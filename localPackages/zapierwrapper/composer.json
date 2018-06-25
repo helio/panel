@@ -1,0 +1,18 @@
+{
+    "name": "helio/zapierWrapper",
+    "version": "0.0.1",
+    "license": "MIT",
+    "description": "Wraps Zapier Calls",
+    "type": "package",
+    "authors": [
+        "Chrsitoph Buchli <team@opencomputing.cloud>"
+    ],
+    "require": {
+        "guzzlehttp/guzzle": "^6.2"
+    },
+    "autoload": {
+        "psr-4": {
+            "Helio\\ZapierWrapper\\": "src"
+        }
+    }
+}

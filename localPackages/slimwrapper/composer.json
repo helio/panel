@@ -1,0 +1,24 @@
+{
+    "name": "helio/slimWrapper",
+    "version": "0.0.1",
+    "description": "Slim wrapper",
+    "license": "MIT",
+    "type": "package",
+    "autoload": {
+        "psr-4": {
+            "Helio\\SlimWrapper\\": "src"
+        }
+    },
+    "authors": [
+        {
+            "name": "Christoph Buchli",
+            "email": "team@helio.exchange",
+            "homepage": "https://helio.exchange"
+        }
+    ],
+    "require": {
+        "slim/slim": "^3.1",
+        "slim/php-view": "^2.0",
+        "ergy/slim-annotations-router": "^1.0"
+    }
+}

@@ -1,0 +1,48 @@
+{
+    "name": "helio/panel",
+    "description": "Prototype of the Helio user Panel",
+    "homepage": "https://panel.idling.host",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Christoph Buchli",
+            "email": "team@helio.exchange",
+            "homepage": "https://helio.exchange"
+        }
+    ],
+    "repositories": [
+        {
+            "url": "./localPackages/*",
+            "type": "path"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Helio\\Panel\\": "src"
+        }
+    },
+    "require": {
+        "php": ">=7.2.0",
+        "monolog/monolog": "^1.17",
+        "helio/dbWrapper": "^0.0.1",
+        "helio/slimWrapper": "^0.0.1",
+        "helio/zapierWrapper": "^0.0.1"
+    },
+    "require-dev": {
+        "roave/security-advisories": "dev-master",
+        "phpunit/phpunit": ">=4.8 < 6.0",
+        "webfactory/doctrine-orm-test-infrastructure": "^1.5"
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Helio\\Test\\": "tests/"
+        }
+    },
+    "config": {
+        "process-timeout": 0
+    },
+    "scripts": {
+        "start": "php -S localhost:8080 -t www",
+        "test": "phpunit"
+    }
+}
