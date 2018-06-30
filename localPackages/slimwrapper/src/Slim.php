@@ -42,7 +42,8 @@ class Slim
 
     /**
      * @param array $routerConfig
-     * @return $this
+     *
+     * @return Slim
      * @throws \Exception
      */
     public function setup(array $routerConfig): self
@@ -50,11 +51,28 @@ class Slim
         [$controller, $cache] = $routerConfig;
         $this->app->getContainer()['router'] = new \Ergy\Slim\Annotations\Router($this->app, $controller, $cache);
 
-        $this->app->get('/', function () {
-            echo 'success';
-        });
-
         return $this;
+    }
+
+
+    /**
+     *
+     * @return App
+     */
+    public function getApp(): App
+    {
+        return $this->app;
+    }
+
+
+    /**
+     * @param callable $callable
+     *
+     * @return App
+     */
+    public function add(callable $callable): App
+    {
+        return $this->app->add($callable);
     }
 
 
@@ -78,8 +96,10 @@ class Slim
      * @throws \Slim\Exception\MethodNotAllowedException
      * @throws \Slim\Exception\NotFoundException
      */
-    public function process(ServerRequestInterface $request = null, ResponseInterface $response = null): ResponseInterface
-    {
+    public function process(
+        ServerRequestInterface $request = null,
+        ResponseInterface $response = null
+    ): ResponseInterface {
         if ($request) {
             $this->app->getContainer()['request'] = $request;
         }

@@ -15,6 +15,7 @@ use Doctrine\{
 };
 
 use Doctrine\Common\Collections\ArrayCollection;
+use Helio\Panel\Helper\JwtHelper;
 
 /**
  * @Entity @Table(name="user")
@@ -45,14 +46,6 @@ class User
      * @Column
      */
     protected $email = '';
-
-
-    /**
-     * @var string
-     *
-     * @Column
-     */
-    protected $passwordHash = '';
 
 
     /**
@@ -132,27 +125,6 @@ class User
 
 
     /**
-     * @return string
-     */
-    public function getPasswordHash(): string
-    {
-        return $this->passwordHash;
-    }
-
-
-    /**
-     * @param string $passwordHash
-     * @return User
-     */
-    public function setPasswordHash(string $passwordHash): User
-    {
-        $this->passwordHash = $passwordHash;
-
-        return $this;
-    }
-
-
-    /**
      * @return bool
      */
     public function isActive(): bool
@@ -191,9 +163,9 @@ class User
         $this->servers = $servers;
 
         /** @var Server $server
-        foreach ($servers as $server) {
-            $server->setOwner($this);
-        }
+         * foreach ($servers as $server) {
+         * $server->setOwner($this);
+         * }
          */
 
         return $this;
@@ -213,5 +185,14 @@ class User
         }
 
         return $this;
+    }
+
+
+    /**
+     * @return string
+     */
+    public function hashedId(): string
+    {
+        return substr(md5($this->getId() . JwtHelper::getSecret()), 0, 6);
     }
 }

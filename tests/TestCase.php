@@ -26,5 +26,7 @@ class TestCase extends \PHPUnit_Framework_TestCase
             \define('LOG_DEST', APPLICATION_ROOT . '/log/app-test.log');
             \define('LOG_LVL', 100);
         }
+        $_SERVER['JWT_SECRET'] = 'ladida';
+        $_SERVER['ZAPIER_HOOK_URL'] = '/blah';
     }
 }

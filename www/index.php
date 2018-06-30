@@ -3,8 +3,7 @@
 require __DIR__ . '/../src/bootstrap.php';
 
 try {
-    session_start();
-    Helio\Panel\App::run('app');
+    Helio\Panel\App::run();
 } catch (Exception $e) {
     header('Content-Type: application/json', 500);
     echo json_encode([

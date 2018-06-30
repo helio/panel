@@ -26,7 +26,12 @@
         "monolog/monolog": "^1.17",
         "helio/dbWrapper": "^0.0.1",
         "helio/slimWrapper": "^0.0.1",
-        "helio/zapierWrapper": "^0.0.1"
+        "helio/zapierWrapper": "^0.0.1",
+        "firebase/php-jwt": "^5.0",
+        "tuupola/base62": "^0.10.0",
+        "tuupola/slim-basic-auth": "^3.1",
+        "tuupola/slim-jwt-auth": "^3.0",
+        "tuupola/cors-middleware": "^0.7.0"
     },
     "require-dev": {
         "roave/security-advisories": "dev-master",

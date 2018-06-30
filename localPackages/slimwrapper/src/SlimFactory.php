@@ -2,6 +2,8 @@
 
 namespace Helio\SlimWrapper;
 
+use Helio\Panel\Helper\JwtHelper;
+
 class SlimFactory
 {
 
@@ -19,12 +21,6 @@ class SlimFactory
 
 
     /**
-     * @var string
-     */
-    private $name;
-
-
-    /**
      *
      * @return SlimFactory
      */
@@ -37,29 +33,40 @@ class SlimFactory
         return self::$factory;
     }
 
+  protected $hasMiddleware;
+
 
     /**
+     * @param bool $addMiddleware
      * @param string $name
      *
      * @return Slim
      * @throws \Exception
      */
-    public function getApp(string $name): Slim
+    public function getApp(bool $addMiddleware = true, string $name = 'app'): Slim
     {
         if (!$this->app) {
-            $this->name = $name;
 
             $logger = (new \Monolog\Logger('panel.' . $name))
                 ->pushProcessor(new \Monolog\Processor\UidProcessor())
                 ->pushHandler(new \Monolog\Handler\StreamHandler(LOG_DEST, LOG_LVL));
+
             $renderer = new \Slim\Views\PhpRenderer(APPLICATION_ROOT . '/src/templates');
 
             $this->app = (new Slim($logger, $renderer))->setup([
                 [APPLICATION_ROOT . '/src/controller/'],
                 APPLICATION_ROOT . '/tmp/cache/' . $name
             ]);
-        } elseif ($name !== $this->name) {
-            throw new \RuntimeException('requested app of two different names, cannot coexists.');
+
+            $this->hasMiddleware = $addMiddleware;
+
+            if ($addMiddleware) {
+                JwtHelper::addMiddleware($this->app);
+            }
+        }
+
+        if ($addMiddleware !== $this->hasMiddleware) {
+            throw new \RuntimeException('You cannot dynamically add/remove middleware', 1530458392);
         }
 
         return $this->app;
