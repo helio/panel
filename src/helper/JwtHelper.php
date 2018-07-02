@@ -97,7 +97,7 @@ class JwtHelper
             'iat' => $now->getTimestamp(),
             'exp' => $future->getTimestamp(),
             'jti' => $jti,
-            'sub' => $userIdHash
+            'uid' => $userIdHash
         ];
         $secret = self::getSecret();
         $token = JWT::encode($payload, $secret, 'HS256');

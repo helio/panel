@@ -15,7 +15,7 @@ class ServerHelper
 
         $protocol = 'http';
 
-        if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] && $_SERVER['HTTPS'] !== 'off') {
+        if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] && stripos('off', $_SERVER['HTTPS']) !== 0) {
             $protocol .= 's';
         }
 

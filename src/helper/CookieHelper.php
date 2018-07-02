@@ -10,15 +10,20 @@ class CookieHelper
 
 
     /**
+     * @var string
+     */
+    public static $timeZone = 'Europe/Berlin';
+
+
+    /**
      * @param ResponseInterface $response
      * @param string $key
      *
      * @return ResponseInterface
      */
-    public static function deleteCookie(ResponseInterface $response, $key)
+    public static function deleteCookie(ResponseInterface $response, $key): ResponseInterface
     {
-        $cookie = urlencode($key) . '=' .
-            urlencode('deleted') . '; expires=Thu, 01-Jan-1970 00:00:01 GMT; Max-Age=0; path=/; secure; httponly';
+        $cookie = urlencode($key) . '=deleted; expires=Thu, 01-Jan-1970 00:00:01 GMT; Max-Age=0; path=/; secure; httponly';
         $response = $response->withAddedHeader('Set-Cookie', $cookie);
 
         return $response;
@@ -37,10 +42,10 @@ class CookieHelper
     public static function addCookie(ResponseInterface $response, string $cookieName, string $cookieValue, int $expires = 0): ResponseInterface
     {
         if ($expires > 0) {
-            $expiry = new \DateTimeImmutable($expires);
-            $maxAge = $expires - (new \DateTime())->getTimestamp();
+            $expiry = (new \DateTimeImmutable("@$expires"))->setTimezone(new \DateTimeZone(self::$timeZone));
+            $maxAge = $expires - (new \DateTime('now', new \DateTimeZone(self::$timeZone)))->getTimestamp();
         } else {
-            $expiry = new \DateTimeImmutable('now + 10 minutes');
+            $expiry = new \DateTimeImmutable('now + 10 minutes', new \DateTimeZone(self::$timeZone));
             $maxAge = 600;
         }
         // TODO: re-add secure.

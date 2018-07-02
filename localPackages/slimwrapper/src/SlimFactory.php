@@ -17,7 +17,16 @@ class SlimFactory
     /**
      * @var Slim
      */
-    private $app;
+    protected $app;
+
+
+    /**
+     * @var Slim
+     */
+    protected $appWithoutMiddleware;
+
+
+    protected $hasMiddleware;
 
 
     /**
@@ -33,19 +42,34 @@ class SlimFactory
         return self::$factory;
     }
 
-  protected $hasMiddleware;
-
 
     /**
-     * @param bool $addMiddleware
      * @param string $name
      *
      * @return Slim
      * @throws \Exception
      */
-    public function getApp(bool $addMiddleware = true, string $name = 'app'): Slim
+    public function getApp(string $name = 'app'): Slim
     {
         if (!$this->app) {
+            $this->app = $this->getAppWithoutMiddleware($name);
+                JwtHelper::addMiddleware($this->app);
+
+        }
+
+        return $this->app;
+    }
+
+
+    /**
+     * @param string $name
+     *
+     * @return Slim
+     * @throws \Exception
+     */
+    public function getAppWithoutMiddleware(string $name = 'app'): Slim
+    {
+        if (!$this->appWithoutMiddleware) {
 
             $logger = (new \Monolog\Logger('panel.' . $name))
                 ->pushProcessor(new \Monolog\Processor\UidProcessor())
@@ -53,22 +77,11 @@ class SlimFactory
 
             $renderer = new \Slim\Views\PhpRenderer(APPLICATION_ROOT . '/src/templates');
 
-            $this->app = (new Slim($logger, $renderer))->setup([
+            $this->appWithoutMiddleware = (new Slim($logger, $renderer))->setup([
                 [APPLICATION_ROOT . '/src/controller/'],
                 APPLICATION_ROOT . '/tmp/cache/' . $name
             ]);
-
-            $this->hasMiddleware = $addMiddleware;
-
-            if ($addMiddleware) {
-                JwtHelper::addMiddleware($this->app);
-            }
         }
-
-        if ($addMiddleware !== $this->hasMiddleware) {
-            throw new \RuntimeException('You cannot dynamically add/remove middleware', 1530458392);
-        }
-
-        return $this->app;
+        return $this->appWithoutMiddleware;
     }
 }

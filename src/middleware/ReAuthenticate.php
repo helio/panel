@@ -43,7 +43,7 @@ class ReAuthenticate implements MiddlewareInterface
         $token = $request->getAttribute('token');
 
         if ($token) {
-            $token = JwtHelper::generateToken($token['sub']);
+            $token = JwtHelper::generateToken($token['uid']);
             # re-authenticate by setting a new token
             $response = CookieHelper::addCookie($response, 'token', $token['token'], $token['expires']);
         }

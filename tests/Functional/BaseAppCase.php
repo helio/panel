@@ -2,7 +2,7 @@
 
 namespace Helio\Test\Functional;
 
-use Helio\Panel\App;
+use Helio\SlimWrapper\Slim;
 use Helio\SlimWrapper\SlimFactory;
 use Helio\Test\TestCase;
 use Psr\Http\Message\ResponseInterface;
@@ -25,13 +25,16 @@ class BaseAppCase extends TestCase
      *
      * @param string $requestMethod the request method (e.g. GET, POST, etc.)
      * @param string $requestUri the request URI
-     * @param mixed $requestData the request data
      * @param bool $withMiddleware whether the app should include the middlewares (mainly JWT).
+     * @param mixed $cookieData the request data
+     * @param mixed $requestData the request data
+     * @param bool|Slim $app if set, this variable will contain the app for further analysis of results and processings (memory heavy!)
+     *
      * @return ResponseInterface
      *
      * @throws
      */
-    public function runApp($requestMethod, $requestUri, $requestData = null, $withMiddleware = false): ResponseInterface
+    public function runApp($requestMethod, $requestUri, $withMiddleware = false, $cookieData = null, $requestData = null, &$app = null): ResponseInterface
     {
 
         // Create a mock environment for testing with
@@ -42,6 +45,10 @@ class BaseAppCase extends TestCase
             ]
         );
 
+        if ($cookieData) {
+            $environment->set('HTTP_Cookie', $cookieData);
+        }
+
         // Set up a request object based on the environment
         $request = Request::createFromEnvironment($environment);
 
@@ -50,8 +57,15 @@ class BaseAppCase extends TestCase
             $request = $request->withParsedBody($requestData);
         }
 
-        $response = SlimFactory::getFactory()->getApp($withMiddleware)->process($request);
+        if ($withMiddleware) {
+            $response = SlimFactory::getFactory()->getApp()->process($request);
+        } else {
+            $response = SlimFactory::getFactory()->getAppWithoutMiddleware()->process($request);
+        }
 
+        if ($app) {
+            $app = SlimFactory::getFactory()->getApp();
+        }
         self::delTree(APPLICATION_ROOT . '/tmp/cache/test/');
 
         return $response;
