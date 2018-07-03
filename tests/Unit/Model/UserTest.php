@@ -1,15 +1,15 @@
 <?php
 namespace Helio\Test\Unit;
 
-use Helio\Test\Functional\Fixture\User;
+use Helio\Test\Functional\Fixture\Model\User;
 use Helio\Test\TestCase;
 
 class UserTest extends TestCase {
 
-    public function testHashedIdFunctionality(): void {
+    public function testIdFunctionality(): void {
 
         $user = new User();
         $user->setId(69);
-        $this->assertEquals(substr(md5(69 . 'ladida'), 0, 6), $user->hashedId());
+        $this->assertEquals(69, $user->getId());
     }
 }

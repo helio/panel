@@ -10,12 +10,6 @@
             "homepage": "https://helio.exchange"
         }
     ],
-    "repositories": [
-        {
-            "url": "./localPackages/*",
-            "type": "path"
-        }
-    ],
     "autoload": {
         "psr-4": {
             "Helio\\Panel\\": "src"
@@ -24,9 +18,11 @@
     "require": {
         "php": ">=7.2.0",
         "monolog/monolog": "^1.17",
-        "helio/dbWrapper": "^0.0.1",
-        "helio/slimWrapper": "^0.0.1",
-        "helio/zapierWrapper": "^0.0.1",
+        "doctrine/orm": "^2.5.0",
+        "guzzlehttp/guzzle": "^6.2",
+        "slim/slim": "^3.1",
+        "slim/php-view": "^2.0",
+        "ergy/slim-annotations-router": "^1.0",
         "firebase/php-jwt": "^5.0",
         "tuupola/base62": "^0.10.0",
         "tuupola/slim-basic-auth": "^3.1",

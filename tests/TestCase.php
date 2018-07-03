@@ -29,4 +29,23 @@ class TestCase extends \PHPUnit_Framework_TestCase
         $_SERVER['JWT_SECRET'] = 'ladida';
         $_SERVER['ZAPIER_HOOK_URL'] = '/blah';
     }
+
+
+    /**
+     * @param $dir
+     *
+     * @return bool
+     */
+    protected static function delTree($dir): bool
+    {
+        if (!is_dir($dir)) {
+            return true;
+        }
+        $files = array_diff(scandir($dir, 0), array ('.', '..'));
+        foreach ($files as $file) {
+            is_dir("$dir/$file") ? self::delTree("$dir/$file") : unlink("$dir/$file");
+        }
+
+        return rmdir($dir);
+    }
 }

@@ -2,9 +2,9 @@
 
 namespace Helio\Test\Functional;
 
-use Helio\Panel\Helper\JwtHelper;
-use Helio\SlimWrapper\Slim;
-use Helio\Test\Functional\Fixture\User;
+use Helio\Panel\App;
+use Helio\Panel\Utility\JwtUtility;
+use Helio\Test\Functional\Fixture\Model\User;
 
 
 /**
@@ -15,6 +15,7 @@ use Helio\Test\Functional\Fixture\User;
  */
 class PanelTest extends BaseAppCase
 {
+
 
     /**
      * Test that the index route returns a rendered response
@@ -33,24 +34,12 @@ class PanelTest extends BaseAppCase
      *
      * @throws \Exception
      */
-    public function testUserHashedId(): void
+    public function testLoginWithJwt(): void
     {
-        $user = new User();
-        $user->setId(69);
-        $user->setEmail('test@dummy.com');
-
-        $this->assertEquals(substr(md5(69 . 'ladida'), 0, 6), $user->hashedId());
-    }
-
-    /**
-     *
-     * @throws \Exception
-     */
-    public function testLoginWithJwt(): void {
         $user = new User();
         $user->setId(1221);
 
-        $tokenCookie = 'token=' . JwtHelper::generateToken($user->hashedId())['token'];
+        $tokenCookie = 'token=' . JwtUtility::generateToken($user->getId())['token'];
         $response = $this->runApp('GET', '/panel', true, $tokenCookie, null);
 
         $this->assertEquals(200, $response->getStatusCode());
@@ -62,19 +51,20 @@ class PanelTest extends BaseAppCase
      *
      * @throws \Exception
      */
-    public function testJwtMiddlewareDecoding(): void {
+    public function testJwtMiddlewareDecoding(): void
+    {
 
         $user = new User();
         $user->setId(564);
         $app = true;
 
-        $tokenCookie = 'token=' . JwtHelper::generateToken($user->hashedId())['token'];
+        $tokenCookie = 'token=' . JwtUtility::generateToken($user->getId())['token'];
 
-        /** @var Slim $app */
+        /** @var App $app */
         $response = $this->runApp('GET', '/panel', true, $tokenCookie, null, $app);
 
         $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals($user->hashedId(), $app->getApp()->getContainer()->get('jwt')['uid']);
+        $this->assertEquals($user->getId(), $app->getContainer()->get('jwt')['uid']);
 
     }
 
@@ -83,12 +73,13 @@ class PanelTest extends BaseAppCase
      *
      * @throws \Exception
      */
-    public function testReAuthenticationAfterParameterLogin(): void {
+    public function testReAuthenticationAfterParameterLogin(): void
+    {
 
         $user = new User();
         $user->setId(1221);
 
-        $tokenCookie = 'token=' . JwtHelper::generateToken($user->hashedId())['token'];
+        $tokenCookie = 'token=' . JwtUtility::generateToken($user->getId())['token'];
         $response = $this->runApp('GET', '/panel', true, $tokenCookie, null);
         $cookies = $response->getHeader('set-cookie');
 

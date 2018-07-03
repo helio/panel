@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "c6b17b0af895a8962dc9ffb59ca2c53d",
+    "content-hash": "71f7e1c4e52f0a76a7ca96ba3c618d2d",
     "packages": [
         {
             "name": "container-interop/container-interop",
@@ -923,94 +923,6 @@
                 "url"
             ],
             "time": "2017-03-20T17:10:46+00:00"
-        },
-        {
-            "name": "helio/dbWrapper",
-            "version": "0.0.1",
-            "dist": {
-                "type": "path",
-                "url": "./localPackages/dbwrapper",
-                "reference": "b0ae0afee088fd48b3dd454df8694f6b61a7ad4a",
-                "shasum": null
-            },
-            "require": {
-                "doctrine/orm": "^2.5.0"
-            },
-            "type": "package",
-            "autoload": {
-                "psr-4": {
-                    "Helio\\DbWrapper\\": "src"
-                }
-            },
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Christoph Buchli",
-                    "email": "team@helio.exchange",
-                    "homepage": "https://helio.exchange"
-                }
-            ],
-            "description": "DB wrapper"
-        },
-        {
-            "name": "helio/slimWrapper",
-            "version": "0.0.1",
-            "dist": {
-                "type": "path",
-                "url": "./localPackages/slimwrapper",
-                "reference": "ae30013deecfa3c3af8777b8b5153eee600444fc",
-                "shasum": null
-            },
-            "require": {
-                "ergy/slim-annotations-router": "^1.0",
-                "slim/php-view": "^2.0",
-                "slim/slim": "^3.1"
-            },
-            "type": "package",
-            "autoload": {
-                "psr-4": {
-                    "Helio\\SlimWrapper\\": "src"
-                }
-            },
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Christoph Buchli",
-                    "email": "team@helio.exchange",
-                    "homepage": "https://helio.exchange"
-                }
-            ],
-            "description": "Slim wrapper"
-        },
-        {
-            "name": "helio/zapierWrapper",
-            "version": "0.0.1",
-            "dist": {
-                "type": "path",
-                "url": "./localPackages/zapierwrapper",
-                "reference": "dd77691f11dcd473255b0dc1eae80525d33132c5",
-                "shasum": null
-            },
-            "require": {
-                "guzzlehttp/guzzle": "^6.2"
-            },
-            "type": "package",
-            "autoload": {
-                "psr-4": {
-                    "Helio\\ZapierWrapper\\": "src"
-                }
-            },
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                "Chrsitoph Buchli <team@opencomputing.cloud>"
-            ],
-            "description": "Wraps Zapier Calls"
         },
         {
             "name": "http-interop/http-factory",

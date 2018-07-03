@@ -5,8 +5,8 @@ namespace Helio\Test\Functional;
 use Helio\Test\App;
 use Helio\Test\TestCase;
 use Psr\Http\Message\ResponseInterface;
-use Slim\Http\Request;
 use Slim\Http\Environment;
+use Slim\Http\Request;
 
 
 /**
@@ -15,8 +15,9 @@ use Slim\Http\Environment;
  * @package    Helio\Test\Functional
  * @author    Christoph Buchli <team@opencomputing.cloud>
  */
-class BaseAppCase extends TestCase
+class BaseIntegrationCase extends TestCase
 {
+
 
     /**
      * Process the application given a request method and URI
