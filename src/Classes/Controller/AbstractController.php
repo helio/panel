@@ -21,6 +21,7 @@ use Slim\Views\PhpRenderer;
  * @property PhpRenderer renderer
  * @property Logger logger
  * @property DbHelper dbHelper
+ * @property array jwt
  * @property ZapierHelper zapierHelper
  *
  * @property-read array settings
@@ -45,10 +46,11 @@ abstract class AbstractController extends Controller
     /**
      * @param string $template
      * @param array $params
+     * @param int $status
      *
      * @return ResponseInterface
      */
-    protected function render(string $template, array $params = []): ResponseInterface
+    protected function render(string $template, array $params = [], int $status = 200): ResponseInterface
     {
         if (!$template) {
             throw new \InvalidArgumentException('No template specified', 1530051401);
@@ -58,6 +60,18 @@ abstract class AbstractController extends Controller
         return $this->renderer->render($this->response,
             'index.phtml',
             $params
-        );
+        )->withStatus($status);
+    }
+
+
+    /**
+     * @param $data
+     * @param int $status
+     *
+     * @return ResponseInterface
+     */
+    protected function json($data, int $status = 200): ResponseInterface
+    {
+        return $this->response->withJson($data)->withStatus($status);
     }
 }

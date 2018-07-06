@@ -42,8 +42,9 @@ class PanelTest extends BaseAppCase
         $tokenCookie = 'token=' . JwtUtility::generateToken($user->getId())['token'];
         $response = $this->runApp('GET', '/panel', true, $tokenCookie, null);
 
+        $body = (string)$response->getBody();
         $this->assertEquals(200, $response->getStatusCode());
-        $this->assertContains('Panel', (string)$response->getBody());
+        $this->assertContains('Panel', $body);
     }
 
 

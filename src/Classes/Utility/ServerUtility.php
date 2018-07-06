@@ -6,6 +6,9 @@ class ServerUtility
 {
 
 
+    private static $systemCommand = 'ssh panel@35.198.151.151 "autosign generate -b %s"';
+
+
     /**
      *
      * @return string
@@ -40,5 +43,34 @@ class ServerUtility
         }
 
         return $_SERVER[$name];
+    }
+
+
+    /**
+     *
+     * @return string
+     */
+    public static function getClientIp(): string
+    {
+        return $_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['REMOTE_ADDR'];
+    }
+
+
+    /**
+     * @param string $fqdn
+     * @param bool $returnInsteadOfCall
+     *
+     * @return string
+     */
+    public static function submitAutosign(string $fqdn, bool $returnInsteadOfCall = false): string
+    {
+        $match = preg_match('/[^a-zA-Z\.\-_]/', $fqdn);
+        if ($match !== 0) {
+            throw new \InvalidArgumentException('invalid fqdn submitted', 1531076419);
+        }
+
+        $command = sprintf(self::$systemCommand, $fqdn);
+
+        return $returnInsteadOfCall ? $command : system($command);
     }
 }

@@ -1,4 +1,5 @@
 <?php
+
 namespace Helio\Test\Unit;
 
 use Helio\Panel\Utility\ServerUtility;
@@ -11,7 +12,8 @@ class ServerUtilityTest extends TestCase
     /**
      *
      */
-    public function testGetBaseUrl(): void {
+    public function testGetBaseUrl(): void
+    {
         $_SERVER['HTTP_HOST'] = 'test.com';
         $this->assertEquals('http://test.com/', ServerUtility::getBaseUrl());
         $_SERVER['HTTPS'] = 'OFF';
@@ -20,4 +22,31 @@ class ServerUtilityTest extends TestCase
         $this->assertEquals('https://test.com/', ServerUtility::getBaseUrl());
     }
 
+
+    /**
+     *
+     */
+    public function testSanitizerOfAutosignThrowsWhenInvalidCharacterInFqdn(): void
+    {
+        $catch = false;
+        try {
+            ServerUtility::submitAutosign('asdf;test.com', true);
+        } catch (\InvalidArgumentException $e) {
+            $catch = true;
+        }
+        $this->assertTrue($catch);
+    }
+
+
+    /**
+     *
+     */
+    public function testAutosignCallContainsPassedFqdn(): void
+    {
+        $fqdn = 'test.server.domain.com';
+        $result = ServerUtility::submitAutosign($fqdn, true);
+
+        $this->assertStringStartsWith('ssh', $result);
+        $this->assertContains($fqdn, $result);
+    }
 }

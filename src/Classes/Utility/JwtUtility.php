@@ -7,6 +7,7 @@ use Firebase\JWT\JWT;
 use Helio\Panel\Middleware\LoadUserFromJwt;
 use Helio\Panel\Middleware\TokenAttributeToCookie;
 use Helio\Panel\Middleware\ReAuthenticate;
+use Helio\Panel\Model\Server;
 use Slim\App;
 use Tuupola\Base62;
 
@@ -108,5 +109,48 @@ class JwtUtility
             'token' => $token,
             'expires' => $future->getTimestamp()
         ];
+    }
+
+
+    /**
+     * @param Server $server
+     *
+     * @return string
+     * @throws \Exception
+     */
+    public static function generateServerIdentificationToken(Server $server): string
+    {
+        $salt = bin2hex(random_bytes(4));
+
+        return self::getToken($server->getId(), $server->getCreated()->getTimestamp(), $salt);
+    }
+
+
+    /**
+     * @param Server $server
+     * @param string $claim
+     *
+     * @return bool
+     */
+    public static function verifyServerIdentificationToken(Server $server, string $claim): bool
+    {
+        $salt = explode(':', $claim)[0];
+
+        return $claim === self::getToken($server->getId(), $server->getCreated()->getTimestamp(), $salt);
+    }
+
+
+    /**
+     * @param int $serverId
+     * @param int $timstamp
+     * @param string $salt
+     *
+     * @return string
+     */
+    protected static function getToken(int $serverId, int $timstamp, string $salt): string
+    {
+        $token = sha1($serverId . $timstamp . $salt . ServerUtility::get('JWT_SECRET'));
+
+        return $salt . ':' . $token;
     }
 }

@@ -12,8 +12,9 @@ use Helio\Panel\Utility\ServerUtility;
  * Class DbHelper
  *
  * @method ObjectRepository|EntityRepository getRepository(string $entityName)
- * @method persist($object)
- * @method flush($object = null)
+ * @method persist($entity)
+ * @method merge($entity)
+ * @method flush($entity = null)
  *
  * @package    Helio\Panel\Helper
  * @author    Christoph Buchli <support@snowflake.ch>
@@ -47,6 +48,18 @@ class DbHelper
 
 
     /**
+     *
+     * @return EntityManager
+     * @throws \Doctrine\ORM\ORMException
+     * @deprecated should be replaced with proxy methods, only kept here for cli-config.php
+     */
+    public function get(): EntityManager
+    {
+        return $this->getConnection();
+    }
+
+
+    /**
      * @param $name
      * @param $arguments
      *
@@ -62,16 +75,16 @@ class DbHelper
     }
 
 
-//    /**
-//     * @param string $modelClassName
-//     *
-//     * @return \Doctrine\Common\Persistence\ObjectRepository|\Doctrine\ORM\EntityRepository
-//     * @throws \Doctrine\ORM\ORMException
-//     */
-//    public function getRepository(string $modelClassName)
-//    {
-//        return $this->getConnection()->getRepository($modelClassName);
-//    }
+    //    /**
+    //     * @param string $modelClassName
+    //     *
+    //     * @return \Doctrine\Common\Persistence\ObjectRepository|\Doctrine\ORM\EntityRepository
+    //     * @throws \Doctrine\ORM\ORMException
+    //     */
+    //    public function getRepository(string $modelClassName)
+    //    {
+    //        return $this->getConnection()->getRepository($modelClassName);
+    //    }
 
 
     /**

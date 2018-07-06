@@ -1,1 +1,46 @@
+Hi <?php
+/** @var \Helio\Panel\Model\User $user * */
+if ($user) {
+    echo htmlspecialchars($user->getEmail());
+}
+?>
 <h2>Welcome to the Helio Panel</h2>
+<?php
+if (isset($message) && $message) {
+    echo <<<EOL
+    <div class="alert alert-primary" role="alert">
+      $message
+    </div>
+EOL;
+}
+?>
+<h3>Your Servers</h3>
+<?php
+/** @var \Helio\Panel\Model\User $user * */
+/** @var \Helio\Panel\Model\Server $server * */
+if ($user && count($user->getServers()) > 0) {
+    echo '<ul>';
+    foreach ($user->getServers() as $server) {
+        echo '<li>' . $server->getName() . 'at ' . $server->getFqdn() . ($server->getIp() ? ' verified with IP <i>' . $server->getIp() . '</i>' : ' with token <i>' . $server->getToken() . '</i>') . '</li>';
+    }
+    echo '</ul>';
+}
+?>
+
+<form action="/panel/addserver" method="post">
+    <input type="text" placeholder="Server Name" id="servername" name="servername" required/>
+    <button type="submit">Add Server</button>
+</form>
+<?php
+if ($user && count($user->getServers()) > 0) {
+    echo <<<EOH
+<div><h4>How to register your server</h4>
+<p>
+From your server, execute the follwing command:
+<pre>
+curl -X POST -H "Content-Type: application/json" -d '{"fqdn":"your.host.name","token":"xyz"}'
+</pre>
+</p>
+EOH;
+}
+?>

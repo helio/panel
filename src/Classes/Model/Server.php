@@ -45,6 +45,14 @@ class Server
 
 
     /**
+     * @var string
+     *
+     * @Column
+     */
+    protected $ip = '';
+
+
+    /**
      * @var boolean
      *
      * @Column(type="boolean")
@@ -74,6 +82,14 @@ class Server
      * @ManyToOne(targetEntity="User", inversedBy="servers", cascade={"persist"})
      */
     protected $owner;
+
+
+    /**
+     * @var string
+     *
+     * @Column
+     */
+    protected $token = '';
 
 
     /**
@@ -218,5 +234,41 @@ class Server
         $this->owner = $owner;
 
         return $this;
+    }
+
+
+    /**
+     * @return string
+     */
+    public function getToken(): string
+    {
+        return $this->token;
+    }
+
+
+    /**
+     * @param string $token
+     */
+    public function setToken(string $token): void
+    {
+        $this->token = $token;
+    }
+
+
+    /**
+     * @return string
+     */
+    public function getIp(): string
+    {
+        return $this->ip;
+    }
+
+
+    /**
+     * @param string $ip
+     */
+    public function setIp(string $ip): void
+    {
+        $this->ip = $ip;
     }
 }

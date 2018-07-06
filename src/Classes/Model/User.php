@@ -15,7 +15,7 @@ use Doctrine\{
 };
 
 use Doctrine\Common\Collections\ArrayCollection;
-use Helio\Panel\Helper\JwtUtility;
+use Helio\Panel\Utility\JwtUtility;
 
 /**
  * @Entity @Table(name="user")
@@ -185,16 +185,5 @@ class User
         }
 
         return $this;
-    }
-
-
-    /**
-     * @return string
-     *
-     * @deprecated
-     */
-    public function hashedId(): string
-    {
-        return substr(md5($this->getId() . JwtUtility::getSecret()), 0, 6);
     }
 }
