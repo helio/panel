@@ -2,9 +2,6 @@
 
 namespace Helio\Panel\Controller;
 
-
-use Helio\Panel\Helper\DbHelper;
-use Helio\Panel\Helper\ZapierHelper;
 use Helio\Panel\Model\User;
 use Helio\Panel\Utility\MailUtility;
 use Psr\Http\Message\ResponseInterface;

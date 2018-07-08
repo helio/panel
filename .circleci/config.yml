@@ -21,17 +21,17 @@ jobs:
           - v1-dependencies-{{ checksum "composer.json" }}
           - v1-dependencies-
 
-      - run: composer install -n -q
+      - run: composer install -n -q -o
 
       - save_cache:
           paths:
             - ./vendor
           key: v1-dependencies-{{ checksum "composer.json" }}
 
-      - run: vendor/bin/phpunit
+      - run: composer run test
 
       # remove dev packages
-      - run: composer install -n -q --prefer-dist --no-dev
+      - run: composer install -o -n -q --prefer-dist --no-dev
 
       - run:
           name: deploy to prod

@@ -3,7 +3,6 @@
 namespace Helio\Panel\Helper;
 
 use GuzzleHttp\Client;
-use GuzzleHttp\Handler\MockHandler;
 use Helio\Panel\Model\User;
 use Helio\Panel\Utility\ServerUtility;
 

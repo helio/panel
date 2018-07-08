@@ -4,7 +4,6 @@ namespace Helio\Test\Integration;
 
 use Helio\Panel\App;
 use Helio\Panel\Utility\JwtUtility;
-use Helio\Test\Functional\BaseIntegrationCase;
 use Helio\Test\Functional\Fixture\Model\User;
 
 class AppTest extends BaseIntegrationCase

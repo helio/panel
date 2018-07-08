@@ -2,7 +2,6 @@
 namespace Helio\Panel\Utility;
 
 use Helio\Panel\Model\User;
-use Slim\Http\Request;
 
 class MailUtility {
 

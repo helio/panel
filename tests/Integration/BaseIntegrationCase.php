@@ -1,6 +1,6 @@
 <?php
 
-namespace Helio\Test\Functional;
+namespace Helio\Test\Integration;
 
 use Helio\Test\App;
 use Helio\Test\TestCase;
