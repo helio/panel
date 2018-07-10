@@ -40,7 +40,7 @@ class UserController extends AbstractController
      */
     public function SubmitUserAction(): ResponseInterface
     {
-        $email = filter_var($this->request->getParsedBodyParam('email', FILTER_SANITIZE_EMAIL));
+        $email = filter_var(filter_var($this->request->getParsedBodyParam('email', FILTER_SANITIZE_EMAIL)), FILTER_VALIDATE_DOMAIN);
 
         $user = $this->dbHelper->getRepository(User::class)->findOneByEmail($email);
         if (!$user) {

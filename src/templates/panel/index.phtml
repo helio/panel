@@ -36,11 +36,12 @@ if ($user && count($user->getServers()) > 0) {
     echo <<<EOH
 <div><h4>How to register your server</h4>
 <p>
-From your server, execute the follwing command:
+To validate, execute the follwing command from your server:
 <pre>
-curl -X POST -H "Content-Type: application/json" -d '{"fqdn":"your.host.name","token":"xyz"}'
+curl -X POST -H "Content-Type: application/json" -d '{"fqdn":"your.host.name","token":"xyz"}' https://panel.idling.host/server/register
 </pre>
 </p>
+</div>
 EOH;
 }
 ?>

@@ -19,6 +19,7 @@ use Psr\Http\Message\ResponseInterface;
 class PanelController extends AbstractController
 {
 
+
     /**
      *
      * @return ResponseInterface
@@ -26,7 +27,8 @@ class PanelController extends AbstractController
      *
      * @Route("/addserver", methods={"POST"}, name="panel.index")
      */
-    public function addServerAction(): ResponseInterface {
+    public function addServerAction(): ResponseInterface
+    {
         /** @var User $user */
         $user = $this->dbHelper->getRepository(User::class)->find($this->jwt['uid']);
 
@@ -50,6 +52,7 @@ class PanelController extends AbstractController
         ]);
     }
 
+
     /**
      *
      * @return ResponseInterface
@@ -60,7 +63,11 @@ class PanelController extends AbstractController
      */
     public function indexAction(): ResponseInterface
     {
+        /** @var User $user */
         $user = $this->dbHelper->getRepository(User::class)->find($this->jwt['uid']);
+        $user->setActive(true);
+        $this->dbHelper->merge($user);
+        $this->dbHelper->flush();
 
         return $this->render('panel/index', [
             'user' => $user,

@@ -1,11 +1,11 @@
 <?php
+
 namespace Helio\Panel\Utility;
 
 use Helio\Panel\Model\User;
 
-class MailUtility {
-
-
+class MailUtility
+{
 
 
     /**
@@ -17,6 +17,7 @@ class MailUtility {
     %s
 EOM;
 
+
     /**
      * @param User $user
      *
@@ -25,12 +26,14 @@ EOM;
      */
     public static function sendConfirmationMail(User $user): bool
     {
-        $return = mail($user->getEmail(), 'Welcome to Helio',
+        $return = @mail($user->getEmail(), 'Welcome to Helio',
             vsprintf(self::$confirmationMailContent, [
                 $user->getName(),
                 ServerUtility::getBaseUrl() . 'panel?token=' .
                 JwtUtility::generateToken($user->getId(), '+1 week')['token']
-            ]));
+            ]), 'From: hello@idling.host', '-f hello@idling.host'
+        );
+
         return $return;
     }
 }
