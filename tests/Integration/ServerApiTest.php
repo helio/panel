@@ -2,9 +2,6 @@
 
 namespace Helio\Test\Integration;
 
-use Helio\Panel\App;
-use Helio\Panel\Model\User;
-use Helio\Panel\Utility\JwtUtility;
 use Helio\Test\TestCase;
 
 class ServerApiTest extends TestCase
