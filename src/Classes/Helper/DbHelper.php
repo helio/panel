@@ -99,8 +99,6 @@ class DbHelper
                 throw new \InvalidArgumentException('invalid path submitted to DbFactory->getConnection()', 1530565724);
             }
 
-            $devMode = !(SITE_ENV === 'PROD');
-
             // database configuration parameters
             $dbCfg = array (
                 'driver' => 'pdo_mysql',
@@ -116,7 +114,7 @@ class DbHelper
             $pathToModels = realpath($this->getPathToModels());
 
             $this->db = EntityManager::create($dbCfg,
-                Setup::createAnnotationMetadataConfiguration([$pathToModels], $devMode));
+                Setup::createAnnotationMetadataConfiguration([$pathToModels], true));
         }
 
         return $this->db;

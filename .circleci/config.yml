@@ -38,7 +38,7 @@ jobs:
           command: |
             mkdir ~/.ssh || rm -f ~/.ssh/known_hosts
             mv ./.circleci/known_hosts ~/.ssh/
-            rsync -rptgoDzL --delete src vendor www cli-config.php composer.* panelproto@nbf01.opsserver.ch:.
-            ssh panelproto@nbf01.opsserver.ch "source .zshrc; vendor/bin/doctrine orm:schema-tool:update --force"
+            rsync -rptgoDzL --delete src www cli-config.php composer.* panelproto@nbf01.opsserver.ch:.
+            ssh panelproto@nbf01.opsserver.ch "source .zshrc; composer install --no-dev -o && vendor/bin/doctrine orm:schema-tool:update --force"
             ssh panelproto@nbf01.opsserver.ch "sudo /usr/sbin/service php72-fpm reload"
             ssh panelproto@nbf01.opsserver.ch "sudo /usr/sbin/service php72-fpm reload"
