@@ -23,7 +23,6 @@ class ZapierHelper
     protected $client;
 
 
-
     /**
      * @param User $user
      *
@@ -86,6 +85,7 @@ class ZapierHelper
         return ServerUtility::get('ZAPIER_HOOK_URL');
     }
 
+
     /**
      *
      * @return ZapierHelper
@@ -114,6 +114,14 @@ class ZapierHelper
             if ($this->hasHandler()) {
                 $config['handler'] = $this->getHandler();
             }
+            if (isset($_SERVER['http_proxy']) && strpos($this->getBaseUrl(), 'http:') === 0) {
+                $config['proxy'] = $_SERVER['http_proxy'];
+            }
+            if (isset($_SERVER['https_proxy']) && strpos($this->getBaseUrl(), 'https:') === 0) {
+                $config['proxy'] = $_SERVER['https_proxy'];
+            }
+
+
             $this->client = new Client($config);
         }
 
