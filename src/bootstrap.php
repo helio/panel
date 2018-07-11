@@ -24,6 +24,15 @@ if (PHP_SAPI === 'cli-server') {
     define('SITE_ENV', array_key_exists('SITE_ENV', $_SERVER) ? $_SERVER['SITE_ENV'] : 'PROD');
 }
 
+if (isset($_SERVER['http_proxy']) && !isset($_SERVER['HTTP_PROXY'])) {
+    $_SERVER['HTTP_PROXY'] = $_SERVER['http_proxy'];
+}
+if (isset($_SERVER['https_proxy']) && !isset($_SERVER['HTTPS_PROXY'])) {
+    $_SERVER['HTTPS_PROXY'] = $_SERVER['https_proxy'];
+}
+if (isset($_SERVER['no_proxy']) && !isset($_SERVER['NO_PROXY'])) {
+    $_SERVER['NO_PROXY'] = $_SERVER['no_proxy'];
+}
 
 require APPLICATION_ROOT . '/vendor/autoload.php';
 
