@@ -3,10 +3,9 @@
 namespace Helio\Test\Unit;
 
 use Helio\Panel\Utility\CookieUtility;
-use Helio\Test\TestCase;
 use Slim\Http\Response;
 
-class CookieUtilityTest extends TestCase
+class CookieUtilityTest extends \PHPUnit_Framework_TestCase
 {
 
 

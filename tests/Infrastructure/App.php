@@ -1,9 +1,9 @@
 <?php
 
-namespace Helio\Test;
+namespace Helio\Test\Infrastructure;
 
-use Helio\Test\Functional\Fixture\Helper\DbHelper;
-use Helio\Test\Functional\Fixture\Helper\ZapierHelper;
+use Helio\Test\Infrastructure\Helper\DbHelper;
+use Helio\Test\Infrastructure\Helper\ZapierHelper;
 
 class App extends \Helio\Panel\App
 {

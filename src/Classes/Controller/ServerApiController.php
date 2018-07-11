@@ -58,9 +58,8 @@ class ServerApiController extends AbstractController
             return $this->json(['success' => false, 'reason' => $e->getMessage()],
                 $e->getCode() < 100 ? $e->getCode() : 406);
         }
-        $this->response->getBody()->write($server->getToken());
 
-        return $this->response;
+        return $this->json(['success' => true, 'token' => $server->getToken()], 200);
     }
 
 
@@ -84,7 +83,7 @@ class ServerApiController extends AbstractController
             $ip = filter_var(ServerUtility::getClientIp(), FILTER_VALIDATE_IP);
 
             if (!$email || !$fqdn || !$ip) {
-                throw new \InvalidArgumentException('Please pass valid values', 1531258313);
+                throw new \InvalidArgumentException('Please pass valid values. got', 1531258313);
             }
 
             /** @var User $user */
@@ -119,9 +118,11 @@ class ServerApiController extends AbstractController
             return $this->json(['success' => false, 'reason' => $e->getMessage()],
                 $e->getCode() < 1000 ? $e->getCode() : 406);
         }
-        $this->response->getBody()->write('User and Server created. Please confirm by klicking the link you just received by email.');
 
-        return $this->response;
+        return $this->json([
+            'success' => true,
+            'message' => 'User and Server created. Please confirm by klicking the link you just received by email.'
+        ], 200);
     }
 
 

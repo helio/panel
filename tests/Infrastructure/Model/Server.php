@@ -1,6 +1,6 @@
 <?php
 
-namespace Helio\Test\Functional\Fixture\Model;
+namespace Helio\Test\Infrastructure\Model;
 
 
 class Server extends \Helio\Panel\Model\Server

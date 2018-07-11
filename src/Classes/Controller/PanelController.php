@@ -66,7 +66,7 @@ class PanelController extends AbstractController
         /** @var User $user */
         $user = $this->dbHelper->getRepository(User::class)->find($this->jwt['uid']);
 
-        if (!$user->isActive()) {
+        if ($user && !$user->isActive()) {
             $user->setActive(true);
             $this->dbHelper->merge($user);
             $this->dbHelper->flush();

@@ -50,8 +50,7 @@ class LoadUserFromJwt implements MiddlewareInterface
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
         if (isset($this->container['jwt'])) {
-            //$this->container['user'] = DbHelper::get()->getRepository(User::class)->findOneById($this->container['jwt']['uid']);
-            $this->container['user'] = new User();
+            $this->container['user'] = $this->container['dbHelper']->getRepository(User::class)->findOneById($this->container['jwt']['uid']);
         }
 
         return $handler->handle($request);

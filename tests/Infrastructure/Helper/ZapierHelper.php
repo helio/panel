@@ -1,6 +1,6 @@
 <?php
 
-namespace Helio\Test\Functional\Fixture\Helper;
+namespace Helio\Test\Infrastructure\Helper;
 
 
 use GuzzleHttp\Handler\MockHandler;

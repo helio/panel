@@ -3,10 +3,11 @@
 namespace Helio\Test\Integration;
 
 use Helio\Panel\App;
+use Helio\Panel\Model\User;
 use Helio\Panel\Utility\JwtUtility;
-use Helio\Test\Functional\Fixture\Model\User;
+use Helio\Test\TestCase;
 
-class AppTest extends BaseIntegrationCase
+class AppTest extends TestCase
 {
 
 
@@ -14,20 +15,19 @@ class AppTest extends BaseIntegrationCase
      *
      * @throws \Exception
      */
-    public function skipped_testLoadUserFromJwtMiddleware(): void
+    public function testLoadUserFromJwtMiddleware(): void
     {
 
         $user = new User();
-        $user->setId(6446);
-        $app = true;
+        $this->infrastructure->import($user);
 
+        $app = true;
         $tokenCookie = 'token=' . JwtUtility::generateToken($user->getId())['token'];
 
         /** @var App $app */
-        $response = $this->runApp('GET', '/panel', true, $tokenCookie, null, $app);
+        $response = $this->runApp('GET', '/panel', true, $tokenCookie, null, [], $app);
 
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertEquals($user->getId(), $app->getContainer()->get('user')->getId());
-
     }
 }

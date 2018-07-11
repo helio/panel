@@ -3,9 +3,8 @@
 namespace Helio\Test\Unit;
 
 use Helio\Panel\Utility\ServerUtility;
-use Helio\Test\TestCase;
 
-class ServerUtilityTest extends TestCase
+class ServerUtilityTest extends \PHPUnit_Framework_TestCase
 {
 
 

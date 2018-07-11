@@ -1,6 +1,6 @@
 <?php
 
-namespace Helio\Test\Functional\Fixture\Helper;
+namespace Helio\Test\Infrastructure\Helper;
 
 
 class DbHelper extends \Helio\Panel\Helper\DbHelper

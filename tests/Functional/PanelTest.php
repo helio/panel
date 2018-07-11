@@ -4,7 +4,8 @@ namespace Helio\Test\Functional;
 
 use Helio\Panel\App;
 use Helio\Panel\Utility\JwtUtility;
-use Helio\Test\Functional\Fixture\Model\User;
+use Helio\Test\Infrastructure\Model\User;
+use Helio\Test\TestCase;
 
 
 /**
@@ -13,12 +14,14 @@ use Helio\Test\Functional\Fixture\Model\User;
  * @package    Helio\Test\Functional
  * @author    Christoph Buchli <team@opencomputing.cloud>
  */
-class PanelTest extends BaseAppCase
+class PanelTest extends TestCase
 {
 
 
     /**
      * Test that the index route returns a rendered response
+     *
+     * @throws \Exception
      */
     public function testGetHomeContainsWithLogin(): void
     {
@@ -34,7 +37,7 @@ class PanelTest extends BaseAppCase
      *
      * @throws \Exception
      */
-    public function _testLoginWithJwt(): void
+    public function testLoginWithJwtInCookie(): void
     {
         $user = new User();
         $user->setId(1221);
@@ -52,7 +55,24 @@ class PanelTest extends BaseAppCase
      *
      * @throws \Exception
      */
-    public function _testJwtMiddlewareDecoding(): void
+    public function testLoginWithJwtInUrl(): void
+    {
+        $user = new User();
+        $user->setId(1221);
+
+        $response = $this->runApp('GET', '/panel', true, null, null, ['token' => JwtUtility::generateToken($user->getId())['token']]);
+
+        $body = (string)$response->getBody();
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertContains('Panel', $body);
+    }
+
+
+    /**
+     *
+     * @throws \Exception
+     */
+    public function testJwtMiddlewareDecoding(): void
     {
 
         $user = new User();
@@ -62,7 +82,7 @@ class PanelTest extends BaseAppCase
         $tokenCookie = 'token=' . JwtUtility::generateToken($user->getId())['token'];
 
         /** @var App $app */
-        $response = $this->runApp('GET', '/panel', true, $tokenCookie, null, $app);
+        $response = $this->runApp('GET', '/panel', true, $tokenCookie, null, [], $app);
 
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertEquals($user->getId(), $app->getContainer()->get('jwt')['uid']);
@@ -74,7 +94,7 @@ class PanelTest extends BaseAppCase
      *
      * @throws \Exception
      */
-    public function _testReAuthenticationAfterParameterLogin(): void
+    public function testReAuthenticationAfterParameterLogin(): void
     {
 
         $user = new User();

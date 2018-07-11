@@ -5,10 +5,11 @@ namespace Helio\Test\Functional;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
-use Helio\Test\Functional\Fixture\Helper\ZapierHelper;
-use Helio\Test\Functional\Fixture\Model\User;
+use Helio\Test\Infrastructure\Helper\ZapierHelper;
+use Helio\Test\Infrastructure\Model\User;
+use Helio\Test\TestCase;
 
-class ZapierTest extends BaseRequestCase
+class ZapierTest extends TestCase
 {
 
 

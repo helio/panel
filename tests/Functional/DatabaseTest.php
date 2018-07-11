@@ -4,8 +4,9 @@ namespace Helio\Test\Functional;
 
 use Helio\Panel\Model\Server;
 use Helio\Panel\Model\User;
+use Helio\Test\TestCase;
 
-class DatabaseTest extends BaseDatabaseCase
+class DatabaseTest extends TestCase
 {
     public function testInfrastructureUserAggregateRoot(): void
     {

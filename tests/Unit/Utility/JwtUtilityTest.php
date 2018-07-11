@@ -3,10 +3,9 @@ namespace Helio\Test\Unit;
 
 use Helio\Panel\Utility\JwtUtility;
 use Helio\Panel\Utility\ServerUtility;
-use Helio\Test\Functional\Fixture\Model\Server;
-use Helio\Test\TestCase;
+use Helio\Test\Infrastructure\Model\Server;
 
-class JwtUtilityTest extends TestCase {
+class JwtUtilityTest extends \PHPUnit_Framework_TestCase {
 
 
     /**

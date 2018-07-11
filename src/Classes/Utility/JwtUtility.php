@@ -93,8 +93,8 @@ class JwtUtility
     public static function generateToken(string $userId, string $duration = '+10 minutes'): array
     {
 
-        $now = new \DateTime();
-        $future = new \DateTime($duration);
+        $now = new \DateTime('now', new \DateTimeZone('Europe/Berlin'));
+        $future = new \DateTime($duration, new \DateTimeZone('Europe/Berlin'));
         $jti = (new Base62())->encode(random_bytes(16));
         $payload = [
             'iat' => $now->getTimestamp(),

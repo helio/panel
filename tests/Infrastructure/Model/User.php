@@ -1,6 +1,6 @@
 <?php
 
-namespace Helio\Test\Functional\Fixture\Model;
+namespace Helio\Test\Infrastructure\Model;
 
 
 class User extends \Helio\Panel\Model\User
