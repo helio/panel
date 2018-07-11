@@ -65,9 +65,12 @@ class PanelController extends AbstractController
     {
         /** @var User $user */
         $user = $this->dbHelper->getRepository(User::class)->find($this->jwt['uid']);
-        $user->setActive(true);
-        $this->dbHelper->merge($user);
-        $this->dbHelper->flush();
+
+        if (!$user->isActive()) {
+            $user->setActive(true);
+            $this->dbHelper->merge($user);
+            $this->dbHelper->flush();
+        }
 
         return $this->render('panel/index', [
             'user' => $user,
