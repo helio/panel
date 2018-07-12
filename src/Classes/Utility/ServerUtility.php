@@ -64,7 +64,7 @@ class ServerUtility
      */
     public static function submitAutosign(string $fqdn, bool $returnInsteadOfCall = false): string
     {
-        $match = preg_match('/[^a-zA-Z\.\-_]/', $fqdn);
+        $match = preg_match('/[^0-9a-zA-Z\.\-_]/', $fqdn);
         if ($match !== 0) {
             throw new \InvalidArgumentException('invalid fqdn submitted', 1531076419);
         }
