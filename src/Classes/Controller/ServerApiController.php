@@ -165,16 +165,14 @@ class ServerApiController extends AbstractController
             $this->dbHelper->merge($server);
             $this->dbHelper->flush();
 
-            $return = ServerUtility::submitAutosign($fqdn);
-            if (!$return) {
+            $token = trim(ServerUtility::submitAutosign($fqdn));
+            if (!$token) {
                 throw new \RuntimeException('coudldn\'t generate autosign. Please try again.', 1530917143);
             }
         } catch (\Exception $e) {
             return $this->json(['success' => false, 'reason' => $e->getMessage()], 406);
         }
 
-        $this->response->getBody()->write($return);
-
-        return $this->response;
+        return $this->json(['success' => true, 'token' => $token]);
     }
 }
