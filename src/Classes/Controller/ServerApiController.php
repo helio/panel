@@ -86,21 +86,31 @@ class ServerApiController extends AbstractController
                 throw new \InvalidArgumentException('Please pass valid values. got', 1531258313);
             }
 
+            $server = new Server();
+            $server->setFqdn($fqdn);
+            $server->setName('Automatically generated');
+            $server->setCreated(new \DateTime('Europe/Berlin'));
+
             /** @var User $user */
             $user = $this->dbHelper->getRepository(User::class)->findOneByEmail($email);
             if ($user) {
                 if (!$user->isActive()) {
                     throw new \InvalidArgumentException('User already exists. Please confirm by clicking the link you received via email.',
                         1531251350);
-
                 }
-                throw new \RuntimeException('User already confirmed', 416);
+
+                $server->setOwner($user);
+                $this->dbHelper->persist($server);
+                $this->dbHelper->merge($user);
+                $this->dbHelper->flush();
+                $server->setToken(JwtUtility::generateServerIdentificationToken($server));
+                $this->dbHelper->merge($server);
+                $this->dbHelper->flush();
+
+                return $this->json(['success' => true, 'reason' => 'User already confirmed'], 416);
             }
             $user = new User();
             $user->setEmail($email);
-            $server = new Server();
-            $server->setFqdn($fqdn);
-            $server->setCreated(new \DateTime('Europe/Berlin'));
             $server->setOwner($user);
             $this->dbHelper->persist($user);
             $this->dbHelper->flush();
@@ -109,14 +119,13 @@ class ServerApiController extends AbstractController
             $this->dbHelper->flush($server);
 
             if (!$this->zapierHelper->submitUserToZapier($user)) {
-                throw new \RuntimeException('', 1531253379);
+                throw new \RuntimeException('Error during user creation', 1531253379);
             }
             if (!MailUtility::sendConfirmationMail($user, '+5 minutes')) {
                 throw new \RuntimeException('Couldn\'t send confirmation mail', 1531253400);
             }
         } catch (\Exception $e) {
-            return $this->json(['success' => false, 'reason' => $e->getMessage()],
-                $e->getCode() < 1000 ? $e->getCode() : 406);
+            return $this->json(['success' => false, 'reason' => $e->getMessage()], 406);
         }
 
         return $this->json([

@@ -2,6 +2,36 @@
 <html>
 <?php include '_head.phtml' ?>
 <body>
+<div class="topbar">
+    <div class="wrapper topbar__wrapper">
+        <nav class="topbar__nav">
+            <a href="https://panel.idling.host/">
+                <img src="/images/unidle-logo.svg" alt="Unidle">
+            </a>
+            <a href="https://idling.host#vision" class="topbar__link">
+                Our vision
+            </a>
+            <a href="https://idling.host#calculator" class="topbar__link">
+                Calculator
+            </a>
+            <a href="https://idling.host#explanation" class="topbar__link">
+                How it works
+            </a>
+        </nav>
+        <nav class="topbar__nav">
+            <a href="https://slack.opencomputing.cloud" class="topbar__link">
+                <img src="/images/social/slack.svg" alt="" class="topbar__icon">
+            </a>
+            <a href="https://twitter.com/opencomputingC" class="topbar__link">
+                <img src="/images/social/twitter.svg" alt="" class="topbar__icon">
+            </a>
+            <a href="https://github.com/helio" class="topbar__link">
+                <img src="/images/social/github.svg" alt="" class="topbar__icon">
+            </a>
+        </nav>
+    </div>
+</div>
+
 <?php
 if (isset($childTemplate)) {
     /** @noinspection PhpIncludeInspection */

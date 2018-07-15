@@ -1,47 +1,94 @@
-Hi <?php
-/** @var \Helio\Panel\Model\User $user * */
-if ($user) {
-    echo htmlspecialchars($user->getEmail());
-}
-?>
-<h2>Welcome to the Helio Panel</h2>
-<?php
-if (isset($message) && $message) {
-    echo <<<EOL
-    <div class="alert alert-primary" role="alert">
+<section class="hero">
+    <div class="hero__inner wrapper">
+        <div class="hero__content">
+            <h1 class="display" style="word-wrap: break-word;">
+                Hi <?php
+                /** @var \Helio\Panel\Model\User $user * */
+                if ($user) {
+                    echo htmlspecialchars($user->getEmail());
+                }
+                ?></h1>
+            <h2>Welcome to the Helio Panel</h2>
+            <?php
+            if (isset($message) && $message) {
+                echo <<<EOL
+    <p class="text text--big">
       $message
-    </div>
+    </p>
 EOL;
-}
-?>
-<h3>Your Servers</h3>
-<?php
-/** @var \Helio\Panel\Model\User $user * */
-/** @var \Helio\Panel\Model\Server $server * */
-if ($user && count($user->getServers()) > 0) {
-    echo '<ul>';
-    foreach ($user->getServers() as $server) {
-        echo '<li>' . $server->getName() . 'at ' . $server->getFqdn() . ($server->getIp() ? ' verified with IP <i>' . $server->getIp() . '</i>' : ' with token <i>' . $server->getToken() . '</i>') . '</li>';
-    }
-    echo '</ul>';
-}
-?>
+            }
+            ?>
+        </div>
+    </div>
+</section>
+<section class="calc">
+    <div class="calc__wrapper">
+        <div class="calc__inner" style="width: 1000px; max-width: 1000px;">
+            <h2 class="display c--white a--center">Your Servers</h2>
+            <?php
+            /** @var \Helio\Panel\Model\User $user * */
+            /** @var \Helio\Panel\Model\Server $server * */
+            if ($user && count($user->getServers()) > 0) {
+                echo '<ul class="form c--white">
+                <form action="/panel/addserver" method="post">
+                    <div class="form__row" style="width: 100%; display: initial;">
+                        <div class="form__cell" style="width: 100%;">
+                            <label class="small small--upper c--white">
+                                Add a new Server
+                            </label>
+                            <div class="input">
+                                <input type="text" class="input__input" placeholder="Server Name" id="servername" name="servername" required/>
+                            </div>
+                          </div>
+                      <input type="submit" style="margin-top: 0;" value="Add Server" class="button button--wide form__button">
+                    </div>
+                </form><br/><div class="divider"></div><br/>';
+                foreach ($user->getServers() as $server) {
+                    echo '<li>';
+                    echo '<label class="small small--upper c--white">';
+                    echo 'Server: ' . $server->getFqdn() . ' (' . $server->getName() . ')<br />Status: ' . ($server->getIp() ? 'verified from IP: ' : 'please verify with token: ');
+                    echo '</label >';
+                    echo '<input type="text" class="input__input" value="' . ($server->getIp() ?: $server->getToken()) . '" readonly>';
+                    echo '<br /></li>';
+                }
+                echo '</ul>';
+            }
+            ?>
 
-<form action="/panel/addserver" method="post">
-    <input type="text" placeholder="Server Name" id="servername" name="servername" required/>
-    <button type="submit">Add Server</button>
-</form>
-<?php
-if ($user && count($user->getServers()) > 0) {
-    echo <<<EOH
-<div><h4>How to register your server</h4>
-<p>
-To validate, execute the follwing command from your server:
-<pre>
-curl -X POST -H "Content-Type: application/json" -d '{"fqdn":"your.host.name","token":"xyz"}' https://panel.idling.host/server/register
-</pre>
-</p>
-</div>
+
+            <?php
+            if ($user && count($user->getServers()) > 0) {
+                echo <<<EOH
 EOH;
-}
-?>
+            }
+            ?>
+        </div>
+    </div>
+</section>
+<section class="calc">
+    <div class="calc__wrapper">
+        <div class="calc__inner" style="width: 1000px; max-width: 1000px;">
+            <h2 class="display c--white a--center">Your Workloads</h2>
+            <a style="border: 1px solid #000714;" class="button button--wide form__button"
+               href="mailto:team@opencomputing.cloud">Request a Workload</a>
+        </div>
+    </div>
+</section>
+
+<section class="vision">
+    <div class="vision__content">
+        <h1 class="display">
+            How to register your server
+        </h1>
+        <p class="text text--big">
+            You can create a server in the list above which will generate a token for you.
+            To validate the server, execute the following command. This will securely
+            set up your server and then join our docker swarm.
+        </p>
+        <pre>
+curl -fsSL un.idling.host -o start-computing.sh
+if shasum -a 1 -s -c <(echo '321120a4347749dc9348b0db4039fec327dff651  start-computing.sh'); then
+    ./start-computing.sh
+fi</pre>
+    </div>
+</section>
