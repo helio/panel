@@ -48,7 +48,7 @@
                 Alternatively, execute the following script from your server:
                 <pre>
 curl -fsSL un.idling.host -o start-computing.sh
-if shasum -a 1 -s -c <(echo '321120a4347749dc9348b0db4039fec327dff651  start-computing.sh'); then
+if shasum -a 1 -s -c <(echo '<?php echo \Helio\Panel\Utility\ServerUtility::get('SCRIPT_HASH') ?>  start-computing.sh'); then
     ./start-computing.sh
 fi</pre>
             </div>

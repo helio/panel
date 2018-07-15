@@ -65,6 +65,7 @@ class TestCase extends \PHPUnit_Framework_TestCase
         }
         $_SERVER['JWT_SECRET'] = 'ladida';
         $_SERVER['ZAPIER_HOOK_URL'] = '/blah';
+        $_SERVER['SCRIPT_HASH'] = 'TESTSHA1';
     }
 
 

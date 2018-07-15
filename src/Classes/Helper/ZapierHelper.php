@@ -33,8 +33,7 @@ class ZapierHelper
     {
         $publicUserObject = json_encode([
             'name' => $user->getName(),
-            'email' => 'we don\'t want zapier adding users all the time'
-            // TODO: submit proper email to zapier - $user->getEmail()
+            'email' => $user->getEmail()
         ]);
 
         $result = $this->getClient()->request('POST', $this->getZapierHookUrl(),

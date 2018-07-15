@@ -30,6 +30,7 @@ class PanelTest extends TestCase
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertContains('Login', (string)$response->getBody());
         $this->assertContains('<form', (string)$response->getBody());
+        $this->assertContains('TESTSHA1', (string)$response->getBody(), 'SHA1 Hash of script not displayed');
     }
 
 

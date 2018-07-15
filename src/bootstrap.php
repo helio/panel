@@ -2,6 +2,7 @@
 
 define('APPLICATION_ROOT', __DIR__ . '/..');
 
+// make ENV work on local developemnt server
 if (PHP_SAPI === 'cli-server') {
 
     // allow internal server to serve static files
@@ -20,6 +21,7 @@ if (PHP_SAPI === 'cli-server') {
     $_SERVER['DB_PORT'] = array_key_exists('DB_PORT', $_ENV) ? $_ENV['DB_PORT'] : '';
     $_SERVER['ZAPIER_HOOK_URL'] = array_key_exists('ZAPIER_HOOK_URL', $_ENV) ? $_ENV['ZAPIER_HOOK_URL'] : '';
     $_SERVER['JWT_SECRET'] = array_key_exists('JWT_SECRET', $_ENV) ? $_ENV['JWT_SECRET'] : '';
+    $_SERVER['SCRIPT_HASH'] = array_key_exists('SCRIPT_HASH', $_ENV) ? $_ENV['SCRIPT_HASH'] : '';
 } else {
     define('SITE_ENV', array_key_exists('SITE_ENV', $_SERVER) ? $_SERVER['SITE_ENV'] : 'PROD');
 }
