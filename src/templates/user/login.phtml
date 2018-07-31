@@ -28,10 +28,10 @@
                         <input name="email" class="newsletter__input" id="email" type="email" placeholder="Email"
                                required/>
 
-                        <br/>
+                        <br/><br />
+                        <button type="submit" id="registerSubmit" class="button button--dark">Login / Register</button>
                     </form>
                 </div>
-                <button type="submit" class="button button--dark">Login / Register</button>
             </div>
 
             <break></break>
@@ -48,7 +48,7 @@
                 Alternatively, execute the following script from your server:
                 <pre>
 curl -fsSL un.idling.host -o start-computing.sh
-if shasum -a 1 -s -c <(echo '<?php echo \Helio\Panel\Utility\ServerUtility::get('SCRIPT_HASH') ?>  start-computing.sh'); then
+if shasum -a 1 -s -c <(echo '<?php echo \Helio\Panel\Utility\ServerUtility::get('SCRIPT_HASH') ?> start-computing.sh'); then
     ./start-computing.sh
 fi</pre>
             </div>

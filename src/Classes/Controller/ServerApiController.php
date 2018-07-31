@@ -171,6 +171,7 @@ class ServerApiController extends AbstractController
                 throw new \RuntimeException('FQDN of your server not found. please pass it as argument.', 1531339382);
             }
             $server->setIp($ip);
+            $server->setToken('');
             $this->dbHelper->merge($server);
             $this->dbHelper->flush();
 

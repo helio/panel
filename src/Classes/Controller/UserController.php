@@ -26,6 +26,10 @@ class UserController extends AbstractController
      */
     public function IndexAction(): ResponseInterface
     {
+        $token = $this->request->getCookieParam('token', null);
+        if ($token) {
+            return $this->response->withRedirect('/panel', 302);
+        }
         return $this->render('user/login', ['title' => 'Welcome!']);
     }
 
@@ -40,6 +44,7 @@ class UserController extends AbstractController
      */
     public function SubmitUserAction(): ResponseInterface
     {
+        $success = true;
         $email = filter_var(filter_var($this->request->getParsedBodyParam('email', FILTER_SANITIZE_EMAIL)), FILTER_VALIDATE_DOMAIN);
 
         $user = $this->dbHelper->getRepository(User::class)->findOneByEmail($email);
@@ -48,11 +53,13 @@ class UserController extends AbstractController
             $user->setEmail($email);
             $this->dbHelper->persist($user);
             $this->dbHelper->flush($user);
+            $success = $this->zapierHelper->submitUserToZapier($user);
         }
 
         return $this->render('user/create',
             [
-                'success' => $this->zapierHelper->submitUserToZapier($user) && MailUtility::sendConfirmationMail($user),
+                'user' => $user,
+                'success' => $success && MailUtility::sendConfirmationMail($user),
                 'title' => 'Login link sent'
             ]
         );

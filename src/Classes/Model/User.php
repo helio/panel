@@ -49,6 +49,14 @@ class User
 
 
     /**
+     * @var string
+     *
+     * @Column
+     */
+    protected $role = '';
+
+
+    /**
      * @var boolean
      *
      * @Column(type="boolean")
@@ -119,6 +127,28 @@ class User
     public function setEmail(string $email): User
     {
         $this->email = $email;
+
+        return $this;
+    }
+
+
+
+    /**
+     * @return string
+     */
+    public function getRole(): string
+    {
+        return $this->role;
+    }
+
+
+    /**
+     * @param string $role
+     * @return User
+     */
+    public function setRole(string $role): User
+    {
+        $this->role = $role;
 
         return $this;
     }

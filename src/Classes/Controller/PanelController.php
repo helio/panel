@@ -59,15 +59,29 @@ class PanelController extends AbstractController
      *
      * @throws \Exception
      *
-     * @Route("", methods={"GET"}, name="panel.index")
+     * @Route("", methods={"GET", "POST"}, name="panel.index")
      */
     public function indexAction(): ResponseInterface
     {
+        $changed = false;
         /** @var User $user */
         $user = $this->dbHelper->getRepository(User::class)->find($this->jwt['uid']);
+        $params = $this->request->getParsedBody();
+        if ($params['username']) {
+            $user->setName(filter_var($params['username'], FILTER_SANITIZE_STRING));
+            $changed = true;
+        }
+        if ($params['role']) {
+            $user->setRole(filter_var($params['role'], FILTER_SANITIZE_STRING));
+            $changed = true;
+        }
 
         if ($user && !$user->isActive()) {
             $user->setActive(true);
+            $changed = true;
+        }
+
+        if ($changed) {
             $this->dbHelper->merge($user);
             $this->dbHelper->flush();
         }

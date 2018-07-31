@@ -42,7 +42,7 @@ class ReAuthenticate implements MiddlewareInterface
         $token = $request->getAttribute('token');
 
         if ($token) {
-            $token = JwtUtility::generateToken($token['uid']);
+            $token = JwtUtility::generateToken($token['uid'], '+120 minutes');
             # re-authenticate by setting a new token
             $response = CookieUtility::addCookie($response, 'token', $token['token'], $token['expires']);
         }
