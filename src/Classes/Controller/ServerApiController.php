@@ -130,6 +130,8 @@ class ServerApiController extends AbstractController
 
         return $this->json([
             'success' => true,
+            'user_id' => $user->getId(),
+            'server_id' => $server->getId(),
             'message' => 'User and Server created. Please confirm by klicking the link you just received by email.'
         ], 200);
     }
