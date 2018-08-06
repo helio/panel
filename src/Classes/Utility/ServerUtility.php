@@ -71,6 +71,6 @@ class ServerUtility
 
         $command = sprintf(self::$systemCommand, $fqdn);
 
-        return $returnInsteadOfCall ? $command : system($command);
+        return $returnInsteadOfCall ? $command : shell_exec($command);
     }
 }
