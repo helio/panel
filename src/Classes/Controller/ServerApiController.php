@@ -185,6 +185,9 @@ class ServerApiController extends AbstractController
             return $this->json(['success' => false, 'reason' => $e->getMessage()], 406);
         }
 
-        return $this->json(['success' => true, 'token' => $token]);
+        return $this->json(['success' => true,
+            'user_id' => $server->getOwner()->getId(),
+            'server_id' => $server->getId(),
+            'token' => $token]);
     }
 }
