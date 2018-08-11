@@ -12,9 +12,11 @@
             <?php
             if (isset($message) && $message) {
                 echo <<<EOL
-    <p class="text text--big">
-      $message
-    </p>
+    <div class="alert alert-success" role="alert">            
+        <p class="text text--big">
+            $message
+        </p>
+    </div>
 EOL;
             }
             ?>
@@ -64,7 +66,7 @@ EOFORM
         <div class="calc__inner" style="width: 1000px; max-width: 1000px;">
             <h2 class="display c--white a--center">Your Servers</h2>
             <ul class="form c--white">
-                <form action="/panel/addserver" method="post">
+                <form action="/panel" method="post">
                     <div class="form__row" style="width: 100%; display: initial;">
                         <div class="form__cell" style="width: 100%;">
                             <label class="small small--upper c--white" for="servername">
@@ -86,11 +88,25 @@ EOFORM
                 if ($user && count($user->getServers()) > 0) {
                     foreach ($user->getServers() as $server) {
                         echo '<li>';
+                        echo '<h3 class="c--white a--center">Server: ' . $server->getName() . '</h3>';
+                        echo '<form action="/panel" method="post">';
                         echo '<label class="small small--upper c--white">';
-                        echo 'Server: ' . $server->getFqdn() . ' (' . $server->getName() . ')<br />Status: ' . ($server->getIp() ? 'verified from IP: ' : 'please verify with token: ');
+                        echo '<br />Status: ' . ($server->getIp() ? 'verified from IP: ' : 'please verify with token: ');
+                        if ($server->getFqdn()) {
+                            echo '<br />Fqdn: ' . $server->getFqdn();
+                        }
                         echo '</label >';
                         echo '<input type="text" class="input__input" value="' . ($server->getIp() ?: $server->getToken()) . '" readonly>';
-                        echo '<br /></li>';
+                        if ($server->getIp()) {
+                            if ($server->isRunning()) {
+                                echo '<input type="hidden" name="stopserver" id="stopserver" value="' . $server->getId() . '"/>';
+                                echo '<button type="submit" class="button button--reset">Stop all Workloads for ' . $server->getFqdn() . '</button>';
+                            } else {
+                                echo '<input type="hidden" name="startserver" id="startserver" value="' . $server->getId() . '"/>';
+                                echo '<button type="submit" class="button button--reset">Start workloads for ' . $server->getFqdn() . '</button>';
+                            }
+                        }
+                        echo '</form><br /></li><div class="divider"></div>';
                     }
                 } else {
                     echo '<li>no Severs yet</li>';

@@ -61,6 +61,14 @@ class Server
 
 
     /**
+     * @var boolean
+     *
+     * @Column(type="boolean")
+     */
+    protected $running = false;
+
+
+    /**
      * @var \DateTime
      *
      * @Column(type="datetime", nullable=TRUE)
@@ -159,6 +167,27 @@ class Server
     public function setActive(bool $active): Server
     {
         $this->active = $active;
+
+        return $this;
+    }
+
+
+    /**
+     * @return bool
+     */
+    public function isRunning(): bool
+    {
+        return $this->running;
+    }
+
+
+    /**
+     * @param bool $running
+     * @return Server
+     */
+    public function setRunning(bool $running): Server
+    {
+        $this->running = $running;
 
         return $this;
     }

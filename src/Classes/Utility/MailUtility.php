@@ -13,7 +13,7 @@ class MailUtility
      */
     protected static $confirmationMailContent = <<<EOM
     Hi %s 
-    Welcome to helio. Please klick this link to confirm your subscription:
+    Welcome to helio. Please klick this link to log in:
     %s
 EOM;
 

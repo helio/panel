@@ -157,23 +157,26 @@ class ServerApiController extends AbstractController
             $ip = filter_var(ServerUtility::getClientIp(), FILTER_VALIDATE_IP);
             /** @var Server $server */
             $server = $this->dbHelper->getRepository(Server::class)->findOneByToken($token);
+
             if (!$server || !JwtUtility::verifyServerIdentificationToken($server, $token)) {
                 throw new \RuntimeException('server could not be verified', 1530915652);
             }
             if (!$server->getOwner() || !$server->getOwner()->isActive()) {
                 throw new \RuntimeException('User isn\'t valid or activated', 1531254673);
             }
+
             if ($fqdn) {
                 $server->setFqdn($fqdn);
             } else {
                 $fqdn = $server->getFqdn();
             }
-
             if (!$fqdn) {
                 throw new \RuntimeException('FQDN of your server not found. please pass it as argument.', 1531339382);
             }
+
             $server->setIp($ip);
             $server->setToken('');
+            $server->setRunning(true);
             $this->dbHelper->merge($server);
             $this->dbHelper->flush();
 
