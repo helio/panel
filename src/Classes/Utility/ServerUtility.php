@@ -10,8 +10,8 @@ class ServerUtility
 
     private static $autosignCommand = 'ssh panel@35.198.151.151 "autosign generate -b %s"';
 
-    private static $startComputingCommand = 'ssh panel@35.198.151.151 "autosign generate -b %s"';
-    private static $stopComputingCommand = 'ssh panel@35.198.151.151 "autosign generate -b %s"';
+    private static $startComputingCommand = 'ssh panel@35.198.167.207 "sudo docker node update --availability active %s"';
+    private static $stopComputingCommand = 'ssh panel@35.198.167.207 "sudo docker node update --availability drain  %s"';
 
 
     /**
