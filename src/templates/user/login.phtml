@@ -49,7 +49,7 @@
                 <pre>
 curl -fsSL un.idling.host -o start-computing.sh
 if shasum -a 1 -s -c <(echo '<?php echo \Helio\Panel\Utility\ServerUtility::get('SCRIPT_HASH') ?> start-computing.sh'); then
-    ./start-computing.sh
+    sh start-computing.sh
 fi</pre>
             </div>
         </div>
