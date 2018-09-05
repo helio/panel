@@ -132,14 +132,15 @@ EOFORM
             How to register your server
         </h1>
         <p class="text text--big">
-            You can create a server in the list above which will generate a token for you.
-            To validate the server, execute the following command. This will securely
-            set up your server and then join our docker swarm.
-        </p>
+            You can create a server in the list above, which will generate a token for you.
+            To confirm the server, execute the following command. This will securely
+            set up your server and then join our cluster (currently Docker Swarm).
+            You'll find technical details on our <a href="https://github.com/helio/setup">Github page</a>
+        </p><br/><br/> 
         <pre>
 curl -fsSL un.idling.host -o start-computing.sh
 if shasum -a 1 -s -c <(echo '<?php echo \Helio\Panel\Utility\ServerUtility::get('SCRIPT_HASH') ?> start-computing.sh'); then
-    ./start-computing.sh
+    sh start-computing.sh
 fi</pre>
     </div>
 </section>
