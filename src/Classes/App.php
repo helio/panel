@@ -4,7 +4,9 @@ namespace Helio\Panel;
 
 use Helio\Panel\Helper\DbHelper;
 use Helio\Panel\Helper\ZapierHelper;
+use Helio\Panel\Model\Server;
 use Helio\Panel\Utility\JwtUtility;
+use Helio\Panel\Utility\ServerUtility;
 
 class App extends \Slim\App
 {
@@ -38,7 +40,7 @@ class App extends \Slim\App
              */
             self::$instance = new self([
                 'settings' => [
-                    'displayErrorDetails' => !(SITE_ENV === 'PROD'),
+                    'displayErrorDetails' => !(ServerUtility::get('SITE_ENV') === 'PROD'),
                 ],
                 'logger' => (new \Monolog\Logger('helio.panel.' . $appName))
                     ->pushProcessor(new \Monolog\Processor\UidProcessor())

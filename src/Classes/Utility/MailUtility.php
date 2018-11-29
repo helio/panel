@@ -35,6 +35,13 @@ EOM;
             ]), 'From: hello@idling.host', '-f hello@idling.host'
         );
 
+        if (ServerUtility::get('SITE_ENV') === 'DEV') {
+            file_put_contents('/tmp/mail.log', vsprintf(self::$confirmationMailContent, [
+                $user->getName(),
+                ServerUtility::getBaseUrl() . 'panel?token=' .
+                JwtUtility::generateToken($user->getId(), $linkLifetime)['token']
+            ])."\n\n", FILE_APPEND);
+        }
         return $return;
     }
 }

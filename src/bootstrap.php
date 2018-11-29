@@ -19,6 +19,7 @@ if (PHP_SAPI === 'cli-server') {
     $_SERVER['DB_NAME'] = array_key_exists('DB_NAME', $_ENV) ? $_ENV['DB_NAME'] : '';
     $_SERVER['DB_HOST'] = array_key_exists('DB_HOST', $_ENV) ? $_ENV['DB_HOST'] : '';
     $_SERVER['DB_PORT'] = array_key_exists('DB_PORT', $_ENV) ? $_ENV['DB_PORT'] : '';
+    $_SERVER['SITE_ENV'] = array_key_exists('SITE_ENV', $_ENV) ? $_ENV['SITE_ENV'] : 'DEV';
     $_SERVER['ZAPIER_HOOK_URL'] = array_key_exists('ZAPIER_HOOK_URL', $_ENV) ? $_ENV['ZAPIER_HOOK_URL'] : '';
     $_SERVER['JWT_SECRET'] = array_key_exists('JWT_SECRET', $_ENV) ? $_ENV['JWT_SECRET'] : '';
     $_SERVER['SCRIPT_HASH'] = array_key_exists('SCRIPT_HASH', $_ENV) ? $_ENV['SCRIPT_HASH'] : '';

@@ -7,6 +7,11 @@ use Helio\Panel\Model\Server;
 class ServerUtility
 {
 
+    /**
+     * @var string
+     */
+    public static $timeZone = 'Europe/Berlin';
+
 
     private static $autosignCommand = 'ssh panel@35.198.151.151 "autosign generate -b %s"';
 
@@ -21,13 +26,24 @@ class ServerUtility
     public static function getBaseUrl(): string
     {
 
-        $protocol = 'http';
+        $protocol = 'http' . (self::isSecure() ? 's' : '');
 
-        if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] && stripos('off', $_SERVER['HTTPS']) !== 0) {
-            $protocol .= 's';
+        return $protocol . '://' . self::get('HTTP_HOST') . '/';
+    }
+
+
+    /**
+     * @return bool
+     */
+    public static function isSecure(): bool
+    {
+        if (self::get('HTTPS', 'off') !== 'off') {
+            return true;
         }
-
-        return $protocol . '://' . $_SERVER['HTTP_HOST'] . '/';
+        if (self::isBehindReverseProxy()) {
+            return self::get('HTTTP_X_FORWARDED_PROTO', false) === 'https';
+        }
+        return false;
     }
 
 
@@ -57,7 +73,16 @@ class ServerUtility
      */
     public static function getClientIp(): string
     {
-        return $_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['REMOTE_ADDR'];
+        return self::isBehindReverseProxy() ? self::get('HTTP_X_FORWARDED_FOR') : self::get('REMOTE_ADDR');
+    }
+
+
+    /**
+     * @return bool
+     */
+    public static function isBehindReverseProxy(): bool
+    {
+        return self::get('REMOTE_ADDR') === self::get('REVERSE_PROXY_IP', 'impossible') && self::get('HTTP_X_FORWARDED_FOR', false);
     }
 
 

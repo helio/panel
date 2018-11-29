@@ -3,6 +3,7 @@
 namespace Helio\Panel\Middleware;
 
 use Helio\Panel\Model\User;
+use Helio\Panel\Utility\ServerUtility;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -50,7 +51,19 @@ class LoadUserFromJwt implements MiddlewareInterface
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
         if (isset($this->container['jwt']['uid'])) {
-            $this->container['user'] = $this->container['dbHelper']->getRepository(User::class)->findOneById($this->container['jwt']['uid']);
+            /** @var User $user */
+            $user = $this->container['dbHelper']->getRepository(User::class)->findOneById($this->container['jwt']['uid']);
+            if ($user->getLoggedOut()) {
+                $tokenGenerationTime = new \DateTime('now', new \DateTimeZone(ServerUtility::$timeZone));
+                $tokenGenerationTime->setTimestamp($this->container['jwt']['iat']);
+
+                $userLoggedOutTime = $user->getLoggedOut()->setTimezone(new \DateTimeZone(ServerUtility::$timeZone));
+
+                if ($userLoggedOutTime >= $tokenGenerationTime) {
+                    throw new \RuntimeException('Token Expired.');
+                }
+            }
+            $this->container['user'] = $user;
         }
 
         return $handler->handle($request);

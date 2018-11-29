@@ -29,7 +29,7 @@ class App extends \Helio\Panel\App
              */
             self::$testInstance = new self([
                 'settings' => [
-                    'displayErrorDetails' => !(SITE_ENV === 'PROD'),
+                    'displayErrorDetails' => true,
                 ],
                 'logger' => (new \Monolog\Logger('helio.panel.test'))
                     ->pushProcessor(new \Monolog\Processor\UidProcessor())

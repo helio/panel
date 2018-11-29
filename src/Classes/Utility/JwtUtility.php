@@ -54,6 +54,7 @@ class JwtUtility
             ],
             'before' => function (Request $request, array $arguments) use ($container) {
                 $container['jwt'] = $arguments['decoded'];
+
             },
             'error' => function (Response $response, array $arguments) {
                 $data['status'] = 'error';
@@ -93,8 +94,8 @@ class JwtUtility
     public static function generateToken(string $userId, string $duration = '+15 minutes'): array
     {
 
-        $now = new \DateTime('now', new \DateTimeZone('Europe/Berlin'));
-        $future = new \DateTime($duration, new \DateTimeZone('Europe/Berlin'));
+        $now = new \DateTime('now', new \DateTimeZone(ServerUtility::$timeZone));
+        $future = new \DateTime($duration, new \DateTimeZone(ServerUtility::$timeZone));
         $jti = (new Base62())->encode(random_bytes(16));
         $payload = [
             'iat' => $now->getTimestamp(),

@@ -1,0 +1,8 @@
+<h1 class="display" style="word-wrap: break-word;">
+    Hi <?php
+    /** @var \Helio\Panel\Model\User $user * */
+    if ($user) {
+        echo htmlspecialchars($user->getName() ?? $user->getEmail());
+    }
+    ?></h1>
+<h2>Welcome to the Helio Panel</h2>

@@ -16,6 +16,7 @@ use Doctrine\{
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Helio\Panel\Utility\JwtUtility;
+use Helio\Panel\Utility\ServerUtility;
 
 /**
  * @Entity @Table(name="user")
@@ -62,6 +63,14 @@ class User
      * @Column(type="boolean")
      */
     protected $active = false;
+
+
+    /**
+     * @var \DateTime $loggedOut
+     *
+     * @Column(type="datetimetz", nullable=true)
+     */
+    protected $loggedOut;
 
 
     /**
@@ -216,4 +225,27 @@ class User
 
         return $this;
     }
+
+    /**
+     * @return \DateTime|null
+     */
+    public function getLoggedOut(): ?\DateTime
+    {
+        return $this->loggedOut;
+    }
+
+    /**
+     * @param \DateTime $loggedOut
+     */
+    public function setLoggedOut(\DateTime $loggedOut = null): void
+    {
+        if (!$loggedOut) {
+            $loggedOut = new \DateTime('now', new \DateTimeZone(ServerUtility::$timeZone));
+        }
+        // Fix Timezone because Doctrine assumes persistend DateTime Objects are always UTC
+        $loggedOut->setTimezone(new \DateTimeZone('UTC'));
+
+        $this->loggedOut = $loggedOut;
+    }
+
 }

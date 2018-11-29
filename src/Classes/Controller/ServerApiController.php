@@ -89,7 +89,7 @@ class ServerApiController extends AbstractController
             $server = new Server();
             $server->setFqdn($fqdn);
             $server->setName('Automatically generated');
-            $server->setCreated(new \DateTime('Europe/Berlin'));
+            $server->setCreated(new \DateTime(ServerUtility::$timeZone));
 
             /** @var User $user */
             $user = $this->dbHelper->getRepository(User::class)->findOneByEmail($email);

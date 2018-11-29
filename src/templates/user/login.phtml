@@ -1,57 +1,51 @@
-<section class="hero">
-    <div class="hero__inner wrapper">
-        <div class="hero__content">
-            <h1 class="display">
-                Monetize your unused space
-            </h1>
-            <p class="text text--big">
-                Have some servers running under capacity?<br>
-                Utilize idling computing capacity.
-            </p>
-        </div>
-    </div>
-</section>
-<section class="values">
-
-    <div class="conversion conversion--box">
-        <div class="conversion__inner">
-            <div class="conversion__title">
-                <h2 class="display">
-                    Login<br/>
-                    <span class="c--white">To the future.</span>
-                </h2>
-            </div>
-            <div class="newsletter">
-                <div class="newsletter__inner">
-                    <form id="register" action="/user/login" method="POST">
-                        <label for="email" class="small">What is your Email address?</label>
-                        <input name="email" class="newsletter__input" id="email" type="email" placeholder="Email"
-                               required/>
-
-                        <br/><br />
-                        <button type="submit" id="registerSubmit" class="button button--dark">Login / Register</button>
-                    </form>
+<div class="login-pf-page">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-sm-8 col-sm-offset-2 col-md-6 col-md-offset-3 col-lg-6 col-lg-offset-3">
+                <header class="login-pf-page-header">
+                    <img class="login-pf-brand" src="/images/logo.svg" alt=" logo"/>
+                    <h1 class="display">
+                        Monetize your unused space
+                    </h1>
+                    <p>
+                        Have some servers running under capacity?<br>
+                        Utilize idling computing capacity.
+                    </p>
+                </header>
+                <div class="row">
+                    <div class="col-sm-10 col-sm-offset-1 col-md-8 col-md-offset-2 col-lg-8 col-lg-offset-2">
+                        <div class="card-pf">
+                            <header class="login-pf-header">
+                                <h1>Sign up or Log In to Your Account</h1>
+                            </header>
+                            <form id="register" action="user/login" method="POST">
+                                <div class="form-group">
+                                    <label class="sr-only" for="exampleInputEmail1">What is your Email address?</label>
+                                    <input type="email" class="form-control  input-lg" id="email" name="email"
+                                           placeholder="Email address">
+                                    <br/>
+                                    <small>
+                                        Please use an email address that you have always access to,
+                                        since we currently only support password-less login via magic link.
+                                    </small>
+                                    <br/>
+                                    <strong>
+                                        We'll never share your email address with anyone.
+                                    </strong>
+                                </div>
+                                <div class="form-group login-pf-settings">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="permanent" id="permanent">Keep me logged in for 30
+                                        days
+                                    </label>
+                                </div>
+                                <button type="submit" class="btn btn-primary btn-block btn-lg">Log In / Sign Up</button>
+                            </form>
+                            <br/>
+                        </div>
+                    </div>
                 </div>
             </div>
-
-            <break></break>
-            <div><br/>
-                <small class="small">
-                    Please use an email address that you have always access to,
-                    since we currently only support password-less login via magic link.
-                </small>
-                <br/>
-                <strong class="c--white">
-                    We'll never share your email address with anyone.
-                </strong>
-                <br/><br/>
-                Alternatively, execute the following script from your server:
-                <pre>
-curl -fsSL un.idling.host -o start-computing.sh
-if shasum -a 1 -s -c <(echo '<?php echo \Helio\Panel\Utility\ServerUtility::get('SCRIPT_HASH') ?> start-computing.sh'); then
-    sh start-computing.sh
-fi</pre>
-            </div>
         </div>
     </div>
-</section>
+</div>

@@ -71,7 +71,7 @@ class Server
     /**
      * @var \DateTime
      *
-     * @Column(type="datetime", nullable=TRUE)
+     * @Column(type="datetimetz", nullable=TRUE)
      */
     protected $created;
 
@@ -79,7 +79,7 @@ class Server
     /**
      * @var \DateTime
      *
-     * @Column(type="datetime", nullable=TRUE)
+     * @Column(type="datetimetz", nullable=TRUE)
      */
     protected $latestAction;
 
@@ -196,7 +196,7 @@ class Server
     /**
      * @return \DateTime
      */
-    public function getCreated(): \DateTime
+    public function getCreated(): ?\DateTime
     {
         return $this->created;
     }
@@ -208,6 +208,9 @@ class Server
      */
     public function setCreated(\DateTime $created): Server
     {
+        // Fix Timezone because Doctrine assumes persistend DateTime Objects are always UTC
+        $created->setTimezone(new \DateTimeZone('UTC'));
+
         $this->created = $created;
 
         return $this;
@@ -217,7 +220,7 @@ class Server
     /**
      * @return \DateTime
      */
-    public function getLatestAction(): \DateTime
+    public function getLatestAction(): ?\DateTime
     {
         return $this->latestAction;
     }
@@ -229,6 +232,9 @@ class Server
      */
     public function setLatestAction(\DateTime $latestAction): Server
     {
+        // Fix Timezone because Doctrine assumes persistend DateTime Objects are always UTC
+        $latestAction->setTimezone(new \DateTimeZone('UTC'));
+
         $this->latestAction = $latestAction;
 
         return $this;

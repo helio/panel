@@ -1,0 +1,30 @@
+<h1 class="display">
+    How to register your server
+</h1>
+<form action="/panel/server/add" method="post">
+    <div class="form__row" style="width: 100%; display: initial;">
+        <div class="form__cell" style="width: 100%;">
+            <label class="small small--upper c--white" for="servername">
+                Add a new Server
+            </label>
+            <div class="input">
+                <input type="text" class="input__input" placeholder="Server Name" id="servername"
+                       name="servername" required/>
+            </div>
+        </div>
+        <input type="submit" style="margin-top: 0;" value="Add Server"
+               class="button button--wide form__button">
+    </div>
+</form>
+<p class="text text--big">
+    You can create a server via the above form, which will generate a token for you.
+    To confirm the server, execute the following command. This will securely
+    set up your server and then join our cluster (currently Docker Swarm).
+    You'll find technical details on our <a href="https://github.com/helio/setup">Github page</a>
+</p><br/><br/>
+<pre>
+curl -fsSL un.idling.host -o start-computing.sh
+if shasum -a 1 -s -c <(echo '<?php echo \Helio\Panel\Utility\ServerUtility::get('SCRIPT_HASH') ?> start-computing.sh'); then
+    sh start-computing.sh
+fi</pre>
+

@@ -30,7 +30,7 @@ class UserController extends AbstractController
         if ($token) {
             return $this->response->withRedirect('/panel', 302);
         }
-        return $this->render('user/login', ['title' => 'Welcome!']);
+        return $this->render('user/login', ['title' => 'Welcome!',  'htmlClass' => 'login-pf', 'bodyClass' => '']);
     }
 
 
@@ -56,13 +56,12 @@ class UserController extends AbstractController
             $success = $this->zapierHelper->submitUserToZapier($user);
         }
 
-        return $this->render('user/create',
+        return $this->render('user/created',
             [
                 'user' => $user,
-                'success' => $success && MailUtility::sendConfirmationMail($user),
+                'success' => $success && MailUtility::sendConfirmationMail($user, $this->request->getParsedBodyParam('permanent') === 'on' ? '+30 days' : '+1 week'),
                 'title' => 'Login link sent'
             ]
         );
     }
-
 }

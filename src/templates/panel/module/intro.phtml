@@ -1,0 +1,52 @@
+Hy Buddy!
+
+<?php
+if (isset($message) && $message) {
+    echo <<<EOL
+    <div class="alert alert-success" role="alert">            
+        <p class="text text--big">
+            $message
+        </p>
+    </div>
+EOL;
+}
+
+if (!$user->getName() || !$user->getRole()) {
+    printf(<<<EOFORM
+<section class="calc">
+<div class="calc__wrapper">
+<div class="calc__inner">
+<h2 class="display c--white a--center">Please Complete your profile</h2>
+<form class="form c--white" action="/panel" method="post">
+<div class="form__row" style="width: 100%%; display: initial;"
+<div class="form__cell" style="width: 100%%;">
+<label class="small small--upper c--white" for="username">
+Your Name
+</label>
+<div class="input">
+<input type="text" class="input__input" placeholder="Your Name" id="username" name="username" value="%1\$s"/>
+</div>
+<span class="small">How are you called?</span>
+<br />
+<br />
+<label class="small small--upper c--white" for="role">
+Your Role
+</label>
+<div class="input">
+<input type="text" class="input__input" placeholder="Your Role" name="role" id="role" value="%2\$s"/>
+</div>
+<span class="small">Please briefly describe your professional role<br />(e.g. "Developer", "CTO", "DevOps" or similar).</span>
+</div>
+<br />
+<br />
+<input type="submit" style="margin-top: 0;" value="Save values" class="button button--wide form__button">
+</form>
+</div>
+</div>
+</section>
+EOFORM
+        , $user->getName(), $user->getRole());
+}
+?>
+
+

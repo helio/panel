@@ -1,0 +1,16 @@
+        <?php
+        /** @var Helio\Panel\Model\User $user */
+        if ($user && $user->isActive()) {
+            echo <<<EOSM
+                    Thank you for signing in.<br />
+                    You have received an E-Mail to the submitted address containing your login link.<br/>
+                    This link is valid for 1 week.
+EOSM;
+        } else {
+            echo <<<EORM
+                    Thank you for your registration.<br />
+                    You have received an E-Mail to the submitted address containing your login link.<br/>
+                    This link is valid for 1 week.
+EORM;
+        }
+        ?>
