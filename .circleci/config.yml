@@ -35,11 +35,10 @@ jobs:
       - run: composer install -o -n -q --prefer-dist --no-dev
 
       - run:
-          name: deploy ${CIRCLECI_BRANCH}
+          name: deploy
           command: |
             export DEPLOY_USERNAME=panelproto
-            if [[ "${CIRCLECI_BRANCH}" = 'development' ]]; then DEPLOY_USERNAME=panelpreview; fi
-            env && exit 1
+            if [[ "${CIRCLE_BRANCH}" = 'development' ]]; then DEPLOY_USERNAME=panelpreview; fi
             mkdir ~/.ssh || rm -f ~/.ssh/known_hosts
             mv ./.circleci/known_hosts ~/.ssh/
             rsync -rptgoDzL --delete cnf src www cli-config.php composer.* ${DEPLOY_USERNAME}@nbf01.opsserver.ch:.
