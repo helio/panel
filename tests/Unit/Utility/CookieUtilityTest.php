@@ -3,9 +3,11 @@
 namespace Helio\Test\Unit;
 
 use Helio\Panel\Utility\CookieUtility;
+use Helio\Panel\Utility\ServerUtility;
+use Helio\Test\TestCase;
 use Slim\Http\Response;
 
-class CookieUtilityTest extends \PHPUnit_Framework_TestCase
+class CookieUtilityTest extends TestCase
 {
 
 
@@ -49,8 +51,8 @@ class CookieUtilityTest extends \PHPUnit_Framework_TestCase
     public function testExpiresInAddCookie(): void
     {
         $emptyResponse = new Response();
-        $now = new \DateTimeImmutable('now', new \DateTimeZone(CookieUtility::$timeZone));
-        $future = new \DateTimeImmutable('now +2 weeks', new \DateTimeZone(CookieUtility::$timeZone));
+        $now = new \DateTimeImmutable('now', new \DateTimeZone(ServerUtility::$timeZone));
+        $future = new \DateTimeImmutable('now +2 weeks', new \DateTimeZone(ServerUtility::$timeZone));
 
         $responseCookies = CookieUtility::addCookie($emptyResponse, 'test', 'value',
             $future->getTimestamp())->getHeader('set-cookie');
@@ -95,7 +97,7 @@ class CookieUtilityTest extends \PHPUnit_Framework_TestCase
     {
         preg_match('/expires=([^;]+);/', $cookieValue, $match);
 
-        return new \DateTimeImmutable($match[1], new \DateTimeZone(CookieUtility::$timeZone));
+        return new \DateTimeImmutable($match[1], new \DateTimeZone(ServerUtility::$timeZone));
     }
 
 

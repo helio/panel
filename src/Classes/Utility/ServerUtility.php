@@ -37,7 +37,7 @@ class ServerUtility
      */
     public static function isSecure(): bool
     {
-        if (self::get('HTTPS', 'off') !== 'off') {
+        if (strtolower(self::get('HTTPS', 'off')) !== 'off') {
             return true;
         }
         if (self::isBehindReverseProxy()) {
