@@ -8,44 +8,6 @@ jobs:
     branches:
       only:
         - master
-    docker:
-      - image: circleci/php:7.2-fpm-node-browsers
-
-    working_directory: ~/repo
-
-    steps:
-      - checkout
-
-      - restore_cache:
-          keys:
-          - v1-dependencies-{{ checksum "composer.json" }}
-          - v1-dependencies-
-
-      - run: composer install -n -q -o
-
-      - save_cache:
-          paths:
-            - ./vendor
-          key: v1-dependencies-{{ checksum "composer.json" }}
-
-      - run: composer run test
-
-      # remove dev packages
-      - run: composer install -o -n -q --prefer-dist --no-dev
-
-      - run:
-          name: deploy to prod
-          command: |
-            mkdir ~/.ssh || rm -f ~/.ssh/known_hosts
-            mv ./.circleci/known_hosts ~/.ssh/
-            rsync -rptgoDzL --delete cnf src www cli-config.php composer.* panelproto@nbf01.opsserver.ch:.
-            ssh panelproto@nbf01.opsserver.ch "source .zshrc; source .profile; composer install --no-dev -o && vendor/bin/doctrine orm:schema-tool:update --force"
-            sleep 5
-            ssh panelproto@nbf01.opsserver.ch "sudo /usr/sbin/service php72-fpm reload"
-
-  preview:
-    branches:
-      only:
         - development
     docker:
       - image: circleci/php:7.2-fpm-node-browsers
@@ -75,9 +37,11 @@ jobs:
       - run:
           name: deploy to prod
           command: |
+            export DEPLOY_USERNAME=panelproto
+            if [[ "${CIRCLECI_BRANCH}" = 'development' ]]; then DEPLOY_USERNAME=panelpreview; fi
             mkdir ~/.ssh || rm -f ~/.ssh/known_hosts
             mv ./.circleci/known_hosts ~/.ssh/
-            rsync -rptgoDzL --delete cnf src www cli-config.php composer.* panelpreview@nbf01.opsserver.ch:.
-            ssh panelpreview@nbf01.opsserver.ch "source .zshrc; source .profile; composer install --no-dev -o && vendor/bin/doctrine orm:schema-tool:update --force"
+            rsync -rptgoDzL --delete cnf src www cli-config.php composer.* ${DEPLOY_USERNAME}@nbf01.opsserver.ch:.
+            ssh ${DEPLOY_USERNAME}@nbf01.opsserver.ch "source .zshrc; source .profile; composer install --no-dev -o && vendor/bin/doctrine orm:schema-tool:update --force"
             sleep 5
-            ssh panelpreview@nbf01.opsserver.ch "sudo /usr/sbin/service php72-fpm reload"
+            ssh ${DEPLOY_USERNAME}@nbf01.opsserver.ch "sudo /usr/sbin/service php72-fpm reload"
