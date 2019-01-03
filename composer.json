@@ -12,7 +12,7 @@
     ],
     "autoload": {
         "psr-4": {
-            "Helio\\Panel\\": "src"
+            "Helio\\Panel\\": "src/Classes"
         }
     },
     "require": {
@@ -28,7 +28,8 @@
         "tuupola/base62": "^0.10.0",
         "tuupola/slim-basic-auth": "^3.1",
         "tuupola/slim-jwt-auth": "^3.0",
-        "tuupola/cors-middleware": "^0.9"
+        "tuupola/cors-middleware": "^0.9",
+        "google/auth": "^1.4"
     },
     "require-dev": {
         "roave/security-advisories": "dev-master",

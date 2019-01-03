@@ -37,10 +37,10 @@ class CookieUtility
     public static function addCookie(ResponseInterface $response, string $cookieName, string $cookieValue, int $expires = 0): ResponseInterface
     {
         if ($expires > 0) {
-            $expiry = (new \DateTimeImmutable("@$expires"))->setTimezone(new \DateTimeZone(ServerUtility::$timeZone));
-            $maxAge = $expires - (new \DateTime('now', new \DateTimeZone(ServerUtility::$timeZone)))->getTimestamp();
+            $expiry = (new \DateTimeImmutable("@$expires"))->setTimezone(ServerUtility::getTimezoneObject());
+            $maxAge = $expires - (new \DateTime('now', ServerUtility::getTimezoneObject()))->getTimestamp();
         } else {
-            $expiry = new \DateTimeImmutable('now + 10 minutes', new \DateTimeZone(ServerUtility::$timeZone));
+            $expiry = new \DateTimeImmutable('now + 10 minutes', ServerUtility::getTimezoneObject());
             $maxAge = 600;
         }
 

@@ -1,0 +1,38 @@
+<?php /** @var \Helio\Panel\Model\User $user */ ?>
+<h2 class="display c--white a--center">Your Profile</h2>
+<form id="form-profile" class="form c--white loadable">
+    <div>
+    <label class="small small--upper c--white" for="username">
+        Your Name
+    </label>
+    <div class="input">
+        <input type="text" class="input__input" placeholder="Your Name" id="username" name="username"
+               value="<?php echo $user->getName(); ?>"/>
+    </div>
+    <span class="small">How are you called?</span>
+    </div>
+    <div>
+    <label class="small small--upper c--white" for="username">
+        Your Mail Addres
+    </label>
+    <div class="input">
+        <input type="text" class="input__input" placeholder="Your Mail Address" id="email" name="email"
+               value="<?php echo $user->getEmail(); ?>"/>
+    </div>
+    <span class="small">Please use an address that you have always access to.</span>
+    </div>
+    <div>
+    <label class="small small--upper c--white" for="role">
+        Your Role
+    </label>
+    <div class="input">
+        <input type="text" class="input__input" placeholder="Your Role" name="role" id="role"
+               value="<?php echo $user->getRole(); ?>"/>
+    </div>
+    <span class="small">Please briefly describe your professional role<br/>(e.g. "Developer", "CTO", "DevOps" or similar).</span>
+    </div>
+    <button type="submit" class="btn btn-primary">
+        Save values
+    </button>
+    <div class="spinner spinner-lg blank-slate-pf-icon loader"></div>
+</form>

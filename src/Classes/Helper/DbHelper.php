@@ -6,6 +6,7 @@ use Doctrine\Common\Persistence\ObjectRepository;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Tools\Setup;
+use Helio\Panel\Filter\DeletedFilter;
 use Helio\Panel\Utility\ServerUtility;
 
 /**
@@ -14,6 +15,7 @@ use Helio\Panel\Utility\ServerUtility;
  * @method ObjectRepository|EntityRepository getRepository(string $entityName)
  * @method persist($entity)
  * @method merge($entity)
+ * @method remove($entity)
  * @method flush($entity = null)
  *
  * @package    Helio\Panel\Helper
@@ -26,7 +28,7 @@ class DbHelper
     /**
      * @var DbHelper
      */
-    private static $helper;
+    protected static $helper;
 
 
     /** @var EntityManager */
@@ -74,19 +76,6 @@ class DbHelper
         throw new \InvalidArgumentException("Method $name not a method of the EntityManager", 1530901357);
     }
 
-
-    //    /**
-    //     * @param string $modelClassName
-    //     *
-    //     * @return \Doctrine\Common\Persistence\ObjectRepository|\Doctrine\ORM\EntityRepository
-    //     * @throws \Doctrine\ORM\ORMException
-    //     */
-    //    public function getRepository(string $modelClassName)
-    //    {
-    //        return $this->getConnection()->getRepository($modelClassName);
-    //    }
-
-
     /**
      *
      * @return EntityManager
@@ -100,12 +89,12 @@ class DbHelper
             }
 
             // database configuration parameters
-            $dbCfg = array (
+            $dbCfg = array(
                 'driver' => 'pdo_mysql',
                 'dbname' => ServerUtility::get('DB_NAME'),
                 'user' => ServerUtility::get('DB_USERNAME'),
                 'password' => ServerUtility::get('DB_PASSWORD'),
-                'host' => ServerUtility::get('DB_HOST') ?: 'localhost',
+                'host' => ServerUtility::get('DB_HOST', 'localhost'),
                 'port' => ServerUtility::get('DB_PORT', 3306)
             );
 
@@ -113,8 +102,16 @@ class DbHelper
             // normalize path so it is suitable for identifying the cache entry
             $pathToModels = realpath($this->getPathToModels());
 
-            $this->db = EntityManager::create($dbCfg,
-                Setup::createAnnotationMetadataConfiguration([$pathToModels], true));
+            $configObject = Setup::createAnnotationMetadataConfiguration([$pathToModels], true);
+            foreach ($this->getFilters() as $name => $filter) {
+                $configObject->addFilter($name, $filter);
+            }
+
+            $this->db = EntityManager::create($dbCfg, $configObject);
+
+            foreach ($this->getFilters() as $name => $filter) {
+                $this->db->getFilters()->enable($name);
+            }
         }
 
         return $this->db;
@@ -130,4 +127,13 @@ class DbHelper
         return APPLICATION_ROOT . '/src/Classes/Model';
     }
 
+    /**
+     * @return array
+     */
+    protected function getFilters(): array
+    {
+        return [
+            'deleted' => DeletedFilter::class
+        ];
+    }
 }

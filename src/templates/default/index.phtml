@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html class="helio login-pf" lang="en">
+<?php include __DIR__ . '/../shared/_head.phtml' ?>
+<body>
+
+
+<div class="login-pf-page">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-sm-8 col-sm-offset-2 col-md-6 col-md-offset-3 col-lg-6 col-lg-offset-3">
+                <header class="login-pf-page-header">
+                    <img class="login-pf-brand" src="/images/logo.svg" alt=" logo"/>
+                    <h1 class="display">
+                        Monetize your unused space
+                    </h1>
+                    <p>
+                        Have some servers running under capacity?<br>
+                        Utilize idling computing capacity.
+                    </p>
+                </header>
+                <div class="row">
+                    <div class="col-sm-10 col-sm-offset-1 col-md-8 col-md-offset-2 col-lg-8 col-lg-offset-2">
+                        <div class="card-pf">
+                            <?php
+                            /** @var Helio\Panel\Model\User $user */
+                            if (isset($user) && $user->getId()) {
+                                echo '<div>';
+                                if ($user->isActive()) {
+                                    echo <<<EOSM
+                    Thank you for signing in.<br />
+                    You have received an E-Mail to the submitted address containing your login link.<br/>
+                    This link is valid for 1 week.
+EOSM;
+                                } else {
+                                    echo <<<EORM
+                    Thank you for your registration.<br />
+                    You have received an E-Mail to the submitted address containing your login link.<br/>
+                    This link is valid for 1 week.
+EORM;
+                                }
+                                echo '</div>';
+                            } else {
+                                if (isset($loggedOut)) {
+
+                                    echo <<<EOLO
+                            <header class="login-pf-header">
+                                <h1>Logged out!</h1>
+                            </header>
+                                <div>Thank you, come again.</div>'
+EOLO;
+                                } else {
+                                    echo <<<EOF
+                            <header class="login-pf-header">
+                                <h1>Sign up or Log In to Your Account</h1>
+                            </header>
+                            <form id="register" action="user/login" method="POST">
+                                <div class="form-group">
+                                    <label class="sr-only" for="exampleInputEmail1">What is your Email address?</label>
+                                    <input type="email" class="form-control  input-lg" id="email" name="email"
+                                           placeholder="Email address">
+                                    <br/>
+                                    <small>
+                                        Please use an email address that you have always access to,
+                                        since we currently only support password-less login via magic link.
+                                    </small>
+                                    <br/>
+                                    <strong>
+                                        We'll never share your email address with anyone.
+                                    </strong>
+                                </div>
+                                <button type="submit" class="btn btn-primary btn-block btn-lg">Log In / Sign Up</button>
+                            </form>
+EOF;
+                                }
+                            }
+                            ?>
+                            <br/>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

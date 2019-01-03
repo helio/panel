@@ -51,8 +51,8 @@ class CookieUtilityTest extends TestCase
     public function testExpiresInAddCookie(): void
     {
         $emptyResponse = new Response();
-        $now = new \DateTimeImmutable('now', new \DateTimeZone(ServerUtility::$timeZone));
-        $future = new \DateTimeImmutable('now +2 weeks', new \DateTimeZone(ServerUtility::$timeZone));
+        $now = new \DateTimeImmutable('now', ServerUtility::getTimezoneObject());
+        $future = new \DateTimeImmutable('now +2 weeks', ServerUtility::getTimezoneObject());
 
         $responseCookies = CookieUtility::addCookie($emptyResponse, 'test', 'value',
             $future->getTimestamp())->getHeader('set-cookie');
@@ -97,7 +97,7 @@ class CookieUtilityTest extends TestCase
     {
         preg_match('/expires=([^;]+);/', $cookieValue, $match);
 
-        return new \DateTimeImmutable($match[1], new \DateTimeZone(ServerUtility::$timeZone));
+        return new \DateTimeImmutable($match[1], ServerUtility::getTimezoneObject());
     }
 
 

@@ -1,0 +1,31 @@
+<?php /** @var \Helio\Panel\Model\Job $job */ ?>
+<div class="col-lg-12">
+    <p>
+        The API for this job is ready. You can create Gitlab Runners by POST/PUT to this URL:
+    </p>
+    <?php
+    echo '<pre class="prettyprint">';
+    echo \Helio\Panel\Utility\ServerUtility::getBaseUrl() . 'exec?jobid=' . $job->getId() . '&token=' . $job->getToken();
+    echo '</pre>';
+    ?>
+    <p>
+        Optionally, you can set the following parameters.
+    </p>
+    <pre class="prettyprint">
+{
+    'token': "&lt;your Gitlab token&gt;",
+    'name': "&lt;your Runner's name&gt";
+}
+</pre>
+
+    <p>
+        If you want to delete a runner, just push a DELETE request to the above URL. There, the following parameter is
+        required:
+    </p>
+
+    <pre class="prettyprint">
+{
+    'name': "&lt;your Runner's name&gt";
+}
+</pre>
+</div>

@@ -23,6 +23,7 @@ jobs:
           - v1-dependencies-
 
       - run: composer install -n -q -o
+      - run: yarn
 
       - save_cache:
           paths:

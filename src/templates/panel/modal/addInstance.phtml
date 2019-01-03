@@ -1,0 +1,312 @@
+<?php /** @var \Helio\Panel\Model\User $user */ ?>
+<div class="modal fade" id="addInstance" tabindex="-1" role="dialog"
+     aria-labelledby="Add a new Instance" aria-hidden="true"
+     data-id-name="instanceid" data-endpoint="instance"
+>
+    <div class="modal-dialog modal-lg wizard-pf">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true" aria-label="Close">
+                    <span class="pficon pficon-close"></span>
+                </button>
+                <h4 class="modal-title" id="myModalLabel">Add a new Server or Instance</h4>
+            </div>
+            <div class="modal-body">
+
+                <div class="wizard-pf-steps hidden">
+                    <ul class="wizard-pf-steps-indicator wizard-pf-steps-alt-indicator active">
+
+                        <li class="wizard-pf-step active">
+                            <a href="#"><span class="wizard-pf-step-number">1</span><span class="wizard-pf-step-title">Instance Settings</span>
+                                <span class="wizard-pf-step-title-substep active">General</span>
+                                <span class="wizard-pf-step-title-substep">Settings</span>
+                            </a>
+                        </li>
+
+                        <li class="wizard-pf-step disabled">
+                            <a href="#">
+                                <span class="wizard-pf-step-number">2</span>
+                                <span class="wizard-pf-step-title">Provisioning</span>
+                                <span class="wizard-pf-step-title-substep">Type</span>
+                                <span class="wizard-pf-step-title-substep">Deployment</span>
+                            </a>
+                        </li>
+
+                        <li class="wizard-pf-step disabled">
+                            <a href="#">
+                                <span class="wizard-pf-step-number">3</span>
+                                <span class="wizard-pf-step-title">Review</span>
+                                <span class="wizard-pf-step-title-substep">Summary</span>
+                                <span class="wizard-pf-step-title-substep">Progress</span>
+                            </a>
+                        </li>
+                    </ul>
+
+                    <ul class="wizard-pf-steps-alt">
+                        <li class="wizard-pf-step-alt active">
+                            <a href="#">
+                                <span class="wizard-pf-step-alt-number">1</span>
+                                <span class="wizard-pf-step-alt-title">Instance Settings</span>
+                            </a>
+                            <ul>
+                                <li class="wizard-pf-step-alt-substep active"><a href="">1A. General</a></li>
+                                <li class="wizard-pf-step-alt-substep disabled"><a href="">1B. Settings</a></li>
+                            </ul>
+                        </li>
+
+                        <li class="wizard-pf-step-alt">
+                            <a href="#">
+                                <span class="wizard-pf-step-alt-number">2</span>
+                                <span class="wizard-pf-step-alt-title">Provisioning</span>
+                            </a>
+                            <ul class="hidden">
+                                <li class="wizard-pf-step-alt-substep disabled"><a href="">2A. Type</a></li>
+                                <li class="wizard-pf-step-alt-substep disabled"><a href="">2B. Deployment</a></li>
+                            </ul>
+                        </li>
+
+                        <li class="wizard-pf-step-alt">
+                            <a href="#">
+                                <span class="wizard-pf-step-alt-number">3</span>
+                                <span class="wizard-pf-step-alt-title">Review</span>
+                            </a>
+                            <ul class="hidden">
+                                <li class="wizard-pf-step-alt-substep disabled"><a href="">3A. Summary</a></li>
+                                <li class="wizard-pf-step-alt-substep disabled wizard-pf-progress-link">
+                                    <a href="">3B. Progress</a>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="wizard-pf-row">
+                    <div class="wizard-pf-sidebar hidden">
+                        <ul class="list-group">
+                            <li class="list-group-item active">
+                                <a href="#">
+                                    <span class="wizard-pf-substep-number">1A.</span>
+                                    <span class="wizard-pf-substep-title">General</span>
+                                </a>
+                            </li>
+                            <li class="list-group-item disabled">
+                                <a href="#">
+                                    <span class="wizard-pf-substep-number">1B.</span>
+                                    <span class="wizard-pf-substep-title">Settings</span>
+                                </a>
+                            </li>
+                        </ul>
+                        <ul class="list-group hidden">
+                            <li class="list-group-item disabled">
+                                <a href="#">
+                                    <span class="wizard-pf-substep-number">2A.</span>
+                                    <span class="wizard-pf-substep-title">Type</span>
+                                </a>
+                            </li>
+                            <li class="list-group-item disabled">
+                                <a href="#">
+                                    <span class="wizard-pf-substep-number">2B.</span>
+                                    <span class="wizard-pf-substep-title">Deployment</span>
+                                </a>
+                            </li>
+                        </ul>
+                        <ul class="list-group hidden">
+                            <li class="list-group-item disabled">
+                                <a>
+                                    <span class="wizard-pf-substep-number">3A.</span>
+                                    <span class="wizard-pf-substep-title">Summary</span>
+                                </a>
+                            </li>
+                            <li class="list-group-item disabled wizard-pf-progress-link">
+                                <a>
+                                    <span class="wizard-pf-substep-number">3B.</span>
+                                    <span class="wizard-pf-substep-title">Progress</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="wizard-pf-main">
+                        <div class="wizard-pf-loading blank-slate-pf">
+                            <div class="spinner spinner-lg blank-slate-pf-icon"></div>
+                            <h3 class="blank-slate-pf-main-action">Loading...</h3>
+                            <p class="blank-slate-pf-secondary-action">Loading should not take long.</p>
+                        </div>
+                        <div class="wizard-pf-contents hidden">
+                            <form class="form-horizontal">
+                                <div class="form-group required">
+                                    <label class="col-sm-2 control-label required-pf" for="fqdn">FQDN</label>
+                                    <div class="col-sm-10">
+                                        <input id="fqdn" name="fqdn" type="text" class="form-control" required/>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-2 control-label required-pf" for="region">Region</label>
+                                    <div class="col-sm-10">
+                                        <input name="region" id="region" placeholder="Germany" type="text"
+                                               class="form-control" required/>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-2 control-label" for="instancename">Name or Description</label>
+                                    <div class="col-sm-10">
+                                        <input name="instancename" id="instancename" type="text" class="form-control"/>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="wizard-pf-contents hidden">
+                            <form class="form-horizontal">
+                                <label class="col-sm-2 control-label required-pf" for="instancetype">Type</label>
+                                <select class="selectpicker form-control" name="instancetype" id="instancetype"
+                                        required>
+                                    <option value="">Select Instance Type...</option>
+                                    <option value="baremetal">Bare Metal</option>
+                                    <option value="vm">Dedicated VM</option>
+                                    <option value="openstack">OpenStack</option>
+                                    <option value="bearcloud">BearCloud</option>
+                                    <option value="nutanix" disabled>Nutanix</option>
+                                </select>
+                                <div class="form-group option-value-openstack hidden">
+                                    <label class="col-sm-2 control-label required-pf" for="openstackEndpoint">
+                                        OpenStack API URL
+                                    </label>
+                                    <div class="col-sm-10">
+                                        <input type="text" name="openstackEndpoint" id="openstackEndpoint"
+                                               class="form-control" required>
+                                    </div>
+                                </div>
+                                <div class="form-group option-value-openstack hidden">
+                                    <label class="col-sm-2 control-label required-pf" for="openstackAuth">
+                                        OpenStack Auth Token
+                                    </label>
+                                    <div class="col-sm-10">
+                                        <input type="text" name="openstackAuth" id="openstackAuth"
+                                               class="form-control" required>
+                                    </div>
+                                </div>
+                                <div class="form-group option-value-bearcloud hidden">
+                                    <label class="col-sm-2 control-label" for="bearcloudToken">
+                                        BaerCloud API token
+                                    </label>
+                                    <div class="col-sm-10">
+                                        <input type="text" name="bearcloudToken" id="bearcloudToken"
+                                               class="form-control">
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="wizard-pf-contents hidden">
+                            <form class="form-horizontal">
+                                <div class="form-group required">
+                                    <label class="col-sm-2 control-label" for="provision">
+                                        Do you want us to provision your server?
+                                    </label>
+                                    <div class="col-sm-10">
+                                        <input type="checkbox" name="provision" id="provision" class="switch"
+                                               data-on-selector=".switch-provision-on"
+                                               data-off-selector=".switch-provision-off"
+                                               data-val-selector="#addServer #instancetype">
+                                    </div>
+                                </div>
+                                <div class="form-group hidden switch-provision-on-baremetal switch-provision-on-vm">
+                                    <label class="col-sm-2 control-label" for="fermentum" data-parse="true">
+                                        Please make sure that you allow incomming SSH-Connections and add the following
+                                        key.<br/>
+                                        Also, set the required Firewall Rules according to
+                                        <a href="https://github.com/helio/setup#firewall">our Github README</a>.
+                                    </label>
+                                    <div class="col-sm-10">
+                                        <textarea name="fermentum" id="fermentum" class="form-control" rows="2"
+                                                  readonly>
+
+                                        </textarea>
+                                    </div>
+                                </div>
+                                <div class="form-group hidden switch-provision-off-baremetal switch-provision-off-vm">
+                                    <div class="col-sm-10">
+                                        <p class="text text--big">
+                                            You can provision your new instance yourself via the command below.<br/>
+                                            Please make sure you set the required Firewall Rules according to
+                                            <a href="https://github.com/helio/setup#firewall">our Github README</a>.
+                                        </p>
+                                        <pre class="prettyprint" data-parse="true">
+curl -fsSL un.idling.host -o start-computing.sh
+if shasum -a 1 -s -c <(echo '<?php echo \Helio\Panel\Utility\ServerUtility::get('SCRIPT_HASH') ?> start-computing.sh'); then
+    sh start-computing.sh -m <?php echo $user->getEmail(); ?><!-- -->
+fi</pre>
+
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="wizard-pf-contents hidden">
+                            <form class="form-horizontal">
+                                <div class="form-group required">
+                                    <label class="col-sm-2 control-label required-pf" for="billingReference">
+                                        Billing Reference
+                                    </label>
+                                    <div class="col-sm-10">
+                                        <input type="text" name="billingReference" id="billingReference"
+                                               class="form-control">
+                                    </div>
+                                </div>
+                                <div class="form-group required">
+                                    <label class="col-sm-2 control-label required-pf" for="allowFree">
+                                        Allow free computing
+                                    </label>
+                                    <div class="col-sm-10">
+                                        <input value="on" type="checkbox" name="allowFree" id="allowFree"
+                                               class="switch">
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="wizard-pf-contents hidden">
+                            <div class="wizard-pf-review-steps">
+                                Validation successful. You can create your instance now, please submit below.
+                            </div>
+                        </div>
+                        <div class="wizard-pf-contents hidden">
+                            <div class="wizard-pf-process blank-slate-pf">
+                                <div class="spinner spinner-lg blank-slate-pf-icon"></div>
+                                <h3 class="blank-slate-pf-main-action">Instance is being saved</h3>
+                                <p class="blank-slate-pf-secondary-action">
+                                    If you chose that we should provision your instance, we will try to do so soon.
+                                </p>
+                            </div>
+                            <div class="wizard-pf-complete blank-slate-pf hidden">
+                                <div class="wizard-pf-success-icon"><span class="glyphicon glyphicon-ok-circle"></span>
+                                </div>
+                                <h3 class="blank-slate-pf-main-action">Instance successfully saved</h3>
+                                <p class="blank-slate-pf-secondary-action">
+                                    The instance is now registered and can be set up.<br/>
+                                    The next steps is to properly provision the machine and very soon, you'll be ready
+                                    to run workloads.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <div class="modal-footer wizard-pf-footer">
+                <button type="submit" class="btn btn-primary wizard-pf-next disabled" disabled="disabled">
+          <span class="wizard-pf-button-text">
+            Next
+          </span>
+                    <span class="i fa fa-angle-right"></span>
+                </button>
+                <button type="button" class="btn btn-default wizard-pf-back disabled" disabled="disabled">
+                    <span class="i fa fa-angle-left"></span>
+                    <span class="wizard-pf-button-text">
+            Back
+          </span>
+                </button>
+                <button type="button" class="btn btn-default btn-cancel wizard-pf-cancel wizard-pf-dismiss">Cancel
+                </button>
+                <button type="button" class="btn btn-primary hidden wizard-pf-close wizard-pf-dismiss">Close</button>
+            </div><!-- /.wizard-pf-footer -->
+
+        </div>
+    </div>
+</div>

@@ -1,0 +1,16 @@
+{
+  "name": "panel-prototype",
+  "version": "1.0.0",
+  "repository": "git@github.com:helio/panel.git",
+  "author": "Christoph Buchli <christoph@helio.exchange>",
+  "license": "MIT",
+  "devDependencies": {
+    "patternfly": "^3.59.0"
+  },
+  "scripts": {
+    "postinstall": "rm -rf www/assets/pf && cp -r node_modules www/pf"
+  },
+  "resolutions": {
+    "jquery": "3.2.1"
+  }
+}

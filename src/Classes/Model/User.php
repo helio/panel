@@ -21,24 +21,8 @@ use Helio\Panel\Utility\ServerUtility;
 /**
  * @Entity @Table(name="user")
  **/
-class User
+class User extends AbstractModel
 {
-
-
-    /**
-     * @var int
-     *
-     * @Id @Column(type="integer") @GeneratedValue
-     */
-    protected $id;
-
-
-    /**
-     * @var string
-     *
-     * @Column
-     */
-    protected $name = '';
 
 
     /**
@@ -66,6 +50,14 @@ class User
 
 
     /**
+     * @var boolean
+     *
+     * @Column(type="boolean")
+     */
+    protected $admin = false;
+
+
+    /**
      * @var \DateTime $loggedOut
      *
      * @Column(type="datetimetz", nullable=true)
@@ -74,11 +66,19 @@ class User
 
 
     /**
-     * @var array<Server>
+     * @var array<Instance>
      *
-     * @OneToMany(targetEntity="Server", mappedBy="owner", cascade={"persist"})
+     * @OneToMany(targetEntity="Instance", mappedBy="owner", cascade={"persist"})
      */
-    protected $servers = [];
+    protected $instances = [];
+
+
+    /**
+     * @var array<Job>
+     *
+     * @OneToMany(targetEntity="Job", mappedBy="owner", cascade={"persist"})
+     */
+    protected $jobs = [];
 
 
     /**
@@ -86,37 +86,8 @@ class User
      */
     public function __construct()
     {
-        $this->servers = new ArrayCollection();
-    }
-
-
-    /**
-     * @return int
-     */
-    public function getId(): int
-    {
-        return $this->id;
-    }
-
-
-    /**
-     * @return string
-     */
-    public function getName(): string
-    {
-        return $this->name;
-    }
-
-
-    /**
-     * @param string $name
-     * @return User
-     */
-    public function setName(string $name): User
-    {
-        $this->name = $name;
-
-        return $this;
+        $this->instances = new ArrayCollection();
+        $this->jobs = new ArrayCollection();
     }
 
 
@@ -139,7 +110,6 @@ class User
 
         return $this;
     }
-
 
 
     /**
@@ -185,43 +155,73 @@ class User
 
 
     /**
-     * @return Collection
+     * @return bool
      */
-    public function getServers(): Collection
+    public function isAdmin(): bool
     {
-        return $this->servers;
+        return $this->admin;
     }
 
 
     /**
-     * @param array<Server> $servers
+     * @param bool $admin
      * @return User
      */
-    public function setServers(array $servers): User
+    public function setAdmin(bool $admin): User
     {
-        $this->servers = $servers;
-
-        /** @var Server $server
-         * foreach ($servers as $server) {
-         * $server->setOwner($this);
-         * }
-         */
+        $this->admin = $admin;
 
         return $this;
     }
 
 
     /**
-     * @param Server $server
+     * @return Collection
+     */
+    public function getInstances(): Collection
+    {
+        return $this->instances;
+    }
+
+
+    /**
+     * @param array<Instance> $instances
+     * @return User
+     */
+    public function setInstances(array $instances): User
+    {
+        $this->instances = $instances;
+        return $this;
+    }
+
+
+    /**
+     * @param Instance $instance
      *
      * @return User
      */
-    public function addServer(Server $server): User
+    public function addInstance(Instance $instance): User
     {
-        $this->servers[] = $server;
-        if (null === $server->getOwner()) {
-            $server->setOwner($this);
+        $this->instances[] = $instance;
+        if (null === $instance->getOwner()) {
+            $instance->setOwner($this);
         }
+
+        return $this;
+    }
+
+
+    /**
+     * @param Instance $instanceToRemove
+     *
+     * @return User
+     */
+    public function removeInstance(Instance $instanceToRemove): User
+    {
+        $this->setInstances(array_filter($this->getInstances()->toArray(), function ($instance) use ($instanceToRemove) {
+            /** @var Instance $instance */
+            return $instance->getId() !== $instanceToRemove->getId();
+        }));
 
         return $this;
     }
@@ -240,7 +240,7 @@ class User
     public function setLoggedOut(\DateTime $loggedOut = null): void
     {
         if (!$loggedOut) {
-            $loggedOut = new \DateTime('now', new \DateTimeZone(ServerUtility::$timeZone));
+            $loggedOut = new \DateTime('now', ServerUtility::getTimezoneObject());
         }
         // Fix Timezone because Doctrine assumes persistend DateTime Objects are always UTC
         $loggedOut->setTimezone(new \DateTimeZone('UTC'));
@@ -248,4 +248,65 @@ class User
         $this->loggedOut = $loggedOut;
     }
 
+
+    /**
+     * @return Collection
+     */
+    public function getJobs(): Collection
+    {
+        return $this->jobs;
+    }
+
+    /**
+     * @param array $jobs
+     * @return User
+     */
+    public function setJobs(array $jobs): User
+    {
+        $this->jobs = $jobs;
+        return $this;
+    }
+
+
+    /**
+     * @param Job $job
+     *
+     * @return User
+     */
+    public function addJob(Job $job): User
+    {
+        $this->jobs[] = $job;
+        if (null === $job->getOwner()) {
+            $job->setOwner($this);
+        }
+
+        return $this;
+    }
+
+
+    /**
+     * @param Job $jobToRemove
+     *
+     * @return User
+     */
+    public function removeJob(Job $jobToRemove): User
+    {
+        $this->setJobs(array_filter($this->getJobs()->toArray(), function ($job) use ($jobToRemove) {
+            /** @var Job $job */
+            return $job->getId() !== $jobToRemove->getId();
+        }));
+
+        return $this;
+    }
+
+    /**
+     * @param int $status
+     * @return User
+     */
+    public function setStatus(int $status): User
+    {
+
+        $this->status = $status;
+        return $this;
+    }
 }

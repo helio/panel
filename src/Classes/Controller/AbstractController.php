@@ -41,26 +41,84 @@ use Slim\Views\PhpRenderer;
  */
 abstract class AbstractController extends Controller
 {
+    /**
+     * The return type is used to determine what language the client understands (e.g. json, html, ...)
+     *
+     * @return string
+     */
+    abstract protected function getReturnType(): ?string;
 
 
     /**
-     * @param string $template
+     * The mode is used to deremine where to look for templates
+     *
+     * @return string
+     */
+    abstract protected function getMode(): ?string;
+
+
+    /**
+     * The Context is used to determine where to look for templates of PARTIARLS!
+     * This is usually just the same as the mode, but can be different if an API endpoint that renders partials is used from different places.
+     * In that case, overwrite this method in such controllers.
+     *
+     * @return null|string
+     */
+    protected function getContext(): ?string
+    {
+        return $this->getMode();
+    }
+
+
+    /**
+     * magic method to prepare your controllers (e.g. use it with traits)
+     * Warning: carefully name your methods
+     *
+     */
+    public function __construct()
+    {
+        $result = true;
+        // first: setup everything
+        foreach (get_class_methods($this) as $method) {
+            if ($result && strpos($method, 'setup') === 0) {
+                $result = $result && $this->$method();
+            }
+        }
+
+        // then: validate everything
+        foreach (get_class_methods($this) as $method) {
+            if ($result && strpos($method, 'validate') === 0) {
+                $result = $result && $this->$method();
+            }
+        }
+
+        if (!$result) {
+            throw new \RuntimeException('Controller Initialisaton failed', 1545281208);
+        }
+    }
+
+
+    /**
+     * @param string $partial
+     * @param array $param
+     * @return string
+     */
+    protected function fetchPartial(string $partial, array $param = []): string
+    {
+        return $this->renderer->fetch($this->getContext() . "/partial/${partial}.phtml", $param);
+    }
+
+
+    /**
      * @param array $params
      * @param int $status
      *
      * @return ResponseInterface
      */
-    protected function render(string $template, array $params = [], int $status = 200): ResponseInterface
+    protected function render(array $params = [], int $status = 200): ResponseInterface
     {
-        if (!$template) {
-            throw new \InvalidArgumentException('No template specified', 1530051401);
-        }
-        $params = array_merge_recursive($params, ['childTemplate' => $template], $this->request->getParams());
-
-        return $this->renderer->render($this->response,
-            'index.phtml',
-            $params
-        )->withStatus($status);
+        $method = $this->getReturnType();
+        return $this->$method($params, $status);
     }
 
 
@@ -72,6 +130,27 @@ abstract class AbstractController extends Controller
      */
     protected function json($data, int $status = 200): ResponseInterface
     {
+        if (\array_key_exists('message', $data)) {
+            $data['notification'] = $this->fetchPartial('message', [
+                'message' => $data['message'],
+                'status' => $data['status'] ?? 'ok',
+                'success' => $data['success'] ?? 'success'
+            ]);
+        }
         return $this->response->withJson($data)->withStatus($status);
+    }
+
+    /**
+     * @param $data
+     * @param int $status
+     * @return ResponseInterface
+     */
+    protected function html($data, int $status = 200): ResponseInterface
+    {
+
+        return $this->renderer->render($this->response,
+            $this->getMode() . '/index.phtml',
+            $data
+        )->withStatus($status);
     }
 }

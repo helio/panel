@@ -2,12 +2,12 @@
 
 namespace Helio\Panel\Controller;
 
-use Helio\Panel\Model\Server;
-use Helio\Panel\Model\User;
+use Helio\Panel\Controller\Traits\ParametrizedController;
+use Helio\Panel\Controller\Traits\StatisticsController;
+use Helio\Panel\Controller\Traits\TypeBrowserController;
 use Helio\Panel\Utility\CookieUtility;
-use Helio\Panel\Utility\JwtUtility;
-use Helio\Panel\Utility\ServerUtility;
 use Psr\Http\Message\ResponseInterface;
+use Slim\Http\StatusCode;
 
 /**
  * Class PanelController
@@ -21,6 +21,14 @@ use Psr\Http\Message\ResponseInterface;
 class PanelController extends AbstractController
 {
 
+    use ParametrizedController;
+    use StatisticsController;
+    use TypeBrowserController;
+
+    protected function getMode(): ?string
+    {
+        return 'panel';
+    }
 
     /**
      *
@@ -32,41 +40,12 @@ class PanelController extends AbstractController
      */
     public function indexAction(): ResponseInterface
     {
-        $changed = false;
-        $message = '';
-
-        /** @var User $user */
-        $user = $this->dbHelper->getRepository(User::class)->find($this->jwt['uid']);
-
-        $params = $this->request->getParsedBody();
-        if ($params['username']) {
-            $user->setName(filter_var($params['username'], FILTER_SANITIZE_STRING));
-            $changed = true;
-        }
-        if ($params['role']) {
-            $user->setRole(filter_var($params['role'], FILTER_SANITIZE_STRING));
-            $changed = true;
-        }
-
-
-        if ($user && !$user->isActive()) {
-            $user->setActive(true);
-            $message = 'user successfully activated';
-            $changed = true;
-        }
-
-        if ($changed) {
-            $this->dbHelper->merge($user);
-            $this->dbHelper->flush();
-            $message .= ($message ? ' and ' : '') . 'changes stored to database.';
-        }
-
-        return $this->render('panel/index', [
-            'user' => $user,
-            'message' => $message,
-            'title' => 'Helio Panel',
-            'selectedServer' => 0,
-            'panelMode' => ''
+        return $this->render([
+            'serverByRegion' => $this->statServerByRegion(),
+            'user' => $this->user,
+            'title' => 'Dashboard - Helio Panel',
+            'dashboardActive' => 'active',
+            'partialJs' => ['donutChart']
         ]);
 
     }
@@ -78,19 +57,13 @@ class PanelController extends AbstractController
      */
     public function BuyAction(): ResponseInterface
     {
-        $message = '';
-        /** @var User $user */
-        $user = $this->dbHelper->getRepository(User::class)->find($this->jwt['uid']);
-
-        $params = $this->request->getParsedBody();
-        return $this->render('panel/index', [
-            'user' => $user,
-            'message' => $message,
-            'title' => 'Helio Panel',
-            'panelMode' => 'buy',
+        return $this->render([
+            'user' => $this->user,
+            'title' => 'Your Jobs - Helio Panel',
             'buyActive' => 'active',
-            'module' => 'dashboard',
-            'buyDashboardActive' => 'active'
+            'module' => 'buy',
+            'partialJs' => ['jobList'],
+            'modalTemplates' => ['addJob']
         ]);
 
     }
@@ -98,49 +71,17 @@ class PanelController extends AbstractController
     /**
      * @return ResponseInterface
      *
-     * @Route("/sell", methods={"GET", "POST"}, name="panel.sell")
+     * @Route("/sell", methods={"GET"}, name="panel.server.log")
      */
-    public function SellAction(): ResponseInterface
+    public function ServerListAction(): ResponseInterface
     {
-        $message = '';
-        /** @var User $user */
-        $user = $this->dbHelper->getRepository(User::class)->find($this->jwt['uid']);
-
-        return $this->render('panel/index', [
-            'user' => $user,
-            'message' => $message,
-            'title' => 'Helio Panel',
-            'panelMode' => 'sell',
+        return $this->render([
+            'user' => $this->user,
+            'title' => 'Your Servers - Helio Panel',
             'sellActive' => 'active',
-            'module' => 'dashboard',
-            'sellDashboardActive' => 'active'
-        ]);
-
-    }
-
-
-    /**
-     * @return ResponseInterface
-     *
-     * @Route("/sell/dashboard", methods={"GET", "POST"}, name="panel.sell.dashboard")
-     */
-    public function SellDashboardAction(): ResponseInterface
-    {
-
-        /** @var User $user */
-        $user = $this->dbHelper->getRepository(User::class)->find($this->jwt['uid']);
-        $server = $this->request->getAttribute('server') ?? 0;
-        $message = '';
-
-        return $this->render('panel/index', [
-            'user' => $user,
-            'message' => $message,
-            'title' => 'Server Dashboar - Helio Panel',
-            'selectedServer' => (int)$server,
-            'panelMode' => 'sell',
-            'sellActive' => 'active',
-            'dashboardActive' => 'active',
-            'module' => 'dashboard'
+            'module' => 'sell',
+            'partialJs' => ['instanceList'],
+            'modalTemplates' => ['addInstance']
         ]);
     }
 
@@ -148,149 +89,38 @@ class PanelController extends AbstractController
     /**
      * @return ResponseInterface
      *
-     * @Route("/server/add", methods={"GET", "POST"}, name="panel.server.log")
+     * @Route("/profile", methods={"GET"}, name="user.profile")
      */
-    public function ServerAddAction(): ResponseInterface
+    public function profileAction(): ResponseInterface
     {
+        return $this->render([
+            'user' => $this->user,
+            'title' => 'Your Profile Page - Helio Panel',
+            'module' => 'profile',
+            'profileActive' => 'active',
+            'partialJs' => ['profile']
+        ]);
+    }
 
-        /** @var User $user */
-        $user = $this->dbHelper->getRepository(User::class)->find($this->jwt['uid']);
-        $server = $this->request->getParam('server') ?? 0;
-        $message = '';
-        $params = $this->request->getParsedBody();
 
-        if ($params['servername']) {
-            $servername = filter_var($params['servername'], FILTER_SANITIZE_STRING);
-
-            $server = new Server();
-            $server->setName($servername);
-            $server->setCreated(new \DateTime('now', ServerUtility::$timeZone));
-            $server->setOwner($user);
-
-            // flush server because we need the generated ID
-            $this->dbHelper->persist($server);
-            $this->dbHelper->flush($server);
-            $server->setToken(JwtUtility::generateServerIdentificationToken($server));
-
-            $changed = true;
-            $message = 'server added';
+    /**
+     * @return ResponseInterface
+     *
+     * @Route("/admin", methods={"GET"}, name="user.admin")
+     */
+    public function adminAction(): ResponseInterface
+    {
+        if (!$this->user->isAdmin()) {
+            return $this->response->withRedirect('/panel', StatusCode::HTTP_FOUND);
         }
-        return $this->render('panel/index', [
-            'user' => $user,
-            'message' => $message,
-            'title' => 'Server Log - Helio Panel',
-            'selectedServer' => (int)$server,
-            'panelMode' => 'sell',
-            'sellActive' => 'active',
-            'module' => 'add',
-            'addSrvActive' => 'active',
-            'srvActive' => 'active'
+        return $this->render([
+            'user' => $this->user,
+            'title' => 'Admin - Helio Panel',
+            'module' => 'admin',
+            'adminActive' => 'active',
+            'partialJs' => ['admin', 'instanceList', 'jobList']
         ]);
     }
-
-
-    /**
-     * @return ResponseInterface
-     *
-     * @Route("/server/status", methods={"GET", "POST"}, name="panel.server.log")
-     */
-    public function ServerStatusAction(): ResponseInterface
-    {
-
-        /** @var User $user */
-        $user = $this->dbHelper->getRepository(User::class)->find($this->jwt['uid']);
-        $server = $this->request->getParam('server') ?? 0;
-        $message = '';
-        $params = $this->request->getParsedBody();
-
-        if ($params['stopserver']) {
-            $serverToStop = filter_var($params['stopserver'], FILTER_SANITIZE_STRING);
-            /** @var Server $server */
-            $server = $this->dbHelper->getRepository(Server::class)->findOneById($serverToStop);
-            if ($server && ServerUtility::submitStopRequest($server)) {
-                $server->setRunning(false);
-                $changed = true;
-                $message = 'server stopped';
-            }
-        }
-        if ($params['startserver']) {
-            $serverToStart = filter_var($params['stopserver'], FILTER_SANITIZE_STRING);
-            /** @var Server $server */
-            $server = $this->dbHelper->getRepository(Server::class)->findOneById($serverToStart);
-            if ($server && ServerUtility::submitStopRequest($server)) {
-                $server->setRunning(true);
-                $changed = true;
-                $message = 'server started';
-            }
-        }
-
-        return $this->render('panel/index', [
-            'user' => $user,
-            'message' => $message,
-            'title' => 'Server Log - Helio Panel',
-            'selectedServer' => (int)$server,
-            'panelMode' => 'sell',
-            'sellActive' => 'active',
-            'module' => 'status',
-            'statusActive' => 'active',
-            'srvActive' => 'active'
-        ]);
-    }
-
-
-    /**
-     * @return ResponseInterface
-     *
-     * @Route("/server/logs", methods={"GET", "POST"}, name="panel.server.log")
-     */
-    public function ServerLogAction(): ResponseInterface
-    {
-
-        /** @var User $user */
-        $user = $this->dbHelper->getRepository(User::class)->find($this->jwt['uid']);
-        $server = $this->request->getParam('server') ?? 0;
-        $message = '';
-
-        return $this->render('panel/index', [
-            'user' => $user,
-            'message' => $message,
-            'title' => 'Server Log - Helio Panel',
-            'selectedServer' => (int)$server,
-            'panelMode' => 'sell',
-            'sellActive' => 'active',
-            'module' => 'logs',
-            'logsActive' => 'active',
-            'srvActive' => 'active'
-        ]);
-    }
-
-
-    /**
-     * @return ResponseInterface
-     *
-     * @Route("/server/metrics", methods={"GET", "POST"}, name="panel.server.log")
-     */
-    public function ServerMetricsAction(): ResponseInterface
-    {
-
-        /** @var User $user */
-        $user = $this->dbHelper->getRepository(User::class)->find($this->jwt['uid']);
-        $server = $this->request->getParam('server') ?? 0;
-        $message = '';
-
-        return $this->render('panel/index', [
-            'user' => $user,
-            'message' => $message,
-            'title' => 'Server Log - Helio Panel',
-            'selectedServer' => (int)$server,
-            'panelMode' => 'sell',
-            'sellActive' => 'active',
-            'module' => 'metrics',
-            'metricsActive' => 'active',
-            'srvActive' => 'active'
-        ]);
-    }
-
 
     /**
      * Note: This has to be here becuase in the "user" module, we don't have the jwt information since that section isn't protected.
@@ -301,17 +131,10 @@ class PanelController extends AbstractController
      */
     public function LogoutUserAction(): ResponseInterface
     {
-        /** @var User $user */
-        $user = $this->dbHelper->getRepository(User::class)->find($this->jwt['uid']);
-        $user->setLoggedOut();
-        $this->dbHelper->persist($user);
-        $this->dbHelper->flush($user);
+        $this->user->setLoggedOut();
+        $this->dbHelper->persist($this->user);
+        $this->dbHelper->flush($this->user);
 
-        return CookieUtility::deleteCookie($this->render('user/loggedout',
-            [
-                'success' => true,
-                'title' => 'Logout Successful.'
-            ]
-        ), 'token');
+        return CookieUtility::deleteCookie($this->response->withRedirect('/loggedout', StatusCode::HTTP_FOUND), 'token');
     }
 }

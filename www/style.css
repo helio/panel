@@ -1,22 +1,85 @@
 .login-pf.helio body {
-    background-image: url('/images/background.png');
-}
-
-.helio .nav-pf-vertical,
-.helio .nav-pf-secondary-nav {
-    top: 86px;
-}
-.helio.layout-pf.layout-pf-fixed body {
-    padding-top: 86px;
+    background: url('/images/background.jpg') no-repeat center center fixed;
+    -moz-background-size: cover;
+    -webkit-background-size: cover;
+    -o-background-size: cover;
+    background-size: cover;
+    min-height: 100vh;
 }
 
 
-@media (max-width: 768px) {
-    .helio .nav-pf-vertical,
-    .helio .nav-pf-secondary-nav {
-        top: 52px;
-    }
-    .helio.layout-pf.layout-pf-fixed body {
-        padding-top: 52px;
-    }
+.helio .instance span.status- {
+    border-color: deeppink;
+}
+
+.helio .instance span.status-0 {
+    border-color: red;
+}
+
+.helio .instance span.status-1 {
+    border-color: orangered;
+}
+
+.helio .instance span.status-2 {
+    border-color: orange;
+}
+
+.helio .instance span.status-3 {
+    border-color: yellow;
+}
+
+.helio .instance span.status-4 {
+    border-color: green;
+}
+
+.draw {
+    transition: color 0.25s;
+}
+
+.draw::before,
+.draw::after {
+    border: 2px solid transparent;
+    width: 0;
+    height: 0;
+}
+
+.draw::before {
+    top: 0;
+    left: 0;
+}
+
+.draw::after {
+    bottom: 0;
+    right: 0;
+}
+
+.draw:hover {
+    color: #030303;
+}
+
+.draw:hover::before,
+.draw:hover::after {
+    width: 100%;
+    height: 100%;
+}
+
+.draw:hover::before {
+    border-top-color: #030303;
+    border-right-color: #030303;
+    transition: width 0.25s ease-out, height 0.25s ease-out 0.25s;
+}
+
+.draw:hover::after {
+    border-bottom-color: #030303;
+    border-left-color: #030303;
+    transition: border-color 0s ease-out 0.5s, width 0.25s ease-out 0.5s, height 0.25s ease-out 0.75s;
+
+}
+
+.loadable.done > .loadmore,
+.loadable.loading > .loadmore {
+    display: none;
+}
+.loadable:not(.loading) > .loader {
+    display: none;
 }

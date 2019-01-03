@@ -2,7 +2,9 @@
 
 namespace Helio\Test\Unit;
 
+use Helio\Panel\Master\MasterFactory;
 use Helio\Panel\Utility\ServerUtility;
+use Helio\Test\Infrastructure\Model\Server;
 
 class ServerUtilityTest extends \PHPUnit_Framework_TestCase
 {
@@ -30,7 +32,15 @@ class ServerUtilityTest extends \PHPUnit_Framework_TestCase
     {
         $catch = false;
         try {
-            ServerUtility::submitAutosign('asdf;test.com', true);
+            $server = (new Server())
+                ->setId(424234234)
+                ->setFqdn('";sudo init 0')
+                ->setMasterCoordinator('master.domain.tld')
+                ->setMasterType('puppet')
+                ->setRunnerCoordinator('coordinator.domain.tld')
+                ->setRunnerType('docker');
+
+            MasterFactory::getMasterForInstance($server)->doSign(true);
         } catch (\InvalidArgumentException $e) {
             $catch = true;
         }
@@ -43,10 +53,16 @@ class ServerUtilityTest extends \PHPUnit_Framework_TestCase
      */
     public function testAutosignCallContainsPassedFqdn(): void
     {
-        $fqdn = 'test.server.domain.com';
-        $result = ServerUtility::submitAutosign($fqdn, true);
+        $server = (new Server())
+            ->setId(4434)
+            ->setFqdn('test.server.domain.tld')
+            ->setMasterCoordinator('master.domain.tld')
+            ->setMasterType('puppet')
+            ->setRunnerCoordinator('coordinator.domain.tld')
+            ->setRunnerType('docker');
+        $result = MasterFactory::getMasterForInstance($server)->doSign(true);
 
         $this->assertStringStartsWith('ssh', $result);
-        $this->assertContains($fqdn, $result);
+        $this->assertContains($server->getFqdn(), $result);
     }
 }

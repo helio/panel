@@ -2,6 +2,7 @@
 
 namespace Helio\Panel\Utility;
 
+use Helio\Panel\Helper\LogHelper;
 use Helio\Panel\Model\User;
 
 class MailUtility
@@ -27,21 +28,24 @@ EOM;
      */
     public static function sendConfirmationMail(User $user, string $linkLifetime = '+1 week'): bool
     {
-        $return = @mail($user->getEmail(), 'Welcome to Helio',
-            vsprintf(self::$confirmationMailContent, [
-                $user->getName(),
-                ServerUtility::getBaseUrl() . 'panel?token=' .
-                JwtUtility::generateToken($user->getId(), $linkLifetime)['token']
-            ]), 'From: hello@idling.host', '-f hello@idling.host'
+        $content = vsprintf(self::$confirmationMailContent, [
+            $user->getName(),
+            ServerUtility::getBaseUrl() . 'panel?token=' .
+            JwtUtility::generateToken($user->getId(), $linkLifetime)['token']
+        ]);
+        $return = @mail($user->getEmail(), 'Welcome to Helio', $content, 'From: hello@idling.host', '-f hello@idling.host'
         );
-
-        if (ServerUtility::get('SITE_ENV') === 'DEV') {
-            file_put_contents('/tmp/mail.log', vsprintf(self::$confirmationMailContent, [
-                $user->getName(),
-                ServerUtility::getBaseUrl() . 'panel?token=' .
-                JwtUtility::generateToken($user->getId(), $linkLifetime)['token']
-            ])."\n\n", FILE_APPEND);
+        if ($return) {
+            LogHelper::info('Sent Confirmation Mail to ' . $user->getEmail());
+        } else {
+            LogHelper::warn('Failed to sent Mail to ' . $user->getEmail() . '. Reason: ' . $return);
         }
+
+        // write mail to PHPStorm Console
+        if (PHP_SAPI === 'cli-server' && ServerUtility::get('SITE_ENV') === 'DEV') {
+            LogHelper::logToConsole($content);
+        }
+
         return $return;
     }
 }

@@ -2,21 +2,13 @@
 
 namespace Helio\Panel\Utility;
 
-use Helio\Panel\Model\Server;
-
 class ServerUtility
 {
 
     /**
      * @var string
      */
-    public static $timeZone = 'Europe/Berlin';
-
-
-    private static $autosignCommand = 'ssh panel@35.198.151.151 "autosign generate -b %s"';
-
-    private static $startComputingCommand = 'ssh panel@35.198.167.207 "sudo docker node update --availability active %s"';
-    private static $stopComputingCommand = 'ssh panel@35.198.167.207 "sudo docker node update --availability drain  %s"';
+    protected static $timeZone = 'Europe/Berlin';
 
 
     /**
@@ -29,6 +21,15 @@ class ServerUtility
         $protocol = 'http' . (self::isSecure() ? 's' : '');
 
         return $protocol . '://' . self::get('HTTP_HOST') . '/';
+    }
+
+
+    /**
+     * @return \DateTimeZone
+     */
+    public static function getTimezoneObject(): \DateTimeZone
+    {
+        return new \DateTimeZone(self::$timeZone);
     }
 
 
@@ -87,58 +88,27 @@ class ServerUtility
 
 
     /**
-     * @param string $fqdn
+     * @param string $command
      * @param bool $returnInsteadOfCall
      *
-     * @return string
+     * @return null|string
      */
-    public static function submitAutosign(string $fqdn, bool $returnInsteadOfCall = false): string
+    public static function executeShellCommand(string $command, bool $returnInsteadOfCall = false): ?string
     {
-        $match = preg_match('/[^0-9a-zA-Z\.\-_]/', $fqdn);
-        if ($match !== 0) {
-            throw new \InvalidArgumentException('invalid fqdn submitted for autosign', 1531076419);
-        }
-
-        $command = sprintf(self::$autosignCommand, $fqdn);
-
-        return $returnInsteadOfCall ? $command : shell_exec($command);
+        return $returnInsteadOfCall ? $command : @shell_exec($command);
     }
 
 
     /**
-     * @param Server $server
-     * @param bool $returnInsteadOfCall
-     *
-     * @return string
+     * @param array $params
      */
-    public static function submitStartRequest(Server $server, bool $returnInsteadOfCall = false): string
+    public static function validateParams(array $params): void
     {
-        $match = preg_match('/[^0-9a-zA-Z\.\-_]/', $server->getFqdn());
-        if ($match !== 0) {
-            throw new \InvalidArgumentException('invalid fqdn submitted for startRequest', 1533592106);
+        foreach ($params as $item) {
+            $res = preg_match('/[^0-9a-zA-Z\.\-_"]/', $item);
+            if ($res === false || $res > 0) {
+                throw new \InvalidArgumentException('suspicious shell command submitted', 1544664506);
+            }
         }
-
-        $command = sprintf(self::$startComputingCommand, $server->getFqdn());
-
-        return $returnInsteadOfCall ? $command : shell_exec($command);
-    }
-
-
-    /**
-     * @param Server $server
-     * @param bool $returnInsteadOfCall
-     *
-     * @return string
-     */
-    public static function submitStopRequest(Server $server, bool $returnInsteadOfCall = false): string
-    {
-        $match = preg_match('/[^0-9a-zA-Z\.\-_]/', $server->getFqdn());
-        if ($match !== 0) {
-            throw new \InvalidArgumentException('invalid fqdn submitted for stopRequest', 1533592106);
-        }
-
-        $command = sprintf(self::$stopComputingCommand, $server->getFqdn());
-
-        return $returnInsteadOfCall ? $command : shell_exec($command);
     }
 }

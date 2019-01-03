@@ -37,7 +37,7 @@ class JwtUtilityTest extends \PHPUnit_Framework_TestCase {
         $server->setId(99);
         $server->setCreated($generated);
 
-        $token = JwtUtility::generateServerIdentificationToken($server);
-        $this->assertTrue(JwtUtility::verifyServerIdentificationToken($server, $token));
+        $token = JwtUtility::generateInstanceIdentificationToken($server);
+        $this->assertTrue(JwtUtility::verifyInstanceIdentificationToken($server, $token));
     }
 }

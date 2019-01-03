@@ -1,0 +1,61 @@
+<h2 class="display c--white a--center">Your Instances</h2>
+<div class="container-fluid">
+    <div class="row">
+        <p>
+            Instances are active Workers. You can register an instance here and then provision it yourself.
+            For certain types of instances, we support automatic provisioning.
+        </p>
+        <p>
+            Alternatively, you can also register your server by executing the on-boarding script directly on the
+            server/vm.
+        </p>
+        <pre class="prettyprint" data-parse="true">
+curl -fsSL un.idling.host -o start-computing.sh
+if shasum -a 1 -s -c <(echo '<?php echo \Helio\Panel\Utility\ServerUtility::get('SCRIPT_HASH') ?> start-computing.sh'); then
+    sh start-computing.sh -m <?php echo $user->getEmail(); ?><!-- -->
+fi</pre>
+    </div>
+</div>
+<div class="container-fluid">
+    <div class="row toolbar-pf">
+        <div class="col-sm-12">
+            <form class="toolbar-pf-actions" onsubmit="return false;">
+                <div class="form-group toolbar-pf-filter">
+                    <label class="sr-only" for="filter">Name</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" data-item-selector="#helio-instancelist > div.instance"
+                               data-text-selector=".list-group-item-header" id="filter" placeholder="Filter List..."
+                               onkeyup="filterItemsByTextSearch(this)">
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<div class="container-fluid">
+    <div id="helio-instancelist" class="list-group list-view-pf list-view-pf-view loadable">
+        <div class="list-group-item control">
+            <div class="list-view-pf-main-info">&nbsp;</div>
+            <div class="list-view-pf-actions form-group">
+                <button class="btn btn-default wizard-pf-open wizard-pf-complete wizard-pf-addInstance"
+                        data-target="#addInstance">
+                    Add an Instance
+                </button>
+            </div>
+        </div>
+        <div class="list-group-item control loader">
+            <div class="list-group-item">
+                <h3 class="blank-slate-pf-main-action">Loading...</h3>
+            </div>
+            <div class="list-view-pf-main-info">
+                <div class="spinner spinner-lg blank-slate-pf-icon"></div>
+            </div>
+        </div>
+        <div class="list-group-item control loadmore">
+            <div class="list-view-pf-main-info">&nbsp;</div>
+            <div class="list-view-pf-actions form-group">
+                <button class="btn btn-default">load more</button>
+            </div>
+        </div>
+    </div>
+</div>

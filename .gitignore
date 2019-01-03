@@ -1,6 +1,10 @@
 /.idea/
+/node_modules/
 /vendor/
 /log/
 /tmp/
 
 .DS_Store
+
+# project files
+/www/pf

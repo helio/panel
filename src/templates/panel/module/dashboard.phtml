@@ -1,0 +1,34 @@
+<?php
+/** @var \Helio\Panel\Model\User $user */
+if (!$user->getName() || !$user->getRole()) {
+    echo <<<EOI
+<div class="alert alert-warning alert-dismissable">
+  <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+    <span class="pficon pficon-close"></span>
+  </button>
+  <span class="pficon pficon-warning-triangle-o"></span>
+  <strong>Profile not Complete!</strong> Please complete your signup <a href="/panel/profile">on your profile page</a>.
+</div>
+EOI;
+}
+?>
+
+    <div class="alert alert-warning">
+        <span class="pficon pficon-warning-triangle-o"></span>
+        <strong>Please Note!</strong> The Content below is just Demo-Content. Stay tuned.
+    </div>
+
+<?php
+if (isset($serverByRegion)) {
+    echo '<div id="server-by-region-chart" class="donut-chart" data-label="Instances"';
+
+    $count = 0;
+    $data = '';
+    foreach ($serverByRegion as $server) {
+        $count += $server['cnt'];
+        $data .= ($server['region'] ?: 'unknown') . ':' . $server['cnt'] . ',';
+    }
+
+    echo ' data-columns=\'' . $data . '\'';
+    echo ' data-total="' . $count . '"></div>';
+}

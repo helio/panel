@@ -2,6 +2,7 @@
 
 namespace Helio\Panel\Middleware;
 
+use Helio\Panel\Helper\DbHelper;
 use Helio\Panel\Model\User;
 use Helio\Panel\Utility\ServerUtility;
 use Psr\Container\ContainerInterface;
@@ -51,18 +52,28 @@ class LoadUserFromJwt implements MiddlewareInterface
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
         if (isset($this->container['jwt']['uid'])) {
-            /** @var User $user */
-            $user = $this->container['dbHelper']->getRepository(User::class)->findOneById($this->container['jwt']['uid']);
+            /**
+             * @var DbHelper $dbHelper
+             * @var User $user
+             */
+            $dbHelper = $this->container['dbHelper'];
+            $user = $dbHelper->getRepository(User::class)->findOneById($this->container['jwt']['uid']);
             if ($user->getLoggedOut()) {
-                $tokenGenerationTime = new \DateTime('now', new \DateTimeZone(ServerUtility::$timeZone));
+                $tokenGenerationTime = new \DateTime('now', ServerUtility::getTimezoneObject());
                 $tokenGenerationTime->setTimestamp($this->container['jwt']['iat']);
 
-                $userLoggedOutTime = $user->getLoggedOut()->setTimezone(new \DateTimeZone(ServerUtility::$timeZone));
+                $userLoggedOutTime = $user->getLoggedOut()->setTimezone(ServerUtility::getTimezoneObject());
 
-                if ($userLoggedOutTime >= $tokenGenerationTime) {
+                if ($userLoggedOutTime > $tokenGenerationTime) {
                     throw new \RuntimeException('Token Expired.');
                 }
             }
+
+            // mark all tokens older than the current as invalid so they can't be used anymore.
+            $user->setLoggedOut((new \DateTime('now', ServerUtility::getTimezoneObject()))->setTimestamp($this->container['jwt']['iat']));
+            $dbHelper->merge($user);
+            $dbHelper->flush();
+
             $this->container['user'] = $user;
         }
 

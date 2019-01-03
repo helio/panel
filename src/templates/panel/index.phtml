@@ -1,14 +1,141 @@
-<?php
-include '_header.phtml';
+<!DOCTYPE html>
+<html class="helio layout-pf layout-pf-fixed transitions" lang="en">
+<?php include __DIR__ . '/../shared/_head.phtml' ?>
+<body class="cards-pf">
+<?php /** @var \Helio\Panel\Model\User $user */ ?>
+<nav class="navbar navbar-pf-vertical">
+    <div class="navbar-header">
+        <button type="button" class="navbar-toggle">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+        </button>
+        <a href="/" class="navbar-brand">
+            <img class="navbar-brand-icon" height="35px" src="/images/logo.svg" alt="Helio logo">
+        </a>
+    </div>
+    <div class="collapse navbar-collapse">
+        <ul class="nav navbar-nav navbar-right navbar-iconic navbar-utility">
 
-if ($panelMode) {
-    include "nav/_$panelMode.phtml";
+            <li class="dropdown">
+                <button class="btn btn-link dropdown-toggle nav-item-iconic" id="dropdownMenu2" data-toggle="dropdown"
+                        aria-haspopup="true" aria-expanded="true">
+                    <span title="Username" class="fa pficon-user"></span>
+                    <span class="dropdown-title"><?php echo $user->getName() ?? ''; ?> <span class="caret"></span>
+          </span>
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="dropdownMenu2">
+                    <li class="<?php echo $profileActive ?? ''; ?>"><a href="/panel/profile">Profile</a></li>
+                    <li><a href="/panel/logout">Log Out</a></li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+</nav>
+<div class="nav-pf-vertical nav-pf-vertical-with-sub-menus nav-pf-persistent-secondary">
+    <ul class="list-group">
+
+        <li class="list-group-item <?php echo $dashboardActive ?? ''; ?>">
+            <a href="/panel">
+                <span class="fa fa-dashboard" data-toggle="tooltip" title="" data-original-title="Dashboard"></span>
+                <span class="list-group-item-value">Dashboard</span>
+            </a>
+        </li>
+        <li class="list-group-item <?php echo $buyActive ?? ''; ?>">
+            <a href="/panel/buy">
+                <span class="fa pficon-applications" data-toggle="tooltip" title="" data-original-title="Your Jobs"></span>
+                <span class="list-group-item-value">Your Jobs</span>
+            </a>
+        </li>
+        <li class="list-group-item <?php echo $sellActive ?? ''; ?>">
+            <a href="/panel/sell">
+                <span class="fa fa-server" data-toggle="tooltip" title="" data-original-title="Your Workforce"></span>
+                <span class="list-group-item-value">Your Workforce</span>
+            </a>
+        </li>
+        <li class="list-group-item <?php echo $adminActive ?? ''; echo (!$user->isAdmin() ? 'hidden' : '') ?>">
+            <a href="/panel/admin">
+                <span class="fa fa-flash" data-toggle="tooltip" title="" data-original-title="Admin"></span>
+                <span class="list-group-item-value">Admin</span>
+            </a>
+        </li>
+
+
+        <li class="list-group-item secondary-nav-item-pf mobile-nav-item-pf visible-xs-block <?php echo $profileActive ?? ''; ?>">
+            <a href="#0">
+                <span class="pficon pficon-user" data-toggle="tooltip" title="" data-original-title="User"></span>
+                <span class="list-group-item-value dropdown-title">User</span>
+            </a>
+            <div id="user-secondary" class="nav-pf-secondary-nav">
+                <div class="nav-item-pf-header">
+                    <a href="#0" class="secondary-collapse-toggle-pf" data-toggle="collapse-secondary-nav"></a>
+                    <span>User</span>
+                </div>
+
+                <ul class="list-group">
+                    <li class="list-group-item">
+                        <a href="/panel/logout">
+                            <span class="list-group-item-value">Logout</span>
+                        </a>
+                    </li>
+                    <li class="list-group-item <?php echo $profileActive ?? ''; ?>">
+                        <a href="/panel/profile" class="<?php echo $profileActive ?? ''; ?>">
+                            <span class="list-group-item-value">Profile</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </li>
+    </ul>
+</div>
+
+<div class="container-fluid container-cards-pf container-pf-nav-pf-vertical">
+
+    <?php
+    /** @noinspection PhpIncludeInspection */
+    include 'module/' . ($module ?? 'dashboard') . '.phtml';
+    ?>
+
+</div>
+
+<script src="/pf/jquery/dist/jquery.min.js"></script>
+<script src="/pf/bootstrap/dist/js/bootstrap.min.js"></script>
+<script src="/pf/c3/c3.min.js"></script>
+<script src="/pf/d3/d3.min.js"></script>
+<script src="/pf/datatables.net/js/jquery.dataTables.min.js"></script>
+<script src="/pf/drmonty-datatables-colvis/js/dataTables.colVis.js"></script>
+<script src="/pf/datatables.net-colreorder/js/dataTables.colReorder.js"></script>
+<script src="/pf/patternfly/dist/js/patternfly.min.js"></script>
+<script src="/pf/patternfly-bootstrap-combobox/js/bootstrap-combobox.js"></script>
+<script src="/pf/bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js"></script>
+<script src="/pf/moment/min/moment.min.js"></script>
+<script src="/pf/eonasdan-bootstrap-datetimepicker/build/js/bootstrap-datetimepicker.min.js"></script>
+<script src="/pf/bootstrap-select/dist/js/bootstrap-select.min.js"></script>
+<script src="/pf/bootstrap-switch/dist/js/bootstrap-switch.min.js"></script>
+<script src="/pf/bootstrap-touchspin/dist/jquery.bootstrap-touchspin.min.js"></script>
+<script src="/pf/patternfly-bootstrap-treeview/dist/bootstrap-treeview.min.js"></script>
+<script src="/pf/google-code-prettify/bin/prettify.min.js"></script>
+<script src="/pf/jquery-match-height/dist/jquery.matchHeight-min.js"></script>
+
+
+<script src="/partial/panelHelpers.js"></script>
+
+<?php
+if (isset($modalTemplates)) {
+    foreach ($modalTemplates as $template) {
+        /** @noinspection PhpIncludeInspection */
+        include "modal/${template}.phtml";
+    }
 }
 
-echo '<div class="container-fluid container-cards-pf container-pf-nav-pf-vertical">';
-
-/** @noinspection PhpIncludeInspection */
-include 'module/' . ($panelMode ? $panelMode . '/' : '') . ($module ?? 'intro') . '.phtml';
-
-echo '</div>';
+if (isset($partialJs)) {
+    foreach ($partialJs as $source) {
+        echo '<script type="text/javascript" src="/partial/' . $source . '.js"></script>';
+    }
+}
 ?>
+
+<script src="/app.js"></script>
+</body>
+</html>
