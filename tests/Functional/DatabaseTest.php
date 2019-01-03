@@ -2,7 +2,7 @@
 
 namespace Helio\Test\Functional;
 
-use Helio\Panel\Model\Server;
+use Helio\Panel\Model\Instance;
 use Helio\Panel\Model\User;
 use Helio\Test\TestCase;
 
@@ -13,8 +13,8 @@ class DatabaseTest extends TestCase
 
         // import fixture
         $user = (new User())->setName('testuser');
-        $server = (new Server())->setName('testserver');
-        $user->addServer($server);
+        $server = (new Instance())->setName('testserver');
+        $user->addInstance($server);
 
         $this->infrastructure->import($user);
 
@@ -24,9 +24,9 @@ class DatabaseTest extends TestCase
         $this->assertCount(1, $entitiesLoadedFromDatabase);
         $foundUser = $entitiesLoadedFromDatabase[0];
 
-        /** @var Server $foundServer */
-        $this->assertCount(1, $foundUser->getServers());
-        $foundServer = $foundUser->getServers()[0];
+        /** @var Instance $foundServer */
+        $this->assertCount(1, $foundUser->getInstances());
+        $foundServer = $foundUser->getInstances()[0];
 
         $this->assertEquals($user->getId(), $foundUser->getId());
         $this->assertEquals($server->getId(), $foundServer->getId());
@@ -41,14 +41,14 @@ class DatabaseTest extends TestCase
 
         // import fixture
         $user = (new User())->setName('testuser');
-        $server = (new Server())->setName('testserver');
+        $server = (new Instance())->setName('testserver');
         $server->setOwner($user);
 
         $this->infrastructure->import($server);
 
         $entitiesLoadedFromDatabase = $this->serverRepository->findAll();
 
-        /** @var Server $foundServer */
+        /** @var Instance $foundServer */
         $this->assertCount(1, $entitiesLoadedFromDatabase);
         $foundServer = $entitiesLoadedFromDatabase[0];
 

@@ -3,16 +3,16 @@
 namespace Helio\Test\Infrastructure\Model;
 
 
-class Server extends \Helio\Panel\Model\Server
+class Instance extends \Helio\Panel\Model\Instance
 {
 
 
     /**
      * @param int $id
-     * @return Server $this
+     * @return Instance $this
      * Allow setting the id
      */
-    public function setId(int $id): Server {
+    public function setId(int $id): Instance {
         $this->id = $id;
         return $this;
     }

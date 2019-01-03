@@ -3,7 +3,7 @@ namespace Helio\Test\Unit;
 
 use Helio\Panel\Utility\JwtUtility;
 use Helio\Panel\Utility\ServerUtility;
-use Helio\Test\Infrastructure\Model\Server;
+use Helio\Test\Infrastructure\Model\Instance;
 
 class JwtUtilityTest extends \PHPUnit_Framework_TestCase {
 
@@ -33,7 +33,7 @@ class JwtUtilityTest extends \PHPUnit_Framework_TestCase {
      */
     public function testServerTokenGeneration(): void {
         $generated = new \DateTime('now', new \DateTimeZone('Europe/Berlin'));
-        $server = new Server();
+        $server = new Instance();
         $server->setId(99);
         $server->setCreated($generated);
 

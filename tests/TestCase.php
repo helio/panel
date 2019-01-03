@@ -9,7 +9,7 @@ use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Request;
 use Slim\Http\Environment;
 use Doctrine\Common\Persistence\ObjectRepository;
-use Helio\Panel\Model\Server;
+use Helio\Panel\Model\Instance;
 use Helio\Panel\Model\User;
 use Webfactory\Doctrine\ORMTestInfrastructure\ORMInfrastructure;
 
@@ -44,9 +44,9 @@ class TestCase extends \PHPUnit_Framework_TestCase
     /** @see \PHPUnit_Framework_TestCase::setUp() */
     protected function setUp()
     {
-        $this->infrastructure = ORMInfrastructure::createWithDependenciesFor([User::class, Server::class]);
+        $this->infrastructure = ORMInfrastructure::createWithDependenciesFor([User::class, Instance::class]);
         $this->userRepository = $this->infrastructure->getRepository(User::class);
-        $this->serverRepository = $this->infrastructure->getRepository(Server::class);
+        $this->serverRepository = $this->infrastructure->getRepository(Instance::class);
     }
 
 
@@ -80,7 +80,7 @@ class TestCase extends \PHPUnit_Framework_TestCase
         if (!is_dir($dir)) {
             return;
         }
-        $files = array_diff(scandir($dir, 0), array ('.', '..'));
+        $files = array_diff(scandir($dir, 0), array('.', '..'));
         foreach ($files as $file) {
             is_dir("$dir/$file") ? self::tearDownAfterClass("$dir/$file") : unlink("$dir/$file");
         }
@@ -114,7 +114,8 @@ class TestCase extends \PHPUnit_Framework_TestCase
         $requestData = null,
         $attributes = [],
         &$app = null
-    ): ResponseInterface {
+    ): ResponseInterface
+    {
 
         $requestParts = explode('?', $requestUri);
         // Create a mock environment for testing with

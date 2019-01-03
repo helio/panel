@@ -4,7 +4,7 @@ namespace Helio\Test\Unit;
 
 use Helio\Panel\Master\MasterFactory;
 use Helio\Panel\Utility\ServerUtility;
-use Helio\Test\Infrastructure\Model\Server;
+use Helio\Test\Infrastructure\Model\Instance;
 
 class ServerUtilityTest extends \PHPUnit_Framework_TestCase
 {
@@ -32,7 +32,7 @@ class ServerUtilityTest extends \PHPUnit_Framework_TestCase
     {
         $catch = false;
         try {
-            $server = (new Server())
+            $server = (new Instance())
                 ->setId(424234234)
                 ->setFqdn('";sudo init 0')
                 ->setMasterCoordinator('master.domain.tld')
@@ -53,7 +53,7 @@ class ServerUtilityTest extends \PHPUnit_Framework_TestCase
      */
     public function testAutosignCallContainsPassedFqdn(): void
     {
-        $server = (new Server())
+        $server = (new Instance())
             ->setId(4434)
             ->setFqdn('test.server.domain.tld')
             ->setMasterCoordinator('master.domain.tld')

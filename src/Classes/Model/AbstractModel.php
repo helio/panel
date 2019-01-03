@@ -2,6 +2,17 @@
 
 namespace Helio\Panel\Model;
 
+use Doctrine\{
+    Common\Collections\Collection,
+    ORM\Mapping\Entity,
+    ORM\Mapping\Table,
+    ORM\Mapping\Id,
+    ORM\Mapping\Column,
+    ORM\Mapping\GeneratedValue,
+    ORM\Mapping\ManyToOne,
+    ORM\Mapping\OneToMany
+};
+
 abstract class AbstractModel
 {
 
@@ -57,16 +68,6 @@ abstract class AbstractModel
     public function getId(): ?int
     {
         return $this->id;
-    }
-
-    /**
-     * @param int $id
-     * @return $this
-     */
-    public function setId(int $id): self
-    {
-        $this->id = $id;
-        return $this;
     }
 
     /**
