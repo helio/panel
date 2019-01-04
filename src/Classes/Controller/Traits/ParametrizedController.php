@@ -19,7 +19,6 @@ trait ParametrizedController
      */
     protected $params;
 
-            /** @var Request request */
 
     /**
      * @return bool
@@ -27,7 +26,7 @@ trait ParametrizedController
     public function setupParams(): bool
     {
         if (!$this->params) {
-            $this->params = $this->request->getParams();
+            $this->params = array_merge(json_decode($this->request->getBody(), true) ?? [], $this->request->getParams() ?? []);
         }
         return true;
     }

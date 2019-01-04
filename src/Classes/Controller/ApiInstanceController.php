@@ -144,7 +144,7 @@ class ApiInstanceController extends AbstractController
         }
 
 
-        if (!array_key_exists('allowFree', $this->params) && $this->params['allowFree'] !== 'on') {
+        if (!array_key_exists('allowFree', $this->params) || $this->params['allowFree'] !== 'on') {
             $this->instance->setAllowFreeComputing(false);
         }
         if (array_key_exists('provision', $this->params) && $this->params['provision'] === 'on' && InstanceFactory::getInstanceForServer($this->instance)->provisionInstance()) {

@@ -557,7 +557,7 @@ const wizard = function (id) {
             method: 'post',
             data: data,
             success: function (data) {
-                $(self.modal + " .wizard-pf-dismiss").off('click').on('click', function () {
+                $(self.modal + " .wizard-pf-dismiss").unbind('click').click(function () {
                     $(self.modal).modal('hide');
                     if (data.hasOwnProperty('notification')) {
                         $(data.notification).prependTo($('body'));
