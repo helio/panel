@@ -2,8 +2,11 @@
 
 namespace Helio\Test\Functional;
 
+use Doctrine\DBAL\Types\Type;
 use Helio\Panel\Model\Instance;
+use Helio\Panel\Model\Type\UTCDateTimeType;
 use Helio\Panel\Model\User;
+use Helio\Panel\Utility\ServerUtility;
 use Helio\Test\TestCase;
 
 class DatabaseTest extends TestCase
@@ -12,8 +15,8 @@ class DatabaseTest extends TestCase
     {
 
         // import fixture
-        $user = (new User())->setName('testuser');
-        $server = (new Instance())->setName('testserver');
+        $user = (new User())->setName('testuser')->setCreated(new \DateTime('now', ServerUtility::getTimezoneObject()));
+        $server = (new Instance())->setName('testserver')->setCreated(new \DateTime('now', ServerUtility::getTimezoneObject()));
         $user->addInstance($server);
 
         $this->infrastructure->import($user);
@@ -40,8 +43,8 @@ class DatabaseTest extends TestCase
     {
 
         // import fixture
-        $user = (new User())->setName('testuser');
-        $server = (new Instance())->setName('testserver');
+        $user = (new User())->setName('testuser')->setCreated(new \DateTime('now', ServerUtility::getTimezoneObject()));
+        $server = (new Instance())->setName('testserver')->setCreated(new \DateTime('now', ServerUtility::getTimezoneObject()));
         $server->setOwner($user);
 
         $this->infrastructure->import($server);
@@ -61,5 +64,28 @@ class DatabaseTest extends TestCase
 
         $this->assertEquals($user->getName(), $foundUser->getName());
         $this->assertEquals($server->getName(), $foundServer->getName());
+    }
+
+    public function testObject(): void {
+        try {
+            $this->assertInstanceOf(UTCDateTimeType::class, Type::getType('datetimetz'));
+        } catch (\Exception $e) {
+            $this->assertTrue(false);
+        }
+    }
+    public function testTimestampIssues(): void {
+
+        // import fixture
+        $user = (new User())->setName('testuser')->setCreated(new \DateTime('now', ServerUtility::getTimezoneObject()));
+        $server = (new Instance())->setName('testserver')->setCreated(new \DateTime('now', ServerUtility::getTimezoneObject()));
+        $server->setOwner($user);
+
+        $this->infrastructure->import($server);
+
+        /** @var Instance $foundServer */
+        $foundServer = $this->serverRepository->findOneByName('testserver');
+
+        $this->assertNotNull($foundServer);
+        $this->assertEquals($server->getCreated()->getTimestamp(), $foundServer->getCreated()->getTimestamp());
     }
 }

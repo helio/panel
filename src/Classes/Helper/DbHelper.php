@@ -3,10 +3,12 @@
 namespace Helio\Panel\Helper;
 
 use Doctrine\Common\Persistence\ObjectRepository;
+use Doctrine\DBAL\Types\Type;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Tools\Setup;
 use Helio\Panel\Filter\DeletedFilter;
+use Helio\Panel\Model\Type\UTCDateTimeType;
 use Helio\Panel\Utility\ServerUtility;
 
 /**
@@ -52,7 +54,7 @@ class DbHelper
     /**
      *
      * @return EntityManager
-     * @throws \Doctrine\ORM\ORMException
+     * @throws \Exception
      * @deprecated should be replaced with proxy methods, only kept here for cli-config.php
      */
     public function get(): EntityManager
@@ -66,7 +68,7 @@ class DbHelper
      * @param $arguments
      *
      * @return mixed
-     * @throws \Doctrine\ORM\ORMException
+     * @throws \Exception
      */
     public function __call($name, $arguments)
     {
@@ -79,11 +81,14 @@ class DbHelper
     /**
      *
      * @return EntityManager
-     * @throws \Doctrine\ORM\ORMException
+     * @throws \Exception
      */
     protected function getConnection(): EntityManager
     {
         if (!$this->db) {
+            Type::overrideType('datetime', UTCDateTimeType::class);
+            Type::overrideType('datetimetz', UTCDateTimeType::class);
+
             if (!$this->getPathToModels() || !is_dir($this->getPathToModels())) {
                 throw new \InvalidArgumentException('invalid path submitted to DbFactory->getConnection()', 1530565724);
             }
@@ -106,6 +111,8 @@ class DbHelper
             foreach ($this->getFilters() as $name => $filter) {
                 $configObject->addFilter($name, $filter);
             }
+
+
 
             $this->db = EntityManager::create($dbCfg, $configObject);
 

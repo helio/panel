@@ -1,17 +1,25 @@
-const loadList = function (endpoint, containerSelector) {
+const loadList = function (endpoint, containerSelector, startFromTheBeginning = false) {
     let container = $(containerSelector);
+    if (startFromTheBeginning) container.removeClass('done');
     if (container.hasClass('loading') || container.hasClass('done')) return;
 
     container.addClass('loading', true);
 
     let offset = container.data('loaded');
     let limit = 5;
+    if (typeof offset === 'undefined') {
+        offset = 0;
+    }
+
+    if (startFromTheBeginning) {
+        container.data('loaded', 0);
+        offset = 0;
+        container.find('.list-group-item').remove();
+    }
+
     let settings = {limit: limit, offset: offset};
     if (container.data('orderby')) {
         settings.orderby = container.data('orderby');
-    }
-    if (typeof offset === 'undefined') {
-        offset = 0;
     }
     $.ajax({
         accepts: {
@@ -559,6 +567,7 @@ const wizard = function (id) {
             success: function (data) {
                 $(self.modal + " .wizard-pf-dismiss").unbind('click').click(function () {
                     $(self.modal).modal('hide');
+                    loadList($(self.modal).data('containerEndpoint'), $(self.modal).data('containerSelector'), true);
                     if (data.hasOwnProperty('notification')) {
                         $(data.notification).prependTo($('body'));
                     }

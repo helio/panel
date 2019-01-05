@@ -38,6 +38,10 @@ class JwtUtilityTest extends \PHPUnit_Framework_TestCase {
         $server->setCreated($generated);
 
         $token = JwtUtility::generateInstanceIdentificationToken($server);
+
+
+        $server->setCreatedByTimestamp($generated->getTimestamp());
+
         $this->assertTrue(JwtUtility::verifyInstanceIdentificationToken($server, $token));
     }
 }

@@ -2,6 +2,8 @@
 
 namespace Helio\Test;
 
+use Doctrine\DBAL\Types\Type;
+use Helio\Panel\Model\Type\UTCDateTimeType;
 use Helio\Test\Infrastructure\App;
 use Helio\Test\Infrastructure\Helper\DbHelper;
 use Helio\Test\Infrastructure\Helper\ZapierHelper;
@@ -41,9 +43,15 @@ class TestCase extends \PHPUnit_Framework_TestCase
     protected $serverRepository;
 
 
-    /** @see \PHPUnit_Framework_TestCase::setUp() */
+    /** @see \PHPUnit_Framework_TestCase::setUp()
+     * @throws \Doctrine\DBAL\DBALException
+     */
     protected function setUp()
     {
+
+        Type::overrideType('datetime', UTCDateTimeType::class);
+        Type::overrideType('datetimetz', UTCDateTimeType::class);
+
         $this->infrastructure = ORMInfrastructure::createWithDependenciesFor([User::class, Instance::class]);
         $this->userRepository = $this->infrastructure->getRepository(User::class);
         $this->serverRepository = $this->infrastructure->getRepository(Instance::class);

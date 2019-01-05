@@ -6,6 +6,8 @@ class ServerUtility
 {
 
     /**
+     * THE ONLY place where a timezone is mentioned. This shall be read from database (in each entity) or ENV in the future.
+     *
      * @var string
      */
     protected static $timeZone = 'Europe/Berlin';

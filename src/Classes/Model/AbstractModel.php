@@ -12,6 +12,7 @@ use Doctrine\{
     ORM\Mapping\ManyToOne,
     ORM\Mapping\OneToMany
 };
+use Helio\Panel\Utility\ServerUtility;
 
 abstract class AbstractModel
 {
@@ -49,6 +50,13 @@ abstract class AbstractModel
     protected $latestAction;
 
     /**
+     * @var string
+     *
+     * @Column
+     */
+    protected $timezone = '';
+
+    /**
      * @var bool
      *
      * @Column(type="boolean")
@@ -61,6 +69,12 @@ abstract class AbstractModel
      * @Column(type="integer")
      */
     protected $status = 0;
+
+
+    public function __construct()
+    {
+        $this->timezone = ServerUtility::getTimezoneObject()->getName();
+    }
 
     /**
      * @return int
@@ -93,6 +107,9 @@ abstract class AbstractModel
      */
     public function getCreated(): \DateTime
     {
+        if ($this->created->getTimezone()->getName() !== $this->getTimezone()) {
+            $this->created->setTimezone(new \DateTimeZone($this->getTimezone()));
+        }
         return $this->created;
     }
 
@@ -102,9 +119,6 @@ abstract class AbstractModel
      */
     public function setCreated(\DateTime $created): self
     {
-        // Fix Timezone because Doctrine assumes persistend DateTime Objects are always UTC
-        $created->setTimezone(new \DateTimeZone('UTC'));
-
         $this->created = $created;
         return $this;
     }
@@ -114,6 +128,9 @@ abstract class AbstractModel
      */
     public function getLatestAction(): \DateTime
     {
+        if ($this->created->getTimezone()->getName() !== $this->getTimezone()) {
+            $this->created->setTimezone(new \DateTimeZone($this->getTimezone()));
+        }
         return $this->latestAction;
     }
 
@@ -121,8 +138,12 @@ abstract class AbstractModel
      * @param \DateTime $latestAction
      * @return $this
      */
-    public function setLatestAction(\DateTime $latestAction): self
+    public function setLatestAction(\DateTime $latestAction = null): self
     {
+        if ($latestAction === null) {
+            $latestAction = new \DateTime('now', $this->getTimezone());
+        }
+
         // Fix Timezone because Doctrine assumes persistend DateTime Objects are always UTC
         $latestAction->setTimezone(new \DateTimeZone('UTC'));
 
@@ -155,6 +176,25 @@ abstract class AbstractModel
     {
         return $this->status;
     }
+
+    /**
+     * @return string
+     */
+    public function getTimezone(): string
+    {
+        return $this->timezone;
+    }
+
+    /**
+     * @param string
+     * @return $this
+     */
+    public function setTimezone(string $timezone): self
+    {
+        $this->timezone = $timezone;
+        return $this;
+    }
+
 
     /**
      * @param int $status
