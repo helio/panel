@@ -141,7 +141,7 @@ abstract class AbstractModel
     public function setLatestAction(\DateTime $latestAction = null): self
     {
         if ($latestAction === null) {
-            $latestAction = new \DateTime('now', $this->getTimezone());
+            $latestAction = new \DateTime('now', new \DateTimeZone($this->getTimezone()));
         }
 
         // Fix Timezone because Doctrine assumes persistend DateTime Objects are always UTC
@@ -182,6 +182,9 @@ abstract class AbstractModel
      */
     public function getTimezone(): string
     {
+        if (!$this->timezone) {
+            $this->setTimezone(ServerUtility::getTimezoneObject()->getName());
+        }
         return $this->timezone;
     }
 
