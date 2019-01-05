@@ -86,6 +86,7 @@ class User extends AbstractModel
      */
     public function __construct()
     {
+        parent::__construct();
         $this->instances = new ArrayCollection();
         $this->jobs = new ArrayCollection();
     }

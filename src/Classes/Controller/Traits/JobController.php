@@ -40,6 +40,7 @@ trait JobController
      */
     protected function persistJob(): void
     {
+        $this->job->setLatestAction();
         $this->dbHelper->persist($this->job);
         $this->dbHelper->flush($this->job);
     }

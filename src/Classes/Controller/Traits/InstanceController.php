@@ -39,6 +39,7 @@ trait InstanceController
      * Persist
      */
     protected function persistInstance(): void {
+        $this->instance->setLatestAction();
         $this->dbHelper->persist($this->instance);
         $this->dbHelper->flush($this->instance);
     }

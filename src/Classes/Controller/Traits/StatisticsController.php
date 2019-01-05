@@ -9,7 +9,6 @@ use Helio\Panel\Model\Instance;
  * Trait StatisticsController
  * @package Helio\Panel\Controller\Traits
  *
- * @property DbHelper dbHelper
  */
 trait StatisticsController
 {
