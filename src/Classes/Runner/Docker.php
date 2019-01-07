@@ -85,7 +85,7 @@ class Docker implements RunnerInterface
      */
     public function inspect(bool $returnInsteadOfCall = false)
     {
-        $result = ServerUtility::executeShellCommand($this->parseCommand('inspectCommand', $this->getNodeId($returnInsteadOfCall)), $returnInsteadOfCall);
+        $result = ServerUtility::executeShellCommand($this->parseCommand('inspect', $this->getNodeId($returnInsteadOfCall)), $returnInsteadOfCall);
 
         if (\is_string($result) && !$returnInsteadOfCall) {
             return json_decode($result, true);

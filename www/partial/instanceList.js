@@ -7,9 +7,12 @@ function loadInstanceStatus(item) {
         url: '/api/instance/status',
         data: {instanceid: item.data('id')},
         success: function (data) {
-            item.find('.list-view-pf-additional-info').html(data);
-            item.removeClass('loading');
-            item.addClass('done');
+            if (data.hasOwnProperty('listItem')) {
+                let newContent = $(data.listItem);
+                initActionButtons(newContent);
+                $(item).replaceWith(newContent);
+
+            }
         }
     });
 }

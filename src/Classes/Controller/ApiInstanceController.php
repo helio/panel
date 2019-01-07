@@ -162,33 +162,46 @@ class ApiInstanceController extends AbstractController
 
 
     /**
+     * Hint: This method might be called recursively if the status changes.
+     *
      * @return ResponseInterface
      * @Route("/status", methods={"GET"}, name="server.status")
      */
     public function getStatusAction(): ResponseInterface
     {
-        if ($this->instance->getStatus() > InstanceStatus::CREATED) {
-            $status = RunnerFactory::getRunnerForInstance($this->instance)->inspect()[0];
-            return $this->render([
-                'status' => $status,
-                'listItem' => $this->fetchPartial('listItemInstance', ['instance' => $this->instance, 'status' => $status]),
-                'instance' => $this->instance
-            ]);
+        switch ($this->instance->getStatus()) {
+            case InstanceStatus::CREATED:
+                $status = MasterFactory::getMasterForInstance($this->instance)->getStatus();
+                if (\is_array($status) && \array_key_exists('deactivated', $status) && !$status['deactivated']) {
+                    $this->instance->setStatus(InstanceStatus::READY);
+                    return $this->getStatusAction();
+                }
+                break;
+            case InstanceStatus::READY:
+                $status = RunnerFactory::getRunnerForInstance($this->instance)->inspect()[0];
+                if (\is_array($status) && \array_key_exists('Status', $status) && \array_key_exists('State', $status['Status']) && $status['Status']['State'] === 'ready') {
+                    $this->instance->setStatus(InstanceStatus::RUNNING);
+                    return $this->getStatusAction();
+                }
+                break;
+            case InstanceStatus::RUNNING:
+                $status = RunnerFactory::getRunnerForInstance($this->instance)->inspect()[0];
+                if (\is_array($status) && \array_key_exists('Status', $status) && \array_key_exists('State', $status['Status']) && $status['Status']['State'] === 'down') {
+                    $this->instance->setStatus(InstanceStatus::READY);
+                    return $this->getStatusAction();
+                }
+                break;
+            default:
+                $status = 'not ready yet';
+            break;
         }
 
-        if ($this->instance->getStatus() === InstanceStatus::CREATED) {
-            $status = MasterFactory::getMasterForInstance($this->instance)->getStatus();
-            if (\is_array($status) && \array_key_exists('deactivated', $status) && !$status['deactivated']) {
-                $this->instance->setStatus(InstanceStatus::READY);
-                $this->dbHelper->flush($this->instance);
-            }
-            return $this->render([
-                'status' => $status,
-                'listItem' => $this->fetchPartial('listItemInstance', ['instance' => $this->instance, 'status' => $status]),
-                'instance' => $this->instance
-            ]);
-        }
-        return $this->render(['message' => 'not ready yet']);
+        $this->dbHelper->flush($this->instance);
+        return $this->render([
+            'status' => $status,
+            'listItem' => $this->fetchPartial('listItemInstance', ['instance' => $this->instance, 'status' => $status]),
+            'instance' => $this->instance
+        ]);
     }
 
 }
