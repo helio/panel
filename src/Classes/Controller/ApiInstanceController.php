@@ -73,11 +73,11 @@ class ApiInstanceController extends AbstractController
     /**
      * @return ResponseInterface
      *
-     * @Route("/destroy", methods={"DELETE"}, name="instance.remove")
+     * @Route("/cleanup", methods={"DELETE"}, name="instance.cleanup")
      */
-    public function destroyInstanceAction(): ResponseInterface
+    public function cleanupInstanceAction(): ResponseInterface
     {
-        if (RunnerFactory::getRunnerForInstance($this->instance)->stopComputing()) {
+        if (RunnerFactory::getRunnerForInstance($this->instance)->stopComputing() && RunnerFactory::getRunnerForInstance($this->instance)->remove() && MasterFactory::getMasterForInstance($this->instance)->cleanup()) {
             $this->instance->setHidden(true);
             $this->persistInstance();
             return $this->render();
@@ -168,11 +168,25 @@ class ApiInstanceController extends AbstractController
     public function getStatusAction(): ResponseInterface
     {
         if ($this->instance->getStatus() > InstanceStatus::CREATED) {
-            return $this->render(['status' => RunnerFactory::getRunnerForInstance($this->instance)->inspect()]);
+            $status = RunnerFactory::getRunnerForInstance($this->instance)->inspect()[0];
+            return $this->render([
+                'status' => $status,
+                'listItem' => $this->fetchPartial('listItemInstance', ['instance' => $this->instance, 'status' => $status]),
+                'instance' => $this->instance
+            ]);
         }
 
         if ($this->instance->getStatus() === InstanceStatus::CREATED) {
-            return $this->render(['status' => MasterFactory::getMasterForInstance($this->instance)->getStatus()]);
+            $status = MasterFactory::getMasterForInstance($this->instance)->getStatus();
+            if (\is_array($status) && \array_key_exists('deactivated', $status) && !$status['deactivated']) {
+                $this->instance->setStatus(InstanceStatus::READY);
+                $this->dbHelper->flush($this->instance);
+            }
+            return $this->render([
+                'status' => $status,
+                'listItem' => $this->fetchPartial('listItemInstance', ['instance' => $this->instance, 'status' => $status]),
+                'instance' => $this->instance
+            ]);
         }
         return $this->render(['message' => 'not ready yet']);
     }

@@ -25,13 +25,13 @@
                     <li>
                         <?php
                         if ($instance->getStatus() > \Helio\Panel\Instance\InstanceStatus::RUNNING) {
-                            echo '<a data-action="stop">Stop all workloads</a>';
+                            echo '<a data-action="instance/stop">Stop all workloads</a>';
                         } else {
-                            echo '<a data-action="start">Start running workloads</a>';
+                            echo '<a data-action="instance/start">Start running workloads</a>';
                         }
                         ?>
                     </li>
-                    <li><a data-action="instance/destroy" data-method="delete">Destroy</a></li>
+                    <li><a data-action="instance/cleanup" data-method="delete">Cleanup</a></li>
                     <li><a data-action="instance/remove" data-method="delete">Remove</a></li>
                     <li><a data-action="instance/provisionlogs" data-method="get">Logs of Server</a></li>
                     <li><a data-action="instance/runnerlogs" data-method="get">Logs of Runners</a></li>
@@ -67,7 +67,7 @@
         <div class="close">
             <span class="pficon pficon-close"></span>
         </div>
-        <div class="row">
+        <div class="row list-view-pf-additional-info">
             <?php
             $filename = __DIR__ . '/instanceDetailStatus-' . $instance->getStatus() . '.phtml';
             if (file_exists($filename)) {

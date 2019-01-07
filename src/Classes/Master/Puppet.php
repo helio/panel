@@ -31,6 +31,11 @@ class Puppet implements MasterInterface
     private static $statusCommand = 'ssh %s@%s "curl -s -X GET https://puppetdb.idling.host/pdb/query/v4/nodes/%s -k"';
 
     /**
+     * @var string
+     */
+    private static $cleanupCommand = 'ssh %s@%s "sudo /opt/puppetlabs/bin/puppetserver ca cert clean --certname %s"';
+
+    /**
      * Puppet constructor.
      * @param Instance $instance
      */
@@ -41,23 +46,39 @@ class Puppet implements MasterInterface
 
     /**
      * @param bool $returnInsteadOfCall
-     * @return string
+     * @return mixed
      */
-    public function getStatus(bool $returnInsteadOfCall = false): string
+    public function getStatus(bool $returnInsteadOfCall = false)
     {
-        return ServerUtility::executeShellCommand($this->parseCommand('status'), $returnInsteadOfCall);
+        $result = ServerUtility::executeShellCommand($this->parseCommand('status'), $returnInsteadOfCall);
+        if (\is_string($result) && !$returnInsteadOfCall) {
+            return json_decode($result, true);
+        }
+        return $result;
     }
 
     /**
      * @param bool $returnInsteadOfCall
-     * @return string
+     * @return mixed
      */
-    public function doSign(bool $returnInsteadOfCall = false): string
+    public function doSign(bool $returnInsteadOfCall = false)
     {
-        return ServerUtility::executeShellCommand($this->parseCommand('autosign'), $returnInsteadOfCall);
+        $result = ServerUtility::executeShellCommand($this->parseCommand('autosign'), $returnInsteadOfCall);
+        if (\is_string($result) && !$returnInsteadOfCall) {
+            return json_decode($result, true);
+        }
+        return $result;
 
     }
 
+    /**
+     * @param bool $returnInsteadOfCall
+     * @return mixed
+     */
+    public function cleanup(bool $returnInsteadOfCall = false)
+    {
+        return ServerUtility::executeShellCommand($this->parseCommand('cleanup'), $returnInsteadOfCall);
+    }
 
     /**
      * @param string $commandName

@@ -97,7 +97,7 @@ class ServerUtility
      */
     public static function executeShellCommand(string $command, bool $returnInsteadOfCall = false): ?string
     {
-        return $returnInsteadOfCall ? $command : @shell_exec($command);
+        return $returnInsteadOfCall ? $command : trim(@shell_exec($command));
     }
 
 

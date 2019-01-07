@@ -20,6 +20,9 @@ class Docker implements RunnerInterface
     private static $stopComputingCommand = 'ssh %s@%s "sudo docker node update --availability drain  %s"';
     private static $restoreComputingCommand = 'ssh %s@%s "sudo docker node update --availability restore  %s"';
     private static $inspectCommand = 'ssh %s@%s "sudo docker node inspect %s"';
+    private static $getIdCommand = 'ssh %s@%s "sudo docker node ls --filter label=%s --format \'{{.ID}}\'"';
+    private static $removeCommand = 'ssh %s@%s "sudo docker node rm %s"';
+
 
     /**
      * Docker constructor.
@@ -32,42 +35,77 @@ class Docker implements RunnerInterface
 
     /**
      * @param bool $returnInsteadOfCall
-     * @return string
+     * @return mixed
      */
-    public function startComputing(bool $returnInsteadOfCall = false): ?string
+    public function startComputing(bool $returnInsteadOfCall = false)
     {
-        return ServerUtility::executeShellCommand($this->parseCommand('startComputing'), $returnInsteadOfCall);
+        $result = ServerUtility::executeShellCommand($this->parseCommand('startComputing'), $returnInsteadOfCall);
+        if (\is_string($result) && !$returnInsteadOfCall) {
+            return json_decode($result, true);
+        }
+        return $result;
     }
 
 
     /**
      * @param bool $returnInsteadOfCall
-     * @return string
+     * @return mixed
      */
-    public function stopComputing(bool $returnInsteadOfCall = false): ?string
+    public function stopComputing(bool $returnInsteadOfCall = false)
     {
-        return ServerUtility::executeShellCommand($this->parseCommand('stopComputing'), $returnInsteadOfCall);
+        $result = ServerUtility::executeShellCommand($this->parseCommand('stopComputing'), $returnInsteadOfCall);
+        if (\is_string($result) && !$returnInsteadOfCall) {
+            return json_decode($result, true);
+        }
+        return $result;
     }
 
 
     /**
      * @param bool $returnInsteadOfCall
-     * @return string
+     * @return null|string
      */
-    public function inspect(bool $returnInsteadOfCall = false): ?string
+    public function getNodeId(bool $returnInsteadOfCall = false): ?string
     {
-        return ServerUtility::executeShellCommand(sprintf(self::$inspectCommand, self::$username, $this->instance->getRunnerCoordinator(), $this->instance->getHostname()), $returnInsteadOfCall);
+        return ServerUtility::executeShellCommand($this->parseCommand('getId', $this->instance->getId()), $returnInsteadOfCall);
+    }
+
+    /**
+     * @param bool $returnInsteadOfCall
+     * @return null|string
+     */
+    public function remove(bool $returnInsteadOfCall = false): ?string
+    {
+        return ServerUtility::executeShellCommand($this->parseCommand('remove', $this->getNodeId($returnInsteadOfCall)));
+    }
+
+    /**
+     * @param bool $returnInsteadOfCall
+     * @return mixed
+     */
+    public function inspect(bool $returnInsteadOfCall = false)
+    {
+        $result = ServerUtility::executeShellCommand($this->parseCommand('inspectCommand', $this->getNodeId($returnInsteadOfCall)), $returnInsteadOfCall);
+
+        if (\is_string($result) && !$returnInsteadOfCall) {
+            return json_decode($result, true);
+        }
+        return $result;
     }
 
     /**
      * @param string $commandName
+     * @param string $nodeIdParam
      * @return string
      */
-    protected function parseCommand(string $commandName): string
+    protected function parseCommand(string $commandName, string $nodeIdParam = ''): string
     {
-        ServerUtility::validateParams([self::$username, $this->instance->getRunnerCoordinator(), $this->instance->getFqdn()]);
+        if (!$nodeIdParam) {
+            $nodeIdParam = $this->instance->getFqdn();
+        }
+        ServerUtility::validateParams([self::$username, $this->instance->getRunnerCoordinator(), $nodeIdParam]);
 
         $commandName .= 'Command';
-        return sprintf(self::$$commandName, self::$username, $this->instance->getRunnerCoordinator(), $this->instance->getFqdn());
+        return sprintf(self::$$commandName, self::$username, $this->instance->getRunnerCoordinator(), $nodeIdParam);
     }
 }
