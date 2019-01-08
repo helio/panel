@@ -15,6 +15,7 @@ use Doctrine\{
 use Helio\Panel\Instance\InstanceStatus;
 use Helio\Panel\Instance\InstanceType;
 use Helio\Panel\Master\MasterType;
+use Helio\Panel\Orchestrator\OrchestratorType;
 use Helio\Panel\Runner\RunnerType;
 use Helio\Panel\Master\MasterFactory;
 use Helio\Panel\Runner\RunnerFactory;
@@ -83,6 +84,13 @@ class Instance extends AbstractModel
      *
      * @Column
      */
+    protected $orchestratorType = OrchestratorType::__DEFAULT;
+
+    /**
+     * @var string
+     *
+     * @Column
+     */
     protected $runnerCoordinator = 'swarm.idling.host';
 
     /**
@@ -91,6 +99,13 @@ class Instance extends AbstractModel
      * @Column
      */
     protected $masterCoordinator = 'master-a.idling.host';
+
+    /**
+     * @var string
+     *
+     * @Column
+     */
+    protected $orchestratorCoordinator = 'control.idling.host';
 
 
     /**
@@ -328,6 +343,42 @@ class Instance extends AbstractModel
     {
         $this->masterCoordinator = $masterCoordinator;
 
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getOrchestratorType(): string
+    {
+        return $this->orchestratorType;
+    }
+
+    /**
+     * @param string $orchestratorType
+     * @return Instance
+     */
+    public function setOrchestratorType(string $orchestratorType): Instance
+    {
+        $this->orchestratorType = $orchestratorType;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getOrchestratorCoordinator(): string
+    {
+        return $this->orchestratorCoordinator;
+    }
+
+    /**
+     * @param string $orchestratorCoordinator
+     * @return Instance
+     */
+    public function setOrchestratorCoordinator(string $orchestratorCoordinator): Instance
+    {
+        $this->orchestratorCoordinator = $orchestratorCoordinator;
         return $this;
     }
 

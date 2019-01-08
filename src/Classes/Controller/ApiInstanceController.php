@@ -9,7 +9,9 @@ use Helio\Panel\Instance\InstanceFactory;
 use Helio\Panel\Instance\InstanceStatus;
 use Helio\Panel\Instance\InstanceType;
 use Helio\Panel\Master\MasterFactory;
+use Helio\Panel\Orchestrator\OrchestratorFactory;
 use Helio\Panel\Runner\RunnerFactory;
+use Helio\Panel\ViewModel\InstanceInfoViewModel;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Http\StatusCode;
 
@@ -193,15 +195,15 @@ class ApiInstanceController extends AbstractController
                 break;
             default:
                 $status = 'not ready yet';
-            break;
+                break;
         }
 
         $this->dbHelper->flush($this->instance);
-        return $this->render([
-            'status' => $status,
-            'listItem' => $this->fetchPartial('listItemInstance', ['instance' => $this->instance, 'status' => $status]),
+        $data = [
+            'info' => new InstanceInfoViewModel([OrchestratorFactory::getOrchestratorForInstance($this->instance)->getInventory(), $status]),
             'instance' => $this->instance
-        ]);
+        ];
+        $data['listItemHtml'] = $this->fetchPartial('listItemInstance', $data);
+        return $this->render($data);
     }
-
 }

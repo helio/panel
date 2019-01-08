@@ -59,6 +59,7 @@
                         <?php echo $instance->getToken() ? 'Token: ' . $instance->getToken() : ''; ?>
                     </div>
                 </div>
+                <?php if (isset($info)) include __DIR__ . '/instanceAdditionalInfo.phtml'; ?>
             </div>
         </div>
     </div>

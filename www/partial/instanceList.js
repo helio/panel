@@ -7,11 +7,10 @@ function loadInstanceStatus(item) {
         url: '/api/instance/status',
         data: {instanceid: item.data('id')},
         success: function (data) {
-            if (data.hasOwnProperty('listItem')) {
-                let newContent = $(data.listItem);
+            if (data.hasOwnProperty('listItemHtml')) {
+                let newContent = $(data.listItemHtml);
                 initActionButtons(newContent);
                 $(item).replaceWith(newContent);
-
             }
         }
     });
