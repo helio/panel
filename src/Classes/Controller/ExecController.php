@@ -152,7 +152,7 @@ class ExecController extends AbstractController
     public static function getJobDataFolder(Job $job): string
     {
         $folder = ServerUtility::getTmpPath() . DIRECTORY_SEPARATOR . 'jobdata' . DIRECTORY_SEPARATOR . $job->getId() . DIRECTORY_SEPARATOR;
-        if (!\is_dir($folder) && !mkdir($folder, 0777) && !is_dir($folder)) {
+        if (!\is_dir($folder) && !mkdir($folder, 0777, true) && !is_dir($folder)) {
             throw new \RuntimeException(sprintf('Directory "%s" was not created', $folder));
         }
         return $folder;
