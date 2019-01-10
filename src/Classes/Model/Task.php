@@ -3,15 +3,15 @@
 
 namespace Helio\Panel\Model;
 
-use Doctrine\{
-    Common\Collections\Collection,
+use Doctrine\{Common\Collections\Collection,
     ORM\Mapping\Entity,
     ORM\Mapping\Table,
     ORM\Mapping\Id,
     ORM\Mapping\Column,
     ORM\Mapping\GeneratedValue,
     ORM\Mapping\ManyToOne,
-    ORM\Mapping\OneToMany
+    ORM\Mapping\OneToMany,
+    ORM\Mapping\Version
 };
 
 use Doctrine\Common\Collections\ArrayCollection;
