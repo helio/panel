@@ -13,8 +13,8 @@ use Doctrine\{Common\Collections\ArrayCollection,
     ORM\Mapping\ManyToOne,
     ORM\Mapping\OneToMany};
 
+use Helio\Panel\Job\JobStatus;
 use Helio\Panel\Job\JobType;
-use Helio\Panel\Job\TaskStatus;
 
 /**
  * @Entity @Table(name="job")
@@ -227,7 +227,7 @@ class Job extends AbstractModel
      */
     public function setStatus(int $status): Job
     {
-        if (TaskStatus::isValidStatus($status)) {
+        if (JobStatus::isValidStatus($status)) {
             $this->status = $status;
         }
         return $this;
