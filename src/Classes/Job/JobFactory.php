@@ -1,7 +1,6 @@
 <?php
 namespace Helio\Panel\Job;
 
-use Helio\Panel\Job\JobInterface;
 use Helio\Panel\Model\Job;
 
 class JobFactory {
@@ -18,7 +17,7 @@ class JobFactory {
 
         if (!array_key_exists($job->getId(), self::$instances)) {
             $type = ucfirst(strtolower($job->getType()));
-            $className = "\\Helio\\Panel\\Job\\$type";
+            $className = "\\Helio\\Panel\\Job\\$type\\Execute";
             self::$instances[$job->getId()] = new $className($job);
 
         }

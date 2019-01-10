@@ -2,26 +2,27 @@
 
 namespace Helio\Panel\Controller\Traits;
 
-use Helio\Panel\Model\User;
+use Helio\Panel\Job\JobStatus;
+use Helio\Panel\Job\JobType;
 use Helio\Panel\Utility\JwtUtility;
 
 /**
- * Trait ServerController
+ * Trait ValidatedJobController
  * @package Helio\Panel\Controller\Traits
  */
 trait ValidatedJobController
 {
-
-    use AuthenticatedController;
     use JobController;
 
     /**
      * @return bool
+     *
      */
-    public function validateServer(): bool
+    public function validateJob(): bool
     {
-        // server has to be owned by current user or authenticated by jwt token
-        return ($this->user->getId() === $this->job->getOwner()->getId())
-            || (!$this->user && JwtUtility::verifyJobIdentificationToken($this->job, filter_var($this->params['token'], FILTER_SANITIZE_STRING)));
+        $this->requiredParameterCheck(['token' => FILTER_SANITIZE_STRING]);
+        return JobType::isValidType($this->job->getType())
+            && JobStatus::isValidActiveStatus($this->job->getStatus())
+            &&JwtUtility::verifyJobIdentificationToken($this->job, $this->params['token']);
     }
 }

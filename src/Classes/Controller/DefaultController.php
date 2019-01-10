@@ -6,7 +6,9 @@ use Helio\Panel\Controller\Traits\ParametrizedController;
 use Helio\Panel\Controller\Traits\TypeBrowserController;
 use Helio\Panel\Model\User;
 use Helio\Panel\Utility\CookieUtility;
+use Helio\Panel\Utility\JwtUtility;
 use Helio\Panel\Utility\MailUtility;
+use Helio\Panel\Utility\ServerUtility;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Http\StatusCode;
 
@@ -65,6 +67,14 @@ class DefaultController extends AbstractController
      */
     public function SubmitUserAction(): ResponseInterface
     {
+        // catch Demo User
+        if (\array_key_exists('email', $this->params) && $this->params['email'] === 'email@example.com') {
+            /** @var User $user */
+            $user = $this->dbHelper->getRepository(User::class)->findOneByEmail('email@example.com');
+            return $this->response->withRedirect(ServerUtility::getBaseUrl() . 'panel?token=' . JwtUtility::generateToken($user->getId(), '+5 minutes')['token']);
+        }
+
+        // normal user process
         $this->requiredParameterCheck(['email' => FILTER_SANITIZE_EMAIL]);
 
         $user = $this->dbHelper->getRepository(User::class)->findOneByEmail($this->params['email']);
@@ -73,9 +83,12 @@ class DefaultController extends AbstractController
             $user->setEmail($this->params['email']);
             $this->dbHelper->persist($user);
             $this->dbHelper->flush($user);
+            if (!$this->zapierHelper->submitUserToZapier($user)) {
+                throw new \RuntimeException('Error during User Creation', 1546940197);
+            }
         }
 
-        if (!$this->zapierHelper->submitUserToZapier($user) || !MailUtility::sendConfirmationMail($user, $this->request->getParsedBodyParam('permanent') === 'on' ? '+30 days' : '+1 week')) {
+        if (!MailUtility::sendConfirmationMail($user, $this->request->getParsedBodyParam('permanent') === 'on' ? '+30 days' : '+1 week')) {
             throw new \RuntimeException('Error during User Creation', 1545655919);
         }
 

@@ -4,7 +4,7 @@ namespace Helio\Panel\Controller;
 
 
 use Helio\Panel\Controller\Traits\TypeDynamicController;
-use Helio\Panel\Controller\Traits\ValidatedInstanceController;
+use Helio\Panel\Controller\Traits\AuthorizedInstanceController;
 use Helio\Panel\Instance\InstanceFactory;
 use Helio\Panel\Instance\InstanceStatus;
 use Helio\Panel\Instance\InstanceType;
@@ -26,7 +26,7 @@ use Slim\Http\StatusCode;
  */
 class ApiInstanceController extends AbstractController
 {
-    use ValidatedInstanceController;
+    use AuthorizedInstanceController;
     use TypeDynamicController;
 
     /**
@@ -199,11 +199,16 @@ class ApiInstanceController extends AbstractController
         }
 
         $this->dbHelper->flush($this->instance);
+
         $data = [
-            'info' => new InstanceInfoViewModel([OrchestratorFactory::getOrchestratorForInstance($this->instance)->getInventory(), $status]),
+            'status' => $status,
             'instance' => $this->instance
         ];
-        $data['listItemHtml'] = $this->fetchPartial('listItemInstance', $data);
-        return $this->render($data);
+
+        if ($this->instance->getStatus() > InstanceStatus::CREATED) {
+            $data['info'] = new InstanceInfoViewModel([OrchestratorFactory::getOrchestratorForInstance($this->instance)->getInventory(), $status]);
+        }
+
+        return $this->render(['listItemHtml' => $this->fetchPartial('listItemInstance', $data)]);
     }
 }

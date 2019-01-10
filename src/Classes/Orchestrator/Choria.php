@@ -24,8 +24,8 @@ class Choria implements OrchestratorInterface
      */
     private static $inventoryCommand = 'ssh %s@%s "mco inventory -F fqdn=/%s/ --script <(echo \\"
 inventory do
-  format \'{\\\\\\"identity\\\\\\": \\\\\\"%%s\\\\\\", \\\\\\"processor\\\\\\": \\\\\\"%%s\\\\\\", \\\\\\"kernelrelease\\\\\\": \\\\\\"%%s\\\\\\", \\\\\\"memorysize\\\\\\": \\\\\\"%%s\\\\\\"}\'
-  fields { [ identity, facts[\'processorcount\'], facts[\'kernelrelease\'], facts[\'memorysize\'] ] }
+  format \'{ \\\\\\"uptime\\\\\\": \\\\\\"%%s\\\\\\", \\\\\\"processor0\\\\\\": \\\\\\"%%s\\\\\\", \\\\\\"os\\\\\\": \\\\\\"%%s\\\\\\", \\\\\\"identity\\\\\\": \\\\\\"%%s\\\\\\", \\\\\\"processors\\\\\\": \\\\\\"%%s\\\\\\", \\\\\\"kernelrelease\\\\\\": \\\\\\"%%s\\\\\\", \\\\\\"memorysize\\\\\\": \\\\\\"%%s\\\\\\" }\'
+  fields { [ facts[\'system_uptime\'][\'seconds\'], facts[\'processor0\'], facts[\'os\'][\'distro\'][\'description\'], identity, facts[\'processorcount\'], facts[\'kernelrelease\'], facts[\'memorysize\'] ] }
 end
 \\")"';
 
@@ -61,6 +61,6 @@ end
         ServerUtility::validateParams([self::$username, $this->instance->getOrchestratorCoordinator(), $this->instance->getFqdn()]);
 
         $commandName .= 'Command';
-        return sprintf(self::$$commandName, self::$username, $this->instance->getOrchestratorCoordinator(), str_replace('.', '\\\\.', 'infrastructure2.c.peppy-center-135409.internal'));//$this->instance->getFqdn()));
+        return sprintf(self::$$commandName, self::$username, $this->instance->getOrchestratorCoordinator(), str_replace('.', '\\\\.', $this->instance->getFqdn()));
     }
 }

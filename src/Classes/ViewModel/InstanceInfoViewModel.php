@@ -20,6 +20,10 @@ class InstanceInfoViewModel
      */
     protected $memory;
     /**
+     * @var int
+     */
+    protected $uptime;
+    /**
      * @var string
      */
     protected $architecture;
@@ -57,7 +61,7 @@ class InstanceInfoViewModel
      */
     public function getGpus(): int
     {
-        return $this->gpus ?? $this->setGpus()->getCpus();
+        return $this->gpus ?? $this->setGpus()->getGpus();
     }
 
     /**
@@ -91,7 +95,7 @@ class InstanceInfoViewModel
     public function setCpus(int $cpus = null): InstanceInfoViewModel
     {
         if ($cpus === null) {
-            $cpus = (int)ArrayUtility::getFirstByDotNotation($this->rawData, ['processor', 'Description.Resources.NanoCPUs'], 0);
+            $cpus = (int)ArrayUtility::getFirstByDotNotation($this->rawData, ['processors', 'Description.Resources.NanoCPUs'], 0);
             if ($cpus > 100000000) { // 0.1 CPUs in NanoCPUs
                 $cpus /= 1000000000;
             }
@@ -146,6 +150,27 @@ class InstanceInfoViewModel
     }
 
     /**
+     * @return int
+     */
+    public function getUptime(): int
+    {
+        return $this->uptime ?? $this->setUptime()->getUptime();
+    }
+
+    /**
+     * @param int $uptime
+     * @return InstanceInfoViewModel
+     */
+    public function setUptime(int $uptime = null): InstanceInfoViewModel
+    {
+        if ($uptime === null) {
+            $uptime = (int)ArrayUtility::getFirstByDotNotation($this->rawData, ['uptime']);
+        }
+        $this->uptime = $uptime;
+        return $this;
+    }
+
+    /**
      * @return string
      */
     public
@@ -161,7 +186,7 @@ class InstanceInfoViewModel
     public
     function setArchitecture(string $architecture = null): InstanceInfoViewModel
     {
-        $this->architecture = $architecture ?? ArrayUtility::getFirstByDotNotation($this->rawData, ['Description.Platform.Architecture'], '');
+        $this->architecture = $architecture ?? ArrayUtility::getFirstByDotNotation($this->rawData, ['processor0', 'Description.Platform.Architecture'], '');
         return $this;
     }
 
@@ -181,7 +206,7 @@ class InstanceInfoViewModel
     public
     function setPlatform(string $platform = null): InstanceInfoViewModel
     {
-        $this->platform = $platform ?? ArrayUtility::getFirstByDotNotation($this->rawData, ['Description.Platform.OS'], '');
+        $this->platform = $platform ?? ArrayUtility::getFirstByDotNotation($this->rawData, ['os', 'Description.Platform.OS'], '');
         return $this;
     }
 }

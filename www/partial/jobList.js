@@ -1,5 +1,3 @@
-
-
 function initActionButtons(item) {
 
     // click the list-view heading then expand a row
@@ -42,6 +40,20 @@ function initActionButtons(item) {
             },
             complete: function () {
                 item.removeClass('loading');
+            }
+        })
+    });
+
+    item.find('.try-job').on('click', function () {
+        let button = $(this);
+        $.ajax({
+            accepts: {
+                mycustomtype: 'application/json'
+            },
+            url: $(this).data('demourl'),
+            method: 'post',
+            success: function() {
+                $('<div class="alert alert-success">Now wait for the result. You can check in by reloading.</div>').insertAfter(button);
             }
         })
     });

@@ -67,7 +67,13 @@ class ApiUserController extends AbstractController
         $jobs = [];
         foreach ($this->dbHelper->getRepository(Job::class)->findByOwner($this->user, $orderBy, $limit, $offset) as $job) {
             /**@var Job $job */
-            $jobs[] = ['id' => $job->getId(), 'html' => $this->fetchPartial('listItemJob', ['job' => $job, 'user' => $this->user])];
+            $jobs[] = ['id' => $job->getId(), 'html' => $this->fetchPartial('listItemJob', [
+                'job' => $job,
+                'user' => $this->user,
+                'files' => array_filter(scandir(ExecController::getJobDataFolder($job), SCANDIR_SORT_ASCENDING), function (string $item) {
+                    return strpos($item, '.') !== 0;
+                })
+            ])];
         }
         return $this->render(['items' => $jobs, 'user' => $this->user]);
     }

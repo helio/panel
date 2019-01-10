@@ -3,18 +3,18 @@
 
 namespace Helio\Panel\Model;
 
-use Doctrine\{
+use Doctrine\{Common\Collections\ArrayCollection,
+    Common\Collections\Collection,
     ORM\Mapping\Entity,
     ORM\Mapping\Table,
     ORM\Mapping\Id,
     ORM\Mapping\Column,
     ORM\Mapping\GeneratedValue,
     ORM\Mapping\ManyToOne,
-    ORM\Mapping\OneToMany
-};
+    ORM\Mapping\OneToMany};
 
 use Helio\Panel\Job\JobType;
-use Helio\Panel\Job\JobStatus;
+use Helio\Panel\Job\TaskStatus;
 
 /**
  * @Entity @Table(name="job")
@@ -120,6 +120,24 @@ class Job extends AbstractModel
 
 
     /**
+     * @var array<Task>
+     *
+     * @OneToMany(targetEntity="Task", mappedBy="job", cascade={"persist"})
+     */
+    protected $tasks = [];
+
+
+    /**
+     * User constructor.
+     */
+    public function __construct()
+    {
+        parent::__construct();
+        $this->tasks = new ArrayCollection();
+    }
+
+
+    /**
      * @return User
      */
     public function getOwner(): ?User
@@ -209,7 +227,7 @@ class Job extends AbstractModel
      */
     public function setStatus(int $status): Job
     {
-        if (JobStatus::isValidStatus($status)) {
+        if (TaskStatus::isValidStatus($status)) {
             $this->status = $status;
         }
         return $this;
@@ -356,6 +374,57 @@ class Job extends AbstractModel
     public function setBudget(string $budget): Job
     {
         $this->budget = $budget;
+        return $this;
+    }
+
+
+    /**
+     * @return Collection
+     */
+    public function getTasks(): Collection
+    {
+        return $this->tasks;
+    }
+
+    /**
+     * @param array $tasks
+     * @return Job
+     */
+    public function setTasks(array $tasks): Job
+    {
+        $this->tasks = $tasks;
+        return $this;
+    }
+
+
+    /**
+     * @param Task $task
+     *
+     * @return Job
+     */
+    public function addTask(Task $task): Job
+    {
+        $this->tasks[] = $task;
+        if (null === $task->getJob()) {
+            $task->setJob($this);
+        }
+
+        return $this;
+    }
+
+
+    /**
+     * @param Task $taskToRemove
+     *
+     * @return Job
+     */
+    public function removeTask(Task $taskToRemove): Job
+    {
+        $this->setTasks(array_filter($this->getTasks()->toArray(), function ($task) use ($taskToRemove) {
+            /** @var Task $task */
+            return $task->getId() !== $taskToRemove->getId();
+        }));
+
         return $this;
     }
 }

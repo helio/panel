@@ -58,8 +58,13 @@ class ServerUtility
      */
     public static function get(string $name, $default = null): string
     {
+        if (PHP_SAPI === 'cli-server') {
+            if (\array_key_exists($name, $_ENV)) {
+                return $_ENV[$name];
+            }
+        }
 
-        if (!array_key_exists($name, $_SERVER) || !$_SERVER[$name]) {
+        if (!\array_key_exists($name, $_SERVER) || !$_SERVER[$name]) {
             if ($default) {
                 return $default;
             }
@@ -112,5 +117,14 @@ class ServerUtility
                 throw new \InvalidArgumentException('suspicious shell command submitted', 1544664506);
             }
         }
+    }
+
+
+    /**
+     * @return string
+     */
+    public static function getTmpPath(): string
+    {
+        return \dirname(__DIR__, 3) . '/tmp';
     }
 }

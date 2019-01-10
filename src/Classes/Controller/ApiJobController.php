@@ -4,7 +4,7 @@ namespace Helio\Panel\Controller;
 
 
 use Helio\Panel\Controller\Traits\TypeDynamicController;
-use Helio\Panel\Controller\Traits\ValidatedJobController;
+use Helio\Panel\Controller\Traits\AuthorizedJobController;
 use Helio\Panel\Job\JobStatus;
 use Helio\Panel\Job\JobType;
 use Helio\Panel\Utility\JwtUtility;
@@ -22,7 +22,7 @@ use Psr\Http\Message\ResponseInterface;
  */
 class ApiJobController extends AbstractController
 {
-    use ValidatedJobController;
+    use AuthorizedJobController;
     use TypeDynamicController;
 
     /**

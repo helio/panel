@@ -1,0 +1,48 @@
+<?php /** @var \Helio\Panel\Model\Job $job */ ?>
+<div class="col-lg-12">
+    <p>
+        The API for this job is ready. You can run EnergyPlus Jobs by POST to this URL:
+    </p>
+    <?php
+    echo '<pre class="prettyprint">';
+    echo \Helio\Panel\Utility\ServerUtility::getBaseUrl() . 'exec?jobid=' . $job->getId() . '&token=' . $job->getToken();
+    echo '</pre>';
+    ?>
+    <button class="try-job"
+            data-demourl="<?php echo \Helio\Panel\Utility\ServerUtility::getBaseUrl() . 'exec?jobid=' . $job->getId() . '&token=' . $job->getToken(); ?>">
+        Try me!
+    </button>
+    <p>
+        You have to set the following
+    </p>
+    <pre class="prettyprint">
+{
+"run_id": "&lt;ID für Rechnungsreferenz etc.&gt;",
+"ep_data": "&lt;Data&gt;",
+"weather_data": "&lt;Data&gt;",
+"report_url": "&lt;URL where to report the results&gt;"
+}
+</pre>
+
+    <p>
+        If you want to delete a runner, just push a DELETE request to the above URL.
+    </p>
+    <?php
+    if (isset($files)) {
+        echo '<p>Files associated to this job</p><ul>';
+        foreach ($files as $file) {
+            if (strpos($file, 'tar.gz') !== false) {
+                echo '<li><a target="_blank" href="/exec/download/' . $file . '?jobid=' . $job->getId() . '&token=' . $job->getToken() . '">' . $file . '</a></li>';
+            }
+        }
+        echo '</ul>';
+    }
+    ?>
+    <br/>
+    <p>
+        Developer Information:
+    </p>
+    <pre class="prettyprint">
+        <?php echo \Helio\Panel\Controller\ExecController::getExecUrl($job, 'work/getnextinqueue', true); ?>
+    </pre>
+</div>

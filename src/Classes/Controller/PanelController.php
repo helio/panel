@@ -71,9 +71,9 @@ class PanelController extends AbstractController
     /**
      * @return ResponseInterface
      *
-     * @Route("/sell", methods={"GET"}, name="panel.server.log")
+     * @Route("/sell", methods={"GET"}, name="panel.sell")
      */
-    public function ServerListAction(): ResponseInterface
+    public function SellAction(): ResponseInterface
     {
         return $this->render([
             'user' => $this->user,

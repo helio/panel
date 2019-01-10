@@ -11,7 +11,7 @@ use Helio\Panel\Utility\JwtUtility;
  * @method User getUser()
  * @method bool hasUser()
  */
-trait ValidatedInstanceController
+trait AuthorizedInstanceController
 {
 
     use AuthenticatedController;

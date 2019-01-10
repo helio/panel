@@ -1,9 +1,65 @@
 <?php /** @var \Helio\Panel\ViewModel\InstanceInfoViewModel $info */ ?>
 <div class="list-view-pf-additional-info">
+    <?php
+    $cpus = $info->getCpus() ?: 0;
+    echo <<<EOI
     <div class="list-view-pf-additional-info-item">
         <div class="list-view-pf-expand">
-            <span class="pficon pficon-screen"></span>
-            <strong><?php echo $info->getCpus(); ?></strong> CPUs
+            <span class="pficon pficon-cpu"></span>
+            <strong>$cpus</strong> CPUs
         </div>
     </div>
+EOI;
+
+    $gpus = $info->getGpus() ?: 0;
+    echo <<<EOI
+    <div class="list-view-pf-additional-info-item">
+        <div class="list-view-pf-expand">
+            <span class="fa fa-th-large"></span>
+            <strong>$gpus</strong> GPUs
+        </div>
+    </div>
+EOI;
+
+    $memory = number_format($info->getMemory() / 1024 / 1024 / 1024, 2) . 'GB';
+    echo <<<EOI
+    <div class="list-view-pf-additional-info-item">
+        <div class="list-view-pf-expand">
+            <span class="pficon pficon-memory"></span>
+            <strong>$memory</strong> Memory
+        </div>
+    </div>
+EOI;
+
+    $arch = $info->getArchitecture() ?: '';
+    echo <<<EOI
+    <div class="list-view-pf-additional-info-item">
+        <div class="list-view-pf-expand">
+            <span class="pficon pficon-builder-image"></span>
+            <strong>System</strong> $arch
+        </div>
+    </div>
+EOI;
+
+    $platform = $info->getPlatform() ?: '';
+    echo <<<EOI
+    <div class="list-view-pf-additional-info-item">
+        <div class="list-view-pf-expand">
+            <span class="fa fa-linux"></span>
+            <strong>OS</strong> $platform
+        </div>
+    </div>
+EOI;
+
+    $uptime = number_format($info->getUptime() / 60 / 60 , 2) . 'h';
+    echo <<<EOI
+    <div class="list-view-pf-additional-info-item">
+        <div class="list-view-pf-expand">
+            <span class="fa fa-clock-o"></span>
+            <strong>Uptime</strong> $uptime
+        </div>
+    </div>
+EOI;
+
+    ?>
 </div>
