@@ -11,14 +11,16 @@ use GuzzleHttp\HandlerStack;
 class GoogleIapHelper
 {
     /**
-     * @param $url
+     * @param $baseUrl
      * @param $path
      * @param $clientId
      * @param $pathToServiceAccount
+     * @param string $method
+     * @param array $options
      * @return mixed|\Psr\Http\Message\ResponseInterface
      * @throws \GuzzleHttp\Exception\GuzzleException
      */
-    function make_iap_request($url, $path, $clientId, $pathToServiceAccount)
+    public function make_iap_request($baseUrl, $path, $clientId, $pathToServiceAccount, $method, $options)
     {
         $serviceAccountKey = json_decode(file_get_contents($pathToServiceAccount), true);
         $oauth_token_uri = 'https://www.googleapis.com/oauth2/v4/token';
@@ -53,11 +55,11 @@ class GoogleIapHelper
         # Create an HTTP Client using Guzzle and pass in the credentials.
         $http_client = new Client([
             'handler' => $stack,
-            'base_uri' => $url,
+            'base_uri' => $baseUrl,
             'auth' => 'scoped'
         ]);
 
         # Make an authenticated HTTP Request
-        return $http_client->request('GET', $path, []);
+        return $http_client->request($method, $path, $options);
     }
 }

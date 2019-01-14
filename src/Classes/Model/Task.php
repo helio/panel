@@ -52,7 +52,7 @@ class Task extends AbstractModel
      *
      * @Column(type="text")
      */
-    protected $config;
+    protected $config = '';
 
 
     /**

@@ -3,6 +3,7 @@
 namespace Helio\Panel\Controller;
 
 
+use Helio\Panel\Controller\Traits\GoogleAuthenticatedController;
 use Helio\Panel\Controller\Traits\TypeDynamicController;
 use Helio\Panel\Controller\Traits\AuthorizedInstanceController;
 use Helio\Panel\Instance\InstanceFactory;
@@ -28,6 +29,14 @@ class ApiInstanceController extends AbstractController
 {
     use AuthorizedInstanceController;
     use TypeDynamicController;
+    use GoogleAuthenticatedController;
+
+    public function __construct()
+    {
+        parent::__construct();
+        $this->baseUrl = 'https://graphsapi.idling.host';
+    }
+
 
     /**
      * @return ResponseInterface
@@ -210,5 +219,32 @@ class ApiInstanceController extends AbstractController
         }
 
         return $this->render(['listItemHtml' => $this->fetchPartial('listItemInstance', $data)]);
+    }
+
+
+    /**
+     * @return ResponseInterface
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     *
+     * @Route("/metrics/snapshot/create", methods={"PUT", "GET"}, name="api.grafana.snapshot.create")
+     */
+    public function createSnapshotAction(): ResponseInterface
+    {
+        $result = $this->requestIapProtectedResource('/api/snapshots', 'POST', [
+                'headers' => [
+                    'Accept' => 'application/json',
+                    'Content-Type' => 'application/json'
+                ],
+                'body' => file_get_contents(\dirname(__DIR__) . '/Instance/dashboard.json')
+            ]
+        );
+
+        if ($result->getStatusCode() === StatusCode::HTTP_OK) {
+            $json = $result->getBody()->getContents();
+            $this->instance->setSnapshotConfig($json);
+            $this->persistInstance();
+        }
+
+        return $this->render(['message' => 'created']);
     }
 }
