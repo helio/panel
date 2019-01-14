@@ -1,6 +1,6 @@
 <?php
 
-namespace Helio\Panel\Filter;
+namespace Helio\Panel\Model\Filter;
 
 use Doctrine\ORM\Mapping\ClassMetaData,
     Doctrine\ORM\Query\Filter\SQLFilter;

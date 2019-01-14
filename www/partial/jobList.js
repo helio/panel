@@ -44,18 +44,17 @@ function initActionButtons(item) {
         })
     });
 
-    item.find('.try-job').on('click', function () {
-        let button = $(this);
-        $.ajax({
-            accepts: {
-                mycustomtype: 'application/json'
-            },
-            url: $(this).data('demourl'),
-            method: 'post',
-            success: function() {
+    item.find('.try-job').on('submit', function (e) {
+        let button = $(this).find('button[type="submit"]');
+        e.preventDefault();
+        let request = new XMLHttpRequest();
+        request.open("POST", $(this).data('demourl'), true);
+        request.onload = function() {
+            if (request.readyState === 4 && request.status === 200) {
                 $('<div class="alert alert-success">Now wait for the result. You can check in by reloading.</div>').insertAfter(button);
             }
-        })
+        };
+        request.send(new FormData(e.target));
     });
 }
 

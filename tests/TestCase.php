@@ -3,6 +3,7 @@
 namespace Helio\Test;
 
 use Doctrine\DBAL\Types\Type;
+use Helio\Panel\Model\Filter\DeletedFilter;
 use Helio\Panel\Model\Type\UTCDateTimeType;
 use Helio\Test\Infrastructure\App;
 use Helio\Test\Infrastructure\Helper\DbHelper;
@@ -13,6 +14,8 @@ use Slim\Http\Environment;
 use Doctrine\Common\Persistence\ObjectRepository;
 use Helio\Panel\Model\Instance;
 use Helio\Panel\Model\User;
+use Webfactory\Doctrine\Config\ConnectionConfiguration;
+use Webfactory\Doctrine\ORMTestInfrastructure\ConfigurationFactory;
 use Webfactory\Doctrine\ORMTestInfrastructure\ORMInfrastructure;
 
 /**
@@ -53,7 +56,10 @@ class TestCase extends \PHPUnit_Framework_TestCase
         Type::overrideType('datetimetz', UTCDateTimeType::class);
 
         $this->infrastructure = ORMInfrastructure::createWithDependenciesFor([User::class, Instance::class]);
+        $this->infrastructure->getEntityManager()->getConfiguration()->addFilter('deleted', DeletedFilter::class);
+
         $this->userRepository = $this->infrastructure->getRepository(User::class);
+
         $this->serverRepository = $this->infrastructure->getRepository(Instance::class);
     }
 
@@ -120,7 +126,7 @@ class TestCase extends \PHPUnit_Framework_TestCase
         $withMiddleware = false,
         $cookieData = null,
         $requestData = null,
-        $attributes = [],
+        array $attributes = [],
         &$app = null
     ): ResponseInterface
     {

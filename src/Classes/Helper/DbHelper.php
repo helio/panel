@@ -7,7 +7,7 @@ use Doctrine\DBAL\Types\Type;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Tools\Setup;
-use Helio\Panel\Filter\DeletedFilter;
+use Helio\Panel\Model\Filter\DeletedFilter;
 use Helio\Panel\Model\Type\UTCDateTimeType;
 use Helio\Panel\Utility\ServerUtility;
 
@@ -107,7 +107,7 @@ class DbHelper
             // normalize path so it is suitable for identifying the cache entry
             $pathToModels = realpath($this->getPathToModels());
 
-            $configObject = Setup::createAnnotationMetadataConfiguration([$pathToModels], true);
+            $configObject = Setup::createAnnotationMetadataConfiguration([$pathToModels], ServerUtility::get('SITE_ENV', 'PROD') !== 'PROD');
             foreach ($this->getFilters() as $name => $filter) {
                 $configObject->addFilter($name, $filter);
             }

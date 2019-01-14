@@ -66,14 +66,37 @@ class DatabaseTest extends TestCase
         $this->assertEquals($server->getName(), $foundServer->getName());
     }
 
-    public function testObject(): void {
+    public function testObject(): void
+    {
         try {
             $this->assertInstanceOf(UTCDateTimeType::class, Type::getType('datetimetz'));
         } catch (\Exception $e) {
             $this->assertTrue(false);
         }
     }
-    public function testTimestampIssues(): void {
+
+    public function testHiddenFilterActive(): void
+    {
+        $instance = (new Instance())->setName('hidden')->setCreated(new \DateTime('now', ServerUtility::getTimezoneObject()))->setHidden(true);
+        $this->infrastructure->import($instance);
+        $this->infrastructure->getEntityManager()->getFilters()->enable('deleted');
+        $foundServer = $this->serverRepository->findAll();
+
+        $this->assertEmpty($foundServer);
+    }
+
+    public function testHiddenFilterInactive(): void
+    {
+        $instance = (new Instance())->setName('hidden')->setCreated(new \DateTime('now', ServerUtility::getTimezoneObject()))->setHidden(true);
+        $this->infrastructure->import($instance);
+        $foundServer = $this->serverRepository->findAll();
+
+        $this->assertCount(1, $foundServer);
+    }
+
+
+    public function testTimestampIssues(): void
+    {
 
         // import fixture
         $user = (new User())->setName('testuser')->setCreated(new \DateTime('now', ServerUtility::getTimezoneObject()));

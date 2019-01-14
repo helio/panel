@@ -127,4 +127,13 @@ class ServerUtility
     {
         return \dirname(__DIR__, 3) . '/tmp';
     }
+
+    /**
+     * @param string $path
+     * @return string
+     */
+    public static function getSha1SumFromFile(string $path): string
+    {
+        return sha1_file($path);
+    }
 }
