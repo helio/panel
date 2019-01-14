@@ -36,8 +36,8 @@ trait GoogleAuthenticatedController
         return $this->auth->make_iap_request(
             $this->baseUrl,
             $path,
-            ServerUtility::get('GOOGLE_AUTH_USER_ID', '1022009500119-cq4u988crl055fbamtrmvenofq0ofiv5.apps.googleusercontent.com'),
-            ServerUtility::get('GOOGLE_AUTH_JSON_PATH', APPLICATION_ROOT . '/cnf/googleauth.json'),
+            ServerUtility::get('GOOGLE_AUTH_USER_ID'),
+            ServerUtility::get('GOOGLE_AUTH_JSON_PATH'),
             $method,
             $options
         );

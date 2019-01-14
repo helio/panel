@@ -12,6 +12,7 @@ use Helio\Panel\Instance\InstanceType;
 use Helio\Panel\Master\MasterFactory;
 use Helio\Panel\Orchestrator\OrchestratorFactory;
 use Helio\Panel\Runner\RunnerFactory;
+use Helio\Panel\Utility\ServerUtility;
 use Helio\Panel\ViewModel\InstanceInfoViewModel;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Http\StatusCode;
@@ -173,6 +174,8 @@ class ApiInstanceController extends AbstractController
 
 
     /**
+     * Get and Update Instance Status
+     *
      * Hint: This method might be called recursively if the status changes.
      *
      * @return ResponseInterface
@@ -235,7 +238,7 @@ class ApiInstanceController extends AbstractController
                     'Accept' => 'application/json',
                     'Content-Type' => 'application/json'
                 ],
-                'body' => file_get_contents(\dirname(__DIR__) . '/Instance/dashboard.json')
+                'body' => file_get_contents(ServerUtility::get('DASHBOARD_CONFIG_JSON', \dirname(__DIR__) . '/Instance/dashboard.json'))
             ]
         );
 
