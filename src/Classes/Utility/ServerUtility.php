@@ -65,7 +65,7 @@ class ServerUtility
         }
 
         if (!\array_key_exists($name, $_SERVER) || !$_SERVER[$name]) {
-            if ($default) {
+            if ($default !== null) {
                 return $default;
             }
             throw new \RuntimeException('please set the ENV Variable ' . $name, 1530357047);
