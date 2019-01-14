@@ -35,8 +35,8 @@
                     <li><a data-action="instance/remove" data-method="delete">Remove</a></li>
                     <li><a data-action="instance/provisionlogs" data-method="get">Logs of Server</a></li>
                     <li><a data-action="instance/runnerlogs" data-method="get">Logs of Runners</a></li>
-                    <li><a data-action="instance/metrics" data-method="get">metrics</a></li>
-                    <li><a data-action="instance/metrics/snapshot" data-method="put">create new metrics snapshot</a>
+                    <li><a data-action="instance/metrics/snapshot/create" data-method="put">create new metrics
+                            snapshot</a>
                     </li>
                     <li>
                         <a data-action="instance/togglefree"><?php echo $instance->isAllowFreeComputing() ? 'Dis' : 'A' ?>
@@ -59,7 +59,11 @@
                         <?php echo $instance->getToken() ? 'Token: ' . $instance->getToken() : ''; ?>
                     </div>
                 </div>
-                <?php if (isset($info)) include __DIR__ . '/instanceAdditionalInfo.phtml'; ?>
+                <?php
+                if (isset($info)) {
+                    include __DIR__ . '/instanceAdditionalInfo.phtml';
+                }
+                ?>
             </div>
         </div>
     </div>
@@ -68,7 +72,7 @@
         <div class="close">
             <span class="pficon pficon-close"></span>
         </div>
-        <div class="row list-view-pf-additional-info">
+        <div class="row">
             <?php
             $filename = __DIR__ . '/instanceDetailStatus-' . $instance->getStatus() . '.phtml';
             if (file_exists($filename)) {

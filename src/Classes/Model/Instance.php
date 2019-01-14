@@ -89,6 +89,13 @@ class Instance extends AbstractModel
     /**
      * @var string
      *
+     * @Column(type="text")
+     */
+    protected $snapshotConfig = '';
+
+    /**
+     * @var string
+     *
      * @Column
      */
     protected $runnerCoordinator = 'swarm.idling.host';
@@ -371,6 +378,25 @@ class Instance extends AbstractModel
     {
         return $this->orchestratorCoordinator;
     }
+
+    /**
+     * @return string
+     */
+    public function getSnapshotConfig(): string
+    {
+        return $this->snapshotConfig;
+    }
+
+    /**
+     * @param string $snapshotConfig
+     * @return Instance
+     */
+    public function setSnapshotConfig(string $snapshotConfig): Instance
+    {
+        $this->snapshotConfig = $snapshotConfig;
+        return $this;
+    }
+
 
     /**
      * @param string $orchestratorCoordinator

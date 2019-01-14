@@ -21,8 +21,9 @@ trait ValidatedJobController
     public function validateJob(): bool
     {
         $this->requiredParameterCheck(['token' => FILTER_SANITIZE_STRING]);
-        return JobType::isValidType($this->job->getType())
+        return $this->job
+            && JobType::isValidType($this->job->getType())
             && JobStatus::isValidActiveStatus($this->job->getStatus())
-            &&JwtUtility::verifyJobIdentificationToken($this->job, $this->params['token']);
+            && JwtUtility::verifyJobIdentificationToken($this->job, $this->params['token']);
     }
 }

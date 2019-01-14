@@ -8,6 +8,9 @@ use Helio\Panel\Controller\Traits\ParametrizedController;
 use Helio\Panel\Controller\Traits\TypeApiController;
 use Helio\Panel\Model\Instance;
 use Helio\Panel\Model\Job;
+use Helio\Panel\Model\Task;
+use Helio\Panel\Task\TaskStatus;
+use Helio\Panel\Utility\ExecUtility;
 use Psr\Http\Message\ResponseInterface;
 
 /**
@@ -70,12 +73,16 @@ class ApiUserController extends AbstractController
             $jobs[] = ['id' => $job->getId(), 'html' => $this->fetchPartial('listItemJob', [
                 'job' => $job,
                 'user' => $this->user,
-                'files' => array_filter(scandir(ExecController::getJobDataFolder($job), SCANDIR_SORT_ASCENDING), function (string $item) {
-                    return strpos($item, '.') !== 0;
+                'files' => array_filter(scandir(ExecUtility::getJobDataFolder($job), SCANDIR_SORT_ASCENDING), function (string $item) {
+                    return strpos($item, '.') !== 0 && strpos($item, '.tar.gz') > 0;
                 })
             ])];
         }
-        return $this->render(['items' => $jobs, 'user' => $this->user]);
+        return $this->render(['items' => $jobs, 'user' => $this->user,
+            'tasks' => $this->dbHelper->getRepository(Task::class)->count(['job' => $job]),
+            'open_tasks' => $this->dbHelper->getRepository(Task::class)->count(['job' => $job, 'status' => TaskStatus::READY]),
+            'running_tasks' => $this->dbHelper->getRepository(Task::class)->count(['job' => $job, 'status' => TaskStatus::RUNNING])
+        ]);
     }
 
     /**

@@ -8,6 +8,46 @@
     echo \Helio\Panel\Utility\ServerUtility::getBaseUrl() . 'exec?jobid=' . $job->getId() . '&token=' . $job->getToken();
     echo '</pre>';
     ?>
+    <hr/>
+    <h2>Try me!</h2>
+    <form class="try-job"
+          data-demourl="<?php echo \Helio\Panel\Utility\ServerUtility::getBaseUrl() . 'exec?jobid=' . $job->getId() . '&token=' . $job->getToken(); ?>">
+        <div class="form-group">
+
+            <label for="name">
+                runner Name
+            </label>
+            <br/>
+            <input type="text" name="name" size="50" id="name">
+        </div>
+        <div class="form-group">
+
+            <label for="token">
+                runner token
+            </label>
+            <br/>
+            <input type="text" name="token" size="50" id="token" value="<?php echo $job->getGitlabToken(); ?>">
+        </div>
+        <div class="form-group">
+
+            <label for="tags">
+                runner tags (comma separated)
+            </label>
+            <br/>
+            <input type="text" name="tags" size="50" id="tags" value="<?php echo $job->getGitlabTags(); ?>">
+        </div>
+        <div class="form-group">
+            <label for="endpoint">
+                Gitlab URL
+            </label>
+            <br/>
+            <input type="text" name="endpoint" size="50" id="endpoint" value="<?php echo $job->getGitlabEndpoint(); ?>">
+        </div>
+        <button type="submit" class="btn btn-primary">
+            Submit
+        </button>
+    </form>
+    <hr/>
     <p>
         Optionally, you can set the following parameters.
     </p>

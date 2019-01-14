@@ -64,14 +64,14 @@ class JwtUtility
 
                 if (strpos('application/json', ServerUtility::get('HTTP_ACCEPT', '')) !== false) {
 
-                    return $response
+                    return CookieUtility::deleteCookie($response
                         ->withHeader('Content-Type', 'application/json')
-                        ->write(json_encode($data, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT));
+                        ->write(json_encode($data, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT)), 'token');
                 }
 
-                return $response
+                return CookieUtility::deleteCookie($response
                     ->withHeader('Location', '/')
-                    ->withStatus(StatusCode::HTTP_SEE_OTHER);
+                    ->withStatus(StatusCode::HTTP_SEE_OTHER), 'token');
             }
         ]));
 

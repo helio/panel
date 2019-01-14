@@ -3,6 +3,7 @@
 namespace Helio\Panel\Controller;
 
 
+use Helio\Panel\Controller\Traits\GoogleAuthenticatedController;
 use Helio\Panel\Controller\Traits\TypeDynamicController;
 use Helio\Panel\Controller\Traits\AuthorizedInstanceController;
 use Helio\Panel\Instance\InstanceFactory;
@@ -11,6 +12,7 @@ use Helio\Panel\Instance\InstanceType;
 use Helio\Panel\Master\MasterFactory;
 use Helio\Panel\Orchestrator\OrchestratorFactory;
 use Helio\Panel\Runner\RunnerFactory;
+use Helio\Panel\Utility\ServerUtility;
 use Helio\Panel\ViewModel\InstanceInfoViewModel;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Http\StatusCode;
@@ -28,6 +30,14 @@ class ApiInstanceController extends AbstractController
 {
     use AuthorizedInstanceController;
     use TypeDynamicController;
+    use GoogleAuthenticatedController;
+
+    public function __construct()
+    {
+        parent::__construct();
+        $this->baseUrl = 'https://graphsapi.idling.host';
+    }
+
 
     /**
      * @return ResponseInterface
@@ -164,6 +174,8 @@ class ApiInstanceController extends AbstractController
 
 
     /**
+     * Get and Update Instance Status
+     *
      * Hint: This method might be called recursively if the status changes.
      *
      * @return ResponseInterface
@@ -210,5 +222,32 @@ class ApiInstanceController extends AbstractController
         }
 
         return $this->render(['listItemHtml' => $this->fetchPartial('listItemInstance', $data)]);
+    }
+
+
+    /**
+     * @return ResponseInterface
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     *
+     * @Route("/metrics/snapshot/create", methods={"PUT", "GET"}, name="api.grafana.snapshot.create")
+     */
+    public function createSnapshotAction(): ResponseInterface
+    {
+        $result = $this->requestIapProtectedResource('/api/snapshots', 'POST', [
+                'headers' => [
+                    'Accept' => 'application/json',
+                    'Content-Type' => 'application/json'
+                ],
+                'body' => file_get_contents(ServerUtility::get('DASHBOARD_CONFIG_JSON', \dirname(__DIR__) . '/Instance/dashboard.json'))
+            ]
+        );
+
+        if ($result->getStatusCode() === StatusCode::HTTP_OK) {
+            $json = $result->getBody()->getContents();
+            $this->instance->setSnapshotConfig($json);
+            $this->persistInstance();
+        }
+
+        return $this->render(['message' => 'created']);
     }
 }

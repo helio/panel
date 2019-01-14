@@ -26,16 +26,20 @@ trait GoogleAuthenticatedController
 
     /**
      * @param string $path
+     * @param string $method
+     * @param array $options
      * @return mixed|\Psr\Http\Message\ResponseInterface
      * @throws \GuzzleHttp\Exception\GuzzleException
      */
-    protected function requestIapProtectedResource(string $path)
+    protected function requestIapProtectedResource(string $path, string $method = 'GET', array $options = [])
     {
         return $this->auth->make_iap_request(
             $this->baseUrl,
             $path,
-            ServerUtility::get('GOOGLE_AUTH_USER_ID', '1022009500119-gagi1ktmi136r2kc12k8tusv9jvhdnep.apps.googleusercontent.com'),
-            ServerUtility::get('GOOGLE_AUTH_JSON_PATH', '/home/panelproto/cnf/googleauth.json')
+            ServerUtility::get('GOOGLE_AUTH_USER_ID'),
+            ServerUtility::get('GOOGLE_AUTH_JSON_PATH'),
+            $method,
+            $options
         );
     }
 }

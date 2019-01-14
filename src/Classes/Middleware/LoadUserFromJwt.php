@@ -4,6 +4,7 @@ namespace Helio\Panel\Middleware;
 
 use Helio\Panel\Helper\DbHelper;
 use Helio\Panel\Model\User;
+use Helio\Panel\Utility\CookieUtility;
 use Helio\Panel\Utility\ServerUtility;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -65,7 +66,7 @@ class LoadUserFromJwt implements MiddlewareInterface
                 $userLoggedOutTime = $user->getLoggedOut()->setTimezone(ServerUtility::getTimezoneObject());
 
                 if ($userLoggedOutTime > $tokenGenerationTime) {
-                    throw new \RuntimeException('Token Expired.');
+                    return CookieUtility::deleteCookie($handler->handle($request)->withRedirect('/panel/logout'), 'token');
                 }
             }
 

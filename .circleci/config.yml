@@ -42,7 +42,8 @@ jobs:
             if [[ "${CIRCLE_BRANCH}" = 'development' ]]; then DEPLOY_USERNAME=panelpreview; fi
             mkdir ~/.ssh || rm -f ~/.ssh/known_hosts
             mv ./.circleci/known_hosts ~/.ssh/
-            rsync -rptgoDzL --delete cnf src www cli-config.php composer.* ${DEPLOY_USERNAME}@nbf01.opsserver.ch:.
+            rsync -rptgoDzL --delete src www cli-config.php composer.* ${DEPLOY_USERNAME}@nbf01.opsserver.ch:.
+            rsync -rptgoDzL cnf ${DEPLOY_USERNAME}@nbf01.opsserver.ch:.
             ssh ${DEPLOY_USERNAME}@nbf01.opsserver.ch "source .zshrc; source .profile; composer install --no-dev -o && vendor/bin/doctrine orm:schema-tool:update --force"
             sleep 5
             ssh ${DEPLOY_USERNAME}@nbf01.opsserver.ch "sudo /usr/sbin/service php72-fpm reload"
