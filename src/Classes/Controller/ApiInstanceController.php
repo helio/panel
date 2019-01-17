@@ -206,7 +206,7 @@ class ApiInstanceController extends AbstractController
         if ($json = $this->createSnapshot()) {
             $this->instance->setSnapshotConfig(json_encode($json));
             $this->persistInstance();
-            return $this->render(['message' => 'created', 'snapshot' => $json]);
+            return $this->render(['message' => 'created', 'snapshotUrl' => $json['url']]);
         }
 
         return $this->render(['status' => 'unknown'], StatusCode::HTTP_FAILED_DEPENDENCY);

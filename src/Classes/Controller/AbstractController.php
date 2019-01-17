@@ -147,6 +147,9 @@ abstract class AbstractController extends Controller
      */
     protected function html($data, int $status = 200): ResponseInterface
     {
+        if (\array_key_exists('impersonate', $this->request->getCookieParams())) {
+            $data['impersonating'] = true;
+        }
 
         return $this->renderer->render($this->response,
             $this->getMode() . '/index.phtml',
