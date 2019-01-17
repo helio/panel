@@ -5,6 +5,8 @@ namespace Helio\Panel\Job\Ep85;
 use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\OptimisticLockException;
 use Helio\Panel\Helper\DbHelper;
+use Helio\Panel\Job\DispatchableInterface;
+use Helio\Panel\Job\DispatchConfig;
 use Helio\Panel\Job\JobInterface;
 use Helio\Panel\Model\Job;
 use Helio\Panel\Model\Task;
@@ -18,7 +20,7 @@ use Slim\Http\Request;
 use Slim\Http\Response;
 use Slim\Http\StatusCode;
 
-class Execute implements JobInterface
+class Execute implements JobInterface, DispatchableInterface
 {
     /**
      * @var Job
@@ -40,6 +42,17 @@ class Execute implements JobInterface
         $this->job = $job;
         $this->task = $task;
     }
+
+
+    /**
+     * @param array $params
+     * @return bool
+     */
+    public function create(array $params): bool
+    {
+        return true;
+    }
+
 
     /**
      * @param array $params
@@ -63,7 +76,7 @@ class Execute implements JobInterface
         } else {
             $idf = ExecUtility::getJobDataFolder($this->job) . 'example.idf';
             if (!file_exists($idf)) {
-                copy(__DIR__ . '/example.idf', $idf);
+                copy(__DIR__ . DIRECTORY_SEPARATOR . 'example.idf', $idf);
             }
         }
 
@@ -74,7 +87,7 @@ class Execute implements JobInterface
         } else {
             $epw = ExecUtility::getJobDataFolder($this->job) . 'weather.epw';
             if (!file_exists($epw)) {
-                copy(__DIR__ . '/example.epw', $epw);
+                copy(__DIR__ . DIRECTORY_SEPARATOR . 'example.epw', $epw);
             }
         }
         $config = array_merge(json_decode($request->getBody()->getContents(), true) ?? [],
@@ -181,5 +194,18 @@ class Execute implements JobInterface
             return $response;
         }
         return $response->withStatus(StatusCode::HTTP_NOT_FOUND);
+    }
+
+
+    /**
+     * @return DispatchConfig
+     */
+    public function getDispatchConfig(): DispatchConfig
+    {
+        return (new DispatchConfig())->setImage('gitlab.idling.host:4567/opencomputing/runner/ep85:latest')->setEnvVariables([
+            'HELIO_JOBID' => $this->job->getId(),
+            'HELIO_TOKEN' => $this->job->getToken(),
+            'HELIO_URL' => ServerUtility::getBaseUrl()
+        ]);
     }
 }

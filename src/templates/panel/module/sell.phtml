@@ -1,3 +1,4 @@
+<?php /** @var \Helio\Panel\Model\User $user */ ?>
 <h2 class="display c--white a--center">Your Instances</h2>
 <div class="container-fluid">
     <div class="row">
@@ -9,11 +10,7 @@
             Alternatively, you can also register your server by executing the on-boarding script directly on the
             server/vm.
         </p>
-        <pre class="prettyprint" data-parse="true">
-curl -fsSL un.idling.host -o start-computing.sh
-if shasum -a 1 -s -c <(echo '<?php echo \Helio\Panel\Utility\ServerUtility::get('SCRIPT_HASH') ?> start-computing.sh'); then
-    sh start-computing.sh -m <?php echo $user->getEmail(); ?><!-- -->
-fi</pre>
+        <?php \Helio\Panel\Helper\ViewHelper::includePartial('instanceAddScript', ['email' => $user->getEmail()]); ?>
     </div>
 </div>
 <div class="container-fluid">

@@ -4,46 +4,85 @@
 #
 version: 2
 jobs:
-  build:
-    branches:
-      only:
-        - master
-        - development
+  code:
     docker:
-      - image: circleci/php:7.2-fpm-node-browsers
+    - image: circleci/php:7.2-fpm-node-browsers
 
     working_directory: ~/repo
 
     steps:
-      - checkout
+    - checkout
 
-      - restore_cache:
-          keys:
-          - v1-dependencies-{{ checksum "composer.json" }}
-          - v1-dependencies-
+    - restore_cache:
+        keys:
+        - v1-dependencies-{{ checksum "composer.json" }}
+        - v1-dependencies-
 
-      - run: composer install -n -q -o
-      - run: yarn
+    - run: composer install -n -q -o
+    - run: yarn
 
-      - save_cache:
-          paths:
-            - ./vendor
-          key: v1-dependencies-{{ checksum "composer.json" }}
+    - save_cache:
+        paths:
+        - ./vendor
+        key: v1-dependencies-{{ checksum "composer.json" }}
 
-      - run: composer run test
+    - run: composer run test
 
-      # remove dev packages
-      - run: composer install -o -n -q --prefer-dist --no-dev
+    # remove dev packages
+    - run: composer install -o -n -q --prefer-dist --no-dev
 
-      - run:
-          name: deploy
-          command: |
-            export DEPLOY_USERNAME=panelproto
-            if [[ "${CIRCLE_BRANCH}" = 'development' ]]; then DEPLOY_USERNAME=panelpreview; fi
-            mkdir ~/.ssh || rm -f ~/.ssh/known_hosts
-            mv ./.circleci/known_hosts ~/.ssh/
-            rsync -rptgoDzL --delete src www cli-config.php composer.* ${DEPLOY_USERNAME}@nbf01.opsserver.ch:.
-            rsync -rptgoDzL cnf ${DEPLOY_USERNAME}@nbf01.opsserver.ch:.
-            ssh ${DEPLOY_USERNAME}@nbf01.opsserver.ch "source .zshrc; source .profile; composer install --no-dev -o && vendor/bin/doctrine orm:schema-tool:update --force"
-            sleep 5
-            ssh ${DEPLOY_USERNAME}@nbf01.opsserver.ch "sudo /usr/sbin/service php72-fpm reload"
+    - run:
+        name: deploy
+        command: |
+          export DEPLOY_USERNAME=panelproto
+          if [[ "${CIRCLE_BRANCH}" = 'development' ]]; then DEPLOY_USERNAME=panelpreview; fi
+          mkdir ~/.ssh || rm -f ~/.ssh/known_hosts
+          mv ./.circleci/known_hosts ~/.ssh/
+          rsync -rptgoDzL --delete src www cli-config.php composer.* ${DEPLOY_USERNAME}@nbf01.opsserver.ch:.
+          rsync -rptgoDzL cnf ${DEPLOY_USERNAME}@nbf01.opsserver.ch:.
+          ssh ${DEPLOY_USERNAME}@nbf01.opsserver.ch "source .zshrc; source .profile; composer install --no-dev -o && vendor/bin/doctrine orm:schema-tool:update --force"
+          sleep 5
+          ssh ${DEPLOY_USERNAME}@nbf01.opsserver.ch "sudo /usr/sbin/service php72-fpm reload"
+
+
+  runners:
+    docker:
+    - image: docker:17.05.0-ce-git
+
+    working_directory: ~/repo
+
+    steps:
+    - checkout
+    - setup_remote_docker
+    - run:
+        name: Build application Docker image
+        command: |
+          docker login -u panel -p ${GITLAB_TOKEN} gitlab.idling.host:4567
+          START_DIR="$(pwd -P)"
+          for img in $(find src -name Dockerfile); do
+            cd "${START_DIR}/$(dirname $img)"
+            IMGNAME=gitlab.idling.host:4567/opencomputing/runner/$(echo $(basename $(dirname $img)) | tr '[:upper:]' '[:lower:]')
+            TAGNAME=$(echo ${CIRCLE_BRANCH} | tr '/' '_')
+            docker build -t ${IMGNAME}:${TAGNAME} . && docker push "${IMGNAME}:${TAGNAME}"
+            if [ "${CIRCLE_BRANCH}" == "master" ]; then
+              docker tag "${IMGNAME}:${TAGNAME}" "${IMGNAME}:latest" && docker push "${IMGNAME}:latest"
+            fi
+          done
+
+
+workflows:
+  version: 2
+  build:
+    jobs:
+    - code:
+        filters:
+          branches:
+            only:
+            - master
+            - development
+    - runners:
+        filters:
+          branches:
+            only:
+            - master
+            - development

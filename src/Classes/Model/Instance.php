@@ -128,6 +128,14 @@ class Instance extends AbstractModel
      *
      * @Column
      */
+    protected $security = '';
+
+
+    /**
+     * @var string
+     *
+     * @Column
+     */
     protected $billingReference = '';
 
 
@@ -152,6 +160,14 @@ class Instance extends AbstractModel
      * @Column(type="boolean")
      */
     protected $allowFreeComputing = true;
+
+    /**
+     * @var int
+     *
+     * @Column
+     */
+    protected $priority = 100;
+
 
     /**
      * @return string
@@ -455,6 +471,24 @@ class Instance extends AbstractModel
     /**
      * @return string
      */
+    public function getSecurity(): string
+    {
+        return $this->security;
+    }
+
+    /**
+     * @param string $security
+     * @return Instance
+     */
+    public function setSecurity(string $security): Instance
+    {
+        $this->security = $security;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
     public function getBillingReference(): string
     {
         return $this->billingReference;
@@ -503,6 +537,24 @@ class Instance extends AbstractModel
     public function setSupervisorToken(string $supervisorToken): Instance
     {
         $this->supervisorToken = $supervisorToken;
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getPriority(): int
+    {
+        return $this->priority;
+    }
+
+    /**
+     * @param int $priority
+     * @return Instance
+     */
+    public function setPriority(int $priority): Instance
+    {
+        $this->priority = $priority;
         return $this;
     }
 

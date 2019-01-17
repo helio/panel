@@ -60,30 +60,6 @@ class Job extends AbstractModel
      *
      * @Column
      */
-    protected $gitlabEndpoint = '';
-
-
-    /**
-     * @var string
-     *
-     * @Column
-     */
-    protected $gitlabToken = '';
-
-
-    /**
-     * @var string
-     *
-     * @Column
-     */
-    protected $gitlabTags = '';
-
-
-    /**
-     * @var string
-     *
-     * @Column
-     */
     protected $cpus = '';
 
 
@@ -125,6 +101,14 @@ class Job extends AbstractModel
      * @OneToMany(targetEntity="Task", mappedBy="job", cascade={"persist"})
      */
     protected $tasks = [];
+
+
+    /**
+     * @var int
+     *
+     * @Column
+     */
+    protected $priority = 100;
 
 
     /**
@@ -230,60 +214,6 @@ class Job extends AbstractModel
         if (JobStatus::isValidStatus($status)) {
             $this->status = $status;
         }
-        return $this;
-    }
-
-    /**
-     * @return string
-     */
-    public function getGitlabEndpoint(): string
-    {
-        return $this->gitlabEndpoint;
-    }
-
-    /**
-     * @param string $gitlabEndpoint
-     * @return Job
-     */
-    public function setGitlabEndpoint(string $gitlabEndpoint): Job
-    {
-        $this->gitlabEndpoint = $gitlabEndpoint;
-        return $this;
-    }
-
-    /**
-     * @return string
-     */
-    public function getGitlabToken(): string
-    {
-        return $this->gitlabToken;
-    }
-
-    /**
-     * @param string $gitlabToken
-     * @return Job
-     */
-    public function setGitlabToken(string $gitlabToken): Job
-    {
-        $this->gitlabToken = $gitlabToken;
-        return $this;
-    }
-
-    /**
-     * @return string
-     */
-    public function getGitlabTags(): string
-    {
-        return $this->gitlabTags;
-    }
-
-    /**
-     * @param string $gitlabTags
-     * @return Job
-     */
-    public function setGitlabTags(string $gitlabTags): Job
-    {
-        $this->gitlabTags = $gitlabTags;
         return $this;
     }
 
@@ -396,6 +326,23 @@ class Job extends AbstractModel
         return $this;
     }
 
+    /**
+     * @return int
+     */
+    public function getPriority(): int
+    {
+        return $this->priority;
+    }
+
+    /**
+     * @param int $priority
+     * @return Job
+     */
+    public function setPriority(int $priority): Job
+    {
+        $this->priority = $priority;
+        return $this;
+    }
 
     /**
      * @param Task $task

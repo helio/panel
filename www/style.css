@@ -1,3 +1,7 @@
+.login-pf.helio body .login-pf-page-header {
+    color: white;
+}
+
 .login-pf.helio body {
     background: url('/images/background.jpg') no-repeat center center fixed;
     -moz-background-size: cover;
@@ -6,7 +10,6 @@
     background-size: cover;
     min-height: 100vh;
 }
-
 
 .helio .instance span.status- {
     border-color: deeppink;
@@ -80,6 +83,12 @@
 .loadable.loading > .loadmore {
     display: none;
 }
+
 .loadable:not(.loading) > .loader {
     display: none;
+}
+
+.loadable .loader-absolute {
+    width: 100%;
+    position: absolute;
 }

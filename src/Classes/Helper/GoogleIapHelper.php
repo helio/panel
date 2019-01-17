@@ -2,7 +2,6 @@
 
 namespace Helio\Panel\Helper;
 
-# Imports Auth libraries and Guzzle HTTP libraries.
 use Google\Auth\OAuth2;
 use Google\Auth\Middleware\ScopedAccessTokenMiddleware;
 use GuzzleHttp\Client;

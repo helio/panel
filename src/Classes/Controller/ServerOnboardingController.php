@@ -126,7 +126,7 @@ class ServerOnboardingController extends AbstractController
                 return $this->json(['success' => true, 'reason' => 'User already confirmed'], StatusCode::HTTP_REQUESTED_RANGE_NOT_SATISFIABLE);
             }
             $user = new User();
-            $user->setEmail($this->params['email']);
+            $user->setEmail($this->params['email'])->setCreated();
             $server->setOwner($user);
             $this->dbHelper->persist($user);
             $this->dbHelper->flush();

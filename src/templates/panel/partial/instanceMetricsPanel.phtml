@@ -1,0 +1,10 @@
+<?php
+/** @var \Helio\Panel\Model\Instance $instance */
+if ($instance->getSnapshotConfig()) {
+    $config = json_decode($instance->getSnapshotConfig(), true);
+    if (array_key_exists('url', $config) && $config['url']) {
+        $url = str_replace('http://localhost:3000', 'https://graphs.idling.host', filter_var($config['url'], FILTER_SANITIZE_URL));
+
+        echo '<iframe src="' . $url . '" width="100%" height="444px" frameborder="0"></iframe>';
+    }
+}

@@ -118,7 +118,7 @@ class PanelController extends AbstractController
             'title' => 'Admin - Helio Panel',
             'module' => 'admin',
             'adminActive' => 'active',
-            'partialJs' => ['admin', 'instanceList', 'jobList']
+            'partialJs' => ['admin']
         ]);
     }
 

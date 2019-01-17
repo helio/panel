@@ -11,6 +11,7 @@ use Helio\Panel\Model\Job;
 use Helio\Panel\Model\Task;
 use Helio\Panel\Task\TaskStatus;
 use Helio\Panel\Utility\ExecUtility;
+use Helio\Panel\Utility\JwtUtility;
 use Psr\Http\Message\ResponseInterface;
 
 /**
@@ -107,8 +108,33 @@ class ApiUserController extends AbstractController
         if (array_key_exists('email', $this->params)) {
             $this->user->setEmail($this->params['email']);
         }
+
+        $config = json_decode($this->user->getConfig(), true);
+        $validConfigOptions = ['gitlabtags', 'instancelevel', 'instancelocation'];
+        foreach ($validConfigOptions as $option) {
+            if (\array_key_exists($option, $this->params)) {
+                $this->optionalParameterCheck([$option => FILTER_SANITIZE_STRING]);
+                $config[$option] = $this->params[$option];
+            }
+        }
+        $this->user->setConfig(json_encode($config));
+
         $this->dbHelper->flush($this->user);
 
-        return $this->render();
+        return $this->render(['message' => 'done']);
+    }
+
+
+    /**
+     * @return ResponseInterface
+     * @throws \Exception
+     *
+     * @Route("/settoken", methods={"PUT"}, name="user.settoken")
+     */
+    public function generateTokenAction(): ResponseInterface
+    {
+        $this->user->setToken(JwtUtility::generateUserIdentificationToken($this->user));
+        $this->persistUser();
+        return $this->render(['message' => '<strong>Your Token is ' . $this->user->getToken() . '</strong> Write it down, it cannot be displayed ever again.']);
     }
 }

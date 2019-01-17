@@ -1,38 +1,84 @@
 <?php /** @var \Helio\Panel\Model\User $user */ ?>
-<h2 class="display c--white a--center">Your Profile</h2>
-<form id="form-profile" class="form c--white loadable">
-    <div>
-    <label class="small small--upper c--white" for="username">
-        Your Name
-    </label>
-    <div class="input">
-        <input type="text" class="input__input" placeholder="Your Name" id="username" name="username"
-               value="<?php echo $user->getName(); ?>"/>
+<div class="row">
+    <div class="col-md-6">
+        <h2>Api Token</h2>
+        <p>
+            If you need API-Access to Helio, you can create a permanent API-Token here. <br>
+            If you ever need to revoke it, just create a new one here.
+        </p>
+        <button id="settoken" class="btn btn-primary form-control">Generate Api Identification Token</button>
+        <p>&nbsp;</p>
     </div>
-    <span class="small">How are you called?</span>
+</div>
+
+<form id="form-profile" class="form-vertical">
+    <div class="row">
+        <div class="col-md-12">
+            <h1>Your Profile Settings</h1>
+            <p>You can change your settings here. If you have any questions, contact our Team.</p>
+        </div>
+        <div class="col-md-6">
+            <h2>Your Profile</h2>
+            <p>Please tell us a little bit about yourself.</p>
+            <div class="form-group">
+                <label class="small" for="username">
+                    Your Name
+                </label>
+                <input class="form-control" type="text" placeholder="Your Name" id="username" name="username"
+                       value="<?php echo $user->getName(); ?>"/>
+                <span class="small">How would you like us to call you?</span>
+            </div>
+            <div class="form-group">
+                <label class="small" for="username">
+                    Your Mail Addres
+                </label>
+                <input class="form-control" type="text" placeholder="Your Mail Address" id="email" name="email"
+                       value="<?php echo $user->getEmail(); ?>"/>
+                <span class="small">Please use an address that you have always access to.</span>
+            </div>
+            <div class="form-group">
+                <label class="small" for="role">
+                    Your Role
+                </label>
+                <input class="form-control" type="text" placeholder="Your Role" name="role" id="role"
+                       value="<?php echo $user->getRole(); ?>"/>
+                <span class="small">Please briefly describe your professional role (e.g. "Developer", "CTO", "DevOps" or similar).</span>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <h2>Your Default Settings</h2>
+            <p>These settings are used as default values when registering an instance or executing a job.</p>
+            <div class="form-group">
+                <label class="small" for="gitlabtags">
+                    Gitlab Tags
+                </label>
+                <input class="form-control" type="text" placeholder="Gitlab tags" name="gitlabtags" id="gitlabtags"
+                       value="<?php echo $user->getConfig('gitlabtags') ?: 'helio'; ?>"/>
+                <span class="small">Default Tags for your gitlab runners, if you plan on use any.</span>
+            </div>
+            <div class="form-group">
+                <label class="small" for="instancelevel">
+                    How secure and reliable are your servers?
+                </label>
+                <?php \Helio\Panel\Helper\ViewHelper::includePartial('instanceSecuritySelect', ['value' => $user->getConfig('instancelevel')]); ?>
+                <span class="small">Select default level.</span>
+            </div>
+            <div class="form-group">
+                <label class="small" for="instancelocation">
+                    Location
+                </label>
+                <?php \Helio\Panel\Helper\ViewHelper::includePartial('instanceLocationSelect', ['value' => $user->getConfig('instancelocation')]); ?>
+                <span class="small">Select the default location of your servers.</span>
+            </div>
+        </div>
     </div>
-    <div>
-    <label class="small small--upper c--white" for="username">
-        Your Mail Addres
-    </label>
-    <div class="input">
-        <input type="text" class="input__input" placeholder="Your Mail Address" id="email" name="email"
-               value="<?php echo $user->getEmail(); ?>"/>
+    <div class="row">
+        <div class="col-md-12">
+            <div class="spinner spinner-lg blank-slate-pf-icon loader hidden"></div>
+            <button type="submit" class="btn btn-primary form-control">
+                Save values
+            </button>
+        </div>
     </div>
-    <span class="small">Please use an address that you have always access to.</span>
-    </div>
-    <div>
-    <label class="small small--upper c--white" for="role">
-        Your Role
-    </label>
-    <div class="input">
-        <input type="text" class="input__input" placeholder="Your Role" name="role" id="role"
-               value="<?php echo $user->getRole(); ?>"/>
-    </div>
-    <span class="small">Please briefly describe your professional role<br/>(e.g. "Developer", "CTO", "DevOps" or similar).</span>
-    </div>
-    <button type="submit" class="btn btn-primary">
-        Save values
-    </button>
-    <div class="spinner spinner-lg blank-slate-pf-icon loader"></div>
 </form>

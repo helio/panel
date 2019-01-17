@@ -121,12 +121,45 @@ class ServerUtility
 
 
     /**
+     * @param array $subpath
      * @return string
      */
-    public static function getTmpPath(): string
+    public static function getApplicationRootPath(array $subpath = []): string
     {
-        return \dirname(__DIR__, 3) . '/tmp';
+        $sub = $subpath ? DIRECTORY_SEPARATOR . implode(DIRECTORY_SEPARATOR, $subpath) : '';
+
+        return APPLICATION_ROOT . $sub;
     }
+
+    /**
+     * @param array $subpath
+     * @return string
+     */
+    public static function getTmpPath(array $subpath = []): string
+    {
+        return self::getApplicationRootPath(array_merge(['tmp'], $subpath));
+    }
+
+
+    /**
+     * @param array $subpath
+     * @return string
+     */
+    public static function getTemplatesPath(array $subpath = []): string
+    {
+        return self::getApplicationRootPath(array_merge(['src', 'templates'], $subpath));
+    }
+
+
+    /**
+     * @param array $subpath
+     * @return string
+     */
+    public static function getClassesPath(array $subpath = []): string
+    {
+        return self::getApplicationRootPath(array_merge(['src', 'Classes'], $subpath));
+    }
+
 
     /**
      * @param string $path

@@ -3,7 +3,7 @@
 namespace Helio\Panel\Master;
 
 use Helio\Panel\Model\Instance;
-use Helio\Panel\Model\Server;
+use Helio\Panel\Model\Job;
 use Helio\Panel\Utility\ServerUtility;
 
 class Puppet implements MasterInterface
@@ -79,6 +79,19 @@ class Puppet implements MasterInterface
     {
         return ServerUtility::executeShellCommand($this->parseCommand('cleanup'), $returnInsteadOfCall);
     }
+
+
+    /**
+     * @param Instance $instance
+     * @param Job $job
+     * @return bool
+     *
+     * TODO: Implement
+     */
+    public function dispatchJob(Instance $instance, Job $job): bool {
+        return true;
+    }
+
 
     /**
      * @param string $commandName

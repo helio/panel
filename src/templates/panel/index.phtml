@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html class="helio layout-pf layout-pf-fixed transitions" lang="en">
-<?php include __DIR__ . '/../shared/_head.phtml' ?>
+<?php \Helio\Panel\Helper\ViewHelper::includeShared('head'); ?>
 <body class="cards-pf">
 <?php /** @var \Helio\Panel\Model\User $user */ ?>
 <nav class="navbar navbar-pf-vertical">
+    <div id="notificationContainer"></div>
     <div class="navbar-header">
         <button type="button" class="navbar-toggle">
             <span class="sr-only">Toggle navigation</span>

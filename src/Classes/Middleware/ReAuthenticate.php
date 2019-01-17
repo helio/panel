@@ -41,7 +41,7 @@ class ReAuthenticate implements MiddlewareInterface
         /** @var Request $request */
         $token = $request->getAttribute('token');
 
-        if ($token && $request->getUri()->getPath() !== '/panel/logout') {
+        if ($token && !\array_key_exists('block_reauth', $request->getCookieParams()) && $request->getUri()->getPath() !== '/panel/logout') {
             $token = JwtUtility::generateToken($token['uid'], '+120 minutes');
             # re-authenticate by setting a new token
             $response = CookieUtility::addCookie($response, 'token', $token['token'], $token['expires']);

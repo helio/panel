@@ -47,13 +47,6 @@ class Task extends AbstractModel
      */
     protected $priority = 100;
 
-    /**
-     * @var string
-     *
-     * @Column(type="text")
-     */
-    protected $config = '';
-
 
     /**
      * @return Job
@@ -110,24 +103,6 @@ class Task extends AbstractModel
     public function setPriority(int $priority): Task
     {
         $this->priority = $priority;
-        return $this;
-    }
-
-    /**
-     * @return string
-     */
-    public function getConfig(): string
-    {
-        return $this->config;
-    }
-
-    /**
-     * @param string $config
-     * @return Task
-     */
-    public function setConfig(string $config): Task
-    {
-        $this->config = $config;
         return $this;
     }
 

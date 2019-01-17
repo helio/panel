@@ -5,15 +5,5 @@
         The last thing you'll need to do is activating the runner on this server.
         Try clicking "Start" in the action menu.
     </p>
-    <?php
-
-    if ($instance->getSnapshotConfig()) {
-        $config = json_decode($instance->getSnapshotConfig(), true);
-        if (array_key_exists('url', $config) && $config['url']) {
-            $url = str_replace('http://localhost:3000','https://'.\Helio\Panel\Utility\ServerUtility::get('GRAFANA_BASIC_AUTH', '').'graphs.idling.host', filter_var($config['url'], FILTER_SANITIZE_URL));
-
-            echo '<iframe src="' . $url . '" width="100%" height="400px" frameborder="0"></iframe>';
-        }
-    }
-    ?>
+    <?php \Helio\Panel\Helper\ViewHelper::includePartial('instanceMetricsPanel', ['instance' => $instance]); ?>
 </div>

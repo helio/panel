@@ -3,18 +3,18 @@
 <div class="list-group-item job loadable"
      data-id="<?php echo $job->getId(); ?>"
      data-status="<?php echo $job->getStatus(); ?>"
+     data-idname="jobid"
 >
 
-    <div class="list-view-pf-additional-info loader">
-        <span>
-            loading details...
-        </span>
+    <div class="loader loader-absolute">
+        <div class="spinner spinner-lg"></div>
     </div>
+
     <div class="list-group-item-header">
         <div class="list-view-pf-expand">
             <span class="fa fa-angle-right"></span>
         </div>
-        <div class="list-view-pf-actions">
+        <div class="list-view-pf-actions<?php echo isset($admin) ? ' hidden' : ''; ?>">
             <div class="dropdown pull-right dropdown-kebab-pf">
                 <button class="btn btn-link dropdown-toggle" type="button" id="dropdownKebabRight9"
                         data-toggle="dropdown"
@@ -29,7 +29,8 @@
 
         <div class="list-view-pf-main-info">
             <div class="list-view-pf-left">
-                <span class="fa fa-<?php echo $job->getType(); ?> list-view-pf-icon-sm status-<?php echo $job->getStatus(); ?>"></span>
+                <span title="<?php echo $job->getId() ?>"
+                      class="<?php echo \Helio\Panel\Job\JobType::getIconClassesForType($job->getType()); ?> list-view-pf-icon-sm status-<?php echo $job->getStatus(); ?>"></span>
             </div>
             <div class="list-view-pf-body">
                 <div class="list-view-pf-description">
@@ -49,10 +50,10 @@
         </div>
         <div class="row">
             <?php
-            $filename = __DIR__ . '/jobDetailType-' . $job->getType() . '.phtml';
-            if (file_exists($filename)) {
-                /** @noinspection PhpIncludeInspection */
-                include $filename;
+            if (isset($admin)) {
+                \Helio\Panel\Helper\ViewHelper::includePartial('jobDetailAdmin');
+            } else {
+                \Helio\Panel\Helper\ViewHelper::includePartial('jobDetailType-' . $job->getType(), ['job' => $job]);
             }
             ?>
         </div>

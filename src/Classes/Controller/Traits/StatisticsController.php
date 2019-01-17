@@ -2,7 +2,6 @@
 
 namespace Helio\Panel\Controller\Traits;
 
-use Helio\Panel\Helper\DbHelper;
 use Helio\Panel\Model\Instance;
 
 /**

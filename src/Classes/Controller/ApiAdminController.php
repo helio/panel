@@ -4,10 +4,17 @@ namespace Helio\Panel\Controller;
 
 
 use Helio\Panel\Controller\Traits\AdminController;
-use Helio\Panel\Controller\Traits\ParametrizedController;
+use Helio\Panel\Controller\Traits\InstanceController;
+use Helio\Panel\Controller\Traits\JobController;
 use Helio\Panel\Controller\Traits\TypeApiController;
-use Helio\Panel\Model\Instance;
+use Helio\Panel\Job\JobStatus;
 use Helio\Panel\Model\Job;
+use Helio\Panel\Model\Task;
+use Helio\Panel\Job\JobFactory;
+use Helio\Panel\Model\Instance;
+use Helio\Panel\Runner\RunnerFactory;
+use Helio\Panel\Task\TaskStatus;
+use Helio\Panel\Utility\ServerUtility;
 use Psr\Http\Message\ResponseInterface;
 
 /**
@@ -21,8 +28,12 @@ use Psr\Http\Message\ResponseInterface;
  */
 class ApiAdminController extends AbstractController
 {
+    use InstanceController, JobController {
+        InstanceController::setupParams insteadof JobController;
+        InstanceController::requiredParameterCheck insteadof JobController;
+        InstanceController::optionalParameterCheck insteadof JobController;
+    }
     use AdminController;
-    use ParametrizedController;
     use TypeApiController;
 
     protected function getContext(): ?string
@@ -40,8 +51,12 @@ class ApiAdminController extends AbstractController
     {
         $limit = (int)($this->params['limit'] ?? 10);
         $offset = (int)($this->params['offset'] ?? 0);
-        $order = explode(' ', filter_var($this->params['orderby'] ?? 'created DESC', FILTER_SANITIZE_STRING));
-        $orderBy = [$order[0] => $order[1]];
+        $order = explode(',', filter_var($this->params['orderby'] ?? 'status DESC, priority ASC', FILTER_SANITIZE_STRING));
+        $orderBy = [];
+        foreach ($order as $field) {
+            $field = explode(' ', trim($field));
+            $orderBy[$field[0]] = $field[1];
+        }
 
         $servers = [];
         foreach ($this->dbHelper->getRepository(Instance::class)->findBy([], $orderBy, $limit, $offset) as $instance) {
@@ -54,15 +69,19 @@ class ApiAdminController extends AbstractController
     /**
      * @return ResponseInterface
      *
-     * @Route("/joblist", methods={"GET"}, name="user.serverlist")
+     * @Route("/joblist", methods={"GET"}, name="admin.joblist")
      * @throws \Exception
      */
     public function jobListAction(): ResponseInterface
     {
         $limit = (int)($this->params['limit'] ?? 10);
         $offset = (int)($this->params['offset'] ?? 0);
-        $order = explode(' ', filter_var($this->params['orderby'] ?? 'created DESC', FILTER_SANITIZE_STRING));
-        $orderBy = [$order[0] => $order[1]];
+        $order = explode(',', filter_var($this->params['orderby'] ?? 'created DESC', FILTER_SANITIZE_STRING));
+        $orderBy = [];
+        foreach ($order as $field) {
+            $field = explode(' ', trim($field));
+            $orderBy[$field[0]] = $field[1];
+        }
 
         $jobs = [];
         foreach ($this->dbHelper->getRepository(Job::class)->findBy([], $orderBy, $limit, $offset) as $job) {
@@ -71,6 +90,21 @@ class ApiAdminController extends AbstractController
         }
         return $this->render(['items' => $jobs, 'user' => $this->user]);
     }
+
+
+    /**
+     * @return ResponseInterface
+     *
+     * @Route("/dispatch", methods={"PUT"}, name="admin.jobdispatch")
+     */
+    public function dispatchAction(): ResponseInterface
+    {
+        // TODO: Do something useful with this config.
+        return $this->render(['message' => 'done',
+            'config' => RunnerFactory::getRunnerForInstance($this->instance)->createConfigForJob(JobFactory::getDispatchConfigOfJob($this->job)->getDispatchConfig()
+        ]);
+    }
+
 
     /**
      * @return ResponseInterface
@@ -97,5 +131,31 @@ class ApiAdminController extends AbstractController
         $this->dbHelper->flush($this->user);
 
         return $this->render();
+    }
+
+
+    /**
+     * @return ResponseInterface
+     *
+     * @Route("/stat", methods={"GET"}, name="exec.stats")
+     * @throws \Exception
+     */
+    public function statsAction(): ResponseInterface
+    {
+        $now = new \DateTime('now', ServerUtility::getTimezoneObject());
+        $stale = $now->sub(new \DateInterval('PT1H'));
+
+        $avgWaitQuery = $this->dbHelper->getRepository(Task::class)->createQueryBuilder('avg_wait');
+        $avgWaitQuery->select('AVG(TIMESTAMPDIFF(SECOND, avg_wait.created, ' . $now->format('YmdHis') . ')) as avg')->where('avg_wait.status = ' . TaskStatus::READY);
+        $staleQuery = $this->dbHelper->getRepository(Task::class)->createQueryBuilder('stale');
+        $staleQuery->select('COUNT(stale.id) as count')->where('stale.status = ' . TaskStatus::RUNNING)->andWhere('TIMESTAMPDIFF(SECOND, stale.latestAction, ' . $stale->format('YmdHis') . ') > 600');
+
+        return $this->render([
+            'active_jobs' => $this->dbHelper->getRepository(Job::class)->count(['status' => JobStatus::READY]),
+            'running_tasks' => $this->dbHelper->getRepository(Task::class)->count(['status' => TaskStatus::RUNNING]),
+            'waiting_tasks' => $this->dbHelper->getRepository(Task::class)->count(['status' => TaskStatus::READY]),
+            'task_avg_wait' => $avgWaitQuery->getQuery()->getArrayResult()[0]['avg'],
+            'stale_tasks' => $staleQuery->getQuery()->getArrayResult()[0]['count']
+        ]);
     }
 }

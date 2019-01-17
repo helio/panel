@@ -1,29 +1,518 @@
 {
-  "dashboard": {
-    "editable":false,
-    "hideControls":true,
-    "nav":[
+  "annotations": {
+    "list": [
       {
-        "enable":false,
-        "type":"timepicker"
+        "name": "Annotations & Alerts",
+        "enable": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "snapshotData": [],
+        "type": "dashboard",
+        "builtIn": 1,
+        "hide": true
       }
-    ],
-    "rows": [
-      {
-
-      }
-    ],
-    "style":"dark",
-    "tags":[],
-    "templating":{
-      "list":[
-      ]
-    },
-    "time":{
-    },
-    "timezone":"browser",
-    "title":"Home",
-    "version":5
+    ]
   },
-  "expires": 604800
+  "editable": true,
+  "gnetId": 1860,
+  "graphTooltip": 0,
+  "id": 8,
+  "iteration": 1547555028276,
+  "links": [],
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 158,
+      "panels": [],
+      "repeat": null,
+      "title": "Basic CPU / Mem Graph",
+      "type": "row",
+      "targets": [],
+      "links": [],
+      "datasource": null
+    },
+    {
+      "aliasColors": {
+        "Busy": "#EAB839",
+        "Busy Iowait": "#890F02",
+        "Busy other": "#1F78C1",
+        "Idle": "#052B51",
+        "Idle - Waiting for something to happen": "#052B51",
+        "guest": "#9AC48A",
+        "idle": "#052B51",
+        "iowait": "#EAB839",
+        "irq": "#BF1B00",
+        "nice": "#C15C17",
+        "softirq": "#E24D42",
+        "steal": "#FCE2DE",
+        "system": "#508642",
+        "user": "#5195CE"
+      },
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": null,
+      "decimals": 2,
+      "description": "Basic CPU info",
+      "fill": 4,
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 1
+      },
+      "id": 77,
+      "legend": {
+        "alignAsTable": false,
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "rightSide": false,
+        "show": true,
+        "sideWidth": 250,
+        "sort": null,
+        "sortDesc": null,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "minSpan": 4,
+      "nullPointMode": "null",
+      "percentage": true,
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [
+        {
+          "alias": "Busy Iowait",
+          "color": "#890F02"
+        },
+        {
+          "alias": "Idle",
+          "color": "#7EB26D"
+        },
+        {
+          "alias": "Busy System",
+          "color": "#EAB839"
+        },
+        {
+          "alias": "Busy User",
+          "color": "#0A437C"
+        },
+        {
+          "alias": "Busy Other",
+          "color": "#6D1F62"
+        }
+      ],
+      "snapshotData": [
+        {
+          "query": "sum by (instance)(rate(node_cpu{mode=\"system\",instance=~\"broker:9100\",job=~\"node_broker\"}[5m])) * 100",
+          "target": "Busy System"
+        },
+        {
+          "query": "sum by (instance)(rate(node_cpu{mode='user',instance=~\"broker:9100\",job=~\"node_broker\"}[5m])) * 100",
+          "target": "Busy User"
+        },
+        {
+          "query": "sum by (instance)(rate(node_cpu{mode='iowait',instance=~\"broker:9100\",job=~\"node_broker\"}[5m])) * 100",
+          "target": "Busy Iowait"
+        },
+        {
+          "query": "sum by (instance)(rate(node_cpu{mode=~\".*irq\",instance=~\"broker:9100\",job=~\"node_broker\"}[5m])) * 100",
+          "target": "Busy IRQs"
+        },
+        {
+          "query": "sum (rate(node_cpu{mode!='idle',mode!='user',mode!='system',mode!='iowait',mode!='irq',mode!='softirq',instance=~\"broker:9100\",job=~\"node_broker\"}[5m])) * 100",
+          "target": "Busy Other"
+        },
+        {
+          "query": "sum by (mode)(rate(node_cpu{mode='idle',instance=~\"broker:9100\",job=~\"node_broker\"}[5m])) * 100",
+          "target": "Idle"
+        }
+      ],
+      "spaceLength": 10,
+      "stack": true,
+      "steppedLine": false,
+      "targets": [],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "CPU Basic",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "transparent": false,
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": "",
+          "logBase": 1,
+          "max": "100",
+          "min": "0",
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": false
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {
+        "Apps": "#629E51",
+        "Buffers": "#614D93",
+        "Cache": "#6D1F62",
+        "Cached": "#511749",
+        "Committed": "#508642",
+        "Free": "#0A437C",
+        "Harware Corrupted - Amount of RAM that the kernel identified as corrupted / not working": "#CFFAFF",
+        "Inactive": "#584477",
+        "PageTables": "#0A50A1",
+        "Page_Tables": "#0A50A1",
+        "RAM_Free": "#E0F9D7",
+        "SWAP Used": "#BF1B00",
+        "Slab": "#806EB7",
+        "Slab_Cache": "#E0752D",
+        "Swap": "#BF1B00",
+        "Swap Used": "#BF1B00",
+        "Swap_Cache": "#C15C17",
+        "Swap_Free": "#2F575E",
+        "Unused": "#EAB839"
+      },
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": null,
+      "decimals": 2,
+      "description": "Basic memory usage",
+      "fill": 4,
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 1
+      },
+      "id": 78,
+      "legend": {
+        "alignAsTable": false,
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "rightSide": false,
+        "show": true,
+        "sideWidth": 350,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "minSpan": 4,
+      "nullPointMode": "null",
+      "percentage": false,
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [
+        {
+          "alias": "RAM Total",
+          "color": "#E0F9D7",
+          "fill": 0,
+          "stack": false
+        },
+        {
+          "alias": "RAM Cache + Buffer",
+          "color": "#052B51"
+        },
+        {
+          "alias": "RAM Free",
+          "color": "#7EB26D"
+        },
+        {
+          "alias": "Avaliable",
+          "color": "#DEDAF7",
+          "fill": 0,
+          "stack": false
+        }
+      ],
+      "snapshotData": [
+        {
+          "query": "node_memory_MemTotal{instance=~\"broker:9100\",job=~\"node_broker\"}",
+          "target": "RAM Total"
+        },
+        {
+          "query": "node_memory_MemTotal{instance=~\"broker:9100\",job=~\"node_broker\"} - node_memory_MemFree{instance=~\"broker:9100\",job=~\"node_broker\"} - (node_memory_Cached{instance=~\"broker:9100\",job=~\"node_broker\"} + node_memory_Buffers{instance=~\"broker:9100\",job=~\"node_broker\"})",
+          "target": "RAM Used"
+        },
+        {
+          "query": "node_memory_Cached{instance=~\"broker:9100\",job=~\"node_broker\"} + node_memory_Buffers{instance=~\"broker:9100\",job=~\"node_broker\"}",
+          "target": "RAM Cache + Buffer"
+        },
+        {
+          "query": "node_memory_MemFree{instance=~\"broker:9100\",job=~\"node_broker\"}",
+          "target": "RAM Free"
+        },
+        {
+          "query": "(node_memory_SwapTotal{instance=~\"broker:9100\",job=~\"node_broker\"} - node_memory_SwapFree{instance=~\"broker:9100\",job=~\"node_broker\"})",
+          "target": "SWAP Used"
+        }
+      ],
+      "spaceLength": 10,
+      "stack": true,
+      "steppedLine": false,
+      "targets": [],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Memory Basic",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "bytes",
+          "label": "",
+          "logBase": 1,
+          "max": null,
+          "min": "0",
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": false
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    }
+  ],
+  "refresh": false,
+  "schemaVersion": 16,
+  "snapshot": {
+    "originalUrl": "https://grafana.idling.host/d/eqrNQOwmk/panel-basic?orgId=1"
+  },
+  "style": "dark",
+  "tags": [],
+  "templating": {
+    "list": [
+      {
+        "allValue": null,
+        "current": {
+          "text": "node_broker",
+          "value": "node_broker"
+        },
+        "datasource": "Prometheus",
+        "definition": "",
+        "hide": 2,
+        "includeAll": false,
+        "label": "",
+        "multi": false,
+        "name": "job",
+        "options": {
+          "text": "node_broker",
+          "value": "node_broker"
+        },
+        "query": "",
+        "refresh": false,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "allValue": null,
+        "current": {
+          "text": "broker",
+          "value": "broker"
+        },
+        "datasource": "Prometheus",
+        "definition": "",
+        "hide": 2,
+        "includeAll": false,
+        "label": "",
+        "multi": false,
+        "name": "node",
+        "options": {
+          "text": "broker",
+          "value": "broker"
+        },
+        "query": "",
+        "refresh": false,
+        "regex": "/([^:]+):.*/",
+        "skipUrlSync": false,
+        "sort": 1,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "allValue": null,
+        "current": {
+          "text": "9100",
+          "value": "9100"
+        },
+        "datasource": "Prometheus",
+        "definition": "",
+        "hide": 2,
+        "includeAll": false,
+        "label": "",
+        "multi": false,
+        "name": "port",
+        "options": {
+          "text": "9100",
+          "value": "9100"
+        },
+        "query": "",
+        "refresh": false,
+        "regex": "/[^:]+:(.*)/",
+        "skipUrlSync": false,
+        "sort": 3,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "allValue": null,
+        "current": {
+          "isNone": true,
+          "text": "None",
+          "value": ""
+        },
+        "datasource": "Prometheus",
+        "definition": "",
+        "hide": 2,
+        "includeAll": false,
+        "label": "",
+        "multi": false,
+        "name": "user",
+        "options": {
+          "isNone": true,
+          "text": "None",
+          "value": ""
+        },
+        "query": "",
+        "refresh": false,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "allValue": null,
+        "current": {
+          "isNone": true,
+          "text": "None",
+          "value": ""
+        },
+        "datasource": "Prometheus",
+        "definition": "",
+        "hide": 2,
+        "includeAll": false,
+        "label": "",
+        "multi": false,
+        "name": "server",
+        "options": {
+          "isNone": true,
+          "text": "None",
+          "value": ""
+        },
+        "query": "",
+        "refresh": false,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      }
+    ]
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "5s",
+      "10s",
+      "30s",
+      "1m",
+      "5m",
+      "15m",
+      "30m",
+      "1h",
+      "2h",
+      "1d"
+    ],
+    "time_options": [
+      "5m",
+      "15m",
+      "1h",
+      "6h",
+      "12h",
+      "24h",
+      "2d",
+      "7d",
+      "30d"
+    ]
+  },
+  "timezone": "browser",
+  "title": "Panel Basic",
+  "uid": "eqrNQOwmk",
+  "version": 2
 }

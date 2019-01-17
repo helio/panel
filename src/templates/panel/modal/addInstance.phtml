@@ -142,16 +142,25 @@
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-2 control-label required-pf" for="region">Region</label>
-                                    <div class="col-sm-10">
-                                        <input name="region" id="region" placeholder="Germany" type="text"
-                                               class="form-control" required/>
-                                    </div>
-                                </div>
-                                <div class="form-group">
                                     <label class="col-sm-2 control-label" for="instancename">Name or Description</label>
                                     <div class="col-sm-10">
                                         <input name="instancename" id="instancename" type="text" class="form-control"/>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-2 control-label" for="instancelocation">
+                                        Instance Location
+                                    </label>
+                                    <div class="col-sm-10">
+                                        <?php \Helio\Panel\Helper\ViewHelper::includePartial('instanceLocationSelect', ['value' => $user->getConfig('instancelocation')]); ?>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-2 control-label" for="instancelevel">
+                                        Instance Security Level
+                                    </label>
+                                    <div class="col-sm-10">
+                                        <?php \Helio\Panel\Helper\ViewHelper::includePartial('instanceSecuritySelect', ['value' => $user->getConfig('instancelevel')]); ?>
                                     </div>
                                 </div>
                             </form>
@@ -162,10 +171,7 @@
                                 <select class="selectpicker form-control" name="instancetype" id="instancetype"
                                         required>
                                     <option value="">Select Instance Type...</option>
-                                    <option value="baremetal">Bare Metal</option>
-                                    <option value="vm">Dedicated VM</option>
-                                    <option value="openstack">OpenStack</option>
-                                    <option value="bearcloud">BearCloud</option>
+                                    <?php echo \Helio\Panel\Instance\InstanceType::getOptionList(); ?>
                                     <option value="nutanix" disabled>Nutanix</option>
                                 </select>
                                 <div class="form-group option-value-openstack hidden">
@@ -231,12 +237,7 @@
                                             Please make sure you set the required Firewall Rules according to
                                             <a href="https://github.com/helio/setup#firewall">our Github README</a>.
                                         </p>
-                                        <pre class="prettyprint" data-parse="true">
-curl -fsSL un.idling.host -o start-computing.sh
-if shasum -a 1 -s -c <(echo '<?php echo \Helio\Panel\Utility\ServerUtility::get('SCRIPT_HASH') ?> start-computing.sh'); then
-    sh start-computing.sh -m <?php echo $user->getEmail(); ?><!-- -->
-fi</pre>
-
+                                        <?php \Helio\Panel\Helper\ViewHelper::includePartial('instanceAddScript', ['email' => $user->getEmail()]); ?>
                                     </div>
                                 </div>
                             </form>
