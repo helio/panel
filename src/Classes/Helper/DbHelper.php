@@ -116,7 +116,7 @@ class DbHelper
 
             $configObject->addCustomNumericFunction('timestampdiff', TimestampDiff::class);
 
-            if (ServerUtility::get('SITE_ENV', 'PROD') === 'DEV') {
+            if (ServerUtility::get('SITE_ENV', 'PROD') !== 'PROD') {
                 $configObject->setAutoGenerateProxyClasses(true);
             } else {
                 $configObject->setAutoGenerateProxyClasses(false);
