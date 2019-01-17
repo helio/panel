@@ -101,7 +101,7 @@ class ApiAdminController extends AbstractController
     {
         // TODO: Do something useful with this config.
         return $this->render(['message' => 'done',
-            'config' => RunnerFactory::getRunnerForInstance($this->instance)->createConfigForJob(JobFactory::getDispatchConfigOfJob($this->job)->getDispatchConfig()
+            'config' => RunnerFactory::getRunnerForInstance($this->instance)->createConfigForJob(JobFactory::getDispatchConfigOfJob($this->job)->getDispatchConfig())
         ]);
     }
 
