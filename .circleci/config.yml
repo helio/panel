@@ -61,7 +61,7 @@ jobs:
           START_DIR="$(pwd -P)"
           for img in $(find src -name Dockerfile); do
             cd "${START_DIR}/$(dirname $img)"
-            IMGNAME=gitlab.idling.host:4567/opencomputing/runner/$(echo $(basename $(dirname $img)) | tr '[:upper:]' '[:lower:]')
+            IMGNAME=gitlab.idling.host:4567/helio/runner/$(echo $(basename $(dirname $img)) | tr '[:upper:]' '[:lower:]')
             TAGNAME=$(echo ${CIRCLE_BRANCH} | tr '/' '_')
             docker build -t ${IMGNAME}:${TAGNAME} . && docker push "${IMGNAME}:${TAGNAME}"
             if [ "${CIRCLE_BRANCH}" == "master" ]; then

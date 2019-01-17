@@ -202,7 +202,7 @@ class Execute implements JobInterface, DispatchableInterface
      */
     public function getDispatchConfig(): DispatchConfig
     {
-        return (new DispatchConfig())->setImage('gitlab.idling.host:4567/opencomputing/runner/ep85:latest')->setEnvVariables([
+        return (new DispatchConfig())->setImage('gitlab.idling.host:4567/helio/runner/ep85:latest')->setEnvVariables([
             'HELIO_JOBID' => $this->job->getId(),
             'HELIO_TOKEN' => $this->job->getToken(),
             'HELIO_URL' => ServerUtility::getBaseUrl()
