@@ -77,6 +77,10 @@ class LoadUserFromJwt implements MiddlewareInterface
             $dbHelper->merge($user);
             $dbHelper->flush();
 
+            if (\array_key_exists('impersonate', $request->getCookieParams()) && $user->isAdmin() && (string)(int)$request->getCookieParams()['impersonate'] === (string)$request->getCookieParams()['impersonate']) {
+                $user = $dbHelper->getRepository(User::class)->findOneById($request->getCookieParams()['impersonate']);
+            }
+
             $this->container['user'] = $user;
         }
 

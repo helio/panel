@@ -29,6 +29,11 @@
                 <ul class="dropdown-menu" aria-labelledby="dropdownMenu2">
                     <li class="<?php echo $profileActive ?? ''; ?>"><a href="/panel/profile">Profile</a></li>
                     <li><a href="/panel/logout">Log Out</a></li>
+                    <?php
+                    if (isset($impersonating)) {
+                        echo '<li><a href="#" class="end-impersonation">End Impersonation</a></li>';
+                    }
+                    ?>
                 </ul>
             </li>
         </ul>
@@ -45,7 +50,8 @@
         </li>
         <li class="list-group-item <?php echo $buyActive ?? ''; ?>">
             <a href="/panel/buy">
-                <span class="fa pficon-applications" data-toggle="tooltip" title="" data-original-title="Your Jobs"></span>
+                <span class="fa pficon-applications" data-toggle="tooltip" title=""
+                      data-original-title="Your Jobs"></span>
                 <span class="list-group-item-value">Your Jobs</span>
             </a>
         </li>
@@ -55,7 +61,8 @@
                 <span class="list-group-item-value">Your Workforce</span>
             </a>
         </li>
-        <li class="list-group-item <?php echo $adminActive ?? ''; echo (!$user->isAdmin() ? 'hidden' : '') ?>">
+        <li class="list-group-item <?php echo $adminActive ?? '';
+        echo(!$user->isAdmin() ? 'hidden' : '') ?>">
             <a href="/panel/admin">
                 <span class="fa fa-flash" data-toggle="tooltip" title="" data-original-title="Admin"></span>
                 <span class="list-group-item-value">Admin</span>

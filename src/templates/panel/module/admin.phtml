@@ -1,4 +1,22 @@
+<?php /** @var \Helio\Panel\Model\User $user */ ?>
 <div class="container-fluid">
+    <div>
+        <h2>
+            Impersonate
+        </h2>
+        <ul>
+            <?php
+            if (isset($users)) {
+                /** @var \Helio\Panel\Model\User $u */
+                foreach ($users as $u) {
+                    if ($u->getId() !== $user->getId()) {
+                        echo '<button class="btn btn-primary impersonate" data-userid="' . $u->getId() . '">'.$u->getEmail().'</button>';
+                    }
+                }
+            }
+            ?>
+        </ul>
+    </div>
     <div id="helio-joblist" class="list-group list-view-pf list-view-pf-view loadable">
         <div class="list-group-item control loader">
             <div class="list-group-item">

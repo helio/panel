@@ -5,6 +5,7 @@ namespace Helio\Panel\Controller;
 use Helio\Panel\Controller\Traits\ParametrizedController;
 use Helio\Panel\Controller\Traits\StatisticsController;
 use Helio\Panel\Controller\Traits\TypeBrowserController;
+use Helio\Panel\Model\User;
 use Helio\Panel\Utility\CookieUtility;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Http\StatusCode;
@@ -114,6 +115,7 @@ class PanelController extends AbstractController
             return $this->response->withRedirect('/panel', StatusCode::HTTP_FOUND);
         }
         return $this->render([
+            'users' => $this->dbHelper->getRepository(User::class)->findAll(),
             'user' => $this->user,
             'title' => 'Admin - Helio Panel',
             'module' => 'admin',

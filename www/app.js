@@ -8,6 +8,12 @@ $(document).ready(function () {
     // Initialize the vertical navigation
     $().setupVerticalNavigation(true);
 
+    $('.end-impersonation').on('click', function(e){
+        e.preventDefault();
+        document.cookie = 'impersonate=; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+        window.location = '/';
+    });
+
     // initialize pretty print
     prettyPrint();
 });

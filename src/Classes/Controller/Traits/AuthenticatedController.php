@@ -3,6 +3,7 @@
 namespace Helio\Panel\Controller\Traits;
 
 use Ergy\Slim\Annotations\RouteInfo;
+use Helio\Panel\App;
 use Helio\Panel\Model\User;
 
 trait AuthenticatedController
@@ -19,7 +20,11 @@ trait AuthenticatedController
      */
     public function setupUser(): bool
     {
-        $this->user = $this->dbHelper->getRepository(User::class)->find($this->jwt['uid']);
+        try {
+            $this->user = App::getApp()->getContainer()['user'];
+        } catch (\Exception $e) {
+            return false;
+        }
         return true;
     }
 

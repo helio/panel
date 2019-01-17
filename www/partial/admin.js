@@ -49,4 +49,12 @@ $(document).ready(function () {
         initActionButtons($(this));
         prettyPrint();
     });
+
+
+    $('.impersonate').on('click', function (e) {
+        let button = $(this);
+        let userId = button.data('userid');
+        document.cookie = 'impersonate=' + userId + '; path=/';
+        window.location = '/';
+    })
 });
