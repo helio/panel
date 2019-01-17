@@ -48,4 +48,14 @@ EOM;
 
         return $return;
     }
+
+
+    /**
+     * @param string $content
+     * @return bool
+     */
+    public static function sendMailToAdmin(string $content = ''): bool
+    {
+        return @mail('team@opencomputing.cloud', 'Admin Notification from Panel', $content, 'From: hello@idling.host', '-f hello@idling.host');
+    }
 }
