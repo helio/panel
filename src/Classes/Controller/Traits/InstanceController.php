@@ -64,7 +64,11 @@ trait InstanceController
                 return $status;
                 break;
             case InstanceStatus::READY:
-                $status = RunnerFactory::getRunnerForInstance($this->instance)->inspect()[0];
+                $status = RunnerFactory::getRunnerForInstance($this->instance)->inspect();
+                if (\is_array($status) && \count($status) > 0) {
+                    $status = $status[0];
+                }
+
                 if (\is_array($status) && \array_key_exists('Status', $status) && \array_key_exists('State', $status['Status']) && $status['Status']['State'] === 'ready') {
                     $this->instance->setStatus(InstanceStatus::RUNNING);
                     $this->persistInstance();
@@ -73,7 +77,10 @@ trait InstanceController
                 return $status;
                 break;
             case InstanceStatus::RUNNING:
-                $status = RunnerFactory::getRunnerForInstance($this->instance)->inspect()[0];
+                $status = RunnerFactory::getRunnerForInstance($this->instance)->inspect();
+                if (\is_array($status) && \count($status) > 0) {
+                    $status = $status[0];
+                }
                 if (\is_array($status) && \array_key_exists('Status', $status) && \array_key_exists('State', $status['Status']) && $status['Status']['State'] === 'down') {
                     $this->instance->setStatus(InstanceStatus::READY);
                     $this->persistInstance();

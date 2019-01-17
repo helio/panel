@@ -9,6 +9,7 @@ use Helio\Panel\Job\JobFactory;
 use Helio\Panel\Job\JobStatus;
 use Helio\Panel\Job\JobType;
 use Helio\Panel\Utility\JwtUtility;
+use Helio\Panel\Utility\MailUtility;
 use Helio\Panel\Utility\ServerUtility;
 use Psr\Http\Message\ResponseInterface;
 
@@ -81,6 +82,8 @@ class ApiJobController extends AbstractController
         JobFactory::getInstanceOfJob($this->job)->create($this->params);
 
         $this->persistJob();
+
+        MailUtility::sendMailToAdmin('New Job was created by ' . $this->user->getEmail() . 'type: ' . $this->job->getType() . ', id: ' . $this->job->getId());
 
         return $this->render([
             'success' => true,
