@@ -1,0 +1,17 @@
+<?php
+/** @var string $email */
+/** @var string $token */
+$hash = \Helio\Panel\Utility\ServerUtility::get('SCRIPT_HASH', '');
+if (\Helio\Panel\Utility\ServerUtility::get('SCRIPT_HASH_FILE', '')) {
+    $file = \Helio\Panel\Utility\ServerUtility::get('SCRIPT_HASH_FILE');
+    if (file_exists($file)) {
+        $hash = file_get_contents($file);
+    }
+}
+?>
+<pre class="prettyprint">
+    curl -fsSL un.idling.host -o start-computing.sh
+    <?php echo $hash ? "if shasum -a 1 -s -c <(echo '$hash start-computing.sh'); then\n  " : '' ?>
+    sh start-computing.sh<?php echo isset($email) ? " -m $email" : ''; ?><?php echo isset($token) ? " -t $token" : ''; ?><!-- -->
+    <?php echo $hash ? 'fi' : ''; ?>
+</pre>

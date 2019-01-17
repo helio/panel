@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html class="helio login-pf" lang="en">
-<?php include __DIR__ . '/../shared/_head.phtml' ?>
+<?php \Helio\Panel\Helper\ViewHelper::includeShared('head'); ?>
 <body>
-
+<div id="notificationContainer"></div>
 
 <div class="login-pf-page">
     <div class="container-fluid">
@@ -11,11 +11,12 @@
                 <header class="login-pf-page-header">
                     <img class="login-pf-brand" src="/images/logo.svg" alt=" logo"/>
                     <h1 class="display">
-                        Monetize your unused space
+                        The Autonomous Cloud Computing Exchange
                     </h1>
                     <p>
-                        Have some servers running under capacity?<br>
-                        Utilize idling computing capacity.
+                        <strong>Have some idling servers?</strong> Utilize their computing capacity today.
+                        <br>
+                        <strong>Have some heavy computing tasks?</strong> Run them cheap and easy.
                     </p>
                 </header>
                 <div class="row">

@@ -12,6 +12,7 @@ use Doctrine\{
     ORM\Mapping\ManyToOne,
     ORM\Mapping\OneToMany
 };
+use Helio\Panel\Utility\ArrayUtility;
 use Helio\Panel\Utility\ServerUtility;
 
 abstract class AbstractModel
@@ -71,6 +72,15 @@ abstract class AbstractModel
     protected $status = 0;
 
 
+    /**
+     * @var string
+     *
+     * @Column(type="text")
+     */
+    protected $config = '';
+    private static $decodedConfig;
+
+
     public function __construct()
     {
         $this->timezone = ServerUtility::getTimezoneObject()->getName();
@@ -114,11 +124,17 @@ abstract class AbstractModel
     }
 
     /**
-     * @param \DateTime $created
+     * @param \DateTime|null $created
      * @return $this
      */
-    public function setCreated(\DateTime $created): self
+    public function setCreated(\DateTime $created = null): self
     {
+        if (!$created) {
+            $created = new \DateTime('now', new \DateTimeZone($this->getTimezone()));
+        }
+        $created->setTimezone(new \DateTimeZone('UTC'));
+
+        // Fix Timezone because Doctrine assumes persistend DateTime Objects are always UTC
         $this->created = $created;
         return $this;
     }
@@ -195,6 +211,35 @@ abstract class AbstractModel
     public function setTimezone(string $timezone): self
     {
         $this->timezone = $timezone;
+        return $this;
+    }
+
+    /**
+     * @param string $option
+     * @return string
+     */
+    public function getConfig(string $option = ''): string
+    {
+        if ($option && $this->config) {
+            if (!self::$decodedConfig) {
+                self::$decodedConfig = json_decode($this->config, true);
+            }
+
+            return ArrayUtility::getFirstByDotNotation([self::$decodedConfig], [$option]) ?? '';
+        }
+        return $this->config;
+    }
+
+    /**
+     * @param string|array $config
+     * @return $this
+     */
+    public function setConfig($config): self
+    {
+        if (\is_array($config)) {
+            $config = json_encode($config);
+        }
+        $this->config = $config;
         return $this;
     }
 

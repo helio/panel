@@ -8,6 +8,7 @@ use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Tools\Setup;
 use Helio\Panel\Model\Filter\DeletedFilter;
+use Helio\Panel\Model\QueryFunction\TimestampDiff;
 use Helio\Panel\Model\Type\UTCDateTimeType;
 use Helio\Panel\Utility\ServerUtility;
 
@@ -89,6 +90,7 @@ class DbHelper
             Type::overrideType('datetime', UTCDateTimeType::class);
             Type::overrideType('datetimetz', UTCDateTimeType::class);
 
+
             if (!$this->getPathToModels() || !is_dir($this->getPathToModels())) {
                 throw new \InvalidArgumentException('invalid path submitted to DbFactory->getConnection()', 1530565724);
             }
@@ -112,6 +114,7 @@ class DbHelper
                 $configObject->addFilter($name, $filter);
             }
 
+            $configObject->addCustomNumericFunction('timestampdiff', TimestampDiff::class);
 
 
             $this->db = EntityManager::create($dbCfg, $configObject);

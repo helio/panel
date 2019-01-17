@@ -4,11 +4,13 @@ namespace Helio\Panel\Utility;
 
 use Firebase\JWT\JWT;
 
+use Helio\Panel\Middleware\CustomApiTokenForUser;
 use Helio\Panel\Middleware\LoadUserFromJwt;
 use Helio\Panel\Middleware\TokenAttributeToCookie;
 use Helio\Panel\Middleware\ReAuthenticate;
 use Helio\Panel\Model\Instance;
 use Helio\Panel\Model\Job;
+use Helio\Panel\Model\User;
 use Slim\App;
 use Slim\Http\StatusCode;
 use Tuupola\Base62;
@@ -74,6 +76,8 @@ class JwtUtility
                     ->withStatus(StatusCode::HTTP_SEE_OTHER), 'token');
             }
         ]));
+
+        $app->add(new CustomApiTokenForUser());
 
         $app->add(new TokenAttributeToCookie());
 
@@ -147,6 +151,32 @@ class JwtUtility
         $salt = explode(':', $claim)[0];
 
         return $claim === self::getSaltedTokenHash($instance->getId(), $instance->getCreated()->getTimestamp(), $salt);
+    }
+
+
+    /**
+     * @param User $user
+     * @return string
+     * @throws \Exception
+     */
+    public static function generateUserIdentificationToken(User $user): string
+    {
+        $salt = bin2hex(random_bytes(4));
+
+        return self::getSaltedTokenHash($user->getId(), $user->getCreated()->getTimestamp(), $salt);
+    }
+
+
+    /**
+     * @param User $user
+     * @param string $claim
+     * @return bool
+     */
+    public static function verifyUserIdentificationToken(User $user, string $claim): bool
+    {
+        $salt = explode(':', $claim)[0];
+
+        return $claim === self::getSaltedTokenHash($user->getId(), $user->getCreated()->getTimestamp(), $salt);
     }
 
 

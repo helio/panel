@@ -1,0 +1,11 @@
+<?php /** @var string $value Has to be set as value="" on select as well, for prefill to work */ ?>
+<select class="selectpicker form-control" id="instancelevel" name="instancelevel" value="<?php echo $value; ?>">
+    <option value="">Select Level...</option>
+    <option value="hobby" <?php echo $value === 'hobby' ? 'selected' : ''; ?>>Hobby</option>
+    <option value="onprem" <?php echo $value === 'onprem' ? 'selected' : ''; ?>>On-Prem</option>
+    <option value="tier1" <?php echo $value === 'tier1' ? 'selected' : ''; ?>>Tier 1 DC</option>
+    <option value="tier2" <?php echo $value === 'tier2' ? 'selected' : ''; ?>>Tier 2 DC</option>
+    <option value="tier3" <?php echo $value === 'tier3' ? 'selected' : ''; ?>>Tier 3 DC</option>
+    <option value="iso" <?php echo $value === 'iso' ? 'selected' : ''; ?>>ISO Certified DC</option>
+    <option value="other" <?php echo $value === 'other' ? 'selected' : ''; ?>>other</option>
+</select>

@@ -2,9 +2,7 @@
 
 namespace Helio\Panel\Controller\Traits;
 
-use Ergy\Slim\Annotations\RouteInfo;
 use Helio\Panel\Helper\GoogleIapHelper;
-use Helio\Panel\Model\User;
 use Helio\Panel\Utility\ServerUtility;
 
 trait GoogleAuthenticatedController

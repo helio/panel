@@ -15,6 +15,7 @@ use Doctrine\{
 };
 
 use Doctrine\Common\Collections\ArrayCollection;
+use Helio\Panel\Utility\ArrayUtility;
 use Helio\Panel\Utility\JwtUtility;
 use Helio\Panel\Utility\ServerUtility;
 
@@ -31,6 +32,14 @@ class User extends AbstractModel
      * @Column
      */
     protected $email = '';
+
+
+    /**
+     * @var string
+     *
+     * @Column
+     */
+    protected $token = '';
 
 
     /**
@@ -109,6 +118,24 @@ class User extends AbstractModel
     {
         $this->email = $email;
 
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getToken(): string
+    {
+        return $this->token;
+    }
+
+    /**
+     * @param string $token
+     * @return User
+     */
+    public function setToken(string $token): User
+    {
+        $this->token = $token;
         return $this;
     }
 

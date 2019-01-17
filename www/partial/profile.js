@@ -1,4 +1,6 @@
 $(document).ready(function () {
+    $('.selectpicker').selectpicker();
+
     $('#form-profile').on('submit', function (e) {
         e.preventDefault();
         let form = $('#form-profile');
@@ -12,17 +14,29 @@ $(document).ready(function () {
             url: '/api/user/update',
             data: data,
             method: 'post',
-            success: function () {
-                $('<div class="toast-pf toast-pf-max-width toast-pf-top-right alert alert-success alert-dismissable">\n' +
-                    '    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">' +
-                    '        <span class="pficon pficon-close"></span>' +
-                    '    </button>' +
-                    '    <span class="pficon pficon-ok"></span>' +
-                    '    Updated Successful' +
-                    '</div>').prependTo($('body'));
+            success: function (data) {
+                if (data.hasOwnProperty('notification')) {
+                    $(data.notification).prependTo($('body'));
+                }
             },
             complete: function () {
                 form.removeClass('loading').addClass('done');
+            }
+        })
+    });
+
+    $('#settoken').on('click', function (e) {
+
+        $.ajax({
+            accepts: {
+                mycustomtype: 'application/json'
+            },
+            url: '/api/user/settoken',
+            method: 'put',
+            success: function (data) {
+                if (data.hasOwnProperty('notification')) {
+                    $(data.notification).prependTo($('body'));
+                }
             }
         })
     });

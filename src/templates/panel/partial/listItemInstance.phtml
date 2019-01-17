@@ -3,18 +3,17 @@
 <div class="list-group-item instance loadable"
      data-status="<?php echo $instance->getStatus(); ?>"
      data-id="<?php echo $instance->getId(); ?>"
+     data-idname="instanceid"
 >
-
-    <div class="list-view-pf-additional-info loader">
-        <span>
-            loading details...
-        </span>
+    <div class="loader loader-absolute">
+        <div class="spinner spinner-lg"></div>
     </div>
+
     <div class="list-group-item-header">
         <div class="list-view-pf-expand">
             <span class="fa fa-angle-right"></span>
         </div>
-        <div class="list-view-pf-actions">
+        <div class="list-view-pf-actions<?php echo isset($admin) ? ' hidden' : ''; ?>">
             <div class="dropdown pull-right dropdown-kebab-pf">
                 <button class="btn btn-link dropdown-toggle" type="button" id="dropdownKebabRight9"
                         data-toggle="dropdown"
@@ -39,15 +38,19 @@
                             snapshot</a>
                     </li>
                     <li>
-                        <a data-action="instance/togglefree"><?php echo $instance->isAllowFreeComputing() ? 'Dis' : 'A' ?>
-                            llow free Computing</a></li>
+                        <a data-action="instance/togglefree">
+                            <?php echo $instance->isAllowFreeComputing() ? 'Dis' : 'A' ?>llow free Computing
+                        </a>
+                    </li>
                 </ul>
             </div>
         </div>
 
         <div class="list-view-pf-main-info">
             <div class="list-view-pf-left">
-                <span class="pficon pficon-container-node list-view-pf-icon-sm status-<?php echo $instance->getStatus(); ?>"></span>
+                <span title="<?php echo $instance->getId() ?>"
+                      class="<?php echo \Helio\Panel\Instance\InstanceType::getIcon($instance->getInstanceType()); ?> list-view-pf-icon-sm status-<?php echo $instance->getStatus(); ?>">
+                </span>
             </div>
             <div class="list-view-pf-body">
                 <div class="list-view-pf-description">
@@ -61,7 +64,7 @@
                 </div>
                 <?php
                 if (isset($info)) {
-                    include __DIR__ . '/instanceAdditionalInfo.phtml';
+                    \Helio\Panel\Helper\ViewHelper::includePartial('/instanceAdditionalInfo', ['info' => $info]);
                 }
                 ?>
             </div>
@@ -73,13 +76,7 @@
             <span class="pficon pficon-close"></span>
         </div>
         <div class="row">
-            <?php
-            $filename = __DIR__ . '/instanceDetailStatus-' . $instance->getStatus() . '.phtml';
-            if (file_exists($filename)) {
-                /** @noinspection PhpIncludeInspection */
-                include $filename;
-            }
-            ?>
+            <?php \Helio\Panel\Helper\ViewHelper::includePartial('instanceDetailStatus-' . $instance->getStatus(), ['instance' => $instance]); ?>
         </div>
     </div>
 </div>

@@ -55,6 +55,73 @@ const loadList = function (endpoint, containerSelector, startFromTheBeginning = 
     });
 };
 
+function initActionButtons(item) {
+
+    // click the list-view heading then expand a row
+    item.find(".list-group-item-header").click(function (event) {
+        if (!$(event.target).is("button, a, input, .fa-ellipsis-v")) {
+            $(this).find(".fa-angle-right").toggleClass("fa-angle-down")
+                .end().parent().toggleClass("list-view-pf-expand-active")
+                .find(".list-group-item-container").toggleClass("hidden");
+        }
+    });
+
+    // click the close button, hide the expand row and remove the active status
+    item.find(".list-group-item-container .close").on("click", function () {
+        $(this).parent().addClass("hidden")
+            .parent().removeClass("list-view-pf-expand-active")
+            .find(".fa-angle-right").removeClass("fa-angle-down");
+    });
+
+    item.find(".list-view-pf-actions:not(.hidden) .dropdown-menu a[data-action]").on('click', function (e) {
+        e.preventDefault();
+        item.addClass('loading');
+
+        let method = $(this).data('method') ? $(this).data('method') : 'put';
+        let data = {};
+        data[item.data('idname')] = item.data('id');
+        $.ajax({
+            accepts: {
+                mycustomtype: 'application/json'
+            },
+            url: '/api/' + $(this).data('action'),
+            data: data,
+            method: method,
+            success: function (data) {
+                if (method === 'delete') {
+                    item.addClass('hidden');
+                }
+
+                if (data.hasOwnProperty('listItemHtml')) {
+                    let newContent = $(data.listItemHtml);
+                    initActionButtons(newContent);
+                    item.replaceWith(newContent);
+                }
+
+                if (data.hasOwnProperty('notification')) {
+                    $(data['notification']).prependTo($('#notificationContainer'));
+                }
+            },
+            complete: function () {
+                item.removeClass('loading');
+            }
+        })
+    });
+
+    item.find('.try-job').on('submit', function (e) {
+        let button = $(this).find('button[type="submit"]');
+        e.preventDefault();
+        let request = new XMLHttpRequest();
+        request.open("POST", $(this).data('demourl'), true);
+        request.onload = function () {
+            if (request.readyState === 4 && request.status === 200) {
+                $('<div class="alert alert-success">Now wait for the result. You can check in by reloading.</div>').insertAfter(button);
+            }
+        };
+        request.send(new FormData(e.target));
+    });
+}
+
 
 function filterItemsByTextSearch(element) {
     let value = $(element).val();
@@ -493,6 +560,9 @@ const wizard = function (id) {
         $(self.modal + " .wizard-pf-next").removeClass("hidden").find(".wizard-pf-button-text").text("Next");
         // reset input fields
         $(self.modal + " .form-control").val("");
+        $(self.modal + " .form-control[value]").val(function () {
+            return $(this).attr('value');
+        });
     };
 
     // Cancel/Close button clicked
@@ -569,7 +639,7 @@ const wizard = function (id) {
                     $(self.modal).modal('hide');
                     loadList($(self.modal).data('containerEndpoint'), $(self.modal).data('containerSelector'), true);
                     if (data.hasOwnProperty('notification')) {
-                        $(data.notification).prependTo($('body'));
+                        $(data.notification).prependTo($('#notificationContainer'));
                     }
                 });
             },

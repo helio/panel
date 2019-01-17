@@ -18,10 +18,10 @@ if (PHP_SAPI === 'cli-server') {
     define('SITE_ENV', array_key_exists('SITE_ENV', $_SERVER) ? $_SERVER['SITE_ENV'] : 'PROD');
 }
 
-require APPLICATION_ROOT . '/vendor/autoload.php';
+require APPLICATION_ROOT . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'autoload.php';
 
 // set logging
-$logfile = APPLICATION_ROOT . '/log/' . ((PHP_SAPI === 'cli') ? 'console' : 'app') . '.log';
+$logfile = APPLICATION_ROOT . DIRECTORY_SEPARATOR . 'log' . DIRECTORY_SEPARATOR . ((PHP_SAPI === 'cli') ? 'console' : 'app') . '.log';
 define('LOG_DEST', isset($_ENV['docker']) ? 'php://stdout' : $logfile);
 define('LOG_LVL', SITE_ENV === 'PROD' ? \Monolog\Logger::WARNING : \Monolog\Logger::DEBUG);
 

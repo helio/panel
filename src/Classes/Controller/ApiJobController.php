@@ -5,6 +5,7 @@ namespace Helio\Panel\Controller;
 
 use Helio\Panel\Controller\Traits\TypeDynamicController;
 use Helio\Panel\Controller\Traits\AuthorizedJobController;
+use Helio\Panel\Job\JobFactory;
 use Helio\Panel\Job\JobStatus;
 use Helio\Panel\Job\JobType;
 use Helio\Panel\Utility\JwtUtility;
@@ -52,9 +53,6 @@ class ApiJobController extends AbstractController
 
         $this->optionalParameterCheck([
             'jobname' => FILTER_SANITIZE_STRING,
-            'gitlabEndpoint' => FILTER_SANITIZE_STRING,
-            'gitlabToken' => FILTER_SANITIZE_STRING,
-            'gitlabTags' => FILTER_SANITIZE_STRING,
             'cpus' => FILTER_SANITIZE_STRING,
             'gpus' => FILTER_SANITIZE_STRING,
             'location' => FILTER_SANITIZE_STRING,
@@ -73,15 +71,14 @@ class ApiJobController extends AbstractController
             ->setToken(JwtUtility::generateJobIdentificationToken($this->job))
             ->setType($this->params['jobtype'])
             ->setOwner($this->user)
-            ->setGitlabEndpoint($this->params['gitlabEndpoint'] ?? '')
-            ->setGitlabToken($this->params['gitlabToken'] ?? '')
-            ->setGitlabTags($this->params['gitlabTags'] ?? '')
             ->setCpus($this->params['cpus'] ?? '')
             ->setGpus($this->params['gpus'] ?? '')
             ->setLocation($this->params['location'] ?? '')
             ->setBillingReference($this->params['billingReference'] ?? '')
             ->setBudget($this->params['budget'] ?? '')
             ->setIsCharity($this->params['free'] ?? '' === 'on');
+
+        JobFactory::getInstanceOfJob($this->job)->create($this->params);
 
         $this->persistJob();
 

@@ -70,7 +70,7 @@ class PrecreateController extends AbstractController
      */
     public function abortAddInstanceAction(): ResponseInterface
     {
-        if ($this->instance->getStatus() === InstanceStatus::UNKNOWN && $this->instance->getOwner()->getId() === $this->user->getId()) {
+        if ($this->instance && $this->instance->getStatus() === InstanceStatus::UNKNOWN && $this->instance->getOwner() && $this->instance->getOwner()->getId() === $this->user->getId()) {
             $this->user->removeInstance($this->instance);
             $this->dbHelper->remove($this->instance);
             $this->dbHelper->flush($this->instance);
@@ -114,7 +114,7 @@ class PrecreateController extends AbstractController
      */
     public function abortAddJobAction(): ResponseInterface
     {
-        if ($this->job->getStatus() === JobStatus::UNKNOWN && $this->job->getOwner()->getId() === $this->user->getId()) {
+        if ($this->job && $this->job->getStatus() === JobStatus::UNKNOWN && $this->job->getOwner() && $this->job->getOwner()->getId() === $this->user->getId()) {
             $this->user->removeJob($this->job);
             $this->dbHelper->remove($this->job);
             $this->dbHelper->flush($this->job);

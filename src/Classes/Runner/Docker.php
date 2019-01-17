@@ -2,6 +2,7 @@
 
 namespace Helio\Panel\Runner;
 
+use Helio\Panel\Job\DispatchConfig;
 use Helio\Panel\Model\Instance;
 use Helio\Panel\Utility\ServerUtility;
 
@@ -92,6 +93,28 @@ class Docker implements RunnerInterface
         }
         return $result;
     }
+
+
+    /**
+     * @param DispatchConfig $config
+     * @return string
+     */
+    public function createConfigForJob(DispatchConfig $config): string {
+        $image = $config->getImage();
+        $envVars = '';
+        foreach ($config->getEnvVariables() as $name => $value) {
+            $envVars .= "    - $name=$value\n";
+        }
+        return <<<EOC
+version: '3'
+services:
+  app:
+    image: "$image"
+    environment:
+$envVars
+EOC;
+    }
+
 
     /**
      * @param string $commandName

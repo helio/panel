@@ -2,6 +2,7 @@
 
 namespace Helio\Panel\Runner;
 
+use Helio\Panel\Job\DispatchConfig;
 use Helio\Panel\Model\Instance;
 
 interface RunnerInterface
@@ -15,4 +16,6 @@ interface RunnerInterface
     public function remove(bool $returnInsteadOfCall = false);
 
     public function inspect(bool $returnInsteadOfCall = false);
+
+    public function createConfigForJob(DispatchConfig $config): string;
 }

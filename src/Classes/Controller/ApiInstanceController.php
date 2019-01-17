@@ -3,7 +3,7 @@
 namespace Helio\Panel\Controller;
 
 
-use Helio\Panel\Controller\Traits\GoogleAuthenticatedController;
+use Helio\Panel\Controller\Traits\GrafanaController;
 use Helio\Panel\Controller\Traits\TypeDynamicController;
 use Helio\Panel\Controller\Traits\AuthorizedInstanceController;
 use Helio\Panel\Instance\InstanceFactory;
@@ -12,7 +12,6 @@ use Helio\Panel\Instance\InstanceType;
 use Helio\Panel\Master\MasterFactory;
 use Helio\Panel\Orchestrator\OrchestratorFactory;
 use Helio\Panel\Runner\RunnerFactory;
-use Helio\Panel\Utility\ServerUtility;
 use Helio\Panel\ViewModel\InstanceInfoViewModel;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Http\StatusCode;
@@ -30,13 +29,7 @@ class ApiInstanceController extends AbstractController
 {
     use AuthorizedInstanceController;
     use TypeDynamicController;
-    use GoogleAuthenticatedController;
-
-    public function __construct()
-    {
-        parent::__construct();
-        $this->baseUrl = 'https://graphsapi.idling.host';
-    }
+    use GrafanaController;
 
 
     /**
@@ -117,7 +110,7 @@ class ApiInstanceController extends AbstractController
      * @Route("/add", methods={"POST"}, name="instance.add")
      * @throws \Exception
      */
-    public function addServerAction(): ResponseInterface
+    public function addInstanceAction(): ResponseInterface
     {
         $this->requiredParameterCheck([
             'fqdn' => FILTER_SANITIZE_STRING,
@@ -133,7 +126,8 @@ class ApiInstanceController extends AbstractController
 
         $this->optionalParameterCheck([
             'instancename' => FILTER_SANITIZE_STRING,
-            'region' => FILTER_SANITIZE_STRING,
+            'instanelocation' => FILTER_SANITIZE_STRING,
+            'instancelevel' => FILTER_SANITIZE_STRING,
             'provision' => FILTER_SANITIZE_STRING,
             'openstackEndpoint' => FILTER_SANITIZE_STRING,
             'openstackAuth' => FILTER_SANITIZE_STRING,
@@ -143,7 +137,8 @@ class ApiInstanceController extends AbstractController
 
         $this->instance
             ->setName($this->params['instancename'] ?? 'Automatically named during creation')
-            ->setRegion($this->params['region'] ?? '')
+            ->setRegion($this->params['instancelocation'] ?? '')
+            ->setSecurity($this->params['instancelevel'] ?? '')
             ->setBillingReference($this->params['billingReference'] ?? '');
 
         if ($this->params['instancetype'] === InstanceType::BEARCLOUD) {
@@ -183,34 +178,7 @@ class ApiInstanceController extends AbstractController
      */
     public function getStatusAction(): ResponseInterface
     {
-        switch ($this->instance->getStatus()) {
-            case InstanceStatus::CREATED:
-                $status = MasterFactory::getMasterForInstance($this->instance)->getStatus();
-                if (\is_array($status) && \array_key_exists('deactivated', $status) && !$status['deactivated']) {
-                    $this->instance->setStatus(InstanceStatus::READY);
-                    return $this->getStatusAction();
-                }
-                break;
-            case InstanceStatus::READY:
-                $status = RunnerFactory::getRunnerForInstance($this->instance)->inspect()[0];
-                if (\is_array($status) && \array_key_exists('Status', $status) && \array_key_exists('State', $status['Status']) && $status['Status']['State'] === 'ready') {
-                    $this->instance->setStatus(InstanceStatus::RUNNING);
-                    return $this->getStatusAction();
-                }
-                break;
-            case InstanceStatus::RUNNING:
-                $status = RunnerFactory::getRunnerForInstance($this->instance)->inspect()[0];
-                if (\is_array($status) && \array_key_exists('Status', $status) && \array_key_exists('State', $status['Status']) && $status['Status']['State'] === 'down') {
-                    $this->instance->setStatus(InstanceStatus::READY);
-                    return $this->getStatusAction();
-                }
-                break;
-            default:
-                $status = 'not ready yet';
-                break;
-        }
-
-        $this->dbHelper->flush($this->instance);
+        $status = $this->ensureAndGetInstanceStatus();
 
         $data = [
             'status' => $status,
@@ -228,26 +196,20 @@ class ApiInstanceController extends AbstractController
     /**
      * @return ResponseInterface
      * @throws \GuzzleHttp\Exception\GuzzleException
+     * @throws \Exception
      *
      * @Route("/metrics/snapshot/create", methods={"PUT", "GET"}, name="api.grafana.snapshot.create")
      */
     public function createSnapshotAction(): ResponseInterface
     {
-        $result = $this->requestIapProtectedResource('/api/snapshots', 'POST', [
-                'headers' => [
-                    'Accept' => 'application/json',
-                    'Content-Type' => 'application/json'
-                ],
-                'body' => file_get_contents(ServerUtility::get('DASHBOARD_CONFIG_JSON', \dirname(__DIR__) . '/Instance/dashboard.json'))
-            ]
-        );
 
-        if ($result->getStatusCode() === StatusCode::HTTP_OK) {
-            $json = $result->getBody()->getContents();
-            $this->instance->setSnapshotConfig($json);
+        if ($json = $this->createSnapshot()) {
+            $this->instance->setSnapshotConfig(json_encode($json));
             $this->persistInstance();
+            return $this->render(['message' => 'created', 'snapshot' => $json]);
         }
 
-        return $this->render(['message' => 'created']);
+        return $this->render(['status' => 'unknown'], StatusCode::HTTP_FAILED_DEPENDENCY);
+
     }
 }

@@ -11,4 +11,6 @@ interface JobInterface {
     public function run(array $params, RequestInterface $request, ResponseInterface $response);
 
     public function stop(array $params);
+
+    public function create(array $params): bool;
 }
