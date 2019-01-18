@@ -11,6 +11,7 @@ use Doctrine\{Common\Collections\ArrayCollection,
     ORM\Mapping\Column,
     ORM\Mapping\GeneratedValue,
     ORM\Mapping\ManyToOne,
+    ORM\Mapping\OneToOne,
     ORM\Mapping\OneToMany};
 
 use Helio\Panel\Job\JobStatus;
