@@ -212,6 +212,6 @@ class ApiAdminController extends AbstractController
         }
         return $this
             ->setReturnType('yaml')
-            ->render(['clustername => {', "  service_name => '$servicename',", '  image => ' . $dcf->getImage() . ',', '  replicas => 1,', $env, '}']);
+            ->render(['profile::docker::clusters:', "$servicename:", "  service_name: '$servicename',", '  image: ' . $dcf->getImage() . ',', '  replicas: 1,', $env, '}']);
     }
 }

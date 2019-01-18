@@ -116,12 +116,8 @@ class DbHelper
 
             $configObject->addCustomNumericFunction('timestampdiff', TimestampDiff::class);
 
-            if (ServerUtility::get('SITE_ENV', 'PROD') !== 'PROD') {
-                $configObject->setAutoGenerateProxyClasses(true);
-            } else {
-                $configObject->setAutoGenerateProxyClasses(false);
-                $configObject->ensureProductionSettings();
-            }
+            // TODO: Fix this shit properly so doctrine can run in real production mode.
+            $configObject->setAutoGenerateProxyClasses(true);
 
             $this->db = EntityManager::create($dbCfg, $configObject);
 
