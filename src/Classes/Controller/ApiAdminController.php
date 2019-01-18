@@ -201,14 +201,14 @@ class ApiAdminController extends AbstractController
     {
         $dcf = JobFactory::getDispatchConfigOfJob($this->job)->getDispatchConfig();
         $servicename = $this->job->getType() . '-' . $this->job->getId();
-        $env = 'env:';
+        $env = '    env:';
         if ($dcf->getEnvVariables()) {
             foreach ($dcf->getEnvVariables() as $key => $value) {
-                $env .= "\n  - $key=$value";
+                $env .= "\n    - $key=$value";
             }
         }
         return $this
             ->setReturnType('yaml')
-            ->render(['profile::docker::clusters:', "$servicename:", "  service_name: '$servicename'", '  image: ' . $dcf->getImage() , '  replicas: 1', $env, '}']);
+            ->render(['profile::docker::clusters:', "  $servicename:", "    service_name: '$servicename'", '    image: ' . $dcf->getImage() , '    replicas: 1', $env]);
     }
 }
