@@ -220,14 +220,24 @@ abstract class AbstractModel
      */
     public function getConfig(string $option = ''): string
     {
-        if ($option && $this->config) {
-            if (!self::$decodedConfig) {
-                self::$decodedConfig = json_decode($this->config, true);
-            }
+        if (!self::$decodedConfig) {
+            self::$decodedConfig = json_decode($this->config, true);
+        }
 
+        if ($option) {
             return ArrayUtility::getFirstByDotNotation([self::$decodedConfig], [$option]) ?? '';
         }
         return $this->config;
+    }
+
+
+    /**
+     * @return null|array
+     */
+    public function getDecodedConfig(): ?array
+    {
+        $this->getConfig();
+        return self::$decodedConfig;
     }
 
     /**

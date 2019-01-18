@@ -146,6 +146,10 @@ if (isset($partialJs)) {
 
 <script src="/app.js"></script>
 
+<?php
+if (\Helio\Panel\Utility\ServerUtility::isProd()) {
+    echo <<<EOS
+
 <script type="text/javascript">
     window._chatlio = window._chatlio || [];
     !function () {
@@ -162,5 +166,8 @@ if (isset($partialJs)) {
         c.parentNode.insertBefore(n, c);
     }();
 </script>
+EOS;
+}
+?>
 </body>
 </html>

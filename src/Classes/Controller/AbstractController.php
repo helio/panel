@@ -9,6 +9,7 @@ use Monolog\Logger;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Request;
 use Slim\Http\Response;
+use Slim\Http\StatusCode;
 use Slim\Interfaces\CallableResolverInterface;
 use Slim\Interfaces\Http\EnvironmentInterface;
 use Slim\Interfaces\InvocationStrategyInterface;
@@ -115,7 +116,7 @@ abstract class AbstractController extends Controller
      *
      * @return ResponseInterface
      */
-    protected function render(array $params = [], int $status = 200): ResponseInterface
+    protected function render(array $params = [], int $status = StatusCode::HTTP_OK): ResponseInterface
     {
         $method = $this->getReturnType();
         return $this->$method($params, $status);
@@ -128,7 +129,7 @@ abstract class AbstractController extends Controller
      *
      * @return ResponseInterface
      */
-    protected function json($data, int $status = 200): ResponseInterface
+    protected function json($data, int $status = StatusCode::HTTP_OK): ResponseInterface
     {
         if (\array_key_exists('message', $data)) {
             $data['notification'] = $this->fetchPartial('message', [
@@ -145,7 +146,7 @@ abstract class AbstractController extends Controller
      * @param int $status
      * @return ResponseInterface
      */
-    protected function html($data, int $status = 200): ResponseInterface
+    protected function html($data, int $status = StatusCode::HTTP_OK): ResponseInterface
     {
         if (\array_key_exists('impersonate', $this->request->getCookieParams())) {
             $data['impersonating'] = true;
@@ -155,5 +156,20 @@ abstract class AbstractController extends Controller
             $this->getMode() . '/index.phtml',
             $data
         )->withStatus($status);
+    }
+
+    /**
+     * @param $data
+     * @param int $status
+     * @return ResponseInterface
+     */
+    protected function yaml($data, int $status = StatusCode::HTTP_OK): ResponseInterface
+    {
+
+        if (\is_array($data)) {
+            $data = implode("\n", $data);
+        }
+        $this->response->getBody()->write($data);
+        return $this->response->withHeader('Content-Type', 'application/x-yaml')->withStatus($status);
     }
 }

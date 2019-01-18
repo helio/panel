@@ -3,6 +3,8 @@
 namespace Helio\Panel\Controller\Traits;
 
 
+use Psr\Http\Message\ResponseInterface;
+
 trait TypeDynamicController
 {
     protected $mode = 'panel';
@@ -24,18 +26,21 @@ trait TypeDynamicController
         return $this->mode;
     }
 
-    protected function setContext(string $context): void
+    protected function setContext(string $context): self
     {
         $this->renderingContext = $context;
+        return $this;
     }
 
-    protected function setReturnType(string $returnType): void
+    protected function setReturnType(string $returnType): self
     {
         $this->returnType = $returnType;
+        return $this;
     }
 
-    protected function setMode(string $mode): void
+    protected function setMode(string $mode): self
     {
         $this->mode = $mode;
+        return $this;
     }
 }

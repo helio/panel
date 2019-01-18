@@ -51,6 +51,15 @@ class ServerUtility
 
 
     /**
+     * @return bool
+     */
+    public static function isProd(): bool
+    {
+        return self::get('SITE_ENV', 'PROD') === 'PROD';
+    }
+
+
+    /**
      * @param string $name
      * @param mixed|null $default
      *

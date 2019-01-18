@@ -110,6 +110,12 @@ class Job extends AbstractModel
      */
     protected $priority = 100;
 
+    /**
+     * @var Instance
+     *
+     * @OneToOne(targetEntity="Instance")
+     */
+    protected $dispatchedInstance;
 
     /**
      * User constructor.
@@ -341,6 +347,24 @@ class Job extends AbstractModel
     public function setPriority(int $priority): Job
     {
         $this->priority = $priority;
+        return $this;
+    }
+
+    /**
+     * @return null|Instance
+     */
+    public function getDispatchedInstance(): ?Instance
+    {
+        return $this->dispatchedInstance;
+    }
+
+    /**
+     * @param Instance $dispatchedInstance
+     * @return Job
+     */
+    public function setDispatchedInstance(Instance $dispatchedInstance): Job
+    {
+        $this->dispatchedInstance = $dispatchedInstance;
         return $this;
     }
 

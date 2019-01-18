@@ -7,6 +7,7 @@ use Helio\Panel\Controller\Traits\AdminController;
 use Helio\Panel\Controller\Traits\InstanceController;
 use Helio\Panel\Controller\Traits\JobController;
 use Helio\Panel\Controller\Traits\TypeApiController;
+use Helio\Panel\Controller\Traits\TypeDynamicController;
 use Helio\Panel\Job\JobStatus;
 use Helio\Panel\Model\Job;
 use Helio\Panel\Model\Task;
@@ -16,6 +17,7 @@ use Helio\Panel\Runner\RunnerFactory;
 use Helio\Panel\Task\TaskStatus;
 use Helio\Panel\Utility\ServerUtility;
 use Psr\Http\Message\ResponseInterface;
+use Slim\Http\Stream;
 
 /**
  * Class ApiController
@@ -34,11 +36,12 @@ class ApiAdminController extends AbstractController
         InstanceController::optionalParameterCheck insteadof JobController;
     }
     use AdminController;
-    use TypeApiController;
+    use TypeDynamicController;
 
-    protected function getContext(): ?string
+    public function __construct()
     {
-        return 'panel';
+        parent::__construct();
+        $this->setMode('api');
     }
 
     /**
@@ -99,6 +102,9 @@ class ApiAdminController extends AbstractController
      */
     public function dispatchAction(): ResponseInterface
     {
+        $this->job->setDispatchedInstance($this->instance);
+        $this->persistJob();
+
         // TODO: Do something useful with this config.
         return $this->render(['message' => 'done',
             'config' => RunnerFactory::getRunnerForInstance($this->instance)->createConfigForJob(JobFactory::getDispatchConfigOfJob($this->job)->getDispatchConfig())
@@ -157,5 +163,55 @@ class ApiAdminController extends AbstractController
             'task_avg_wait' => $avgWaitQuery->getQuery()->getArrayResult()[0]['avg'],
             'stale_tasks' => $staleQuery->getQuery()->getArrayResult()[0]['count']
         ]);
+    }
+
+
+    /**
+     * @return ResponseInterface
+     *
+     * @Route("/getRunnersHiera", methods={"GET"}, name="admin.getJobHiera")
+     */
+    public function openJobsListForPuppetAction(): ResponseInterface
+    {
+        $jobs = $this->dbHelper->getRepository(Job::class)->findBy(['status' => JobStatus::READY]);
+
+        $cfg = '';
+        /** @var Job $job */
+        foreach ($jobs as $job) {
+            $cfg .= "  {\n";
+            $cfg .= "    job_id => '" . $job->getId() . "',\n";
+            $cfg .= "    service_name => '" . $job->getType() . '-' . $job->getId() . "',\n";
+            $cfg .= "    instance_id => '" . ($job->getDispatchedInstance() ? $job->getDispatchedInstance()->getId() : 'NULL') . "'\n";
+            $cfg .= "  },\n";
+        }
+
+
+        return $this
+            ->setReturnType('yaml')
+            ->render(['backlog => [', rtrim($cfg, ",\n"), ']']);
+    }
+
+
+    /**
+     * @return ResponseInterface
+     *
+     * @Route("/getJobHiera", methods={"GET"}, name="admin.getJobHiera")
+     */
+    public function jobConfigForPuppetAction(): ResponseInterface
+    {
+        $dcf = JobFactory::getDispatchConfigOfJob($this->job)->getDispatchConfig();
+        $servicename = $this->job->getType() . '-' . $this->job->getId();
+        $env = '';
+        if ($dcf->getEnvVariables()) {
+            $env = '  env => [';
+            foreach ($dcf->getEnvVariables() as $key => $value) {
+                $env .= "\n  '$key=$value',";
+            }
+            $env = rtrim($env, ',');
+            $env .= "\n  ]";
+        }
+        return $this
+            ->setReturnType('yaml')
+            ->render(['clustername => {', "  service_name => '$servicename',", '  image => ' . $dcf->getImage() . ',', '  replicas => 1,', $env, '}']);
     }
 }

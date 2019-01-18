@@ -29,7 +29,7 @@ class JobFactory {
     /**
      * @param Job $job
      * @param Task|null $task
-     * @return JobInterface
+     * @return DispatchableInterface
      */
     public static function getDispatchConfigOfJob(Job $job, Task $task = null): DispatchableInterface {
 
