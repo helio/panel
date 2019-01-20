@@ -178,17 +178,16 @@ class ApiAdminController extends AbstractController
         $cfg = '';
         /** @var Job $job */
         foreach ($jobs as $job) {
-            $cfg .= "  {\n";
-            $cfg .= "    job_id => '" . $job->getId() . "',\n";
-            $cfg .= "    service_name => '" . $job->getType() . '-' . $job->getId() . "',\n";
-            $cfg .= "    instance_id => '" . ($job->getDispatchedInstance() ? $job->getDispatchedInstance()->getId() : 'NULL') . "'\n";
-            $cfg .= "  },\n";
+            $cfg .= "  '" . $job->getType() . '-' . $job->getId() . "':\n";
+            $cfg .= '    job_id: ' . $job->getId() . "\n";
+            $cfg .= "    service_name: '" . $job->getType() . '-' . $job->getId() . "'\n";
+            $cfg .= "    instance_id: '" . ($job->getDispatchedInstance() ? $job->getDispatchedInstance()->getId() : 'NULL') . "'\n";
         }
 
 
         return $this
             ->setReturnType('yaml')
-            ->render(['backlog => [', rtrim($cfg, ",\n"), ']']);
+            ->render(['profile::docker::backlog:', $cfg]);
     }
 
 
@@ -209,6 +208,6 @@ class ApiAdminController extends AbstractController
         }
         return $this
             ->setReturnType('yaml')
-            ->render(['profile::docker::clusters:', "  $servicename:", "    service_name: '$servicename'", '    image: ' . $dcf->getImage() , '    replicas: 1', $env]);
+            ->render(['profile::docker::clusters:', "  '$servicename':", "    service_name: '$servicename'", '    image: ' . $dcf->getImage(), '    replicas: 1', $env]);
     }
 }
