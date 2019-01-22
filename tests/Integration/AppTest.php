@@ -3,16 +3,12 @@
 namespace Helio\Test\Integration;
 
 use Helio\Panel\App;
+use Helio\Panel\Model\User;
 use Helio\Panel\Utility\JwtUtility;
-use Helio\Test\Infrastructure\Model\User;
 use Helio\Test\TestCase;
 
 class AppTest extends TestCase
 {
-    protected function setUp() {
-        $this->markTestIncomplete('Integration Tests not done yet due to database dependency');
-    }
-
 
     /**
      *
@@ -23,15 +19,16 @@ class AppTest extends TestCase
 
         $user = new User();
         $this->infrastructure->import($user);
+        $this->infrastructure->import($user);
 
-        $app = true;
+        $app = null;
         $tokenCookie = 'token=' . JwtUtility::generateToken($user->getId())['token'];
 
         /** @var App $app */
         $response = $this->runApp('GET', '/panel', true, $tokenCookie, null, [], $app);
 
-        $body = (string)$response->getBody();
         $this->assertEquals(200, $response->getStatusCode());
+        $ct = $app->getContainer();
         $this->assertEquals($user->getId(), $app->getContainer()->get('user')->getId());
     }
 
@@ -44,14 +41,15 @@ class AppTest extends TestCase
     {
 
         $user = new User();
-        $user->setId(1221);
+        $user->setId(1221)->setCreated()->setName('testuser');
+        $this->infrastructure->import($user);
 
         $tokenCookie = 'token=' . JwtUtility::generateToken($user->getId())['token'];
-        $response = $this->runApp('GET', '/panel', true, $tokenCookie, null);
+        $response = $this->runApp('GET', '/panel', true, $tokenCookie);
 
         $body = (string)$response->getBody();
         $this->assertEquals(200, $response->getStatusCode());
-        $this->assertContains('Panel', $body);
+        $this->assertContains('testuser', $body);
     }
 
 
@@ -63,13 +61,14 @@ class AppTest extends TestCase
     {
 
         $user = new User();
-        $user->setId(1221);
+        $user->setId(1221)->setName('testuser');
+        $this->infrastructure->import($user);
 
         $response = $this->runApp('GET', '/panel', true, null, null, ['token' => JwtUtility::generateToken($user->getId())['token']]);
 
         $body = (string)$response->getBody();
         $this->assertEquals(200, $response->getStatusCode());
-        $this->assertContains('Panel', $body);
+        $this->assertContains('testuser', $body);
     }
 
 
@@ -82,6 +81,7 @@ class AppTest extends TestCase
 
         $user = new User();
         $user->setId(564);
+        $this->infrastructure->import($user);
         $app = true;
 
         $tokenCookie = 'token=' . JwtUtility::generateToken($user->getId())['token'];
@@ -103,6 +103,7 @@ class AppTest extends TestCase
 
         $user = new User();
         $user->setId(1221);
+        $this->infrastructure->import($user);
 
         $tokenCookie = 'token=' . JwtUtility::generateToken($user->getId())['token'];
         $response = $this->runApp('GET', '/panel', true, $tokenCookie, null);

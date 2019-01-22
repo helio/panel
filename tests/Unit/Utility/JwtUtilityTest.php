@@ -1,11 +1,12 @@
 <?php
 namespace Helio\Test\Unit;
 
+use Helio\Panel\Model\Instance;
 use Helio\Panel\Utility\JwtUtility;
 use Helio\Panel\Utility\ServerUtility;
-use Helio\Test\Infrastructure\Model\Instance;
+use Helio\Test\TestCase;
 
-class JwtUtilityTest extends \PHPUnit_Framework_TestCase {
+class JwtUtilityTest extends TestCase {
 
 
     /**

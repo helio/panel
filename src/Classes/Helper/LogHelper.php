@@ -69,14 +69,15 @@ class LogHelper
      *
      * @return void
      */
-    public static function logToConsole(...$args): void {
+    public static function logToConsole(...$args): void
+    {
 
         foreach ($args as $arg) {
 
             if (\is_object($arg) || \is_array($arg) || \is_resource($arg)) {
                 $output = print_r($arg, true);
             } else {
-                $output = (string) $arg;
+                $output = (string)$arg;
             }
 
             fwrite(fopen('php://stdout', 'wb'), $output . "\n");
@@ -98,10 +99,13 @@ class LogHelper
      * @return Logger
      * @throws \Exception
      */
-    protected static function get(): Logger
+    public static function get(): Logger
     {
         if (!self::$logger) {
-            self::$logger = App::getApp(null)->getContainer()['logger'];
+            self::$logger = (new Logger('helio.panel'))
+                ->pushProcessor(new \Monolog\Processor\UidProcessor())
+                ->pushHandler(new \Monolog\Handler\StreamHandler(LOG_DEST, LOG_LVL));
+            self::$logger::setTimezone(ServerUtility::getTimezoneObject());
         }
 
         return self::$logger;

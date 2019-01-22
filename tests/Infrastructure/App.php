@@ -2,50 +2,47 @@
 
 namespace Helio\Test\Infrastructure;
 
+use Helio\Panel\Helper\LogHelper;
+use Helio\Panel\Utility\JwtUtility;
 use Helio\Test\Infrastructure\Helper\DbHelper;
 use Helio\Test\Infrastructure\Helper\ZapierHelper;
+use Slim\Http\Request;
 
 class App extends \Helio\Panel\App
 {
+    /**
+     * @var array
+     */
+    protected static $instances;
 
 
     /**
-     * @var App
+     * @var
      */
-    protected static $testInstance;
-
+    protected static $currentIndex;
 
     /**
-     *
-     * @return App
-     * @throws \Exception
+     * @inheritdoc
      */
-    public static function getTestApp(): App
+    public static function getApp(
+        ?string $appName = null,
+        Request $request = null,
+        array $middleWaresToApply = [JwtUtility::class],
+        string $dbHelperClassName = DbHelper::class,
+        string $zapierHelperClassName = ZapierHelper::class,
+        string $logHelperClassName = LogHelper::class
+    ): \Helio\Panel\App
     {
-        if (!self::$testInstance) {
-            /**
-             * @var DbHelper $dbHelperClassName
-             * @var ZapierHelper $zapierHelperClassName
-             */
-            self::$testInstance = new self([
-                'settings' => [
-                    'displayErrorDetails' => true,
-                ],
-                'logger' => (new \Monolog\Logger('helio.panel.test'))
-                    ->pushProcessor(new \Monolog\Processor\UidProcessor())
-                    ->pushHandler(new \Monolog\Handler\StreamHandler(LOG_DEST, LOG_LVL)),
-                'renderer' => new \Slim\Views\PhpRenderer(APPLICATION_ROOT . '/src/templates'),
-                'dbHelper' => DbHelper::getInstance(),
-                'zapierHelper' => ZapierHelper::getInstance()
-            ]);
-
-            // router initialisation depends in an instance of app, so it has to happen after new()
-            self::$testInstance->getContainer()['router'] = new \Ergy\Slim\Annotations\Router(self::$testInstance,
-                [APPLICATION_ROOT . '/src/Classes/Controller/'],
-                APPLICATION_ROOT . '/tmp/cache/test'
-            );
-
+        // if a new test is run, we increase the instance index to ensure no two tests run on the same app instance.
+        if ($appName === 'test') {
+            ++self::$currentIndex;
         }
-        return self::$testInstance;
+
+
+        if (!self::$instances || !\array_key_exists('test-' . self::$currentIndex, self::$instances)) {
+            self::$instance = null;
+            self::$instances['test-' . self::$currentIndex] = \Helio\Panel\App::getApp('test-' . self::$currentIndex, $request, $middleWaresToApply, DbHelper::class, ZapierHelper::class, LogHelper::class);
+        }
+        return self::$instances['test-' . self::$currentIndex];
     }
 }

@@ -33,6 +33,11 @@ class ServerOnboardingController extends AbstractController
     use ParametrizedController;
     use TypeApiController;
 
+    public function getContext(): ?string
+    {
+        return 'panel';
+    }
+
 
     /**
      *

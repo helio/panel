@@ -8,25 +8,10 @@ use GuzzleHttp\Handler\MockHandler;
 class ZapierHelper extends \Helio\Panel\Helper\ZapierHelper
 {
 
-
-    private static $testHelper;
-
-
     /**
      * @var array
      */
-    protected $responseStack;
-
-
-    public static function getTestInstance(): ZapierHelper
-    {
-        if (!self::$testHelper) {
-            self::$testHelper = new self();
-        }
-
-        return self::$testHelper;
-    }
-
+    protected static $responseStack;
 
     /**
      *
@@ -34,7 +19,7 @@ class ZapierHelper extends \Helio\Panel\Helper\ZapierHelper
      */
     protected function getHandler(): MockHandler
     {
-        return new MockHandler($this->responseStack);
+        return new MockHandler(self::$responseStack);
     }
 
 
@@ -47,10 +32,17 @@ class ZapierHelper extends \Helio\Panel\Helper\ZapierHelper
     }
 
 
-    public function setResponseStack(array $stack): ZapierHelper
+    public static function setResponseStack(array $stack): void
     {
-        $this->responseStack = $stack;
+        self::$responseStack = $stack;
+    }
 
-        return $this;
+
+    /**
+     *
+     */
+    public static function reset(): void
+    {
+        self::$instances = null;
     }
 }

@@ -3,10 +3,11 @@
 namespace Helio\Panel;
 
 use Helio\Panel\Helper\DbHelper;
+use Helio\Panel\Helper\LogHelper;
 use Helio\Panel\Helper\ZapierHelper;
 use Helio\Panel\Utility\JwtUtility;
 use Helio\Panel\Utility\ServerUtility;
-use Monolog\Logger;
+use Slim\Http\Request;
 
 class App extends \Slim\App
 {
@@ -19,50 +20,52 @@ class App extends \Slim\App
 
 
     /**
-     * @param string|null $appName if null, fail if not yet instanced
+     * @param null|string $appName
+     * @param Request|null $request
+     * @param array $middleWaresToApply
      * @param string $dbHelperClassName
      * @param string $zapierHelperClassName
-     * @param string[] $middleWaresToApply
-     *
+     * @param string $logHelperClassName
      * @return App
      * @throws \Exception
      */
     public static function getApp(
-        ?string $appName = 'app',
+        ?string $appName = null,
+        Request $request = null,
+        array $middleWaresToApply = [JwtUtility::class],
         string $dbHelperClassName = DbHelper::class,
         string $zapierHelperClassName = ZapierHelper::class,
-        array $middleWaresToApply = [JwtUtility::class]
-    ): App {
+        string $logHelperClassName = LogHelper::class
+    ): App
+    {
         if (!self::$instance) {
             // abort if $instance should exist, but doesn't (e.g. if we call getApp from inside the application)
             if ($appName === null) {
-                throw new \RuntimeException('App instance cannot be created from here.');
+                throw new \RuntimeException('App instance cannot be created from here.', 1548056859);
             }
 
+            self::$instance = new self(['settings' => [
+                'displayErrorDetails' => !ServerUtility::isProd(),
+            ]]);
             /**
              * @var DbHelper $dbHelperClassName
+             * @var LogHelper $logHelperClassName
              * @var ZapierHelper $zapierHelperClassName
              */
-            self::$instance = new self([
-                'settings' => [
-                    'displayErrorDetails' => !(ServerUtility::get('SITE_ENV') === 'PROD'),
-                ],
-                'logger' => (new Logger('helio.panel.' . $appName))
-                    ->pushProcessor(new \Monolog\Processor\UidProcessor())
-                    ->pushHandler(new \Monolog\Handler\StreamHandler(LOG_DEST, LOG_LVL)),
-                'renderer' => new \Slim\Views\PhpRenderer(APPLICATION_ROOT . '/src/templates'),
-                'dbHelper' => $dbHelperClassName::getInstance(),
-                'zapierHelper' => $zapierHelperClassName::getInstance()
-            ]);
-            Logger::setTimezone(ServerUtility::getTimezoneObject());
+            self::$instance->getContainer()['logger'] = $logHelperClassName::get();
+            self::$instance->getContainer()['dbHelper'] = $dbHelperClassName::getInstance();
+            self::$instance->getContainer()['zapierHelper'] = $zapierHelperClassName::getInstance();
+            self::$instance->getContainer()['renderer'] = new \Slim\Views\PhpRenderer(APPLICATION_ROOT . '/src/templates');
 
-            // router initialisation depends in an instance of app, so it has to happen after new()
+            if ($request) {
+                self::$instance->getContainer()['request'] = $request;
+            }
+
             self::$instance->getContainer()['router'] = new \Ergy\Slim\Annotations\Router(self::$instance,
                 [APPLICATION_ROOT . '/src/Classes/Controller/'],
                 APPLICATION_ROOT . '/tmp/cache/' . $appName
             );
 
-            // middleware initialisation depends in an instance of app, so it has to happen after new()
             foreach ($middleWaresToApply as $middleware) {
                 $middleware::addMiddleware(self::$instance);
             }
@@ -72,4 +75,11 @@ class App extends \Slim\App
     }
 
 
+    /**
+     * @return bool
+     */
+    public static function isReady(): bool
+    {
+        return (bool)self::$instance;
+    }
 }

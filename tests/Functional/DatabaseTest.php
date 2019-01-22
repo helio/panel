@@ -49,7 +49,7 @@ class DatabaseTest extends TestCase
 
         $this->infrastructure->import($server);
 
-        $entitiesLoadedFromDatabase = $this->serverRepository->findAll();
+        $entitiesLoadedFromDatabase = $this->instanceRepository->findAll();
 
         /** @var Instance $foundServer */
         $this->assertCount(1, $entitiesLoadedFromDatabase);
@@ -80,7 +80,7 @@ class DatabaseTest extends TestCase
         $instance = (new Instance())->setName('hidden')->setCreated(new \DateTime('now', ServerUtility::getTimezoneObject()))->setHidden(true);
         $this->infrastructure->import($instance);
         $this->infrastructure->getEntityManager()->getFilters()->enable('deleted');
-        $foundServer = $this->serverRepository->findAll();
+        $foundServer = $this->instanceRepository->findAll();
 
         $this->assertEmpty($foundServer);
     }
@@ -89,7 +89,7 @@ class DatabaseTest extends TestCase
     {
         $instance = (new Instance())->setName('hidden')->setCreated(new \DateTime('now', ServerUtility::getTimezoneObject()))->setHidden(true);
         $this->infrastructure->import($instance);
-        $foundServer = $this->serverRepository->findAll();
+        $foundServer = $this->instanceRepository->findAll();
 
         $this->assertCount(1, $foundServer);
     }
@@ -106,7 +106,7 @@ class DatabaseTest extends TestCase
         $this->infrastructure->import($server);
 
         /** @var Instance $foundServer */
-        $foundServer = $this->serverRepository->findOneByName('testserver');
+        $foundServer = $this->instanceRepository->findOneByName('testserver');
 
         $this->assertNotNull($foundServer);
         $this->assertEquals($server->getCreated()->getTimestamp(), $foundServer->getCreated()->getTimestamp());

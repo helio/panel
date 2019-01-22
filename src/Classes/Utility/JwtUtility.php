@@ -45,7 +45,7 @@ class JwtUtility
 
         $app->add(new ReAuthenticate());
 
-        $app->add(new LoadUserFromJwt($container));
+        $app->add(new LoadUserFromJwt());
 
         $app->add(new JwtAuthentication([
             'logger' => $container['logger'],

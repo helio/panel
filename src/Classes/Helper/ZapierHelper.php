@@ -12,9 +12,9 @@ class ZapierHelper
 
 
     /**
-     * @var ZapierHelper
+     * @var array>ZapierHelper>
      */
-    private static $helper;
+    protected static $instances;
 
 
     /**
@@ -79,6 +79,10 @@ class ZapierHelper
     }
 
 
+    /**
+     * @return string
+     * @throws \Exception
+     */
     protected function getZapierHookUrl(): string
     {
         return ServerUtility::get('ZAPIER_HOOK_URL');
@@ -87,15 +91,16 @@ class ZapierHelper
 
     /**
      *
-     * @return ZapierHelper
+     * @return $this
      */
-    public static function getInstance(): ZapierHelper
+    public static function getInstance(): self
     {
-        if (!self::$helper) {
-            self::$helper = new self();
+        $class = static::class;
+        if (!self::$instances || !\array_key_exists($class, self::$instances)) {
+            // new $class() will work too
+            self::$instances[$class] = new static();
         }
-
-        return self::$helper;
+        return self::$instances[$class];
     }
 
 

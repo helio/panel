@@ -29,9 +29,9 @@ class DbHelper
 
 
     /**
-     * @var DbHelper
+     * @var array<DbHelper>
      */
-    protected static $helper;
+    protected static $instances;
 
 
     /** @var EntityManager */
@@ -40,17 +40,17 @@ class DbHelper
 
     /**
      *
-     * @return DbHelper
+     * @return $this
      */
-    public static function getInstance(): DbHelper
+    public static function getInstance(): self
     {
-        if (!self::$helper) {
-            self::$helper = new self();
+        $class = static::class;
+        if (!self::$instances || !\array_key_exists($class, self::$instances)) {
+            // new $class() will work too
+            self::$instances[$class] = new static();
         }
-
-        return self::$helper;
+        return self::$instances[$class];
     }
-
 
     /**
      *
@@ -87,46 +87,54 @@ class DbHelper
     protected function getConnection(): EntityManager
     {
         if (!$this->db) {
-            Type::overrideType('datetime', UTCDateTimeType::class);
-            Type::overrideType('datetimetz', UTCDateTimeType::class);
-
 
             if (!$this->getPathToModels() || !is_dir($this->getPathToModels())) {
                 throw new \InvalidArgumentException('invalid path submitted to DbFactory->getConnection()', 1530565724);
             }
 
-            // database configuration parameters
-            $dbCfg = array(
-                'driver' => 'pdo_mysql',
-                'dbname' => ServerUtility::get('DB_NAME'),
-                'user' => ServerUtility::get('DB_USERNAME'),
-                'password' => ServerUtility::get('DB_PASSWORD'),
-                'host' => ServerUtility::get('DB_HOST', 'localhost'),
-                'port' => ServerUtility::get('DB_PORT', 3306)
-            );
+            if (!$this->getConnectionSettings()) {
+                throw new \InvalidArgumentException('invalid DB connection settings', 1548043213);
+            }
 
+            Type::overrideType('datetime', UTCDateTimeType::class);
+            Type::overrideType('datetimetz', UTCDateTimeType::class);
 
-            // normalize path so it is suitable for identifying the cache entry
-            $pathToModels = realpath($this->getPathToModels());
+            $configObject = Setup::createAnnotationMetadataConfiguration([realpath($this->getPathToModels())], !ServerUtility::isProd(), ServerUtility::getTmpPath());
+            $configObject->setAutoGenerateProxyClasses(!ServerUtility::isProd());
+            $configObject->addCustomNumericFunction('timestampdiff', TimestampDiff::class);
 
-            $configObject = Setup::createAnnotationMetadataConfiguration([$pathToModels], ServerUtility::get('SITE_ENV', 'PROD') !== 'PROD');
+            // add filters
             foreach ($this->getFilters() as $name => $filter) {
                 $configObject->addFilter($name, $filter);
             }
 
-            $configObject->addCustomNumericFunction('timestampdiff', TimestampDiff::class);
 
-            // TODO: Fix this shit properly so doctrine can run in real production mode.
-            $configObject->setAutoGenerateProxyClasses(true);
+            $test = $this->getConnectionSettings();
+            $this->db = EntityManager::create($this->getConnectionSettings(), $configObject);
 
-            $this->db = EntityManager::create($dbCfg, $configObject);
-
+            // enable filters
             foreach ($this->getFilters() as $name => $filter) {
                 $this->db->getFilters()->enable($name);
             }
         }
 
         return $this->db;
+    }
+
+
+    /**
+     * @return array
+     */
+    protected function getConnectionSettings(): array
+    {
+        return array(
+            'driver' => 'pdo_mysql',
+            'dbname' => ServerUtility::get('DB_NAME'),
+            'user' => ServerUtility::get('DB_USERNAME'),
+            'password' => ServerUtility::get('DB_PASSWORD'),
+            'host' => ServerUtility::get('DB_HOST', 'localhost'),
+            'port' => ServerUtility::get('DB_PORT', 3306)
+        );
     }
 
 

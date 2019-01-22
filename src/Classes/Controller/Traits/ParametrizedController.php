@@ -57,6 +57,8 @@ trait ParametrizedController
      * NOTE: Only call this with SANITIZE Filters, VALIDATE will fail.
      *
      * @throws \RuntimeException
+     *
+     * TODO: Properly filter Params
      */
     public function optionalParameterCheck(array $params): void
     {

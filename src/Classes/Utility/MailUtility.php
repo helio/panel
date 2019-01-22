@@ -33,8 +33,8 @@ EOM;
             ServerUtility::getBaseUrl() . 'panel?token=' .
             JwtUtility::generateToken($user->getId(), $linkLifetime)['token']
         ]);
-        $return = @mail($user->getEmail(), 'Welcome to Helio', $content, 'From: hello@idling.host', '-f hello@idling.host'
-        );
+        $test = ServerUtility::get('SITE_ENV', 'PROD');
+        $return = ServerUtility::get('SITE_ENV', 'PROD') !== 'TEST' ? @mail($user->getEmail(), 'Welcome to Helio', $content, 'From: hello@idling.host', '-f hello@idling.host') : true;
         if ($return) {
             LogHelper::info('Sent Confirmation Mail to ' . $user->getEmail());
         } else {
@@ -42,7 +42,7 @@ EOM;
         }
 
         // write mail to PHPStorm Console
-        if (PHP_SAPI === 'cli-server' && ServerUtility::get('SITE_ENV') === 'DEV') {
+        if (PHP_SAPI === 'cli-server' && ServerUtility::get('SITE_ENV') !== 'PROD') {
             LogHelper::logToConsole($content);
         }
 

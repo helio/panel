@@ -1,9 +1,10 @@
 <?php
 namespace Helio\Test\Unit;
 
-use Helio\Test\Infrastructure\Model\User;
+use Helio\Panel\Model\User;
+use Helio\Test\TestCase;
 
-class UserTest extends \PHPUnit_Framework_TestCase {
+class UserTest extends TestCase {
 
     public function testIdFunctionality(): void {
 

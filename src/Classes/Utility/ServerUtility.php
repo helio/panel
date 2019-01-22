@@ -2,6 +2,9 @@
 
 namespace Helio\Panel\Utility;
 
+use Helio\Panel\App;
+use Helio\Panel\Helper\LogHelper;
+
 class ServerUtility
 {
 
@@ -55,7 +58,7 @@ class ServerUtility
      */
     public static function isProd(): bool
     {
-        return self::get('SITE_ENV', 'PROD') === 'PROD';
+        return self::get('SITE_ENV') === 'PROD';
     }
 
 
@@ -64,16 +67,28 @@ class ServerUtility
      * @param mixed|null $default
      *
      * @return string
+     *
+     * TODO: Don't use _ENV or _SERVER anymore here, but use proper request params
      */
     public static function get(string $name, $default = null): string
     {
-        if (PHP_SAPI === 'cli-server') {
-            if (\array_key_exists($name, $_ENV)) {
-                return $_ENV[$name];
-            }
+        // local development server has the stuff in _ENV
+        if (PHP_SAPI === 'cli-server' && \array_key_exists($name, $_ENV)) {
+            return $_ENV[$name];
         }
 
+        // look in _SERVER and request
         if (!\array_key_exists($name, $_SERVER) || !$_SERVER[$name]) {
+            if (App::isReady()) {
+                try {
+                    $reqParams = App::getApp()->getContainer()->get('request')->getServerParams();
+                    if (\array_key_exists($name, $reqParams) && $reqParams[$name]) {
+                        return $reqParams[$name];
+                    }
+                } catch (\Exception $e) {
+                    // fallback to default.
+                }
+            }
             if ($default !== null) {
                 return $default;
             }

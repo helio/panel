@@ -3,10 +3,11 @@
 namespace Helio\Test\Unit;
 
 use Helio\Panel\Master\MasterFactory;
+use Helio\Panel\Model\Instance;
 use Helio\Panel\Utility\ServerUtility;
-use Helio\Test\Infrastructure\Model\Instance;
+use Helio\Test\TestCase;
 
-class ServerUtilityTest extends \PHPUnit_Framework_TestCase
+class ServerUtilityTest extends TestCase
 {
 
 

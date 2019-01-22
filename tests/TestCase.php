@@ -3,8 +3,14 @@
 namespace Helio\Test;
 
 use Doctrine\DBAL\Types\Type;
+use Helio\Panel\Helper\LogHelper;
 use Helio\Panel\Model\Filter\DeletedFilter;
+use Helio\Panel\Model\Instance;
+use Helio\Panel\Model\Job;
+use Helio\Panel\Model\Task;
 use Helio\Panel\Model\Type\UTCDateTimeType;
+use Helio\Panel\Model\User;
+use Helio\Panel\Utility\JwtUtility;
 use Helio\Test\Infrastructure\App;
 use Helio\Test\Infrastructure\Helper\DbHelper;
 use Helio\Test\Infrastructure\Helper\ZapierHelper;
@@ -12,10 +18,6 @@ use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Request;
 use Slim\Http\Environment;
 use Doctrine\Common\Persistence\ObjectRepository;
-use Helio\Panel\Model\Instance;
-use Helio\Panel\Model\User;
-use Webfactory\Doctrine\Config\ConnectionConfiguration;
-use Webfactory\Doctrine\ORMTestInfrastructure\ConfigurationFactory;
 use Webfactory\Doctrine\ORMTestInfrastructure\ORMInfrastructure;
 
 /**
@@ -26,8 +28,6 @@ use Webfactory\Doctrine\ORMTestInfrastructure\ORMInfrastructure;
  */
 class TestCase extends \PHPUnit_Framework_TestCase
 {
-
-
     /**
      * @var ORMInfrastructure
      */
@@ -43,45 +43,63 @@ class TestCase extends \PHPUnit_Framework_TestCase
     /**
      * @var ObjectRepository
      */
-    protected $serverRepository;
+    protected $instanceRepository;
+
+
+    /**
+     * @var ObjectRepository
+     */
+    protected $jobRepository;
+
+
+    /**
+     * @var ObjectRepository
+     */
+    protected $taskRepository;
 
 
     /** @see \PHPUnit_Framework_TestCase::setUp()
-     * @throws \Doctrine\DBAL\DBALException
+     * @throws \Exception
      */
     protected function setUp()
     {
+        $_SERVER['JWT_SECRET'] = 'ladida';
+        $_SERVER['ZAPIER_HOOK_URL'] = '/blah';
+        $_SERVER['SCRIPT_HASH'] = 'TESTSHA1';
+        $_SERVER['REMOTE_ADDR'] = '127.0.0.1';
+        $_SERVER['SITE_ENV'] = 'TEST';
 
+
+        // re-init Zapier helper to make sure no Responses are left in the stack etc.
+        ZapierHelper::reset();
+
+
+        // re-init DBHelper
+        DbHelper::reset();
         Type::overrideType('datetime', UTCDateTimeType::class);
         Type::overrideType('datetimetz', UTCDateTimeType::class);
 
-        $this->infrastructure = ORMInfrastructure::createWithDependenciesFor([User::class, Instance::class]);
+
+        $this->infrastructure = ORMInfrastructure::createWithDependenciesFor([User::class, Instance::class, Job::class, Task::class]);
         $this->infrastructure->getEntityManager()->getConfiguration()->addFilter('deleted', DeletedFilter::class);
+        DbHelper::setInfrastructure($this->infrastructure);
 
         $this->userRepository = $this->infrastructure->getRepository(User::class);
-
-        $this->serverRepository = $this->infrastructure->getRepository(Instance::class);
+        $this->instanceRepository = $this->infrastructure->getRepository(Instance::class);
+        $this->jobRepository = $this->infrastructure->getRepository(Job::class);
+        $this->taskRepository = $this->infrastructure->getRepository(Task::class);
     }
-
 
     /**
      *
      */
     public static function setUpBeforeClass()
     {
-        parent::setUpBeforeClass();
-
         if (!\defined('APPLICATION_ROOT')) {
-            \define('APPLICATION_ROOT', __DIR__ . '/..');
-            \define('SITE_ENV', 'TEST');
+            \define('APPLICATION_ROOT', \dirname(__DIR__));
             \define('LOG_DEST', APPLICATION_ROOT . '/log/app-test.log');
             \define('LOG_LVL', 100);
         }
-        $_SERVER['JWT_SECRET'] = 'ladida';
-        $_SERVER['ZAPIER_HOOK_URL'] = '/blah';
-        $_SERVER['SCRIPT_HASH'] = 'TESTSHA1';
-        $_SERVER['REMOTE_ADDR'] = '127.0.0.1';
-        $_SERVER['SITE_ENV'] = 'TEST';
     }
 
 
@@ -130,8 +148,6 @@ class TestCase extends \PHPUnit_Framework_TestCase
         &$app = null
     ): ResponseInterface
     {
-
-        $requestParts = explode('?', $requestUri);
         // Create a mock environment for testing with
         $environment = Environment::mock(
             [
@@ -157,12 +173,8 @@ class TestCase extends \PHPUnit_Framework_TestCase
             $request = $request->withAttributes($attributes);
         }
 
-        if ($withMiddleware) {
-            $app = App::getApp('app', DbHelper::class, ZapierHelper::class);
-        } else {
-            $app = App::getTestApp();
-        }
-        $app->getContainer()['request'] = $request;
+        $middlewares = $withMiddleware ? [JwtUtility::class] : [];
+        $app = App::getApp('test', $request, $middlewares);
 
         return $app->run(true);
     }

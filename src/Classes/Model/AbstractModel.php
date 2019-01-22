@@ -112,6 +112,7 @@ abstract class AbstractModel
         return $this;
     }
 
+
     /**
      * @return \DateTime
      */
@@ -136,6 +137,20 @@ abstract class AbstractModel
 
         // Fix Timezone because Doctrine assumes persistend DateTime Objects are always UTC
         $this->created = $created;
+        return $this;
+    }
+
+
+    /**
+     * @param int $timestamp
+     * @return $this
+     *
+     * NOTE: Don't use ths method! It's for testing purposes only!
+     * @internal
+     */
+    public function setCreatedByTimestamp(int $timestamp): self
+    {
+        $this->created = (new \DateTime('now', ServerUtility::getTimezoneObject()))->setTimestamp($timestamp);
         return $this;
     }
 
@@ -250,6 +265,21 @@ abstract class AbstractModel
             $config = json_encode($config);
         }
         $this->config = $config;
+        return $this;
+    }
+
+
+    /**
+     * @param int $id
+     * @return $this $this
+     * Allow setting the id
+     */
+    public function setId(int $id): self
+    {
+        if (ServerUtility::isProd()) {
+            throw new \RuntimeException('You cannot force IDs, they are auto-incremented on DB-level.', 1548053101);
+        }
+        $this->id = $id;
         return $this;
     }
 

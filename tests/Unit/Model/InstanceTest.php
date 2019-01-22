@@ -1,9 +1,10 @@
 <?php
 namespace Helio\Test\Unit;
 
-use Helio\Test\Infrastructure\Model\Instance;
+use Helio\Panel\Model\Instance;
+use Helio\Test\TestCase;
 
-class InstanceTest extends \PHPUnit_Framework_TestCase {
+class InstanceTest extends TestCase {
 
     public function testIdFunctionality(): void {
 
