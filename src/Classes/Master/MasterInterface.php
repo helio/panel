@@ -9,11 +9,11 @@ interface MasterInterface
 {
     public function __construct(Instance $instance);
 
-    public function getStatus(bool $returnInsteadOfCall = false);
+    public function getStatus();
 
-    public function doSign(bool $returnInsteadOfCall = false);
+    public function doSign();
 
-    public function cleanup(bool $returnInsteadOfCall = false);
+    public function cleanup();
 
-    public function dispatchJob(Job $job, bool $returnInsteadOfCall = false): bool;
+    public function dispatchJob(Job $job): bool;
 }

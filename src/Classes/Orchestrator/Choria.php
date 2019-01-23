@@ -40,13 +40,12 @@ end
     }
 
     /**
-     * @param bool $returnInsteadOfCall
      * @return mixed
      */
-    public function getInventory(bool $returnInsteadOfCall = false)
+    public function getInventory()
     {
-        $result = ServerUtility::executeShellCommand($this->parseCommand('inventory'), $returnInsteadOfCall);
-        if (\is_string($result) && !$returnInsteadOfCall) {
+        $result = ServerUtility::executeShellCommand($this->parseCommand('inventory'));
+        if (\is_string($result) && $result) {
             return json_decode($result, true);
         }
         return $result;

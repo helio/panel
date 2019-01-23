@@ -35,13 +35,12 @@ class Docker implements RunnerInterface
     }
 
     /**
-     * @param bool $returnInsteadOfCall
      * @return mixed
      */
-    public function startComputing(bool $returnInsteadOfCall = false)
+    public function startComputing()
     {
-        $result = ServerUtility::executeShellCommand($this->parseCommand('startComputing'), $returnInsteadOfCall);
-        if (\is_string($result) && !$returnInsteadOfCall) {
+        $result = ServerUtility::executeShellCommand($this->parseCommand('startComputing'));
+        if (\is_string($result) && $result) {
             return json_decode($result, true);
         }
         return $result;
@@ -49,13 +48,12 @@ class Docker implements RunnerInterface
 
 
     /**
-     * @param bool $returnInsteadOfCall
      * @return mixed
      */
-    public function stopComputing(bool $returnInsteadOfCall = false)
+    public function stopComputing()
     {
-        $result = ServerUtility::executeShellCommand($this->parseCommand('stopComputing'), $returnInsteadOfCall);
-        if (\is_string($result) && !$returnInsteadOfCall) {
+        $result = ServerUtility::executeShellCommand($this->parseCommand('stopComputing'));
+        if (\is_string($result) && $result) {
             return json_decode($result, true);
         }
         return $result;
@@ -63,32 +61,29 @@ class Docker implements RunnerInterface
 
 
     /**
-     * @param bool $returnInsteadOfCall
      * @return null|string
      */
-    public function getNodeId(bool $returnInsteadOfCall = false): ?string
+    public function getNodeId(): ?string
     {
-        return ServerUtility::executeShellCommand($this->parseCommand('getId', $this->instance->getId()), $returnInsteadOfCall);
+        return ServerUtility::executeShellCommand($this->parseCommand('getId', $this->instance->getId()));
     }
 
     /**
-     * @param bool $returnInsteadOfCall
      * @return null|string
      */
-    public function remove(bool $returnInsteadOfCall = false): ?string
+    public function remove(): ?string
     {
-        return ServerUtility::executeShellCommand($this->parseCommand('remove', $this->getNodeId($returnInsteadOfCall)));
+        return ServerUtility::executeShellCommand($this->parseCommand('remove', $this->getNodeId()));
     }
 
     /**
-     * @param bool $returnInsteadOfCall
      * @return mixed
      */
-    public function inspect(bool $returnInsteadOfCall = false)
+    public function inspect()
     {
-        $result = ServerUtility::executeShellCommand($this->parseCommand('inspect', $this->getNodeId($returnInsteadOfCall)), $returnInsteadOfCall);
+        $result = ServerUtility::executeShellCommand($this->parseCommand('inspect', $this->getNodeId()));
 
-        if (\is_string($result) && !$returnInsteadOfCall) {
+        if (\is_string($result) && $result) {
             return json_decode($result, true);
         }
         return $result;

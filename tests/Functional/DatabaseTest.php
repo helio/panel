@@ -110,5 +110,25 @@ class DatabaseTest extends TestCase
 
         $this->assertNotNull($foundServer);
         $this->assertEquals($server->getCreated()->getTimestamp(), $foundServer->getCreated()->getTimestamp());
+        $this->assertEquals($server->getCreated()->getTimezone()->getName(), $foundServer->getCreated()->getTimezone()->getName());
+    }
+
+
+    public function testTimestampAutoSetter(): void
+    {
+
+        // import fixture
+        $user = (new User())->setName('testuser')->setCreated();
+        $server = (new Instance())->setName('testserver')->setCreated();
+        $server->setOwner($user);
+
+        $this->infrastructure->import($server);
+
+        /** @var Instance $foundServer */
+        $foundServer = $this->instanceRepository->findOneByName('testserver');
+
+        $this->assertNotNull($foundServer);
+        $this->assertEquals($server->getCreated()->getTimestamp(), $foundServer->getCreated()->getTimestamp());
+        $this->assertEquals($server->getCreated()->getTimezone()->getName(), $foundServer->getCreated()->getTimezone()->getName());
     }
 }

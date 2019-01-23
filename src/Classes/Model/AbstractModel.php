@@ -84,6 +84,7 @@ abstract class AbstractModel
     public function __construct()
     {
         $this->timezone = ServerUtility::getTimezoneObject()->getName();
+        $this->setCreated();
     }
 
     /**

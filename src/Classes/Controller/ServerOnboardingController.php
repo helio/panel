@@ -63,7 +63,7 @@ class ServerOnboardingController extends AbstractController
                 throw new \RuntimeException('User isn\'t valid or activated', 1531254673);
             }
 
-            if ($this->params['fqdn']) {
+            if (\array_key_exists('fqdn', $this->params) && $this->params['fqdn']) {
                 $server->setFqdn($this->params['fqdn']);
             }
             if (!$server->getFqdn()) {
@@ -76,7 +76,7 @@ class ServerOnboardingController extends AbstractController
             $this->dbHelper->merge($server);
             $this->dbHelper->flush();
 
-            $token = trim(MasterFactory::getMasterForInstance($server)->doSign());
+            $token = MasterFactory::getMasterForInstance($server)->doSign();
             if (!$token) {
                 throw new \RuntimeException('couldn\'t generate autosign. Please try again.', 1530917143);
             }

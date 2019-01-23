@@ -3,7 +3,6 @@
 namespace Helio\Panel\Utility;
 
 use Helio\Panel\App;
-use Helio\Panel\Helper\LogHelper;
 
 class ServerUtility
 {
@@ -14,6 +13,16 @@ class ServerUtility
      * @var string
      */
     protected static $timeZone = 'Europe/Berlin';
+
+    /**
+     * @var bool
+     */
+    protected static $testMode = false;
+
+    /**
+     * @var
+     */
+    protected static $lastExecutedShellCommand = '';
 
 
     /**
@@ -120,13 +129,16 @@ class ServerUtility
 
     /**
      * @param string $command
-     * @param bool $returnInsteadOfCall
      *
      * @return null|string
      */
-    public static function executeShellCommand(string $command, bool $returnInsteadOfCall = false): ?string
+    public static function executeShellCommand(string $command): ?string
     {
-        return $returnInsteadOfCall ? $command : trim(@shell_exec($command));
+        self::$lastExecutedShellCommand = $command;
+        if (self::$testMode) {
+            return '{"status":"success"}';
+        }
+        return trim(@shell_exec($command));
     }
 
 
@@ -192,5 +204,21 @@ class ServerUtility
     public static function getSha1SumFromFile(string $path): string
     {
         return sha1_file($path);
+    }
+
+    /**
+     *
+     */
+    public static function setTesting(): void
+    {
+        self::$testMode = true;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getLastExecutedShellCommand(): string
+    {
+        return self::$lastExecutedShellCommand;
     }
 }

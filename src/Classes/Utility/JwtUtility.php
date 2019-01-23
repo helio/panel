@@ -127,16 +127,16 @@ class JwtUtility
 
 
     /**
-     * @param Instance $server
+     * @param Instance $instance
      *
      * @return string
      * @throws \Exception
      */
-    public static function generateInstanceIdentificationToken(Instance $server): string
+    public static function generateInstanceIdentificationToken(Instance $instance): string
     {
         $salt = bin2hex(random_bytes(4));
 
-        return self::getSaltedTokenHash($server->getId(), $server->getCreated()->getTimestamp(), $salt);
+        return self::getSaltedTokenHash($instance->getId(), $instance->getCreated()->getTimestamp(), $salt);
     }
 
 

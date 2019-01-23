@@ -9,13 +9,13 @@ interface RunnerInterface
 {
     public function __construct(Instance $server);
 
-    public function startComputing(bool $returnInsteadOfCall = false);
+    public function startComputing();
 
-    public function stopComputing(bool $returnInsteadOfCall = false);
+    public function stopComputing();
 
-    public function remove(bool $returnInsteadOfCall = false);
+    public function remove();
 
-    public function inspect(bool $returnInsteadOfCall = false);
+    public function inspect();
 
     public function createConfigForJob(DispatchConfig $config): string;
 }

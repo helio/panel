@@ -12,4 +12,10 @@ class InstanceTest extends TestCase {
         $instance->setId(69);
         $this->assertEquals(69, $instance->getId());
     }
+
+    public function testTimestampOnCreated(): void {
+        $instance = new Instance();
+        $instance->setCreated();
+        $this->assertEquals($instance->getTimezone(), $instance->getCreated()->getTimezone()->getName());
+    }
 }

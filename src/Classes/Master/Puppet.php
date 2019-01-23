@@ -53,26 +53,24 @@ class Puppet implements MasterInterface
     }
 
     /**
-     * @param bool $returnInsteadOfCall
      * @return mixed
      */
-    public function getStatus(bool $returnInsteadOfCall = false)
+    public function getStatus()
     {
-        $result = ServerUtility::executeShellCommand($this->parseCommand('status'), $returnInsteadOfCall);
-        if (\is_string($result) && !$returnInsteadOfCall) {
+        $result = ServerUtility::executeShellCommand($this->parseCommand('status'));
+        if (\is_string($result) && $result) {
             return json_decode($result, true);
         }
         return $result;
     }
 
     /**
-     * @param bool $returnInsteadOfCall
      * @return mixed
      */
-    public function doSign(bool $returnInsteadOfCall = false)
+    public function doSign()
     {
-        $result = ServerUtility::executeShellCommand($this->parseCommand('autosign'), $returnInsteadOfCall);
-        if (\is_string($result) && !$returnInsteadOfCall) {
+        $result = ServerUtility::executeShellCommand($this->parseCommand('autosign'));
+        if (\is_string($result) && $result) {
             return json_decode($result, true);
         }
         return $result;
@@ -80,23 +78,21 @@ class Puppet implements MasterInterface
     }
 
     /**
-     * @param bool $returnInsteadOfCall
      * @return mixed
      */
-    public function cleanup(bool $returnInsteadOfCall = false)
+    public function cleanup()
     {
-        return ServerUtility::executeShellCommand($this->parseCommand('cleanup'), $returnInsteadOfCall);
+        return ServerUtility::executeShellCommand($this->parseCommand('cleanup'));
     }
 
 
     /**
      * @param Job $job
-     * @param bool $returnInsteadOfCall
      * @return bool
      */
-    public function dispatchJob(Job $job, bool $returnInsteadOfCall = false): bool
+    public function dispatchJob(Job $job): bool
     {
-        return ServerUtility::executeShellCommand($this->parseCommand('dispatch'), $returnInsteadOfCall);
+        return ServerUtility::executeShellCommand($this->parseCommand('dispatch'));
     }
 
 

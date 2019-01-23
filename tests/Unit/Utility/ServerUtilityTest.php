@@ -61,10 +61,10 @@ class ServerUtilityTest extends TestCase
             ->setMasterType('puppet')
             ->setRunnerCoordinator('coordinator.domain.tld')
             ->setRunnerType('docker');
-        $result = MasterFactory::getMasterForInstance($server)->doSign(true);
+        $result = MasterFactory::getMasterForInstance($server)->doSign();
 
-        $this->assertStringStartsWith('ssh', $result);
-        $this->assertContains($server->getFqdn(), $result);
+        $this->assertStringStartsWith('ssh', ServerUtility::getLastExecutedShellCommand());
+        $this->assertContains($server->getFqdn(), ServerUtility::getLastExecutedShellCommand());
     }
 
     /**

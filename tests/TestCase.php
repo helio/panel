@@ -11,6 +11,7 @@ use Helio\Panel\Model\Task;
 use Helio\Panel\Model\Type\UTCDateTimeType;
 use Helio\Panel\Model\User;
 use Helio\Panel\Utility\JwtUtility;
+use Helio\Panel\Utility\ServerUtility;
 use Helio\Test\Infrastructure\App;
 use Helio\Test\Infrastructure\Helper\DbHelper;
 use Helio\Test\Infrastructure\Helper\ZapierHelper;
@@ -100,6 +101,9 @@ class TestCase extends \PHPUnit_Framework_TestCase
             \define('LOG_DEST', APPLICATION_ROOT . '/log/app-test.log');
             \define('LOG_LVL', 100);
         }
+
+        // make sure no shell commands are being executed.
+        ServerUtility::setTesting();
     }
 
 
