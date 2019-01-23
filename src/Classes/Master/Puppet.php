@@ -37,6 +37,8 @@ class Puppet implements MasterInterface
 
     /**
      * @var string
+     *
+     * TODO: Set properly once KEHA is ready
      */
     protected static $dispatchCommand = 'ssh %s@%s "mco puppet runonce -W fqdn=%s"';
 
