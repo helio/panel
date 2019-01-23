@@ -2,13 +2,12 @@
 
 namespace Helio\Panel\Master;
 
-use Helio\Panel\Instance\InstanceFactory;
 use Helio\Panel\Model\Instance;
 use Helio\Panel\Model\Job;
 
 interface MasterInterface
 {
-    public function __construct(Instance $server);
+    public function __construct(Instance $instance);
 
     public function getStatus(bool $returnInsteadOfCall = false);
 
@@ -16,5 +15,5 @@ interface MasterInterface
 
     public function cleanup(bool $returnInsteadOfCall = false);
 
-    public function dispatchJob(Instance $instance, Job $job): bool;
+    public function dispatchJob(Job $job, bool $returnInsteadOfCall = false): bool;
 }

@@ -175,19 +175,22 @@ class ApiAdminController extends AbstractController
     {
         $jobs = $this->dbHelper->getRepository(Job::class)->findBy(['status' => JobStatus::READY]);
 
-        $cfg = '';
+        $jobList = [];
+        $counter = 0;
         /** @var Job $job */
         foreach ($jobs as $job) {
-            $cfg .= "  '" . $job->getType() . '-' . $job->getId() . "':\n";
-            $cfg .= '    job_id: ' . $job->getId() . "\n";
-            $cfg .= "    service_name: '" . $job->getType() . '-' . $job->getId() . "'\n";
-            $cfg .= "    instance_id: '" . ($job->getDispatchedInstance() ? $job->getDispatchedInstance()->getId() : 'NULL') . "'\n";
+            $jobList[] = [
+                'job_number' => ++$counter,
+                'job_specs' => [
+                    'job_id' => $job->getId(),
+                    'service_name' => $job->getType() . '-' . $job->getId(),
+                    'instance_id' => $job->getDispatchedInstance() ? $job->getDispatchedInstance()->getId() : 'NULL'
+                ]
+            ];
         }
 
 
-        return $this
-            ->setReturnType('yaml')
-            ->render(['profile::docker::backlog:', $cfg]);
+        return $this->render(['name' => 'profile::docker::backlog', 'jobs' => $jobList]);
     }
 
 
@@ -206,6 +209,8 @@ class ApiAdminController extends AbstractController
                 $env .= "\n    - $key=$value";
             }
         }
+
+        // TODO: add a proper array to yaml parser
         return $this
             ->setReturnType('yaml')
             ->render(['profile::docker::clusters:', "  '$servicename':", "    service_name: '$servicename'", '    image: ' . $dcf->getImage(), '    replicas: 1', $env]);

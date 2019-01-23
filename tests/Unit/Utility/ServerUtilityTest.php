@@ -32,7 +32,6 @@ class ServerUtilityTest extends TestCase
     public function testSanitizerOfAutosignThrowsWhenInvalidCharacterInFqdn(): void
     {
         $catch = false;
-        try {
             $server = (new Instance())
                 ->setId(424234234)
                 ->setFqdn('";sudo init 0')
@@ -41,6 +40,7 @@ class ServerUtilityTest extends TestCase
                 ->setRunnerCoordinator('coordinator.domain.tld')
                 ->setRunnerType('docker');
 
+        try {
             MasterFactory::getMasterForInstance($server)->doSign(true);
         } catch (\InvalidArgumentException $e) {
             $catch = true;
@@ -65,5 +65,30 @@ class ServerUtilityTest extends TestCase
 
         $this->assertStringStartsWith('ssh', $result);
         $this->assertContains($server->getFqdn(), $result);
+    }
+
+    /**
+     *
+     */
+    public function testTimezoneObject(): void {
+        $this->assertEquals('Europe/Berlin', ServerUtility::getTimezoneObject()->getName());
+    }
+
+    /**
+     *
+     */
+    public function testReverseProxy(): void {
+        $clientIp = '8.4.5.6';
+        $reverseProxyIp = '5.2.5.55';
+        $_SERVER['HTTP_X_FORWARDED_FOR'] = $clientIp;
+        $_SERVER['REVERSE_PROXY_IP'] = $reverseProxyIp;
+        $_SERVER['REMOTE_ADDR'] = $reverseProxyIp;
+
+        $this->assertEquals($clientIp, ServerUtility::getClientIp());
+
+        $_SERVER['REVERSE_PROXY_IP'] = '101.1.1.1';
+
+        $this->assertNotEquals($clientIp, ServerUtility::getClientIp());
+        $this->assertEquals($reverseProxyIp, ServerUtility::getClientIp());
     }
 }

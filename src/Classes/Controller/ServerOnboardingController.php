@@ -40,6 +40,7 @@ class ServerOnboardingController extends AbstractController
 
 
     /**
+     * (wenn der Token bekannt ist (zB wenn der Server im Panel erstellt worden ist))
      *
      * @return \Psr\Http\Message\ResponseInterface
      *
@@ -91,6 +92,7 @@ class ServerOnboardingController extends AbstractController
 
 
     /**
+     * (wenn's den User noch nicht gibt)
      *
      * @return ResponseInterface
      *
@@ -159,6 +161,7 @@ class ServerOnboardingController extends AbstractController
 
 
     /**
+     * (wenn's den User schon gibt)
      *
      * @return ResponseInterface
      *
@@ -187,7 +190,7 @@ class ServerOnboardingController extends AbstractController
             }
         } catch (\Exception $e) {
             return $this->json(['success' => false, 'reason' => $e->getMessage()],
-                $e->getCode() < 100 ? $e->getCode() : StatusCode::HTTP_NOT_ACCEPTABLE);
+                $e->getCode() < 1000 ? $e->getCode() : StatusCode::HTTP_NOT_ACCEPTABLE);
         }
 
         return $this->json(['success' => true, 'token' => $server->getToken()], StatusCode::HTTP_OK);

@@ -5,9 +5,13 @@ namespace Helio\Panel\Controller;
 
 use Helio\Panel\Controller\Traits\TypeDynamicController;
 use Helio\Panel\Controller\Traits\AuthorizedJobController;
+use Helio\Panel\Instance\InstanceStatus;
 use Helio\Panel\Job\JobFactory;
 use Helio\Panel\Job\JobStatus;
 use Helio\Panel\Job\JobType;
+use Helio\Panel\Master\MasterFactory;
+use Helio\Panel\Model\Instance;
+use Helio\Panel\Model\User;
 use Helio\Panel\Utility\JwtUtility;
 use Helio\Panel\Utility\MailUtility;
 use Helio\Panel\Utility\ServerUtility;
@@ -84,6 +88,22 @@ class ApiJobController extends AbstractController
         $this->persistJob();
 
         MailUtility::sendMailToAdmin('New Job was created by ' . $this->user->getEmail() . 'type: ' . $this->job->getType() . ', id: ' . $this->job->getId());
+
+
+        // TODO: Remove this pseudo-instance as it's only for prototype purposes
+        $demoInstanceName = 'Demo runner for prototype';
+        $instance = $this->dbHelper->getRepository(Instance::class)->findOneBy(['name' => 'Demo runner for prototype']);
+        if (!$instance) {
+            $owner = $this->dbHelper->getRepository(User::class)->findOneBy(['email' => 'team@opencomputing.cloud']);
+            if (!$owner) {
+                $owner = (new User())->setName('admin')->setEmail('team@opencomputing.cloud')->setAdmin(true)->setActive(true)->setCreated();
+            }
+            $instance = (new Instance())->setName($demoInstanceName)->setOwner($owner)->setStatus(InstanceStatus::RUNNING)->setCreated();
+        }
+        $this->job->setDispatchedInstance($instance);
+
+        MasterFactory::getMasterForInstance($instance)->dispatchJob($this->job);
+        // TODO: End remov
 
         return $this->render([
             'success' => true,

@@ -21,15 +21,12 @@ class AppTest extends TestCase
         $this->infrastructure->import($user);
         $this->infrastructure->import($user);
 
-        $app = null;
         $tokenCookie = 'token=' . JwtUtility::generateToken($user->getId())['token'];
 
-        /** @var App $app */
-        $response = $this->runApp('GET', '/panel', true, $tokenCookie, null, [], $app);
+        $response = $this->runApp('GET', '/panel', true, $tokenCookie);
 
         $this->assertEquals(200, $response->getStatusCode());
-        $ct = $app->getContainer();
-        $this->assertEquals($user->getId(), $app->getContainer()->get('user')->getId());
+        $this->assertEquals($user->getId(), \Helio\Test\Infrastructure\App::getApp()->getContainer()->get('user')->getId());
     }
 
 
@@ -82,15 +79,13 @@ class AppTest extends TestCase
         $user = new User();
         $user->setId(564);
         $this->infrastructure->import($user);
-        $app = true;
 
         $tokenCookie = 'token=' . JwtUtility::generateToken($user->getId())['token'];
 
-        /** @var App $app */
-        $response = $this->runApp('GET', '/panel', true, $tokenCookie, null, [], $app);
+        $response = $this->runApp('GET', '/panel', true, $tokenCookie);
 
         $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals($user->getId(), $app->getContainer()->get('jwt')['uid']);
+        $this->assertEquals($user->getId(), \Helio\Test\Infrastructure\App::getApp()->getContainer()->get('jwt')['uid']);
     }
 
 
@@ -106,7 +101,7 @@ class AppTest extends TestCase
         $this->infrastructure->import($user);
 
         $tokenCookie = 'token=' . JwtUtility::generateToken($user->getId())['token'];
-        $response = $this->runApp('GET', '/panel', true, $tokenCookie, null);
+        $response = $this->runApp('GET', '/panel', true, $tokenCookie);
         $cookies = $response->getHeader('set-cookie');
 
         // guard asserts

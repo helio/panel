@@ -112,7 +112,7 @@ class ServerUtility
     /**
      * @return bool
      */
-    public static function isBehindReverseProxy(): bool
+    protected static function isBehindReverseProxy(): bool
     {
         return self::get('REMOTE_ADDR') === self::get('REVERSE_PROXY_IP', 'impossible') && self::get('HTTP_X_FORWARDED_FOR', false);
     }

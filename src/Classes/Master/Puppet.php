@@ -18,22 +18,28 @@ class Puppet implements MasterInterface
     /**
      * @var string
      */
-    private static $username = 'panel';
+    protected static $username = 'panel';
 
     /**
      * @var string
      */
-    private static $autosignCommand = 'ssh %s@%s "autosign generate -b %s"';
+    protected static $autosignCommand = 'ssh %s@%s "autosign generate -b %s"';
 
     /**
      * @var string
      */
-    private static $statusCommand = 'ssh %s@%s "curl -s -X GET https://puppetdb.idling.host/pdb/query/v4/nodes/%s -k"';
+    protected static $statusCommand = 'ssh %s@%s "curl -s -X GET https://puppetdb.idling.host/pdb/query/v4/nodes/%s -k"';
 
     /**
      * @var string
      */
-    private static $cleanupCommand = 'ssh %s@%s "sudo /opt/puppetlabs/bin/puppetserver ca cert clean --certname %s"';
+    protected static $cleanupCommand = 'ssh %s@%s "sudo /opt/puppetlabs/bin/puppetserver ca cert clean --certname %s"';
+
+    /**
+     * @var string
+     */
+    protected static $dispatchCommand = 'ssh %s@%s "mco puppet runonce -W fqdn=%s"';
+
 
     /**
      * Puppet constructor.
@@ -82,14 +88,13 @@ class Puppet implements MasterInterface
 
 
     /**
-     * @param Instance $instance
      * @param Job $job
+     * @param bool $returnInsteadOfCall
      * @return bool
-     *
-     * TODO: Implement
      */
-    public function dispatchJob(Instance $instance, Job $job): bool {
-        return true;
+    public function dispatchJob(Job $job, bool $returnInsteadOfCall = false): bool
+    {
+        return ServerUtility::executeShellCommand($this->parseCommand('dispatch'), $returnInsteadOfCall);
     }
 
 
