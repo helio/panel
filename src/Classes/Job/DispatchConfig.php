@@ -2,10 +2,13 @@
 
 namespace Helio\Panel\Job;
 
+use Helio\Panel\Model\Job;
+
 class DispatchConfig
 {
     protected $image = '';
     protected $envVariables = [];
+    protected $taskPerReplica = 5;
 
     /**
      * @return string
@@ -41,6 +44,29 @@ class DispatchConfig
     {
         $this->envVariables = $envVariables;
         return $this;
+    }
+
+
+    /**
+     * @return int
+     */
+    public function getTaskCountPerReplica(): int
+    {
+        return $this->taskPerReplica;
+    }
+
+
+    /**
+     * @param Job $job
+     * @return int
+     */
+    public function getReplicaCountForJob(Job $job): int
+    {
+        if ($job->getActiveTaskCount() === 0) {
+            return 0;
+        }
+
+        return 1 + ceil(($job->getActiveTaskCount() - ($job->getActiveTaskCount() % $this->getTaskCountPerReplica())) / $this->getTaskCountPerReplica());
     }
 
 }

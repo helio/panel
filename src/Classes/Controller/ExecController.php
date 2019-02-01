@@ -6,7 +6,11 @@ namespace Helio\Panel\Controller;
 use Helio\Panel\Controller\Traits\TaskController;
 use Helio\Panel\Controller\Traits\TypeApiController;
 use Helio\Panel\Controller\Traits\ValidatedJobController;
+use Helio\Panel\Instance\InstanceStatus;
 use Helio\Panel\Job\JobFactory;
+use Helio\Panel\Master\MasterFactory;
+use Helio\Panel\Model\Instance;
+use Helio\Panel\Model\User;
 use Helio\Panel\Task\TaskStatus;
 use Helio\Panel\Utility\ExecUtility;
 use Psr\Http\Message\ResponseInterface;
@@ -40,7 +44,30 @@ class ExecController extends AbstractController
     public function execAction(): ResponseInterface
     {
         try {
+            // TODO: Remove this pseudo-instance as it's only for prototype purposes
+            if ($this->job->getDispatchedInstance() === null) {
+
+                $demoInstanceName = 'Demo runner for prototype';
+                $instance = $this->dbHelper->getRepository(Instance::class)->findOneBy(['name' => 'Demo runner for prototype']);
+                if (!$instance) {
+                    $owner = $this->dbHelper->getRepository(User::class)->findOneBy(['email' => 'team@opencomputing.cloud']);
+                    if (!$owner) {
+                        $owner = (new User())->setName('admin')->setEmail('team@opencomputing.cloud')->setAdmin(true)->setActive(true)->setCreated();
+                    }
+                    $instance = (new Instance())->setName($demoInstanceName)->setOwner($owner)->setStatus(InstanceStatus::RUNNING)->setCreated();
+                    $this->dbHelper->persist($instance);
+                }
+                $this->job->setDispatchedInstance($instance);
+                $this->persistJob();
+            }
+
+            $previousReplicaCount = JobFactory::getDispatchConfigOfJob($this->job)->getDispatchConfig()->getReplicaCountForJob($this->job);
             JobFactory::getInstanceOfJob($this->job, $this->task)->run($this->params, $this->request, $this->response);
+            $newReplicaCount = JobFactory::getDispatchConfigOfJob($this->job)->getDispatchConfig()->getReplicaCountForJob($this->job);
+
+            if ($previousReplicaCount !== $newReplicaCount) {
+                MasterFactory::getMasterForInstance($this->job->getDispatchedInstance())->dispatchJob($this->job);
+            }
             return $this->render(['status' => 'success']);
         } catch (\Exception $e) {
             return $this->render(['status' => 'error', 'reason' => $e->getMessage()], StatusCode::HTTP_INTERNAL_SERVER_ERROR);

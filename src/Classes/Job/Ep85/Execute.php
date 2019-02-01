@@ -4,6 +4,7 @@ namespace Helio\Panel\Job\Ep85;
 
 use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\OptimisticLockException;
+use Helio\Panel\App;
 use Helio\Panel\Helper\DbHelper;
 use Helio\Panel\Job\DispatchableInterface;
 use Helio\Panel\Job\DispatchConfig;
@@ -64,19 +65,21 @@ class Execute implements JobInterface, DispatchableInterface
     public function run(array $params, RequestInterface $request, ResponseInterface $response): bool
     {
         $this->task = (new Task())->setJob($this->job)->setCreated(new \DateTime('now', ServerUtility::getTimezoneObject()))->setConfig('');
-        DbHelper::getInstance()->persist($this->task);
-        DbHelper::getInstance()->flush();
+        App::getApp()->getContainer()['dbHelper']->persist($this->task);
+        App::getApp()->getContainer()['dbHelper']->flush();
 
         /** @var Request $request */
-        /** @var UploadedFileInterface $uploadedFile */
-        $uploadedFile = $request->getUploadedFiles()['idf'];
-        if ($uploadedFile && $uploadedFile->getError() === UPLOAD_ERR_OK) {
-            $idf = ExecUtility::getTaskDataFolder($this->task) . $uploadedFile->getClientFilename();
-            $uploadedFile->moveTo($idf);
-        } else {
-            $idf = ExecUtility::getJobDataFolder($this->job) . 'example.idf';
-            if (!file_exists($idf)) {
-                copy(__DIR__ . DIRECTORY_SEPARATOR . 'example.idf', $idf);
+        if (\array_key_exists('idf', $request->getUploadedFiles())) {
+            /** @var UploadedFileInterface $uploadedFile */
+            $uploadedFile = $request->getUploadedFiles()['idf'];
+            if ($uploadedFile && $uploadedFile->getError() === UPLOAD_ERR_OK) {
+                $idf = ExecUtility::getTaskDataFolder($this->task) . $uploadedFile->getClientFilename();
+                $uploadedFile->moveTo($idf);
+            } else {
+                $idf = ExecUtility::getJobDataFolder($this->job) . 'example.idf';
+                if (!file_exists($idf)) {
+                    copy(__DIR__ . DIRECTORY_SEPARATOR . 'example.idf', $idf);
+                }
             }
         }
 
@@ -92,8 +95,8 @@ class Execute implements JobInterface, DispatchableInterface
         }
         $config = array_merge(json_decode($request->getBody()->getContents(), true) ?? [],
             [
-                'idf' => $idf,
-                'idf_sha1' => ServerUtility::getSha1SumFromFile($idf),
+                'idf' => $idf ?? '',
+                'idf_sha1' => isset($idf) ? ServerUtility::getSha1SumFromFile($idf) : '',
                 'epw' => $epw,
                 'epw_sha1' => ServerUtility::getSha1SumFromFile($epw),
             ]);
@@ -101,8 +104,8 @@ class Execute implements JobInterface, DispatchableInterface
         $this->task->setStatus(TaskStatus::READY)
             ->setConfig(json_encode($config, JSON_UNESCAPED_SLASHES));
 
-        DbHelper::getInstance()->persist($this->task);
-        DbHelper::getInstance()->flush();
+        App::getApp()->getContainer()['dbHelper']->persist($this->task);
+        App::getApp()->getContainer()['dbHelper']->flush();
 
         return true;
     }
@@ -110,6 +113,7 @@ class Execute implements JobInterface, DispatchableInterface
     /**
      * @param array $params
      * @return bool
+     * @throws \Exception
      */
     public function stop(array $params): bool
     {
@@ -117,9 +121,9 @@ class Execute implements JobInterface, DispatchableInterface
         /** @var Task $task */
         foreach ($tasks as $task) {
             $task->setStatus(TaskStatus::STOPPED);
-            DbHelper::getInstance()->persist($task);
+            App::getApp()->getContainer()['dbHelper']->persist($task);
         }
-        DbHelper::getInstance()->flush();
+        App::getApp()->getContainer()['dbHelper']->flush();
 
         return true;
     }
@@ -132,14 +136,14 @@ class Execute implements JobInterface, DispatchableInterface
      */
     public function getnextinqueue(array $params, Response $response): ResponseInterface
     {
-        $tasks = DbHelper::getInstance()->getRepository(Task::class)->findBy(['job' => $this->job, 'status' => TaskStatus::READY], ['priority' => 'ASC', 'created' => 'ASC'], 5);
+        $tasks = App::getApp()->getContainer()['dbHelper']->getRepository(Task::class)->findBy(['job' => $this->job, 'status' => TaskStatus::READY], ['priority' => 'ASC', 'created' => 'ASC'], 5);
         /** @var Task $task */
         foreach ($tasks as $task) {
             try {
                 /** @var Task $lockedTask */
-                $lockedTask = DbHelper::getInstance()->getRepository(Task::class)->find($task->getId(), LockMode::OPTIMISTIC, $task->getVersion());
+                $lockedTask = App::getApp()->getContainer()['dbHelper']->getRepository(Task::class)->find($task->getId(), LockMode::OPTIMISTIC, $task->getVersion());
                 $lockedTask->setStatus(TaskStatus::RUNNING);
-                DbHelper::getInstance()->flush();
+                App::getApp()->getContainer()['dbHelper']->flush();
                 $config = json_decode($lockedTask->getConfig(), true);
                 return $response->withJson([
                     'id' => (string)$lockedTask->getId(),

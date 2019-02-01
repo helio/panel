@@ -2,6 +2,7 @@
 
 namespace Helio\Panel\Middleware;
 
+use Helio\Panel\App;
 use Helio\Panel\Helper\DbHelper;
 use Helio\Panel\Model\User;
 use Helio\Panel\Utility\JwtUtility;
@@ -39,8 +40,13 @@ class CustomApiTokenForUser implements MiddlewareInterface
 
         $cookies = $request->getCookieParams();
         if (\array_key_exists('token', $cookies) && strpos($cookies['token'], ':') === 8) {
-            /** @var User $user */
-            $user = DbHelper::getInstance()->getRepository(User::class)->findOneByToken($request->getCookieParams()['token']);
+            $container = App::getApp()->getContainer();
+            /**
+             * @var DbHelper $dbHelper
+             * @var User $user
+             */
+            $dbHelper = $container['dbHelper'];
+            $user = $dbHelper->getRepository(User::class)->findOneByToken($request->getCookieParams()['token']);
             if ($user && JwtUtility::verifyUserIdentificationToken($user, $request->getCookieParams()['token']) && strpos($request->getUri()->getPath(), '/api') === 0) {
                 $cookies['token'] = JwtUtility::generateToken($user->getId())['token'];
                 $cookies['block_reauth'] = 'true';

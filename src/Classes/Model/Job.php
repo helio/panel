@@ -16,6 +16,7 @@ use Doctrine\{Common\Collections\ArrayCollection,
 
 use Helio\Panel\Job\JobStatus;
 use Helio\Panel\Job\JobType;
+use Helio\Panel\Task\TaskStatus;
 
 /**
  * @Entity @Table(name="job")
@@ -117,6 +118,8 @@ class Job extends AbstractModel
      * @OneToOne(targetEntity="Instance")
      */
     protected $dispatchedInstance;
+
+    private $numberOfActiveTasks;
 
     /**
      * User constructor.
@@ -330,6 +333,7 @@ class Job extends AbstractModel
     public function setTasks(array $tasks): Job
     {
         $this->tasks = $tasks;
+        $this->numberOfActiveTasks = null;
         return $this;
     }
 
@@ -381,6 +385,8 @@ class Job extends AbstractModel
             $task->setJob($this);
         }
 
+        $this->numberOfActiveTasks = null;
+
         return $this;
     }
 
@@ -396,7 +402,19 @@ class Job extends AbstractModel
             /** @var Task $task */
             return $task->getId() !== $taskToRemove->getId();
         }));
+        $this->numberOfActiveTasks = null;
 
         return $this;
+    }
+
+
+    /**
+     * @return int
+     */
+    public function getActiveTaskCount(): int
+    {
+        return $this->numberOfActiveTasks ?? $this->numberOfActiveTasks = \count(array_filter($this->getTasks()->toArray(), function (Task $task) {
+                return TaskStatus::isValidPendingStatus($task->getStatus());
+            }));
     }
 }

@@ -37,7 +37,9 @@ class TokenAttributeToCookie implements MiddlewareInterface
         $cookies = $request->getCookieParams();
         if ($request->getAttribute('token')) {
             $cookies['token'] = $request->getAttribute('token');
-        } elseif (array_key_exists('token', $_REQUEST)) {
+        } elseif (\array_key_exists('token', $request->getQueryParams())) {
+            $cookies['token'] = $request->getQueryParams()['token'];
+        } elseif (\array_key_exists('token', $_REQUEST)) {
             $cookies['token'] = $_REQUEST['token'];
         }
 

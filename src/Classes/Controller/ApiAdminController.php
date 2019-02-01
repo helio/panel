@@ -203,6 +203,7 @@ class ApiAdminController extends AbstractController
     {
         $dcf = JobFactory::getDispatchConfigOfJob($this->job)->getDispatchConfig();
         $servicename = $this->job->getType() . '-' . $this->job->getId();
+        $replicas = $dcf->getReplicaCountForJob($this->job);
         $env = '    env:';
         if ($dcf->getEnvVariables()) {
             foreach ($dcf->getEnvVariables() as $key => $value) {
@@ -213,6 +214,13 @@ class ApiAdminController extends AbstractController
         // TODO: add a proper array to yaml parser
         return $this
             ->setReturnType('yaml')
-            ->render(['profile::docker::clusters:', "  '$servicename':", "    service_name: '$servicename'", '    image: ' . $dcf->getImage(), '    replicas: 1', $env]);
+            ->render([
+                'profile::docker::clusters:',
+                "  '$servicename':",
+                "    service_name: '$servicename'",
+                '    image: ' . $dcf->getImage(),
+                '    replicas: ' . $replicas,
+                $env
+            ]);
     }
 }

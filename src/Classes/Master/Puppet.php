@@ -38,9 +38,8 @@ class Puppet implements MasterInterface
     /**
      * @var string
      *
-     * TODO: Set properly once KEHA is ready
      */
-    protected static $dispatchCommand = 'ssh %s@%s "mco puppet runonce -W fqdn=%s"';
+    protected static $dispatchCommand = 'ssh %s@%s "mco tasks run docker::jobs -I manager1.c.peppy-center-135409.internal"';
 
 
     /**

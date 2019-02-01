@@ -24,4 +24,10 @@ final class TaskStatus
             || $status === self::DONE
             || $status === self::STOPPED;
     }
+
+    public static function isValidPendingStatus(int $status): bool
+    {
+        return $status === self::READY
+            || $status === self::STOPPED;
+    }
 }

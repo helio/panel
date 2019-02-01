@@ -99,11 +99,13 @@ class ApiJobController extends AbstractController
                 $owner = (new User())->setName('admin')->setEmail('team@opencomputing.cloud')->setAdmin(true)->setActive(true)->setCreated();
             }
             $instance = (new Instance())->setName($demoInstanceName)->setOwner($owner)->setStatus(InstanceStatus::RUNNING)->setCreated();
+            $this->dbHelper->persist($instance);
         }
         $this->job->setDispatchedInstance($instance);
+        $this->persistJob();
 
         MasterFactory::getMasterForInstance($instance)->dispatchJob($this->job);
-        // TODO: End remov
+        // TODO: End remove
 
         return $this->render([
             'success' => true,
