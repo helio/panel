@@ -99,7 +99,12 @@ class Execute implements JobInterface, DispatchableInterface
                 'idf_sha1' => isset($idf) ? ServerUtility::getSha1SumFromFile($idf) : '',
                 'epw' => $epw,
                 'epw_sha1' => ServerUtility::getSha1SumFromFile($epw),
+                'report_url' => $params['report_url'] ?? ''
             ]);
+
+        if (\array_key_exists('run_id', $params)) {
+            $this->task->setName($params['run_id']);
+        }
 
         $this->task->setStatus(TaskStatus::READY)
             ->setConfig(json_encode($config, JSON_UNESCAPED_SLASHES));
