@@ -53,7 +53,7 @@
             if (isset($admin)) {
                 \Helio\Panel\Helper\ViewHelper::includePartial('jobDetailAdmin');
             } else {
-                \Helio\Panel\Helper\ViewHelper::includePartial('jobDetailType-' . $job->getType(), ['job' => $job]);
+                \Helio\Panel\Helper\ViewHelper::includePartial('jobDetailType-' . $job->getType(), ['job' => $job, 'files' => $files]);
             }
             ?>
         </div>

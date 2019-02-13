@@ -10,6 +10,7 @@ use Helio\Panel\Instance\InstanceStatus;
 use Helio\Panel\Job\JobFactory;
 use Helio\Panel\Master\MasterFactory;
 use Helio\Panel\Model\Instance;
+use Helio\Panel\Model\Task;
 use Helio\Panel\Model\User;
 use Helio\Panel\Task\TaskStatus;
 use Helio\Panel\Utility\ExecUtility;
@@ -90,6 +91,51 @@ class ExecController extends AbstractController
         }
     }
 
+    /**
+     * @return ResponseInterface
+     *
+     * @Route("/jobstatus", methods={"GET"}, name="exec.job.status")
+     */
+    public function jobStatusAction(): ResponseInterface
+    {
+        return $this->render([
+            'status' => $this->job->getStatus(),
+            'tasks' => [
+                'total' => $this->dbHelper->getRepository(Task::class)->count(['job' => $this->job]),
+                'pending' => $this->dbHelper->getRepository(Task::class)->count(['job' => $this->job, 'status' => TaskStatus::READY]),
+                'running' => $this->dbHelper->getRepository(Task::class)->count(['job' => $this->job, 'status' => TaskStatus::RUNNING]),
+                'done' => $this->dbHelper->getRepository(Task::class)->count(['job' => $this->job, 'status' => TaskStatus::DONE])
+            ]
+        ]);
+    }
+
+    /**
+     * @return ResponseInterface
+     *
+     * @Route("/isdone", methods={"GET"}, name="exec.job.status")
+     */
+    public function jobIsDoneAction(): ResponseInterface
+    {
+        $tasksPending = $this->dbHelper->getRepository(Task::class)->count(['job' => $this->job, 'status' => TaskStatus::READY]);
+        return $this->render([], $tasksPending === 0 ? StatusCode::HTTP_OK : StatusCode::HTTP_FAILED_DEPENDENCY);
+    }
+
+
+    /**
+     * @return ResponseInterface
+     *
+     * @Route("/taskstatus", methods={"GET"}, name="exec.task.status")
+     */
+    public function taskStatusAction(): ResponseInterface
+    {
+        if (!$this->task) {
+            return $this->render(['error' => 'no task specified']);
+        }
+        return $this->render([
+            'status' => $this->job->getStatus()
+        ]);
+    }
+
 
     /**
      * @return ResponseInterface
@@ -100,7 +146,7 @@ class ExecController extends AbstractController
     public function workAction(string $method): ResponseInterface
     {
         try {
-            return JobFactory::getInstanceOfJob($this->job, $this->task)->$method($this->params, $this->response);
+            return JobFactory::getInstanceOfJob($this->job, $this->task)->$method($this->params, $this->response, $this->request);
         } catch (\Exception $e) {
             return $this->render(['status' => 'error'], StatusCode::HTTP_INTERNAL_SERVER_ERROR);
         }

@@ -145,11 +145,13 @@ class AutoscalerTest extends TestCase
     /**
      * @throws \Exception
      */
-    public function testReplicaGetAppliedOnNewTJob(): void
+    public function testReplicaGetAppliedOnNewJob(): void
     {
-        $this->runApp('POST', '/api/precreate/job?token=' . $this->user->getToken(), true, null);
+        $precreatedJobs = $this->jobRepository->findAll();
+        $result = (string)$this->runApp('POST', '/api/precreate/job?token=' . $this->user->getToken(), true, null)->getBody();
         /** @var Job $precreatedJob */
         $precreatedJob = $this->jobRepository->findOneByName('precreated automatically');
+        $precreatedJobs = $this->jobRepository->findAll();
 
         $this->assertNotNull($precreatedJob);
 

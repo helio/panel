@@ -115,7 +115,7 @@ class Job extends AbstractModel
     /**
      * @var Instance
      *
-     * @OneToOne(targetEntity="Instance")
+     * @ManyToOne(targetEntity="Instance", inversedBy="tasks", cascade={"persist"})
      */
     protected $dispatchedInstance;
 

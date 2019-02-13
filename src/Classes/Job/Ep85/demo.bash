@@ -3,13 +3,41 @@
 
 if [[ "${1}" = "-h" || "${1}" = "--help" ]]; then
     echo "usage:"
-    echo "./demo.bash <path_To_idf_file> <job-id> <token> <optional: url to epw file>"
+    echo "./demo.bash <User API token (createt at panel.idling.host/profile)>"
     echo "";
     echo "example:"
-    echo "./demo.bash /tmp/demo.idf 3 263700aa:60d891d454f416a53667c5284c9164f75cc5a617"
+    echo "./demo.bash 246f04cf:a4454d1d9b39c3e0a142d09cb2f57c0a2295b261"
     exit 0
 fi
 
-EPW=${4:-https://energyplus.net/weather-download/south_america_wmo_region_3/CHL//CHL_Concepcion.856820_IWEC/CHL_Concepcion.856820_IWEC.epw}
+if [[ -z "${1}" ]]; then exit 1; fi
 
-curl -fsSLo /dev/null -X POST  -F "idf=@${1}" -F "run_id=demorun from $(uname -n)" -F 'report_url=empty' -F "epw=${EPW}" "http://localhost:8099/exec?jobid=${2}&token=${3}"
+BASE_URL=${2:-http://localhost:8099}
+JOB=$(curl -fsSL -m 360 -X POST "${BASE_URL}/api/job/add?jobid=_NEW&jobtype=ep85&token=${1}")
+JOB_ID=$(echo ${JOB} | jq -r .id)
+JOB_TOKEN=$(echo ${JOB} | jq -r .token)
+
+TOTAL=5
+RUNS=${TOTAL}
+
+if [[ -z "${JOB_ID}" || -z "${JOB_TOKEN}" ]]; then exit 1; fi
+
+
+while [ ${RUNS} -gt 0 ]; do
+    EPW=https://energyplus.net/weather-download/south_america_wmo_region_3/CHL//CHL_Concepcion.856820_IWEC/CHL_Concepcion.856820_IWEC.epw
+    IDF=https://pastebin.com/raw/zj2SAV5Z
+
+    DATA='{"run_id":"demorun_from_'$(uname -n)'","report_url":"rsync://user@target","epw":"'${EPW}'","idf":"'${IDF}'"}'
+
+    curl -fsSLo /dev/null -X POST -d ${DATA} "${BASE_URL}/exec?jobid=${JOB_ID}&token=${JOB_TOKEN}"
+
+    RUNS=$[${RUNS}-1]
+done
+
+
+while true; do
+    if curl -fsSL -o /dev/null "${BASE_URL}/exec/isdone?jobid=${JOB_ID}&token=${JOB_TOKEN}"; then
+        exit 0
+    fi
+    sleep 30;
+done

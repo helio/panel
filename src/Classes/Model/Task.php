@@ -49,6 +49,14 @@ class Task extends AbstractModel
 
 
     /**
+     * @var string
+     *
+     * @Column(type="text")
+     */
+    protected $stats = '';
+
+
+    /**
      * @return Job
      */
     public function getJob(): ?Job
@@ -109,8 +117,26 @@ class Task extends AbstractModel
     /**
      * @return int
      */
-    public function getVersion()
+    public function getVersion(): int
     {
-        return $this->version;
+        return $this->version ?? 0;
+    }
+
+    /**
+     * @return string
+     */
+    public function getStats(): string
+    {
+        return $this->stats;
+    }
+
+    /**
+     * @param string $stats
+     * @return Task
+     */
+    public function setStats(string $stats): Task
+    {
+        $this->stats = $stats;
+        return $this;
     }
 }

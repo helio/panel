@@ -18,11 +18,11 @@
                 Where can we download the epw file for this job(if empty, we'll use an example one)?
             </label>
             <br/>
-            <input type="text" name="epw" size="50" id="epw">
+            <input type="text" name="epw" size="50" id="epw" value="https://energyplus.net/weather-download/south_america_wmo_region_3/CHL//CHL_Concepcion.856820_IWEC/CHL_Concepcion.856820_IWEC.epw">
         </div>
         <div class="form-group">
-            <label for="idf">Upload your IDF file (if empty, we'll use an example one).</label>
-            <input type="file" name="idf" id="idf" accept=".idf">
+            <label for="idf">URL to your IDF file</label>
+            <input type="text" name="idf" id="idf" value="https://pastebin.com/raw/zj2SAV5Z">
         </div>
         <button type="submit" class="btn btn-primary">
             Submit
@@ -36,7 +36,7 @@
 {
 "run_id": "&lt;ID für Rechnungsreferenz etc.&gt;",
 "epw": "&lt;URL&gt;",
-"idf": "&lt;Data&gt;",
+"idf": "&lt;URL&gt;",
 "report_url": "&lt;URL where to report the results&gt;"
 }
 </pre>

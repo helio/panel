@@ -92,7 +92,7 @@ class ApiJobController extends AbstractController
 
         // TODO: Remove this pseudo-instance as it's only for prototype purposes
         $demoInstanceName = 'Demo runner for prototype';
-        $instance = $this->dbHelper->getRepository(Instance::class)->findOneBy(['name' => 'Demo runner for prototype']);
+        $instance = $this->dbHelper->getRepository(Instance::class)->findOneBy(['name' => $demoInstanceName]);
         if (!$instance) {
             $owner = $this->dbHelper->getRepository(User::class)->findOneBy(['email' => 'team@opencomputing.cloud']);
             if (!$owner) {
@@ -109,6 +109,8 @@ class ApiJobController extends AbstractController
 
         return $this->render([
             'success' => true,
+            'token' => $this->job->getToken(),
+            'id' => $this->job->getId(),
             'html' => $this->fetchPartial('listItemJob', ['job' => $this->job, 'user' => $this->user]),
             'message' => 'Job <strong>' . $this->job->getName() . '</strong> added'
         ]);

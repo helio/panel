@@ -4,7 +4,7 @@ FROM python:2-alpine
 #  - expect for installing the interactive EnergyPlus installer
 
 # Copy the current directory contents into the container at /tmp
-RUN apk add --no-cache bash gcompat libstdc++ curl jq && \
+RUN apk add --no-cache bash gcompat libstdc++ curl jq coreutils && \
     wget -q -O /tmp/install.sh https://github.com/NREL/EnergyPlus/releases/download/v8.5.0/EnergyPlus-8.5.0-c87e61b44b-Linux-x86_64.sh && \
     chmod +x /tmp/install.sh && \
     sed -i 's/install_directory=""/install_directory=\$default_install_directory/g' /tmp/install.sh && \

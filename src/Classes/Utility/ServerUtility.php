@@ -201,9 +201,19 @@ class ServerUtility
      * @param string $path
      * @return string
      */
-    public static function getSha1SumFromFile(string $path): string
+    public static function getHashOfFile(string $path): string
     {
         return sha1_file($path);
+    }
+
+
+    /**
+     * @param string $string
+     * @return string
+     */
+    public static function getHashOfString(string $string): string
+    {
+        return sha1($string);
     }
 
     /**
