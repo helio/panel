@@ -51,13 +51,6 @@ class Instance extends AbstractModel
 
 
     /**
-     * @var array<Task>
-     *
-     * @OneToMany(targetEntity="Instance", mappedBy="dispatchedinstance", cascade={"persist"})
-     */
-    protected $tasks = [];
-
-    /**
      * @var string
      *
      * @Column

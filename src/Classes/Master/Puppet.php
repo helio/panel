@@ -3,7 +3,6 @@
 namespace Helio\Panel\Master;
 
 use Helio\Panel\Model\Instance;
-use Helio\Panel\Model\Job;
 use Helio\Panel\Utility\ServerUtility;
 
 class Puppet implements MasterInterface
@@ -34,12 +33,6 @@ class Puppet implements MasterInterface
      * @var string
      */
     protected static $cleanupCommand = 'ssh %s@%s "sudo /opt/puppetlabs/bin/puppetserver ca cert clean --certname %s"';
-
-    /**
-     * @var string
-     *
-     */
-    protected static $dispatchCommand = 'ssh %s@%s "mco tasks run docker::jobs -I manager1.c.peppy-center-135409.internal"';
 
 
     /**
@@ -82,16 +75,6 @@ class Puppet implements MasterInterface
     public function cleanup()
     {
         return ServerUtility::executeShellCommand($this->parseCommand('cleanup'));
-    }
-
-
-    /**
-     * @param Job $job
-     * @return bool
-     */
-    public function dispatchJob(Job $job): bool
-    {
-        return ServerUtility::executeShellCommand($this->parseCommand('dispatch'));
     }
 
 

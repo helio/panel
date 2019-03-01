@@ -10,7 +10,7 @@
                 /** @var \Helio\Panel\Model\User $u */
                 foreach ($users as $u) {
                     if ($u->getId() !== $user->getId()) {
-                        echo '<button class="btn btn-primary impersonate" data-userid="' . $u->getId() . '">'.$u->getEmail().'</button>';
+                        echo '<button class="btn btn-primary impersonate" data-userid="' . $u->getId() . '">' . $u->getEmail() . '</button> ';
                     }
                 }
             }
@@ -35,7 +35,7 @@
         </div>
     </div>
 
-    <div id="helio-instancelist" class="list-group list-view-pf list-view-pf-view loadable"">
+    <div id="helio-instancelist" class="list-group list-view-pf list-view-pf-view loadable">
         <div class="list-group-item control loader">
             <div class="list-group-item">
                 <h3 class="blank-slate-pf-main-action">Loading...</h3>

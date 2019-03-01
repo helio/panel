@@ -15,6 +15,7 @@ use Slim\Interfaces\Http\EnvironmentInterface;
 use Slim\Interfaces\InvocationStrategyInterface;
 use Slim\Interfaces\RouterInterface;
 use Slim\Views\PhpRenderer;
+use Symfony\Component\Yaml\Yaml;
 
 /**
  * Abstract Panel Controller
@@ -78,23 +79,22 @@ abstract class AbstractController extends Controller
      */
     public function __construct()
     {
-        $result = true;
         // first: setup everything
         foreach (get_class_methods($this) as $method) {
-            if ($result && strpos($method, 'setup') === 0) {
-                $result = $result && $this->$method();
+            if (strpos($method, 'setup') === 0) {
+                if (!$this->$method()) {
+                    throw new \RuntimeException('Controller Setup failed: ' . $method, 1551432903);
+                }
             }
         }
 
         // then: validate everything
         foreach (get_class_methods($this) as $method) {
-            if ($result && strpos($method, 'validate') === 0) {
-                $result = $result && $this->$method();
+            if (strpos($method, 'validate') === 0) {
+                if (!$this->$method()) {
+                    throw new \RuntimeException('Controller Validation failed: ' . $method, 1551432915);
+                }
             }
-        }
-
-        if (!$result) {
-            throw new \RuntimeException('Controller Initialisaton failed', 1545281208);
         }
     }
 
@@ -167,9 +167,11 @@ abstract class AbstractController extends Controller
     {
 
         if (\is_array($data)) {
-            $data = implode("\n", $data);
+            $data = Yaml::dump($data, 4, 2);
         }
         $this->response->getBody()->write($data);
-        return $this->response->withHeader('Content-Type', 'application/x-yaml')->withStatus($status);
+        return $this->response
+            ->withHeader('Content-Type', 'application/x-yaml')
+            ->withStatus($status);
     }
 }

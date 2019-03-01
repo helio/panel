@@ -16,12 +16,12 @@ class MasterFactory {
     public static function getMasterForInstance(Instance $instance): MasterInterface {
         $type = ucfirst(strtolower($instance->getMasterType()));
 
-        if (!array_key_exists($instance->getId(), self::$instances)) {
+        if (!array_key_exists($instance->getId() ?? 0, self::$instances)) {
             $className = "\\Helio\\Panel\\Master\\$type";
-            self::$instances[$instance->getId()] = new $className($instance);
+            self::$instances[$instance->getId() ?? 0] = new $className($instance);
 
         }
 
-        return self::$instances[$instance->getId()];
+        return self::$instances[$instance->getId() ?? 0];
     }
 }

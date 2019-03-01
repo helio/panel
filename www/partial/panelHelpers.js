@@ -215,10 +215,10 @@ const wizard = function (id) {
             accepts: {
                 mycustomtype: 'application/json'
             },
-            url: '/api/precreate/' + $(self.modal).data('endpoint'),
+            url: '/api/' + $(self.modal).data('endpoint') + '/add?' + $(self.modal).data('idName') + '=_NEW',
             method: 'post',
             success: function (data) {
-                $(self.modal).data($(self.modal).data('idName'), data[$(self.modal).data('idName')]);
+                $(self.modal).data($(self.modal).data('idName'), data['id']);
                 if (data.hasOwnProperty('token')) {
                     $(self.modal).data('token', data['token']);
                 }
@@ -575,7 +575,7 @@ const wizard = function (id) {
                 accepts: {
                     mycustomtype: 'application/json'
                 },
-                url: '/api/precreate/' + $(self.modal).data('endpoint') + '/abort',
+                url: '/api/' + $(self.modal).data('endpoint') + '/add/abort',
                 method: 'post',
                 data: data,
                 success: function () {

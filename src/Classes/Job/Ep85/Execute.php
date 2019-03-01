@@ -66,9 +66,9 @@ class Execute implements JobInterface, DispatchableInterface
         App::getApp()->getContainer()['dbHelper']->persist($this->task);
         App::getApp()->getContainer()['dbHelper']->flush();
 
-        $inConfig = json_decode(trim((string)$request->getBody()), true);
-        $idf = array_key_exists('idf', $inConfig) ? $inConfig['idf'] : \array_key_exists('idf', $params) ? $params['idf'] : ExecUtility::getExecUrl('work/getidfdata', $this->task, $this->job);
-        $epw = array_key_exists('epw', $inConfig) ? $inConfig['epw'] : \array_key_exists('epw', $params) ? $params['epw'] : ExecUtility::getExecUrl('work/getwetherdata', $this->task, $this->job);
+        $inConfig = json_decode(trim((string)$request->getBody()), true) ?? [];
+        $idf = \array_key_exists('idf', $inConfig) ? $inConfig['idf'] : \array_key_exists('idf', $params) ? $params['idf'] : ExecUtility::getExecUrl('work/getidfdata', $this->task, $this->job);
+        $epw = \array_key_exists('epw', $inConfig) ? $inConfig['epw'] : \array_key_exists('epw', $params) ? $params['epw'] : ExecUtility::getExecUrl('work/getwetherdata', $this->task, $this->job);
 
         $outConfig = [
             'idf' => $idf,
@@ -86,6 +86,7 @@ class Execute implements JobInterface, DispatchableInterface
             ->setConfig(json_encode($outConfig, JSON_UNESCAPED_SLASHES));
 
         App::getApp()->getContainer()['dbHelper']->persist($this->task);
+        App::getApp()->getContainer()['dbHelper']->persist($this->job);
         App::getApp()->getContainer()['dbHelper']->flush();
 
         return true;

@@ -12,7 +12,7 @@ use Helio\Panel\Model\Task;
 use Helio\Panel\Model\User;
 use Helio\Panel\Task\TaskStatus;
 use Helio\Panel\Utility\JwtUtility;
-use Helio\Panel\Utility\ServerUtility;
+use Helio\Test\Infrastructure\Utility\ServerUtility;
 use Helio\Test\TestCase;
 use Psr\Http\Message\ResponseInterface;
 
@@ -54,10 +54,11 @@ class AutoscalerTest extends TestCase
     public function setUp()
     {
         parent::setUp();
+        ServerUtility::resetLastExecutedCommand();
         $this->instance = (new Instance())->setName('testinstance')->setCreated()->setFqdn('testserver.example.com')->setStatus(InstanceStatus::RUNNING);
 
         $this->user = (new User())->setAdmin(1)->setName('testuser')->setCreated()->setEmail('test-autoscaler@example.com')->setActive(true)->addInstance($this->instance);
-        $this->job = (new Job())->setStatus(JobStatus::READY)->setDispatchedInstance($this->instance)->setType(JobType::ENERGY_PLUS_85)->setOwner($this->user);
+        $this->job = (new Job())->setStatus(JobStatus::READY)->setType(JobType::ENERGY_PLUS_85)->setOwner($this->user)->setInitManagerIp('1.1.1.1')->setManagerNodes(['1', '2', '3']);
         $this->infrastructure->getEntityManager()->persist($this->user);
         $this->infrastructure->getEntityManager()->persist($this->job);
         $this->infrastructure->getEntityManager()->flush();
@@ -147,27 +148,17 @@ class AutoscalerTest extends TestCase
      */
     public function testReplicaGetAppliedOnNewJob(): void
     {
-        $precreatedJobs = $this->jobRepository->findAll();
-        $result = (string)$this->runApp('POST', '/api/precreate/job?token=' . $this->user->getToken(), true, null)->getBody();
+        $this->runApp('POST', '/api/job/add?jobid=_NEW&token=' . $this->user->getToken(), true, null);
+        $this->assertEquals('', ServerUtility::getLastExecutedShellCommand(), 'must not fire node init command as long as no job type is set');
+
         /** @var Job $precreatedJob */
-        $precreatedJob = $this->jobRepository->findOneByName('precreated automatically');
-        $precreatedJobs = $this->jobRepository->findAll();
+        $precreatedJob = $this->jobRepository->findOneByName('precreated on request');
 
         $this->assertNotNull($precreatedJob);
 
-        $this->runApp('POST', '/api/job/add?token=' . $this->user->getToken(), true, null, ['jobid' => $precreatedJob->getId(), 'jobtype' => JobType::ENERGY_PLUS_85]);
+        $this->runApp('POST', '/api/job/add?token=' . $this->user->getToken(), true, null, ['jobid' => $precreatedJob->getId(), 'jobtype' => JobType::ENERGY_PLUS_85, 'jobname' => 'testing 1551430480']);
 
         $this->assertContains('ssh', ServerUtility::getLastExecutedShellCommand());
-        $this->assertContains('docker::jobs', ServerUtility::getLastExecutedShellCommand());
-    }
-
-    /**
-     * @throws \Exception
-     */
-    public function testReplicaGetAppliedOnNewTask(): void
-    {
-        $this->runApp('POST', '/exec', true, null, ['jobid' => $this->job->getId(), 'token' => $this->job->getToken()]);
-        $this->assertContains('ssh', ServerUtility::getLastExecutedShellCommand());
-        $this->assertContains('docker::jobs', ServerUtility::getLastExecutedShellCommand());
+        $this->assertContains('manager-' . ServerUtility::getShortHashOfString($precreatedJob->getId()) . '-0', ServerUtility::getLastExecutedShellCommand());
     }
 }

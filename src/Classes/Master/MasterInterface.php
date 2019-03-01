@@ -14,6 +14,4 @@ interface MasterInterface
     public function doSign();
 
     public function cleanup();
-
-    public function dispatchJob(Job $job): bool;
 }

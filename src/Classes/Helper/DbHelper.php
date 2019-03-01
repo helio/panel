@@ -109,7 +109,6 @@ class DbHelper
             }
 
 
-            $test = $this->getConnectionSettings();
             $this->db = EntityManager::create($this->getConnectionSettings(), $configObject);
 
             // enable filters

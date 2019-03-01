@@ -31,7 +31,8 @@
         "tuupola/cors-middleware": "^0.9",
         "google/auth": "^1.4",
         "adbario/php-dot-notation": "^2.2",
-        "ocramius/proxy-manager": "^2.2"
+        "ocramius/proxy-manager": "^2.2",
+        "symfony/yaml": "^4.2"
     },
     "require-dev": {
         "roave/security-advisories": "dev-master",

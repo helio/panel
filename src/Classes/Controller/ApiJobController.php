@@ -3,19 +3,18 @@
 namespace Helio\Panel\Controller;
 
 
+use Helio\Panel\Controller\Traits\InstanceController;
 use Helio\Panel\Controller\Traits\TypeDynamicController;
 use Helio\Panel\Controller\Traits\AuthorizedJobController;
-use Helio\Panel\Instance\InstanceStatus;
 use Helio\Panel\Job\JobFactory;
 use Helio\Panel\Job\JobStatus;
 use Helio\Panel\Job\JobType;
-use Helio\Panel\Master\MasterFactory;
-use Helio\Panel\Model\Instance;
-use Helio\Panel\Model\User;
+use Helio\Panel\Orchestrator\OrchestratorFactory;
 use Helio\Panel\Utility\JwtUtility;
 use Helio\Panel\Utility\MailUtility;
 use Helio\Panel\Utility\ServerUtility;
 use Psr\Http\Message\ResponseInterface;
+use Slim\Http\StatusCode;
 
 /**
  * Class ApiController
@@ -28,7 +27,12 @@ use Psr\Http\Message\ResponseInterface;
  */
 class ApiJobController extends AbstractController
 {
-    use AuthorizedJobController;
+    use AuthorizedJobController, InstanceController {
+        AuthorizedJobController::setupParams insteadof InstanceController;
+        AuthorizedJobController::requiredParameterCheck insteadof InstanceController;
+        AuthorizedJobController::optionalParameterCheck insteadof InstanceController;
+    }
+
     use TypeDynamicController;
 
     /**
@@ -52,9 +56,28 @@ class ApiJobController extends AbstractController
      */
     public function addJobAction(): ResponseInterface
     {
-        $this->requiredParameterCheck([
-            'jobtype' => FILTER_SANITIZE_STRING
-        ]);
+        try {
+            $this->requiredParameterCheck([
+                'jobtype' => FILTER_SANITIZE_STRING
+            ]);
+
+            if (!JobType::isValidType($this->params['jobtype'])) {
+                return $this->render(['success' => false, 'message' => 'Unknown Job Type']);
+            }
+
+            $this->job->setType($this->params['jobtype']);
+        } catch (\Exception $e) {
+            // If we have created a new job but haven't passed the jobtype (e.g. during wizard loading), we cannot continue.
+            if (($this->params['jobid'] ?? '') === '_NEW') {
+                $this->job->setToken(JwtUtility::generateJobIdentificationToken($this->job));
+                $this->persistJob();
+                return $this->render(['token' => $this->job->getToken(), 'id' => $this->job->getId()]);
+            }
+            // if the existing job hasn't got a proper type, we cannot continue either, but that's a hard fail...
+            if (!JobType::isValidType($this->job->getType())) {
+                return $this->render(['success' => false, 'meassge' => $e->getMessage()], StatusCode::HTTP_NOT_ACCEPTABLE);
+            }
+        }
 
         $this->optionalParameterCheck([
             'jobname' => FILTER_SANITIZE_STRING,
@@ -66,15 +89,10 @@ class ApiJobController extends AbstractController
             'free' => FILTER_SANITIZE_STRING
         ]);
 
-        if (!JobType::isValidType($this->params['jobtype'])) {
-            return $this->render(['success' => false, 'message' => 'Unknown Job Type']);
-        }
-
-        $this->job->setName($this->params['jobname'] ?? 'Automatically named during creation')
-            ->setStatus(JobStatus::READY)
+        $this->job->setName($this->params['jobname'] ?? 'Automatically named during add')
+            ->setStatus(JobStatus::INIT)
             ->setCreated(new \DateTime('now', ServerUtility::getTimezoneObject()))
             ->setToken(JwtUtility::generateJobIdentificationToken($this->job))
-            ->setType($this->params['jobtype'])
             ->setOwner($this->user)
             ->setCpus($this->params['cpus'] ?? '')
             ->setGpus($this->params['gpus'] ?? '')
@@ -89,30 +107,101 @@ class ApiJobController extends AbstractController
 
         MailUtility::sendMailToAdmin('New Job was created by ' . $this->user->getEmail() . 'type: ' . $this->job->getType() . ', id: ' . $this->job->getId());
 
-
-        // TODO: Remove this pseudo-instance as it's only for prototype purposes
-        $demoInstanceName = 'Demo runner for prototype';
-        $instance = $this->dbHelper->getRepository(Instance::class)->findOneBy(['name' => $demoInstanceName]);
-        if (!$instance) {
-            $owner = $this->dbHelper->getRepository(User::class)->findOneBy(['email' => 'team@opencomputing.cloud']);
-            if (!$owner) {
-                $owner = (new User())->setName('admin')->setEmail('team@opencomputing.cloud')->setAdmin(true)->setActive(true)->setCreated();
-            }
-            $instance = (new Instance())->setName($demoInstanceName)->setOwner($owner)->setStatus(InstanceStatus::RUNNING)->setCreated();
-            $this->dbHelper->persist($instance);
-        }
-        $this->job->setDispatchedInstance($instance);
-        $this->persistJob();
-
-        MasterFactory::getMasterForInstance($instance)->dispatchJob($this->job);
-        // TODO: End remove
+        OrchestratorFactory::getOrchestratorForInstance($this->instance)->provisionManager($this->job);
 
         return $this->render([
             'success' => true,
             'token' => $this->job->getToken(),
             'id' => $this->job->getId(),
             'html' => $this->fetchPartial('listItemJob', ['job' => $this->job, 'user' => $this->user]),
-            'message' => 'Job <strong>' . $this->job->getName() . '</strong> added'
+            'message' => 'Job <strong>' . $this->job->getName() . '</strong> added',
         ]);
+    }
+
+    /**
+     * @return ResponseInterface
+     *
+     * @Route("/add/abort", methods={"POST"}, name="job.abort")
+     * @throws \Exception
+     */
+    public function abortAddJobAction(): ResponseInterface
+    {
+        if ($this->job && $this->job->getStatus() === JobStatus::UNKNOWN && $this->job->getOwner() && $this->job->getOwner()->getId() === $this->user->getId()) {
+            $this->user->removeJob($this->job);
+            $this->dbHelper->remove($this->job);
+            $this->dbHelper->flush($this->job);
+            $this->persistUser();
+            return $this->render();
+        }
+        return $this->render(['message' => 'no access to job'], StatusCode::HTTP_UNAUTHORIZED);
+    }
+
+    /**
+     * @return ResponseInterface
+     *
+     * @Route("/callback", methods={"POST", "GET"}, "name="job.callback")
+     */
+    public function callbackAction(): ResponseInterface
+    {
+        $result = false;
+
+        // have to get init manager node ip
+        if (!$this->job->getInitManagerIp() && \count($this->job->getManagerNodes()) === 1) {
+            $result = OrchestratorFactory::getOrchestratorForInstance($this->instance)->setInitManagerNodeIp($this->job)
+                && OrchestratorFactory::getOrchestratorForInstance($this->instance)->setClusterToken($this->job);
+        }
+
+        // provision missing redundancy nodes
+        if ($this->job->getInitManagerIp() && \count($this->job->getManagerNodes()) < 3) {
+            $result = OrchestratorFactory::getOrchestratorForInstance($this->instance)->provisionManager($this->job);
+        }
+
+        //
+        if ($result && \count($this->job->getManagerNodes()) === 3) {
+            $this->job->setStatus(JobStatus::READY);
+            $this->persistJob();
+            return $this->render(['message' => 'ok']);
+        }
+
+        return $this->render(['message' => 'unknown error', StatusCode::HTTP_INTERNAL_SERVER_ERROR]);
+
+    }
+
+
+    /**
+     * @return ResponseInterface
+     *
+     * @Route("/manager/init", methods={"GET"}, name="job.manager.init")
+     */
+    public function getInitManagerNodeConfigAction(): ResponseInterface
+    {
+        $config = [
+            'classes' => ['role::base', 'profile::docker'],
+            'profile::docker::manager' => true,
+            'profile::docker::manager_init' => true
+        ];
+        return $this
+            ->setReturnType('yaml')
+            ->render($config);
+    }
+
+
+    /**
+     * @return ResponseInterface
+     *
+     * @Route("/manager/redundancy", methods={"GET"}, name="job.manager.redundancy")
+     */
+    public function getRedundantManagerNodeConfigAction(): ResponseInterface
+    {
+        $config = [
+            'classes' => ['role::base', 'profile::docker'],
+            'profile::docker::manager' => true,
+            'profile::docker::manager_init' => true,
+            'profile::docker::manager_ip' => $this->job->getInitManagerIp(),
+            'profile::docker::token' => $this->job->getClusterToken()
+        ];
+        return $this
+            ->setReturnType('yaml')
+            ->render($config);
     }
 }

@@ -216,6 +216,17 @@ class ServerUtility
         return sha1($string);
     }
 
+
+    /**
+     * @param string $string
+     * @param int $length
+     * @return string
+     */
+    public static function getShortHashOfString(string $string, int $length = 8): string
+    {
+        return substr(sha1($string), 0, $length);
+    }
+
     /**
      *
      */

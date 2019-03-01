@@ -3,15 +3,14 @@
 namespace Helio\Panel\Controller;
 
 
+use Helio\Panel\Controller\Traits\InstanceController;
 use Helio\Panel\Controller\Traits\TaskController;
 use Helio\Panel\Controller\Traits\TypeApiController;
 use Helio\Panel\Controller\Traits\ValidatedJobController;
-use Helio\Panel\Instance\InstanceStatus;
 use Helio\Panel\Job\JobFactory;
-use Helio\Panel\Master\MasterFactory;
-use Helio\Panel\Model\Instance;
+use Helio\Panel\Job\JobStatus;
 use Helio\Panel\Model\Task;
-use Helio\Panel\Model\User;
+use Helio\Panel\Orchestrator\OrchestratorFactory;
 use Helio\Panel\Task\TaskStatus;
 use Helio\Panel\Utility\ExecUtility;
 use Psr\Http\Message\ResponseInterface;
@@ -29,10 +28,10 @@ use Slim\Http\StatusCode;
  */
 class ExecController extends AbstractController
 {
-    use ValidatedJobController, TaskController {
-        ValidatedJobController::setupParams insteadof TaskController;
-        ValidatedJobController::requiredParameterCheck insteadof TaskController;
-        ValidatedJobController::optionalParameterCheck insteadof TaskController;
+    use ValidatedJobController, TaskController, InstanceController {
+        ValidatedJobController::setupParams insteadof TaskController, InstanceController;
+        ValidatedJobController::requiredParameterCheck insteadof TaskController, InstanceController;
+        ValidatedJobController::optionalParameterCheck insteadof TaskController, InstanceController;
     }
     use TypeApiController;
 
@@ -45,29 +44,17 @@ class ExecController extends AbstractController
     public function execAction(): ResponseInterface
     {
         try {
-            // TODO: Remove this pseudo-instance as it's only for prototype purposes
-            if ($this->job->getDispatchedInstance() === null) {
-
-                $demoInstanceName = 'Demo runner for prototype';
-                $instance = $this->dbHelper->getRepository(Instance::class)->findOneBy(['name' => 'Demo runner for prototype']);
-                if (!$instance) {
-                    $owner = $this->dbHelper->getRepository(User::class)->findOneBy(['email' => 'team@opencomputing.cloud']);
-                    if (!$owner) {
-                        $owner = (new User())->setName('admin')->setEmail('team@opencomputing.cloud')->setAdmin(true)->setActive(true)->setCreated();
-                    }
-                    $instance = (new Instance())->setName($demoInstanceName)->setOwner($owner)->setStatus(InstanceStatus::RUNNING)->setCreated();
-                    $this->dbHelper->persist($instance);
-                }
-                $this->job->setDispatchedInstance($instance);
-                $this->persistJob();
+            if (!JobStatus::isValidActiveStatus($this->job->getStatus())) {
+                throw new \RuntimeException('job not ready');
             }
-
             $previousReplicaCount = JobFactory::getDispatchConfigOfJob($this->job)->getDispatchConfig()->getReplicaCountForJob($this->job);
-            JobFactory::getInstanceOfJob($this->job, $this->task)->run($this->params, $this->request, $this->response);
+            $job = JobFactory::getInstanceOfJob($this->job, $this->task);
+            $result = $job->run($this->params, $this->request, $this->response);
             $newReplicaCount = JobFactory::getDispatchConfigOfJob($this->job)->getDispatchConfig()->getReplicaCountForJob($this->job);
 
             if ($previousReplicaCount !== $newReplicaCount) {
-                MasterFactory::getMasterForInstance($this->job->getDispatchedInstance())->dispatchJob($this->job);
+                OrchestratorFactory::getOrchestratorForInstance($this->instance)->dispatchJob($this->job);
+                $this->persistJob();
             }
             return $this->render(['status' => 'success']);
         } catch (\Exception $e) {
@@ -146,6 +133,9 @@ class ExecController extends AbstractController
     public function workAction(string $method): ResponseInterface
     {
         try {
+            if (!JobStatus::isValidActiveStatus($this->job->getStatus())) {
+                throw new \RuntimeException('job not ready');
+            }
             return JobFactory::getInstanceOfJob($this->job, $this->task)->$method($this->params, $this->response, $this->request);
         } catch (\Exception $e) {
             return $this->render(['status' => 'error'], StatusCode::HTTP_INTERNAL_SERVER_ERROR);

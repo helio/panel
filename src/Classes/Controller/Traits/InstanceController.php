@@ -7,6 +7,8 @@ use Helio\Panel\Master\MasterFactory;
 use Helio\Panel\Model\Instance;
 use Helio\Panel\Model\User;
 use Helio\Panel\Runner\RunnerFactory;
+use Helio\Panel\Utility\JwtUtility;
+use Helio\Panel\Utility\ServerUtility;
 
 /**
  * Trait ServerController
@@ -25,14 +27,39 @@ trait InstanceController
 
 
     /**
+     * optionally create a new default instance if none is passed.
+     *
      * @return bool
+     * @throws \Exception
      */
     public function setupInstance(): bool
     {
         $this->setupParams();
-        $instanceId = filter_var($this->params['instanceid'] ?? 0, FILTER_SANITIZE_NUMBER_INT);
+
+        // make it possible to add a new job via api
+        if ($this->user !== null && \array_key_exists('instanceid', $this->params) && filter_var($this->params['instanceid'], FILTER_SANITIZE_STRING) === '_NEW') {
+
+            $instance = (new Instance())
+                ->setName('precreated automatically')
+                ->setStatus(0)
+                ->setCreated(new \DateTime('now', ServerUtility::getTimezoneObject()));
+            $this->dbHelper->persist($instance);
+            $this->dbHelper->flush($instance);
+
+            $instance->setToken(JwtUtility::generateInstanceIdentificationToken($instance))
+                ->setOwner($this->user);
+
+            $this->user->addInstance($instance);
+            $this->dbHelper->persist($instance);
+            $this->dbHelper->flush($instance);
+            $this->persistUser();
+            return true;
+        }
+
+        $instanceId = filter_var($this->params['instanceid'] ?? 0, FILTER_VALIDATE_INT);
         if ($instanceId === 0) {
-            return false;
+            $this->instance = (new Instance())->setId(0);
+            return true;
         }
         $this->instance = $this->dbHelper->getRepository(Instance::class)->find($instanceId);
         return true;
