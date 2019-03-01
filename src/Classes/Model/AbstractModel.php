@@ -277,7 +277,7 @@ abstract class AbstractModel
      */
     public function setId(int $id): self
     {
-        if (ServerUtility::isProd()) {
+        if ($id !== 0 && ServerUtility::isProd()) {
             throw new \RuntimeException('You cannot force IDs, they are auto-incremented on DB-level.', 1548053101);
         }
         $this->id = $id;

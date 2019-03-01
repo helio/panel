@@ -106,18 +106,36 @@ class Job extends AbstractModel
 
 
     /**
+     * @var string
+     *
+     * @Column
+     */
+    protected $initManagerIp = '';
+
+
+    /**
+     * @var string
+     *
+     * @Column
+     */
+    protected $clusterToken = '';
+
+
+    /**
+     * @var array<string>
+     *
+     * @Column(type="simple_array", nullable=TRUE)
+     */
+    protected $managerNodes = [];
+
+
+    /**
      * @var int
      *
      * @Column
      */
     protected $priority = 100;
 
-    /**
-     * @var Instance
-     *
-     * @ManyToOne(targetEntity="Instance", inversedBy="tasks", cascade={"persist"})
-     */
-    protected $dispatchedInstance;
 
     private $numberOfActiveTasks;
 
@@ -356,24 +374,6 @@ class Job extends AbstractModel
     }
 
     /**
-     * @return null|Instance
-     */
-    public function getDispatchedInstance(): ?Instance
-    {
-        return $this->dispatchedInstance;
-    }
-
-    /**
-     * @param Instance $dispatchedInstance
-     * @return Job
-     */
-    public function setDispatchedInstance(Instance $dispatchedInstance): Job
-    {
-        $this->dispatchedInstance = $dispatchedInstance;
-        return $this;
-    }
-
-    /**
      * @param Task $task
      *
      * @return Job
@@ -404,6 +404,86 @@ class Job extends AbstractModel
         }));
         $this->numberOfActiveTasks = null;
 
+        return $this;
+    }
+
+    /**
+     * @return array
+     */
+    public function getManagerNodes(): array
+    {
+        return $this->managerNodes;
+    }
+
+    /**
+     * @param array $managerNodes
+     * @return Job
+     */
+    public function setManagerNodes(array $managerNodes): Job
+    {
+        $this->managerNodes = $managerNodes;
+        return $this;
+    }
+
+    /**
+     * @param string $managerNode
+     * @return Job
+     */
+    public function addManagerNode(string $managerNode): Job
+    {
+        $this->managerNodes[] = $managerNode;
+        return $this;
+    }
+
+
+    /**
+     * @param string $nodeToRemove
+     * @return Job
+     */
+    public function removeManagerNode(string $nodeToRemove): Job
+    {
+        $this->setManagerNodes(array_filter($this->getManagerNodes(), function ($node) use ($nodeToRemove) {
+            /** @var Task $task */
+            return $node !== $nodeToRemove;
+        }));
+        $this->numberOfActiveTasks = null;
+
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getInitManagerIp(): string
+    {
+        return $this->initManagerIp;
+    }
+
+    /**
+     * @param string $initManagerIp
+     * @return Job
+     */
+    public function setInitManagerIp(string $initManagerIp): Job
+    {
+        $this->initManagerIp = $initManagerIp;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getClusterToken(): string
+    {
+        return $this->clusterToken;
+    }
+
+    /**
+     * @param string $clusterToken
+     * @return Job
+     */
+    public function setClusterToken(string $clusterToken): Job
+    {
+        $this->clusterToken = $clusterToken;
         return $this;
     }
 

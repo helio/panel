@@ -123,7 +123,6 @@ class ApiInstanceController extends AbstractController
             ->setStatus(InstanceStatus::INIT)
             ->setOwner($this->user);
 
-
         $this->optionalParameterCheck([
             'instancename' => FILTER_SANITIZE_STRING,
             'instanelocation' => FILTER_SANITIZE_STRING,
@@ -163,8 +162,29 @@ class ApiInstanceController extends AbstractController
 
         return $this->render([
             'html' => $this->fetchPartial('listItemInstance', ['instance' => $this->instance, 'user' => $this->user]),
-            'message' => 'Instance <strong>' . $this->instance->getName() . '</strong> added.'
+            'message' => 'Instance <strong>' . $this->instance->getName() . '</strong> added.',
+            'id' => $this->instance->getId(),
+            'token' => $this->instance->getToken()
         ]);
+    }
+
+
+    /**
+     * @return ResponseInterface
+     *
+     * @Route("/add/abort", methods={"POST"}, name="server.abort")
+     * @throws \Exception
+     */
+    public function abortAddInstanceAction(): ResponseInterface
+    {
+        if ($this->instance && $this->instance->getStatus() === InstanceStatus::UNKNOWN && $this->instance->getOwner() && $this->instance->getOwner()->getId() === $this->user->getId()) {
+            $this->user->removeInstance($this->instance);
+            $this->dbHelper->remove($this->instance);
+            $this->dbHelper->flush($this->instance);
+            $this->persistUser();
+            return $this->render();
+        }
+        return $this->render(['message' => 'no access to server'], StatusCode::HTTP_UNAUTHORIZED);
     }
 
 

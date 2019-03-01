@@ -121,9 +121,10 @@ UPLOAD_RESULT() {
 
 REPORT() {
     DEBUG "reporting success to $(GET_CURRENT_REPORT_URL)"
+    # note: unfourtuntately, due to whitespaces and potential linebreaks, we have to go through a file
     echo '{"success":"'${1}'","epw_stat":"'$(wc ${CURRENT_EPW_FILENAME})'","idf_stat":"'$(wc ${CURRENT_IDF_FILENAME})'", "started":"'${STARTED}'", "ended":"'$(date +%s)'","taskid":"'$(GET_CURRENT_TASK_ID)'"}' > /tmp/report
     DEBUG "report data: " $(cat /tmp/report | tr -d '[:space:]')
-    curl -fsSLo /dev/null -X PUT -H "Content-Type: application/json" --data @/tmp/report "$(GET_CURRENT_REPORT_URL)&XDEBUG_SESSION_START=true" || return 1
+    curl -fsSLo /dev/null -X PUT -H "Content-Type: application/json" --data @/tmp/report "$(GET_CURRENT_REPORT_URL)&XDEBUG_SESSION_START=true" && rm -f /tmp/report || return 1
 }
 
 # Subshell heartbeat

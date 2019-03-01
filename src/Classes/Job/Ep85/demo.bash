@@ -13,7 +13,8 @@ fi
 if [[ -z "${1}" ]]; then exit 1; fi
 
 BASE_URL=${2:-http://localhost:8099}
-JOB=$(curl -fsSL -m 360 -X POST "${BASE_URL}/api/job/add?jobid=_NEW&jobtype=ep85&token=${1}")
+ID=$(date -j -f "%a %b %d %T %Z %Y" "`date`" "+%s")
+JOB=$(curl -fsSL -m 360 -X POST "${BASE_URL}/api/job/add?jobid=_NEW&jobtype=ep85&jobname=_auto&billingReference=${ID}&token=${1}")
 JOB_ID=$(echo ${JOB} | jq -r .id)
 JOB_TOKEN=$(echo ${JOB} | jq -r .token)
 

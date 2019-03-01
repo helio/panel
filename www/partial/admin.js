@@ -24,28 +24,6 @@ $(document).ready(function () {
             loadList('admin/instancelist', '#helio-instancelist');
         }
 
-        $(this).find('form.dispatch').on('submit', function (e) {
-            e.preventDefault();
-            let data = $(this).serialize() + '&jobid=' + $(this).parents('.job').data('id');
-
-
-            $.ajax({
-                accepts: {
-                    mycustomtype: 'application/json'
-                },
-                url: '/api/admin/dispatch',
-                data: data,
-                method: 'PUT',
-                success: function (data) {
-                    if (data.hasOwnProperty('notification')) {
-                        $(data['notification']).prependTo($('#notificationContainer'));
-                    }
-                }
-            })
-
-
-        });
-
         initActionButtons($(this));
         prettyPrint();
     });

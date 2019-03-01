@@ -98,23 +98,6 @@ class ApiAdminController extends AbstractController
     /**
      * @return ResponseInterface
      *
-     * @Route("/dispatch", methods={"PUT"}, name="admin.jobdispatch")
-     */
-    public function dispatchAction(): ResponseInterface
-    {
-        $this->job->setDispatchedInstance($this->instance);
-        $this->persistJob();
-
-        // TODO: Do something useful with this config.
-        return $this->render(['message' => 'done',
-            'config' => RunnerFactory::getRunnerForInstance($this->instance)->createConfigForJob(JobFactory::getDispatchConfigOfJob($this->job)->getDispatchConfig())
-        ]);
-    }
-
-
-    /**
-     * @return ResponseInterface
-     *
      * @Route("/update", methods={"POST"}, name="user.update")
      */
     public function updateProfileAction(): ResponseInterface
@@ -160,6 +143,7 @@ class ApiAdminController extends AbstractController
             'active_jobs' => $this->dbHelper->getRepository(Job::class)->count(['status' => JobStatus::READY]),
             'running_tasks' => $this->dbHelper->getRepository(Task::class)->count(['status' => TaskStatus::RUNNING]),
             'waiting_tasks' => $this->dbHelper->getRepository(Task::class)->count(['status' => TaskStatus::READY]),
+            'done_tasks' => $this->dbHelper->getRepository(Task::class)->count(['status' => TaskStatus::DONE]),
             'task_avg_wait' => $avgWaitQuery->getQuery()->getArrayResult()[0]['avg'],
             'stale_tasks' => $staleQuery->getQuery()->getArrayResult()[0]['count']
         ]);
@@ -183,8 +167,7 @@ class ApiAdminController extends AbstractController
                 'job_number' => ++$counter,
                 'job_specs' => [
                     'job_id' => $job->getId(),
-                    'service_name' => $job->getType() . '-' . $job->getId(),
-                    'instance_id' => $job->getDispatchedInstance() ? $job->getDispatchedInstance()->getId() : 'NULL'
+                    'service_name' => $job->getType() . '-' . $job->getId()
                 ]
             ];
         }
@@ -203,24 +186,26 @@ class ApiAdminController extends AbstractController
     {
         $dcf = JobFactory::getDispatchConfigOfJob($this->job)->getDispatchConfig();
         $servicename = $this->job->getType() . '-' . $this->job->getId();
-        $replicas = $dcf->getReplicaCountForJob($this->job);
-        $env = '    env:';
+
+        $env = [];
         if ($dcf->getEnvVariables()) {
             foreach ($dcf->getEnvVariables() as $key => $value) {
-                $env .= "\n    - $key=$value";
+                $env[] = "$key=$value";
             }
         }
 
-        // TODO: add a proper array to yaml parser
         return $this
             ->setReturnType('yaml')
             ->render([
-                'profile::docker::clusters:',
-                "  '$servicename':",
-                "    service_name: '$servicename'",
-                '    image: ' . $dcf->getImage(),
-                '    replicas: ' . $replicas,
-                $env
-            ]);
+                    'profile::docker::clusters' => [
+                        $servicename => [
+                            'service_name' => $servicename,
+                            'image' => $dcf->getImage(),
+                            'replicas' => $dcf->getReplicaCountForJob($this->job),
+                            'env' => $env
+                        ]
+                    ]
+                ]
+            );
     }
 }

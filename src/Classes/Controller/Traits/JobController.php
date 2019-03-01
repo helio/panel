@@ -33,7 +33,7 @@ trait JobController
         if ($this->user !== null && \array_key_exists('jobid', $this->params) && filter_var($this->params['jobid'], FILTER_SANITIZE_STRING) === '_NEW') {
 
             $job = (new Job())
-                ->setName('precreated automatically')
+                ->setName('precreated on request')
                 ->setOwner($this->user)
                 ->setCreated(new \DateTime('now', ServerUtility::getTimezoneObject()));
             $this->dbHelper->persist($job);
