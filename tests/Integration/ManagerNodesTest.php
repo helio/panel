@@ -15,6 +15,7 @@ use Helio\Panel\Utility\JwtUtility;
 use Helio\Test\Infrastructure\Utility\ServerUtility;
 use Helio\Test\TestCase;
 use Psr\Http\Message\ResponseInterface;
+use Slim\Http\StatusCode;
 
 class ManagerNodesTest extends TestCase
 {
@@ -86,7 +87,7 @@ class ManagerNodesTest extends TestCase
         $result = json_decode((string)$this->runApp('POST', '/api/job/add?jobid=_NEW&token=' . $this->user->getToken() . '&jobtype=' . JobType::GITLAB_RUNNER, true, null)->getBody(), true);
         $this->assertArrayHasKey('id', $result, 'no ID of new job returned');
         $this->runApp('POST', '/api/job/add?token=' . $this->user->getToken(), true, null, ['jobid' => $result['id'], 'jobname' => 'testing 1551430509']);
-        $this->assertCount(1, $this->jobRepository->findOneByName('testing 1551430509')->getManagerNodes(), 'init node not ready, must not call to create redundant manager nodes yet');
+        $this->assertNotNull($this->jobRepository->findOneByName('testing 1551430509')->getManagerNodes(), 'init node not ready, must not call to create redundant manager nodes yet');
     }
 
     /**
@@ -104,19 +105,6 @@ class ManagerNodesTest extends TestCase
         $url = '/' . $matches[1];
 
         $this->assertStringEndsWith('token=' . $this->user->getToken(), $url);
-        $this->runApp('POST', $url, true);
-
-        $this->assertContains('Addr', ServerUtility::getLastExecutedShellCommand(), 'should query for manager node IP address here 1551435953');
-        $this->assertContains(ServerUtility::getShortHashOfString($jobid) . '-0', ServerUtility::getLastExecutedShellCommand());
-
-        // fake it till we make it: since we cannot query puppet for the manager-IP, we force it here.
-        /** @var Job $job */
-        $job = $this->jobRepository->findOneById($jobid);
-        $this->assertNotNull($job);
-        $this->assertNotEquals(JobStatus::READY, $job->getStatus());
-        $job->setInitManagerIp('1.2.3.4');
-        $this->infrastructure->getEntityManager()->persist($job);
-        $this->infrastructure->getEntityManager()->flush();
 
         // call callback again, this time the manager node is "ready"
         $this->runApp('POST', $url, true);
@@ -165,10 +153,41 @@ class ManagerNodesTest extends TestCase
         $i = 1 + JobFactory::getDispatchConfigOfJob($this->job)->getDispatchConfig()->getTaskCountPerReplica();
         do {
             --$i;
-            $result = (string)$this->runApp('POST', '/exec', true, null, ['jobid' => $this->job->getId(), 'token' => $this->job->getToken()])->getBody();
+            $this->runApp('POST', '/exec', true, null, ['jobid' => $this->job->getId(), 'token' => $this->job->getToken()])->getBody();
         } while ($i > 0);
 
         $this->assertContains('ssh', ServerUtility::getLastExecutedShellCommand());
         $this->assertContains('docker::swarm_token', ServerUtility::getLastExecutedShellCommand());
+    }
+
+
+    /**
+     * @throws \Exception
+     */
+    public function testJobStatusEndpointReflectsStatus(): void
+    {
+
+
+        $result = json_decode((string)$this->runApp('POST', '/api/job/add?jobid=_NEW&token=' . $this->user->getToken() . '&jobtype=' . JobType::GITLAB_RUNNER, true, null)->getBody(), true);
+        $jobid = $result['id'];
+        $jobtoken = $result['token'];
+
+        $command = str_replace('\\"', '"', ServerUtility::getLastExecutedShellCommand());
+        $pattern = '/^.*"uri":"' . str_replace('/', '\\/', ServerUtility::getBaseUrl()) . '([^"]+)"/';
+        $matches = [];
+        preg_match($pattern, $command, $matches);
+        $this->assertNotEmpty($matches);
+        $callbackUrl = '/' . $matches[1];
+
+        $statusResult = $this->runApp('GET', "/api/job/isready?jobid=${jobid}&token=${jobtoken}");
+        $this->assertEquals($statusResult->getStatusCode(), StatusCode::HTTP_FAILED_DEPENDENCY);
+
+
+        $this->runApp('POST', $callbackUrl, true);
+
+        $statusResult = $this->runApp('GET', "/api/job/isready?jobid=${jobid}&token=${jobtoken}");
+        $body = (string)$statusResult->getBody();
+        $this->assertEquals($statusResult->getStatusCode(), StatusCode::HTTP_OK);
+
     }
 }

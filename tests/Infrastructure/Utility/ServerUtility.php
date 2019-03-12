@@ -8,4 +8,19 @@ class ServerUtility extends \Helio\Panel\Utility\ServerUtility
     {
         self::$lastExecutedShellCommand = '';
     }
+
+    /**
+     * Mock command results
+     *
+     * @param string $command
+     * @return string
+     */
+    public static function getMockResultForShellCommand(string $command) : string {
+
+        if (strpos($command, 'RemoteManagers') && strpos($command, 'Addr') !== false) {
+            return '5.1.2.3';
+        }
+
+        return '{"status":"success"}';
+    }
 }

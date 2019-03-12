@@ -37,7 +37,8 @@ trait InstanceController
         $this->setupParams();
 
         // make it possible to add a new job via api
-        if ($this->user !== null && \array_key_exists('instanceid', $this->params) && filter_var($this->params['instanceid'], FILTER_SANITIZE_STRING) === '_NEW') {
+        /** @noinspection NotOptimalIfConditionsInspection */
+        if (property_exists($this, 'user') && $this->user !== null && \array_key_exists('instanceid', $this->params) && filter_var($this->params['instanceid'], FILTER_SANITIZE_STRING) === '_NEW') {
 
             $instance = (new Instance())
                 ->setName('precreated automatically')

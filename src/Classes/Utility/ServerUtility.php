@@ -136,7 +136,7 @@ class ServerUtility
     {
         self::$lastExecutedShellCommand = $command;
         if (self::$testMode) {
-            return '{"status":"success"}';
+            return \Helio\Test\Infrastructure\Utility\ServerUtility::getMockResultForShellCommand($command);
         }
         return trim(@shell_exec($command));
     }
