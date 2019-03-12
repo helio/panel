@@ -30,7 +30,8 @@ trait JobController
         $this->setupParams();
 
         // make it possible to add a new job via api
-        if ($this->user !== null && \array_key_exists('jobid', $this->params) && filter_var($this->params['jobid'], FILTER_SANITIZE_STRING) === '_NEW') {
+        /** @noinspection NotOptimalIfConditionsInspection */
+        if (property_exists($this, 'user') && $this->user !== null && \array_key_exists('jobid', $this->params) && filter_var($this->params['jobid'], FILTER_SANITIZE_STRING) === '_NEW') {
 
             $job = (new Job())
                 ->setName('precreated on request')

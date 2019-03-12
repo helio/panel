@@ -135,7 +135,7 @@ end
      */
     public function setClusterToken(Job $job): bool
     {
-        $result = filter_var(trim(ServerUtility::executeShellCommand($this->parseCommand('getDockerToken', [$job->getManagerNodes()[0]]))), FILTER_SANITIZE_STRING);
+        $result = filter_var(trim(ServerUtility::executeShellCommand($this->parseCommand('getDockerToken', [$job->getManagerNodes()[0], $job->getManagerNodes()[0]]))), FILTER_SANITIZE_STRING);
         if (!$result) {
             return false;
         }

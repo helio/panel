@@ -139,6 +139,16 @@ class ApiJobController extends AbstractController
     /**
      * @return ResponseInterface
      *
+     * @Route("/isready", methods={"GET"}, name="exec.job.status")
+     */
+    public function jobIsReadyAction(): ResponseInterface
+    {
+        return $this->render([], $this->job->getStatus() === JobStatus::READY ? StatusCode::HTTP_OK : StatusCode::HTTP_FAILED_DEPENDENCY);
+    }
+
+    /**
+     * @return ResponseInterface
+     *
      * @Route("/callback", methods={"POST", "GET"}, "name="job.callback")
      */
     public function callbackAction(): ResponseInterface

@@ -18,6 +18,16 @@ JOB=$(curl -fsSL -m 360 -X POST "${BASE_URL}/api/job/add?jobid=_NEW&jobtype=ep85
 JOB_ID=$(echo ${JOB} | jq -r .id)
 JOB_TOKEN=$(echo ${JOB} | jq -r .token)
 
+while true; do
+    PROGRES="${PROGRES}."
+    if curl -fsSL -o /dev/null "${BASE_URL}/api/job/isready?jobid=${JOB_ID}&token=${JOB_TOKEN}"; then
+        break
+    fi
+    echo -ne "\\rWaiting for job ready state. This may take a while${PROGRES}"
+    sleep 15;
+done
+
+
 TOTAL=5
 RUNS=${TOTAL}
 
