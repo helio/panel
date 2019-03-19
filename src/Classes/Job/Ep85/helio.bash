@@ -1,5 +1,7 @@
 #!/bin/bash
 
+trap 'exit 0' SIGTERM SIGINT SIGKILL
+
 # Variable Init
 ERROR=''
 WORKDIR_ROOT=$(pwd -P)
@@ -74,7 +76,18 @@ GET_CURRENT_REPORT_URL() {
 
 SET_CURRENT_TASK_CONFIG() {
     DEBUG "Setting Task Config from $(GET_EXEC_URL "exec/work/getnextinqueue")"
-    TASK_CONFIG=$(curl -fsSL -X GET -H "Accept: application/json" $(GET_EXEC_URL "exec/work/getnextinqueue")) || return 1
+    while true; do
+        TASK_CONFIG=$(curl -fsSL -X GET -H "Accept: application/json" $(GET_EXEC_URL "exec/work/getnextinqueue")) && break
+
+        if [ -z "${KEEP_ALIVE}" ]; then
+            DEBUG "Config update failed. KEEP_ALIVE not set. Exitting."
+            return 1
+        fi
+
+        DEBUG "Currently, there's nothing to do. Waiting..."
+        sleep 30
+        DEBUG "Retrying..."
+    done
     DEBUG "Done Setting Task Config: ${TASK_CONFIG}"
 
     # write TaskID to file because hearbeat subprocess doesn't have ENV available.
