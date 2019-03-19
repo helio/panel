@@ -21,5 +21,5 @@ USER epuser
 
 WORKDIR '/tmp'
 
-CMD ["helio"]
+ENTRYPOINT ["/usr/local/bin/helio"]
 
