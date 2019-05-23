@@ -6,24 +6,23 @@ namespace Helio\Panel\Controller;
 use Helio\Panel\Controller\Traits\AdminController;
 use Helio\Panel\Controller\Traits\InstanceController;
 use Helio\Panel\Controller\Traits\JobController;
-use Helio\Panel\Controller\Traits\TypeApiController;
 use Helio\Panel\Controller\Traits\TypeDynamicController;
 use Helio\Panel\Job\JobStatus;
 use Helio\Panel\Model\Job;
 use Helio\Panel\Model\Task;
 use Helio\Panel\Job\JobFactory;
 use Helio\Panel\Model\Instance;
-use Helio\Panel\Runner\RunnerFactory;
 use Helio\Panel\Task\TaskStatus;
 use Helio\Panel\Utility\ServerUtility;
 use Psr\Http\Message\ResponseInterface;
-use Slim\Http\Stream;
 
 /**
  * Class ApiController
  *
  * @package    Helio\Panel\Controller
  * @author    Christoph Buchli <team@opencomputing.cloud>
+ *
+ * @OA\Info(title="Admin API", version="0.0.1")
  *
  * @RoutePrefix('/api/admin')
  *

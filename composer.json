@@ -32,7 +32,8 @@
         "google/auth": "^1.4",
         "adbario/php-dot-notation": "^2.2",
         "ocramius/proxy-manager": "^2.2",
-        "symfony/yaml": "^4.2"
+        "symfony/yaml": "^4.2",
+        "zircote/swagger-php": "^3.0"
     },
     "require-dev": {
         "roave/security-advisories": "dev-master",

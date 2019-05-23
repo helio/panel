@@ -6,6 +6,7 @@ final class JobType
 {
     public const GITLAB_RUNNER = 'gitlab';
     public const ENERGY_PLUS_85 = 'ep85';
+    public const VF_DOCKER = 'vfdocker';
     public const UNKNOWN = '';
 
     /**
@@ -22,6 +23,7 @@ final class JobType
     {
         return $type === self::GITLAB_RUNNER
             || $type === self::ENERGY_PLUS_85
+            || $type === self::VF_DOCKER
             || $type === self::UNKNOWN;
     }
 
@@ -33,7 +35,8 @@ final class JobType
     {
         if (self::isValidType($type)) {
             $map = [
-                self::ENERGY_PLUS_85 => 'fa fa-plus'
+                self::ENERGY_PLUS_85 => 'fa fa-plus',
+                self::VF_DOCKER => 'fa fa-docker'
             ];
 
             return $map[$type] ?? "fa fa-$type";

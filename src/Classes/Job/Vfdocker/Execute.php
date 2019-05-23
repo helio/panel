@@ -1,6 +1,6 @@
 <?php
 
-namespace Helio\Panel\Job\Gitlab;
+namespace Helio\Panel\Job\Vfdocker;
 
 use Helio\Panel\Job\DispatchableInterface;
 use Helio\Panel\Job\DispatchConfig;
@@ -16,10 +16,16 @@ class Execute implements JobInterface, DispatchableInterface
      */
     protected $job;
 
+
+    /**
+     * Execute constructor.
+     * @param Job $job
+     */
     public function __construct(Job $job)
     {
         $this->job = $job;
     }
+
 
     /**
      * @param array $params
@@ -30,6 +36,7 @@ class Execute implements JobInterface, DispatchableInterface
     {
         return true;
     }
+
 
     /**
      * @param array $params
@@ -52,9 +59,7 @@ class Execute implements JobInterface, DispatchableInterface
             ->setImage('gitlab/gitlab-runner')
             ->setEnvVariables([
                 'HELIO_JOBID' => $this->job->getId(),
-                'HELIO_TOKEN' => $this->job->getToken(),
-                'GITLAB_TAGS' => $this->job->getConfig('gitlabTags'),
-                // 'GITLAB_TOKEN' =>
+                'HELIO_TOKEN' => $this->job->getToken()
             ]);
     }
 
@@ -66,20 +71,8 @@ class Execute implements JobInterface, DispatchableInterface
      */
     public function create(array $params, RequestInterface $request): bool
     {
-        $options = [
-            'gitlabEndpoint' => FILTER_SANITIZE_URL,
-            'gitlabToken' => FILTER_SANITIZE_STRING,
-            'gitlabTags' => FILTER_SANITIZE_STRING
-        ];
-
-        $config = [];
-        foreach ($options as $name => $filter) {
-            $key = filter_var($name, FILTER_SANITIZE_STRING);
-            if (array_key_exists($key, $params)) {
-                $config[$key] = filter_var($params[$key], $filter);
-            }
-        }
-        $this->job->setConfig($config);
+        // TODO: parse body
+        $this->job->setConfig((string)$request->getBody());
         return true;
     }
 }

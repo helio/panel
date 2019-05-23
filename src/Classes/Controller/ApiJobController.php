@@ -24,6 +24,8 @@ use Slim\Http\StatusCode;
  *
  * @RoutePrefix('/api/job')
  *
+ * @OA\Info(title="Job API", version="0.0.1")
+ *
  */
 class ApiJobController extends AbstractController
 {
@@ -39,6 +41,11 @@ class ApiJobController extends AbstractController
      * @return ResponseInterface
      *
      * @Route("/remove", methods={"DELETE"}, name="job.remove")
+     *
+     * @OA\Delete(
+     *     path="/api/job/remove",
+     *     @OA\Response(response="200", description="Job has been deleted")
+     * )
      */
     public function removeJobAction(): ResponseInterface
     {
@@ -101,7 +108,7 @@ class ApiJobController extends AbstractController
             ->setBudget($this->params['budget'] ?? '')
             ->setIsCharity($this->params['free'] ?? '' === 'on');
 
-        JobFactory::getInstanceOfJob($this->job)->create($this->params);
+        JobFactory::getInstanceOfJob($this->job)->create($this->params, $this->request);
 
         $this->persistJob();
 

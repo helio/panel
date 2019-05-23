@@ -45,9 +45,10 @@ class Execute implements JobInterface, DispatchableInterface
 
     /**
      * @param array $params
+     * @param RequestInterface $request
      * @return bool
      */
-    public function create(array $params): bool
+    public function create(array $params, RequestInterface $request): bool
     {
         return true;
     }
@@ -94,10 +95,11 @@ class Execute implements JobInterface, DispatchableInterface
 
     /**
      * @param array $params
+     * @param RequestInterface $request
      * @return bool
      * @throws \Exception
      */
-    public function stop(array $params): bool
+    public function stop(array $params, RequestInterface $request): bool
     {
         $tasks = DbHelper::getInstance()->getRepository(Task::class)->findByJob($this->job);
         /** @var Task $task */

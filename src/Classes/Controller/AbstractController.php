@@ -122,6 +122,23 @@ abstract class AbstractController extends Controller
         return $this->$method($params, $status);
     }
 
+    /**
+     * @param $data
+     * @param int $status
+     * @return ResponseInterface
+     */
+    protected function html($data, int $status = StatusCode::HTTP_OK): ResponseInterface
+    {
+        if (\array_key_exists('impersonate', $this->request->getCookieParams())) {
+            $data['impersonating'] = true;
+        }
+
+        return $this->renderer->render($this->response,
+            $this->getMode() . '/index.phtml',
+            $data
+        )->withStatus($status);
+    }
+
 
     /**
      * @param $data
@@ -142,21 +159,21 @@ abstract class AbstractController extends Controller
     }
 
     /**
-     * @param $data
+     * @param string $data
      * @param int $status
      * @return ResponseInterface
      */
-    protected function html($data, int $status = StatusCode::HTTP_OK): ResponseInterface
+    protected function rawJson(string $data, int $status = StatusCode::HTTP_OK): ResponseInterface
     {
-        if (\array_key_exists('impersonate', $this->request->getCookieParams())) {
-            $data['impersonating'] = true;
-        }
+        {
+            $this->response->getBody()->write($data);
 
-        return $this->renderer->render($this->response,
-            $this->getMode() . '/index.phtml',
-            $data
-        )->withStatus($status);
+            return $this->response
+                ->withHeader('Content-Type', 'application/json')
+                ->withStatus($status);
+        }
     }
+
 
     /**
      * @param $data
@@ -169,9 +186,21 @@ abstract class AbstractController extends Controller
         if (\is_array($data)) {
             $data = Yaml::dump($data, 4, 2);
         }
+        return $this->rawYaml($data, $status);
+    }
+
+
+    /**
+     * @param string $data
+     * @param int $status
+     * @return ResponseInterface
+     */
+    protected function rawYaml(string $data, int $status = StatusCode::HTTP_OK): ResponseInterface
+    {
         $this->response->getBody()->write($data);
         return $this->response
             ->withHeader('Content-Type', 'application/x-yaml')
             ->withStatus($status);
+
     }
 }

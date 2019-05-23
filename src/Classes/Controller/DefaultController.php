@@ -99,4 +99,44 @@ class DefaultController extends AbstractController
             ]
         );
     }
+
+    /**
+     * @param string $context
+     * @return ResponseInterface
+     *
+     * @Route("apidoc/{context:[\w]+}", methods={"GET"}, name="api.doc")
+     */
+    public function ApiDocAction(string $context): ResponseInterface
+    {
+        return $this->renderApiDocumentation(['Controller', 'Api' . ucfirst(strtolower($context)) . 'Controller.php']);
+    }
+
+    /**
+     * @param string jobtype
+     * @return ResponseInterface
+     *
+     * @Route("apidoc/job/{jobtype:[\w]+}", methods={"GET"}, name="api.doc")
+     */
+    public function JobApiDocAction(string $jobtype): ResponseInterface
+    {
+        return $this->renderApiDocumentation(['Job', ucfirst(strtolower($jobtype)) . '/ApiInterface.php']);
+    }
+
+
+    /**
+     * @param array $path
+     * @return ResponseInterface
+     */
+    protected function renderApiDocumentation(array $path = []): ResponseInterface
+    {
+
+        $openapi = \OpenApi\scan(ServerUtility::getClassesPath($path));
+
+        if ((array_key_exists('format', $this->params) && $this->params['format'] === 'json')
+            || $this->request->getHeader('Content-Type') === 'application/json') {
+            return $this->rawJson($openapi->toJson());
+        }
+
+        return $this->rawYaml($openapi->toYaml());
+    }
 }

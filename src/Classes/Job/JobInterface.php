@@ -10,7 +10,7 @@ interface JobInterface {
 
     public function run(array $params, RequestInterface $request, ResponseInterface $response);
 
-    public function stop(array $params);
+    public function stop(array $params, RequestInterface $request);
 
-    public function create(array $params): bool;
+    public function create(array $params, RequestInterface $request): bool;
 }

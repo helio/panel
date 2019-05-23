@@ -49,7 +49,7 @@ class ExecController extends AbstractController
             }
             $previousReplicaCount = JobFactory::getDispatchConfigOfJob($this->job)->getDispatchConfig()->getReplicaCountForJob($this->job);
             $job = JobFactory::getInstanceOfJob($this->job, $this->task);
-            $result = $job->run($this->params, $this->request, $this->response);
+            $job->run($this->params, $this->request, $this->response);
             $newReplicaCount = JobFactory::getDispatchConfigOfJob($this->job)->getDispatchConfig()->getReplicaCountForJob($this->job);
 
             if ($previousReplicaCount !== $newReplicaCount) {
@@ -71,7 +71,7 @@ class ExecController extends AbstractController
     public function stopAction(): ResponseInterface
     {
         try {
-            JobFactory::getInstanceOfJob($this->job, $this->task)->stop($this->params);
+            JobFactory::getInstanceOfJob($this->job, $this->task)->stop($this->params, $this->request);
             return $this->render(['status' => 'success']);
         } catch (\Exception $e) {
             return $this->render(['status' => 'error'], StatusCode::HTTP_INTERNAL_SERVER_ERROR);
