@@ -138,7 +138,7 @@ class AutoscalerTest extends TestCase
         }
 
         $result = $this->exec();
-$body=(string)$result->getBody();
+
         $this->assertEquals(200, $result->getStatusCode());
         $this->assertEquals(2, $this->findValueOfKeyInHiera($result, 'replicas'));
     }
