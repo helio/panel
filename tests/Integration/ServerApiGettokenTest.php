@@ -68,7 +68,7 @@ class ServerApiGettokenTest extends TestCase
     public function testInstanceDoesntExist(): void
     {
         $this->infrastructure->import($this->user);
-        $this->assertEquals(404, $this->exec()->getStatusCode());
+        $this->assertEquals(200, $this->exec()->getStatusCode());
     }
 
     /**

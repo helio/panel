@@ -179,6 +179,11 @@ class ServerOnboardingController extends AbstractController
 
             /** @var User $user */
             $user = $this->dbHelper->getRepository(User::class)->findOneByEmail($this->params['email']);
+
+            if (!$user) {
+                throw new \InvalidArgumentException('User not found', StatusCode::HTTP_NOT_FOUND);
+            }
+
             /** @var Instance $server */
             $server = $this->dbHelper->getRepository(Instance::class)->findOneByFqdn($this->params['fqdn']);
             if (!$server) {
@@ -187,15 +192,17 @@ class ServerOnboardingController extends AbstractController
                     ->setName('Automatically generated during gettoken')
                     ->setCreated(new \DateTime('now', ServerUtility::getTimezoneObject()))
                     ->setStatus(InstanceStatus::INIT)
+                    ->setIp($ip)
                     ->setOwner($user);
                 $this->dbHelper->persist($server);
                 $this->dbHelper->flush();
             }
 
-            if (!$user || !$server || !$server->getOwner() || $user->getId() !== $server->getOwner()->getId()) {
-                throw new \InvalidArgumentException('Not found', StatusCode::HTTP_NOT_FOUND);
+            if (!$server || !$server->getOwner() || $user->getId() !== $server->getOwner()->getId()) {
+                throw new \InvalidArgumentException('Instance not found or not permitted', StatusCode::HTTP_NOT_FOUND);
             }
 
+            // todo: implement useful auth
             if ($server->getIp() !== $ip) {
                 throw new \InvalidArgumentException('Not authorized', StatusCode::HTTP_FORBIDDEN);
             }
