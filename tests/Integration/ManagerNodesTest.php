@@ -54,7 +54,7 @@ class ManagerNodesTest extends TestCase
 
         $jobid = json_decode((string)$this->runApp('POST', '/api/job/add?jobid=_NEW&token=' . $this->user->getToken() . '&jobtype=' . JobType::ENERGY_PLUS_85, true, null)->getBody(), true)['id'];
         $command = str_replace('\\"', '"', ServerUtility::getLastExecutedShellCommand());
-        $pattern = '/^.*"uri":"' . str_replace('/', '\\/', ServerUtility::getBaseUrl()) . '([^"]+)"/';
+        $pattern = '/^.*"callback":"' . str_replace('/', '\\/', ServerUtility::getBaseUrl()) . '([^"]+)"/';
         $matches = [];
         preg_match($pattern, $command, $matches);
         $this->assertNotEmpty($matches);
