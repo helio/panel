@@ -184,8 +184,8 @@ class ApiAdminController extends AbstractController
      */
     public function jobConfigForPuppetAction(): ResponseInterface
     {
-        if (!JobType::isValidType($this->job->getType())) {
-            throw new \InvalidArgumentException('Invalid Job type');
+        if (!$this->job || !JobType::isValidType($this->job->getType())) {
+            throw new \InvalidArgumentException('Invalid Job');
         }
 
         $dcf = JobFactory::getDispatchConfigOfJob($this->job)->getDispatchConfig();

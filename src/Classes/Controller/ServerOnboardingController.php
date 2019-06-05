@@ -2,6 +2,7 @@
 
 namespace Helio\Panel\Controller;
 
+use Helio\Panel\Controller\Traits\InstanceController;
 use Helio\Panel\Controller\Traits\ParametrizedController;
 use Helio\Panel\Controller\Traits\TypeApiController;
 use Helio\Panel\Helper\LogHelper;
@@ -31,7 +32,7 @@ use Slim\Http\StatusCode;
 class ServerOnboardingController extends AbstractController
 {
 
-    use ParametrizedController;
+    use InstanceController;
     use TypeApiController;
 
     public function getContext(): ?string
@@ -72,7 +73,6 @@ class ServerOnboardingController extends AbstractController
             }
 
             $server->setIp($ip);
-            $server->setToken('');
             $server->setStatus(InstanceStatus::CREATED);
             $this->dbHelper->merge($server);
             $this->dbHelper->flush();
@@ -149,6 +149,7 @@ class ServerOnboardingController extends AbstractController
                 throw new \RuntimeException('Couldn\'t send confirmation mail', 1531253400);
             }
         } catch (\Exception $e) {
+            LogHelper::err('Error during Server init: ' . $e->getMessage());
             return $this->json(['success' => false, 'reason' => $e->getMessage()], StatusCode::HTTP_NOT_ACCEPTABLE);
         }
 
@@ -190,7 +191,7 @@ class ServerOnboardingController extends AbstractController
                 throw new \InvalidArgumentException('Not authorized', StatusCode::HTTP_FORBIDDEN);
             }
         } catch (\Exception $e) {
-            LogHelper::warn('Error at gettoken: ' . $e->getMessage() . "\nsupplied body has been:" . print_r((string)$this->request->getBody(),true));
+            LogHelper::warn('Error at gettoken: ' . $e->getMessage() . "\nsupplied body has been:" . print_r((string)$this->request->getBody(), true));
             return $this->json(['success' => false, 'reason' => $e->getMessage()],
                 $e->getCode() < 1000 ? $e->getCode() : StatusCode::HTTP_NOT_ACCEPTABLE);
         }
