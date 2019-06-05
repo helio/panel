@@ -67,13 +67,13 @@ end
     /**
      * @var string
      */
-    protected static $firstManagerCommand = 'ssh %s@%s "mco playbook run infrastructure::gce::create --input \'{\\"node\\":\\"%s\\", \\"uri\\":\\"%s\\"}\'"';
+    protected static $firstManagerCommand = 'ssh %s@%s "mco playbook run infrastructure::gce::create --input \'{\\"node\\":\\"%s\\", \\"callback\\":\\"%s\\", \\"id\\": \\"%s\\", \\"token\\": \\"%s\\"}\'"';
 
 
     /**
      * @var string
      */
-    protected static $redundantManagersCommand = 'ssh %s@%s "mco playbook run infrastructure::gce::create --input \'{\\"node\\":[\\"%s\\"], \\"uri\\":\\"%s\\"}\'"';
+    protected static $redundantManagersCommand = 'ssh %s@%s "mco playbook run infrastructure::gce::create --input \'{\\"node\\":[\\"%s\\"], \\"callback\\":\\"%s\\", \\"id\\": \\"%s\\", \\"token\\": \\"%s\\"}\'"';
 
 
     /**
@@ -211,6 +211,8 @@ end
             App::getApp()->getContainer()->get('dbHelper')->persist($job);
             App::getApp()->getContainer()->get('dbHelper')->flush($job);
             $params[] = ServerUtility::getBaseUrl() . 'api/job/callback?jobid=' . $job->getId() . '&token=' . $job->getOwner()->getToken();
+            $params[] = $job->getId();
+            $params[] = $job->getToken();
         } catch (\Exception $e) {
             return false;
         }
