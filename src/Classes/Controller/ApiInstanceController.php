@@ -12,6 +12,7 @@ use Helio\Panel\Instance\InstanceType;
 use Helio\Panel\Master\MasterFactory;
 use Helio\Panel\Orchestrator\OrchestratorFactory;
 use Helio\Panel\Runner\RunnerFactory;
+use Helio\Panel\Utility\JwtUtility;
 use Helio\Panel\ViewModel\InstanceInfoViewModel;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Http\StatusCode;
@@ -112,10 +113,19 @@ class ApiInstanceController extends AbstractController
      */
     public function addInstanceAction(): ResponseInterface
     {
-        $this->requiredParameterCheck([
-            'fqdn' => FILTER_SANITIZE_STRING,
-            'instancetype' => FILTER_SANITIZE_STRING
-        ]);
+        try {
+            $this->requiredParameterCheck([
+                'fqdn' => FILTER_SANITIZE_STRING,
+                'instancetype' => FILTER_SANITIZE_STRING
+            ]);
+        } catch (\RuntimeException $e) {
+            if (($this->params['instanceid'] ?? '') === '_NEW') {
+                $this->instance->setToken(JwtUtility::generateInstanceIdentificationToken($this->instance));
+                $this->persistInstance();
+                return $this->render(['token' => $this->instance->getToken(), 'id' => $this->instance->getId()]);
+            }
+            return $this->render(['status' => 'fail'], StatusCode::HTTP_INTERNAL_SERVER_ERROR);
+        }
 
         $this->instance
             ->setFqdn($this->params['fqdn'])

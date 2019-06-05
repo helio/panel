@@ -69,7 +69,7 @@ class ApiJobController extends AbstractController
             ]);
 
             if (!JobType::isValidType($this->params['jobtype'])) {
-                return $this->render(['success' => false, 'message' => 'Unknown Job Type']);
+                return $this->render(['success' => false, 'message' => 'Unknown Job Type'], StatusCode::HTTP_METHOD_NOT_ALLOWED);
             }
 
             $this->job->setType($this->params['jobtype']);

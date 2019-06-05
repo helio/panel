@@ -40,19 +40,19 @@ trait InstanceController
         /** @noinspection NotOptimalIfConditionsInspection */
         if (property_exists($this, 'user') && $this->user !== null && \array_key_exists('instanceid', $this->params) && filter_var($this->params['instanceid'], FILTER_SANITIZE_STRING) === '_NEW') {
 
-            $instance = (new Instance())
+            $this->instance = (new Instance())
                 ->setName('precreated automatically')
                 ->setStatus(0)
                 ->setCreated(new \DateTime('now', ServerUtility::getTimezoneObject()));
-            $this->dbHelper->persist($instance);
-            $this->dbHelper->flush($instance);
+            $this->dbHelper->persist($this->instance);
+            $this->dbHelper->flush($this->instance);
 
-            $instance->setToken(JwtUtility::generateInstanceIdentificationToken($instance))
+            $this->instance->setToken(JwtUtility::generateInstanceIdentificationToken($this->instance))
                 ->setOwner($this->user);
 
-            $this->user->addInstance($instance);
-            $this->dbHelper->persist($instance);
-            $this->dbHelper->flush($instance);
+            $this->user->addInstance($this->instance);
+            $this->dbHelper->persist($this->instance);
+            $this->dbHelper->flush($this->instance);
             $this->persistUser();
             return true;
         }
