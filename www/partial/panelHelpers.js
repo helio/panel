@@ -14,7 +14,7 @@ const loadList = function (endpoint, containerSelector, startFromTheBeginning = 
     if (startFromTheBeginning) {
         container.data('loaded', 0);
         offset = 0;
-        container.find('.list-group-item').remove();
+        container.find('.list-group-item.loadable').remove();
     }
 
     let settings = {limit: limit, offset: offset};
