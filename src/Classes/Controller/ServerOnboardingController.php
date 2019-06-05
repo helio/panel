@@ -2,7 +2,6 @@
 
 namespace Helio\Panel\Controller;
 
-use Helio\Panel\Controller\Traits\InstanceController;
 use Helio\Panel\Controller\Traits\ParametrizedController;
 use Helio\Panel\Controller\Traits\TypeApiController;
 use Helio\Panel\Helper\LogHelper;
@@ -32,7 +31,7 @@ use Slim\Http\StatusCode;
 class ServerOnboardingController extends AbstractController
 {
 
-    use InstanceController;
+    use ParametrizedController;
     use TypeApiController;
 
     public function getContext(): ?string
@@ -182,6 +181,16 @@ class ServerOnboardingController extends AbstractController
             $user = $this->dbHelper->getRepository(User::class)->findOneByEmail($this->params['email']);
             /** @var Instance $server */
             $server = $this->dbHelper->getRepository(Instance::class)->findOneByFqdn($this->params['fqdn']);
+            if (!$server) {
+                $server = new Instance();
+                $server->setFqdn($this->params['fqdn'])
+                    ->setName('Automatically generated during gettoken')
+                    ->setCreated(new \DateTime('now', ServerUtility::getTimezoneObject()))
+                    ->setStatus(InstanceStatus::INIT)
+                    ->setOwner($user);
+                $this->dbHelper->persist($server);
+                $this->dbHelper->flush();
+            }
 
             if (!$user || !$server || !$server->getOwner() || $user->getId() !== $server->getOwner()->getId()) {
                 throw new \InvalidArgumentException('Not found', StatusCode::HTTP_NOT_FOUND);
