@@ -190,7 +190,7 @@ class ServerOnboardingController extends AbstractController
                 throw new \InvalidArgumentException('Not authorized', StatusCode::HTTP_FORBIDDEN);
             }
         } catch (\Exception $e) {
-            LogHelper::warn('Error at gettoken: ' . $e->getMessage() . "\nsupplied body has been:" . $this->params);
+            LogHelper::warn('Error at gettoken: ' . $e->getMessage() . "\nsupplied body has been:" . print_r((string)$this->request->getBody(),true));
             return $this->json(['success' => false, 'reason' => $e->getMessage()],
                 $e->getCode() < 1000 ? $e->getCode() : StatusCode::HTTP_NOT_ACCEPTABLE);
         }
