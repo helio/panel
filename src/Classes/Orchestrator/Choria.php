@@ -3,6 +3,7 @@
 namespace Helio\Panel\Orchestrator;
 
 use Helio\Panel\App;
+use Helio\Panel\Helper\LogHelper;
 use Helio\Panel\Model\Instance;
 use Helio\Panel\Model\Job;
 use Helio\Panel\Utility\ServerUtility;
@@ -96,6 +97,7 @@ end
     public function getInventory()
     {
         $result = ServerUtility::executeShellCommand($this->parseCommand('inventory', [str_replace('.', '\\\\.', $this->instance->getFqdn())]));
+        LogHelper::debug('response from choria at getInventory:' . print_r($result, true));
         if (\is_string($result) && $result) {
             return json_decode($result, true);
         }
@@ -113,6 +115,7 @@ end
             return false;
         }
         $result = filter_var(trim(ServerUtility::executeShellCommand($this->parseCommand('getInitManagerIp', [$job->getManagerNodes()[0]]))), FILTER_VALIDATE_IP);
+        LogHelper::debug('response from choria at setInitManagerNodeIp:' . print_r($result, true));
         if (!$result) {
             return false;
         }
@@ -136,6 +139,7 @@ end
     public function setClusterToken(Job $job): bool
     {
         $result = filter_var(trim(ServerUtility::executeShellCommand($this->parseCommand('getDockerToken', [$job->getManagerNodes()[0], $job->getManagerNodes()[0]]))), FILTER_SANITIZE_STRING);
+        LogHelper::debug('response from choria at setClusterToken:' . print_r($result, true));
         if (!$result) {
             return false;
         }
@@ -163,7 +167,9 @@ end
      */
     public function dispatchJob(Job $job): bool
     {
-        return ServerUtility::executeShellCommand($this->parseCommand('dispatch', [$job->getManagerNodes()[0]]));
+        $result = ServerUtility::executeShellCommand($this->parseCommand('dispatch', [$job->getManagerNodes()[0]]));
+        LogHelper::debug('response from choria at dispatchJob:' . print_r($result, true));
+        return $result;
     }
 
 
@@ -212,7 +218,9 @@ end
         if (!$command) {
             return false;
         }
-        return ServerUtility::executeShellCommand($this->parseCommand($command, $params));
+        $result = ServerUtility::executeShellCommand($this->parseCommand($command, $params));
+        LogHelper::debug('response from choria at provision ' . $command . ':' . print_r($result, true));
+        return $result;
     }
 
 

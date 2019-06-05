@@ -2,6 +2,7 @@
 
 namespace Helio\Panel\Master;
 
+use Helio\Panel\Helper\LogHelper;
 use Helio\Panel\Model\Instance;
 use Helio\Panel\Utility\ServerUtility;
 
@@ -50,6 +51,7 @@ class Puppet implements MasterInterface
     public function getStatus()
     {
         $result = ServerUtility::executeShellCommand($this->parseCommand('status'));
+        LogHelper::debug('response from puppet at getStatus:' . print_r($result, true));
         if (\is_string($result) && strpos(trim($result), '{') === 0) {
             return json_decode($result, true);
         }
@@ -62,6 +64,7 @@ class Puppet implements MasterInterface
     public function doSign()
     {
         $result = ServerUtility::executeShellCommand($this->parseCommand('autosign'));
+        LogHelper::debug('response from puppet at doSign:' . print_r($result, true));
         if (\is_string($result) && strpos(trim($result), '{') === 0) {
             return json_decode($result, true);
         }
@@ -74,7 +77,9 @@ class Puppet implements MasterInterface
      */
     public function cleanup()
     {
-        return ServerUtility::executeShellCommand($this->parseCommand('cleanup'));
+        $result = ServerUtility::executeShellCommand($this->parseCommand('cleanup'));
+        LogHelper::debug('response from puppet at cleanup:'.print_r($result,true));
+        return $result;
     }
 
 

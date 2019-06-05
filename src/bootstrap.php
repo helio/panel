@@ -23,7 +23,10 @@ require APPLICATION_ROOT . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR 
 // set logging
 $logfile = APPLICATION_ROOT . DIRECTORY_SEPARATOR . 'log' . DIRECTORY_SEPARATOR . ((PHP_SAPI === 'cli') ? 'console' : 'app') . '.log';
 define('LOG_DEST', isset($_ENV['docker']) ? 'php://stdout' : $logfile);
-define('LOG_LVL', SITE_ENV === 'PROD' ? \Monolog\Logger::WARNING : \Monolog\Logger::DEBUG);
-
+if (\array_key_exists('DEBUG', $_SERVER)) {
+    define('LOG_LVL', \Monolog\Logger::DEBUG);
+} else {
+    define('LOG_LVL', SITE_ENV === 'PROD' ? \Monolog\Logger::WARNING : \Monolog\Logger::DEBUG);
+}
 // cleanup
 unset($url, $file, $logfile);

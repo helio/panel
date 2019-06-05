@@ -16,6 +16,7 @@ use Helio\Panel\Model\Instance;
 use Helio\Panel\Task\TaskStatus;
 use Helio\Panel\Utility\ServerUtility;
 use Psr\Http\Message\ResponseInterface;
+use Slim\Http\StatusCode;
 
 /**
  * Class ApiController
@@ -185,7 +186,7 @@ class ApiAdminController extends AbstractController
     public function jobConfigForPuppetAction(): ResponseInterface
     {
         if (!$this->job || !JobType::isValidType($this->job->getType())) {
-            throw new \InvalidArgumentException('Invalid Job');
+            return $this->render([], StatusCode::HTTP_NOT_ACCEPTABLE);
         }
 
         $dcf = JobFactory::getDispatchConfigOfJob($this->job)->getDispatchConfig();

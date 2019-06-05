@@ -149,15 +149,15 @@ abstract class AbstractController extends Controller
      */
     protected function json($data, int $status = StatusCode::HTTP_OK): ResponseInterface
     {
+        if ($status > 299) {
+            LogHelper::warn('API error on ' . $this->request->getUri() . ' with code ' . $status . "\nResponse Data:\n" . print_r($data, true) . "\nRequest:\n" . print_r((string)$this->request->getBody(), true));
+        }
         if (\array_key_exists('message', $data)) {
             $data['notification'] = $this->fetchPartial('message', [
                 'message' => $data['message'],
                 'status' => $data['status'] ?? 'ok',
                 'success' => $data['success'] ?? 'success'
             ]);
-        }
-        if ($status > 299) {
-            LogHelper::warn('API error on ' . $this->request->getUri() . ' with code ' . $status . "\nResponse Data:\n" . print_r($data, true) . "\nRequest:\n" . print_r((string)$this->request->getBody(), true));
         }
         return $this->response->withJson($data)->withStatus($status);
     }
@@ -170,11 +170,11 @@ abstract class AbstractController extends Controller
     protected function rawJson(string $data, int $status = StatusCode::HTTP_OK): ResponseInterface
     {
         {
-            $this->response->getBody()->write($data);
             if ($status > 299) {
                 LogHelper::warn('API error on ' . $this->request->getUri() . ' with code ' . $status . "\nResponse Data:\n" . print_r($data, true) . "\nRequest:\n" . print_r((string)$this->request->getBody(), true));
             }
 
+            $this->response->getBody()->write($data);
             return $this->response
                 ->withHeader('Content-Type', 'application/json')
                 ->withStatus($status);
@@ -189,12 +189,12 @@ abstract class AbstractController extends Controller
      */
     protected function yaml($data, int $status = StatusCode::HTTP_OK): ResponseInterface
     {
+        if ($status > 299) {
+            LogHelper::warn('API error on ' . $this->request->getUri() . ' with code ' . $status . "\nResponse Data:\n" . print_r($data, true) . "\nRequest:\n" . print_r((string)$this->request->getBody(), true));
+        }
 
         if (\is_array($data)) {
             $data = Yaml::dump($data, 4, 2);
-        }
-        if ($status > 299) {
-            LogHelper::warn('API error on ' . $this->request->getUri() . ' with code ' . $status . "\nResponse Data:\n" . print_r($data, true) . "\nRequest:\n" . print_r((string)$this->request->getBody(), true));
         }
         return $this->rawYaml($data, $status);
     }
@@ -207,10 +207,11 @@ abstract class AbstractController extends Controller
      */
     protected function rawYaml(string $data, int $status = StatusCode::HTTP_OK): ResponseInterface
     {
-        $this->response->getBody()->write($data);
         if ($status > 299) {
             LogHelper::warn('API error on ' . $this->request->getUri() . ' with code ' . $status . "\nResponse Data:\n" . print_r($data, true) . "\nRequest:\n" . print_r((string)$this->request->getBody(), true));
         }
+
+        $this->response->getBody()->write($data);
         return $this->response
             ->withHeader('Content-Type', 'application/x-yaml')
             ->withStatus($status);
