@@ -218,6 +218,15 @@ interface ApiInterface
      *             enum = {"_NEW"}
      *         )
      *     ),
+     *     @OA\Parameter(
+     *         name="token",
+     *         in="query",
+     *         description="The token of the *JOB* (received in the response of /api/job/add)",
+     *         required=true,
+     *         @Oa\Items(
+     *             type="string"
+     *         )
+     *     ),
      *
      *     @OA\RequestBody(
      *         description=">- ENV Variables formated like this
@@ -239,14 +248,9 @@ interface ApiInterface
      *         @OA\JsonContent(
      *           type="object",
      *           @OA\Property(
-     *               property="token",
+     *               property="success",
      *               type="string",
-     *               description="The authentication token that's only valid for this job"
-     *           ),
-     *           @OA\Property(
-     *               property="id",
-     *               type="string",
-     *               description="The Id of the newly created job"
+     *               description="boolean if the execution was successful"
      *           )
      *         )
      *     ),

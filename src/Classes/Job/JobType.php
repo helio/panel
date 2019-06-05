@@ -38,7 +38,7 @@ final class JobType
         if (self::isValidType($type)) {
             $map = [
                 self::ENERGY_PLUS_85 => 'fa fa-plus',
-                self::VF_DOCKER => 'fa fa-docker',
+                self::VF_DOCKER => 'fa fa-bolt',
                 self::BUSYBOX => 'fa fa-clock-o'
             ];
 
