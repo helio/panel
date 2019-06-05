@@ -8,6 +8,7 @@ use Helio\Panel\Controller\Traits\InstanceController;
 use Helio\Panel\Controller\Traits\JobController;
 use Helio\Panel\Controller\Traits\TypeDynamicController;
 use Helio\Panel\Job\JobStatus;
+use Helio\Panel\Job\JobType;
 use Helio\Panel\Model\Job;
 use Helio\Panel\Model\Task;
 use Helio\Panel\Job\JobFactory;
@@ -183,6 +184,10 @@ class ApiAdminController extends AbstractController
      */
     public function jobConfigForPuppetAction(): ResponseInterface
     {
+        if (!JobType::isValidType($this->job->getType())) {
+            throw new \InvalidArgumentException('Invalid Job type');
+        }
+
         $dcf = JobFactory::getDispatchConfigOfJob($this->job)->getDispatchConfig();
         $servicename = $this->job->getType() . '-' . $this->job->getId();
 

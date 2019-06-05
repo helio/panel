@@ -4,6 +4,7 @@ namespace Helio\Panel\Controller;
 
 use Helio\Panel\Controller\Traits\ParametrizedController;
 use Helio\Panel\Controller\Traits\TypeApiController;
+use Helio\Panel\Helper\LogHelper;
 use Helio\Panel\Instance\InstanceStatus;
 use Helio\Panel\Master\MasterFactory;
 
@@ -189,6 +190,7 @@ class ServerOnboardingController extends AbstractController
                 throw new \InvalidArgumentException('Not authorized', StatusCode::HTTP_FORBIDDEN);
             }
         } catch (\Exception $e) {
+            LogHelper::warn('Error at gettoken: ' . $e->getMessage() . "\nsupplied body has been:" . $this->params);
             return $this->json(['success' => false, 'reason' => $e->getMessage()],
                 $e->getCode() < 1000 ? $e->getCode() : StatusCode::HTTP_NOT_ACCEPTABLE);
         }
