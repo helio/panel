@@ -3,6 +3,7 @@
 namespace Helio\Panel\Utility;
 
 use Helio\Panel\App;
+use Helio\Panel\Helper\LogHelper;
 
 class ServerUtility
 {
@@ -134,6 +135,7 @@ class ServerUtility
      */
     public static function executeShellCommand(string $command): ?string
     {
+        LogHelper::debug('executing shell command:' . "\n${command}");
         self::$lastExecutedShellCommand = $command;
         if (self::$testMode) {
             return \Helio\Test\Infrastructure\Utility\ServerUtility::getMockResultForShellCommand($command);

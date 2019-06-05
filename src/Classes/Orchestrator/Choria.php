@@ -218,6 +218,7 @@ end
         }
 
         if (!$command) {
+            LogHelper::warn('empty command in Choria manager provisioning. this is only valid, if managers are already properly provisioned.');
             return false;
         }
         $result = ServerUtility::executeShellCommand($this->parseCommand($command, $params));
