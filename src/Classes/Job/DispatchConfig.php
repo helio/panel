@@ -8,6 +8,7 @@ class DispatchConfig
 {
     protected $image = '';
     protected $envVariables = [];
+    protected $args = [];
     protected $taskPerReplica = 5;
 
     /**
@@ -43,6 +44,24 @@ class DispatchConfig
     public function setEnvVariables(array $envVariables): DispatchConfig
     {
         $this->envVariables = $envVariables;
+        return $this;
+    }
+
+    /**
+     * @return array
+     */
+    public function getArgs(): array
+    {
+        return $this->args;
+    }
+
+    /**
+     * @param array $args
+     * @return DispatchConfig
+     */
+    public function setArgs(array $args): DispatchConfig
+    {
+        $this->args = $args;
         return $this;
     }
 
