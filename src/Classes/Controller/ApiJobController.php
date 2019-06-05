@@ -174,7 +174,7 @@ class ApiJobController extends AbstractController
         }
 
         //
-        if ($result && \count($this->job->getManagerNodes()) === 3) {
+        if ($result !== false && \count($this->job->getManagerNodes()) === 3) {
             $this->job->setStatus(JobStatus::READY);
             $this->persistJob();
             return $this->render(['message' => 'ok']);
