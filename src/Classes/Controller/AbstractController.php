@@ -156,7 +156,9 @@ abstract class AbstractController extends Controller
                 'success' => $data['success'] ?? 'success'
             ]);
         }
-        LogHelper::debug('API answer with code ' . $status . "\n" . print_r($data, true));
+        if ($status > 299) {
+            LogHelper::warn('API error on ' . $this->request->getUri() . ' with code ' . $status . "\nResponse Data:\n" . print_r($data, true) . "\nRequest:\n" . print_r((string)$this->request->getBody(), true));
+        }
         return $this->response->withJson($data)->withStatus($status);
     }
 
@@ -169,7 +171,9 @@ abstract class AbstractController extends Controller
     {
         {
             $this->response->getBody()->write($data);
-            LogHelper::debug('API answer with code ' . $status . "\n" . print_r($data, true));
+            if ($status > 299) {
+                LogHelper::warn('API error on ' . $this->request->getUri() . ' with code ' . $status . "\nResponse Data:\n" . print_r($data, true) . "\nRequest:\n" . print_r((string)$this->request->getBody(), true));
+            }
 
             return $this->response
                 ->withHeader('Content-Type', 'application/json')
@@ -189,7 +193,9 @@ abstract class AbstractController extends Controller
         if (\is_array($data)) {
             $data = Yaml::dump($data, 4, 2);
         }
-        LogHelper::debug('API answer with code ' . $status . "\n" . print_r($data, true));
+        if ($status > 299) {
+            LogHelper::warn('API error on ' . $this->request->getUri() . ' with code ' . $status . "\nResponse Data:\n" . print_r($data, true) . "\nRequest:\n" . print_r((string)$this->request->getBody(), true));
+        }
         return $this->rawYaml($data, $status);
     }
 
@@ -202,7 +208,8 @@ abstract class AbstractController extends Controller
     protected function rawYaml(string $data, int $status = StatusCode::HTTP_OK): ResponseInterface
     {
         $this->response->getBody()->write($data);
-        LogHelper::debug('API answer with code ' . $status . "\n" . print_r($data, true));
+        if ($status > 299) {
+            LogHelper::warn('API error on ' . $this->request->getUri() . ' with code ' . $status . "\nResponse Data:\n" . print_r($data, true) . "\nRequest:\n" . print_r((string)$this->request->getBody(), true));
         return $this->response
             ->withHeader('Content-Type', 'application/x-yaml')
             ->withStatus($status);
