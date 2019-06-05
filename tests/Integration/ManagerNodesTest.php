@@ -98,7 +98,7 @@ class ManagerNodesTest extends TestCase
         $jobid = json_decode((string)$this->runApp('POST', '/api/job/add?jobid=_NEW&token=' . $this->user->getToken() . '&jobtype=' . JobType::GITLAB_RUNNER, true, null)->getBody(), true)['id'];
         $this->assertContains('manager-' . ServerUtility::getShortHashOfString($jobid) . '-0', ServerUtility::getLastExecutedShellCommand());
         $command = str_replace('\\"', '"', ServerUtility::getLastExecutedShellCommand());
-        $pattern = '/^.*"uri":"' . str_replace('/', '\\/', ServerUtility::getBaseUrl()) . '([^"]+)"/';
+        $pattern = '/^.*"callback":"' . str_replace('/', '\\/', ServerUtility::getBaseUrl()) . '([^"]+)"/';
         $matches = [];
         preg_match($pattern, $command, $matches);
         $this->assertNotEmpty($matches);
@@ -173,7 +173,7 @@ class ManagerNodesTest extends TestCase
         $jobtoken = $result['token'];
 
         $command = str_replace('\\"', '"', ServerUtility::getLastExecutedShellCommand());
-        $pattern = '/^.*"uri":"' . str_replace('/', '\\/', ServerUtility::getBaseUrl()) . '([^"]+)"/';
+        $pattern = '/^.*"callback":"' . str_replace('/', '\\/', ServerUtility::getBaseUrl()) . '([^"]+)"/';
         $matches = [];
         preg_match($pattern, $command, $matches);
         $this->assertNotEmpty($matches);
