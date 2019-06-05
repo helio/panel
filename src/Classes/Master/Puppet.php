@@ -50,10 +50,10 @@ class Puppet implements MasterInterface
     public function getStatus()
     {
         $result = ServerUtility::executeShellCommand($this->parseCommand('status'));
-        if (\is_string($result) && $result) {
+        if (\is_string($result) && strpos(trim($result), '{') === 0) {
             return json_decode($result, true);
         }
-        return $result;
+        return trim($result);
     }
 
     /**
@@ -62,10 +62,10 @@ class Puppet implements MasterInterface
     public function doSign()
     {
         $result = ServerUtility::executeShellCommand($this->parseCommand('autosign'));
-        if (\is_string($result) && $result) {
+        if (\is_string($result) && strpos(trim($result), '{') === 0) {
             return json_decode($result, true);
         }
-        return $result;
+        return trim($result);
 
     }
 
