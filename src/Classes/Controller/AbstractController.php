@@ -210,6 +210,7 @@ abstract class AbstractController extends Controller
         $this->response->getBody()->write($data);
         if ($status > 299) {
             LogHelper::warn('API error on ' . $this->request->getUri() . ' with code ' . $status . "\nResponse Data:\n" . print_r($data, true) . "\nRequest:\n" . print_r((string)$this->request->getBody(), true));
+        }
         return $this->response
             ->withHeader('Content-Type', 'application/x-yaml')
             ->withStatus($status);
