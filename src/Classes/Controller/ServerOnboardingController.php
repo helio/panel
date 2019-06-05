@@ -196,6 +196,9 @@ class ServerOnboardingController extends AbstractController
                     ->setOwner($user);
                 $this->dbHelper->persist($server);
                 $this->dbHelper->flush();
+                $server->setToken(JwtUtility::generateInstanceIdentificationToken($server));
+                $this->dbHelper->persist($server);
+                $this->dbHelper->flush();
             }
 
             if (!$server || !$server->getOwner() || $user->getId() !== $server->getOwner()->getId()) {

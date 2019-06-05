@@ -4,6 +4,7 @@ namespace Helio\Panel\Controller;
 
 use Ergy\Slim\Annotations\Controller;
 use Helio\Panel\Helper\DbHelper;
+use Helio\Panel\Helper\LogHelper;
 use Helio\Panel\Helper\ZapierHelper;
 use Monolog\Logger;
 use Psr\Http\Message\ResponseInterface;
@@ -155,6 +156,7 @@ abstract class AbstractController extends Controller
                 'success' => $data['success'] ?? 'success'
             ]);
         }
+        LogHelper::debug('API answer with code ' . $status . "\n" . print_r($data, true));
         return $this->response->withJson($data)->withStatus($status);
     }
 
@@ -167,6 +169,7 @@ abstract class AbstractController extends Controller
     {
         {
             $this->response->getBody()->write($data);
+            LogHelper::debug('API answer with code ' . $status . "\n" . print_r($data, true));
 
             return $this->response
                 ->withHeader('Content-Type', 'application/json')
@@ -186,6 +189,7 @@ abstract class AbstractController extends Controller
         if (\is_array($data)) {
             $data = Yaml::dump($data, 4, 2);
         }
+        LogHelper::debug('API answer with code ' . $status . "\n" . print_r($data, true));
         return $this->rawYaml($data, $status);
     }
 
@@ -198,6 +202,7 @@ abstract class AbstractController extends Controller
     protected function rawYaml(string $data, int $status = StatusCode::HTTP_OK): ResponseInterface
     {
         $this->response->getBody()->write($data);
+        LogHelper::debug('API answer with code ' . $status . "\n" . print_r($data, true));
         return $this->response
             ->withHeader('Content-Type', 'application/x-yaml')
             ->withStatus($status);
