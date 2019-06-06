@@ -68,11 +68,9 @@ class Execute implements JobInterface, DispatchableInterface
     public function getDispatchConfig(): DispatchConfig
     {
         return (new DispatchConfig())
-            ->setImage('dummy')
-            ->setEnvVariables([
-                'HELIO_JOBID' => $this->job->getId(),
-                'HELIO_TOKEN' => $this->job->getToken()
-            ]);
+            ->setImage($this->job->getConfig('image'))
+            ->setEnvVariables($this->job->getConfig('env'))
+            ->setRegistry($this->job->getConfig('registry'));
     }
 
 
@@ -83,7 +81,6 @@ class Execute implements JobInterface, DispatchableInterface
      */
     public function create(array $params, RequestInterface $request): bool
     {
-        // TODO: parse body
         $this->job->setConfig((string)$request->getBody());
         return true;
     }

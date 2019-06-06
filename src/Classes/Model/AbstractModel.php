@@ -232,9 +232,9 @@ abstract class AbstractModel
 
     /**
      * @param string $option
-     * @return string
+     * @return mixed
      */
-    public function getConfig(string $option = ''): string
+    public function getConfig(string $option = '')
     {
         if (!self::$decodedConfig) {
             self::$decodedConfig = json_decode($this->config, true);

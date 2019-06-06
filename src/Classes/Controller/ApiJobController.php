@@ -42,10 +42,6 @@ class ApiJobController extends AbstractController
      *
      * @Route("/remove", methods={"DELETE"}, name="job.remove")
      *
-     * @OA\Delete(
-     *     path="/api/job/remove",
-     *     @OA\Response(response="200", description="Job has been deleted")
-     * )
      */
     public function removeJobAction(): ResponseInterface
     {
@@ -145,6 +141,23 @@ class ApiJobController extends AbstractController
 
     /**
      * @return ResponseInterface
+     *
+     * @OA\Get(
+     *     path="/api/job/isready",
+     *     @OA\Parameter(
+     *         name="jobid",
+     *         in="query",
+     *         description="Id of the job which status you wandt to see",
+     *         required=true,
+     *         @Oa\Items(
+     *             type="string"
+     *         )
+     *     ),
+     *     @OA\Response(response="200", description="Contains the Status")
+     * ),
+     *     security={
+     *         {"authByApitoken": {"any"}}
+     *     }
      *
      * @Route("/isready", methods={"GET"}, name="exec.job.status")
      */

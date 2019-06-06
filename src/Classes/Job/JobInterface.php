@@ -1,4 +1,5 @@
 <?php
+
 namespace Helio\Panel\Job;
 
 use Helio\Panel\Model\Job;
@@ -17,10 +18,20 @@ use Psr\Http\Message\ResponseInterface;
  *     name="token"
  * )
  */
-interface JobInterface {
-
+interface JobInterface
+{
 
     /**
+     * JobInterface constructor.
+     * @param Job $job
+     */
+    public function __construct(Job $job);
+
+    /**
+     *
+     * @param array $params
+     * @param RequestInterface $request
+     *
      * @OA\Post(
      *     path="/api/job/add",
      *     @OA\Parameter(
@@ -108,28 +119,23 @@ interface JobInterface {
      *     ),
      *
      *     @OA\RequestBody(
-     *         description=">- Your Job YAML config looking like this:
+     *         description=">- Your Job JSON config looking like this:
 
-    containers:
-    - name: nginx
-    image: nginx:1.8
-    ports:
-    - containerPort: 80
-    env:
-    - name: SOURCE_PATH
-    value: 'https://account-name>.<zone-name>.web.core.windows.net'
-    - name: TARGET_PATH
-    value: 'https://bucket.s3.aws-region.amazonaws.com'
-    registry:
-    - name: myregistrykey
-    type: docker-registry
-    literals:
-    - docker-server=${some-registry-name}.azurecr.io
-    - docker-username=DOCKER_USER
-    - docker-password=DOCKER_PASSWORD
-    - docker-email=${some-email-address}",
+    {
+        ""container"": ""nginx:1.8"",
+        ""env"": [
+            {""SOURCE_PATH"":""https://account-name>.<zone-name>.web.core.windows.net""},
+            {""TARGET_PATH"":""https://bucket.s3.aws-region.amazonaws.com""}
+        ],
+        ""registry"": {
+            ""server"": ""vattenfall.azurecr.io"",
+            ""username"": ""$DOCKER_USER"",
+            ""password"": ""$DOCKER_PASSWORD"",
+            ""email"": ""docker@vattenfall.se""
+        }
+    }",
      *         @OA\MediaType(
-     *             mediaType="application/x-yaml",
+     *             mediaType="application/json",
      *             @OA\Schema(
      *                 type="string"
      *             )
@@ -156,11 +162,15 @@ interface JobInterface {
      *     }
      * )
      *
-     * @return ResponseInterface
+     * @return bool
      */
-    public function addJob(): ResponseInterface;
+    public function create(array $params, RequestInterface $request): bool;
+
 
     /**
+     * @param array $params
+     * @param RequestInterface $request
+     *
      * @OA\Delete(
      *     path="/api/job/remove",
      *     @OA\Parameter(
@@ -177,32 +187,11 @@ interface JobInterface {
      *         {"authByApitoken": {"any"}}
      *     }
      * )
-     * @return ResponseInterface
      *
+     * @return mixed
      */
-    public function removeJob(): ResponseInterface;
+    public function stop(array $params, RequestInterface $request);
 
-    /**
-     * @OA\Get(
-     *     path="/api/job/isready",
-     *     @OA\Parameter(
-     *         name="jobid",
-     *         in="query",
-     *         description="Id of the job which status you wandt to see",
-     *         required=true,
-     *         @Oa\Items(
-     *             type="string"
-     *         )
-     *     ),
-     *     @OA\Response(response="200", description="Contains the Status")
-     * ),
-     *     security={
-     *         {"authByApitoken": {"any"}}
-     *     }
-     *
-     * @return ResponseInterface
-     */
-    public function isJobReady(): ResponseInterface;
 
     /**
      * @OA\Post(
@@ -230,11 +219,12 @@ interface JobInterface {
      *     @OA\RequestBody(
      *         description=">- ENV Variables formated like this
 
-    env:
-    - name: SOURCE_PATH
-    value: 'https://account-name>.<zone-name>.web.core.windows.net'
-    - name: TARGET_PATH
-    value: 'https://bucket.s3.aws-region.amazonaws.com'",
+    {
+        ""env"": [
+            {""SOURCE_PATH"":""https://account-name>.<zone-name>.web.core.windows.net""},
+            {""TARGET_PATH"":""https://bucket.s3.aws-region.amazonaws.com""}
+        ]
+     }",
      *         @OA\MediaType(
      *             mediaType="application/x-yaml",
      *             @OA\Schema(
@@ -258,14 +248,9 @@ interface JobInterface {
      *     }
      * )
      *
-     * @return ResponseInterface
+     * @param array $params
+     * @param RequestInterface $request
+     * @param ResponseInterface $response
      */
-    public function execute(): ResponseInterface;
-    public function __construct(Job $job);
-
     public function run(array $params, RequestInterface $request, ResponseInterface $response);
-
-    public function stop(array $params, RequestInterface $request);
-
-    public function create(array $params, RequestInterface $request): bool;
 }

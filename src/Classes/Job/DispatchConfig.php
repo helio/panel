@@ -9,6 +9,7 @@ class DispatchConfig
     protected $image = '';
     protected $envVariables = [];
     protected $args = [];
+    protected $registry = [];
     protected $taskPerReplica = 5;
 
     /**
@@ -62,6 +63,24 @@ class DispatchConfig
     public function setArgs(array $args): DispatchConfig
     {
         $this->args = $args;
+        return $this;
+    }
+
+    /**
+     * @return array
+     */
+    public function getRegistry(): array
+    {
+        return $this->registry;
+    }
+
+    /**
+     * @param array $config
+     * @return DispatchConfig
+     */
+    public function setRegistry(array $config): DispatchConfig
+    {
+        $this->registry = $config;
         return $this;
     }
 

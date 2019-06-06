@@ -208,7 +208,8 @@ class ApiAdminController extends AbstractController
                             'image' => $dcf->getImage(),
                             'replicas' => $dcf->getReplicaCountForJob($this->job),
                             'env' => $env,
-                            'args' => '[' . implode(',', $dcf->getArgs()) . ']'
+                            'args' => '[' . implode(',', $dcf->getArgs()) . ']',
+                            'registry' => '{' . $dcf->getRegistry() ?? '' . '}'
                         ]
                     ]
                 ]
