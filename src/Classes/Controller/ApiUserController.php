@@ -137,6 +137,6 @@ class ApiUserController extends AbstractController
     {
         $this->user->setToken(JwtUtility::generateUserIdentificationToken($this->user));
         $this->persistUser();
-        return $this->render(['message' => '<strong>Your Token is ' . $this->user->getToken() . '</strong> Write it down, it cannot be displayed ever again.']);
+        return $this->render(['message' => '<strong>Your Token is ' . $this->user->getToken() . '</strong> Safe it in your Password manager, it cannot be displayed ever again.']);
     }
 }

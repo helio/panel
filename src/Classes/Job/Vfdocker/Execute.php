@@ -8,7 +8,6 @@ use Helio\Panel\Job\DispatchConfig;
 use Helio\Panel\Job\JobInterface;
 use Helio\Panel\Model\Job;
 use Helio\Panel\Model\Task;
-use Helio\Panel\Task\TaskStatus;
 use Helio\Panel\Utility\ServerUtility;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;

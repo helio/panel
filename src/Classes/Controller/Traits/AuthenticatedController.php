@@ -22,6 +22,7 @@ trait AuthenticatedController
     {
         try {
             $this->user = App::getApp()->getContainer()['user'];
+            $this->persistUser();
         } catch (\Exception $e) {
             return false;
         }
