@@ -1,6 +1,6 @@
 <?php
 
-namespace Helio\Panel\Job\Vfdocker;
+namespace Helio\Panel\Job\Gitlab;
 
 use Helio\Panel\Job\JobInterface;
 
@@ -9,7 +9,7 @@ use Helio\Panel\Job\JobInterface;
  *
  * @package Helio\Panel\Job\VfDocker
  *
- * @OA\Info(title="Docker Dispatch Api for  customerMarkets", version="0.0.1")
+ * @OA\Info(title="Gitlab Worker Interface", version="0.0.1")
  */
 interface ApiInterface extends JobInterface
 {

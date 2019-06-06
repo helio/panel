@@ -9,6 +9,7 @@ use Helio\Panel\Utility\CookieUtility;
 use Helio\Panel\Utility\JwtUtility;
 use Helio\Panel\Utility\MailUtility;
 use Helio\Panel\Utility\ServerUtility;
+use OpenApi\Annotations\Server;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Http\StatusCode;
 
@@ -108,7 +109,7 @@ class DefaultController extends AbstractController
      */
     public function ApiDocAction(string $context): ResponseInterface
     {
-        return $this->renderApiDocumentation(['Controller', 'Api' . ucfirst(strtolower($context)) . 'Controller.php']);
+        return $this->renderApiDocumentation(['Controller'], ['Api' . ucfirst(strtolower($context)) . 'Controller.php']);
     }
 
     /**
@@ -119,18 +120,28 @@ class DefaultController extends AbstractController
      */
     public function JobApiDocAction(string $jobtype): ResponseInterface
     {
-        return $this->renderApiDocumentation(['Job', ucfirst(strtolower($jobtype)) . '/ApiInterface.php']);
+        return $this->renderApiDocumentation(['Job'], ['JobInterface.php', ucfirst(strtolower($jobtype)) . '/ApiInterface.php']);
     }
 
 
     /**
-     * @param array $path
+     * @param array $folder
+     * @param array $include
      * @return ResponseInterface
+     *
+     * TODO: test this, it's quite pecular and only used for apidoc so far
      */
-    protected function renderApiDocumentation(array $path = []): ResponseInterface
+    protected function renderApiDocumentation(array $folder = [], array $include = []): ResponseInterface
     {
-
-        $openapi = \OpenApi\scan(ServerUtility::getClassesPath($path));
+        $path = ServerUtility::getClassesPath($folder);
+        $exclude = [];
+        if (!empty($include)) {
+            $exclude = array_filter(ServerUtility::getAllFilesInFolder($path, '.php'), function ($object) use ($include, $path) {
+                $filenameInsidePath = substr($object, \strlen($path . DIRECTORY_SEPARATOR));
+                return !\in_array($filenameInsidePath, $include, true);
+            });
+        }
+        $openapi = \OpenApi\scan($path, ['exclude' => $exclude]);
 
         if ((array_key_exists('format', $this->params) && $this->params['format'] === 'json')
             || $this->request->getHeader('Content-Type') === 'application/json') {

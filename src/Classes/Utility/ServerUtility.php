@@ -244,4 +244,30 @@ class ServerUtility
     {
         return self::$lastExecutedShellCommand;
     }
+
+    /**
+     * @param string $folder
+     * @param string $fileEnding
+     * @return array
+     */
+    public static function getAllFilesInFolder(string $folder, string $fileEnding = ''): array
+    {
+        $result = [];
+        foreach (scandir($folder, true) as $node) {
+            if (strpos($node, '.') === 0) {
+                continue;
+            }
+            if (is_dir($folder . DIRECTORY_SEPARATOR . $node)) {
+                /** @noinspection SlowArrayOperationsInLoopInspection */
+                $result = \array_merge($result, self::getAllFilesInFolder($folder . DIRECTORY_SEPARATOR . $node, $fileEnding));
+            } else if ($fileEnding) {
+                if (strpos($node, $fileEnding) === (\strlen($node) - \strlen($fileEnding))) {
+                    $result[] = $folder . DIRECTORY_SEPARATOR . $node;
+                }
+            } else {
+                $result[] = $folder . DIRECTORY_SEPARATOR . $node;
+            }
+        }
+        return $result;
+    }
 }
