@@ -68,6 +68,7 @@ class Execute implements JobInterface, DispatchableInterface
     public function getDispatchConfig(): DispatchConfig
     {
         return (new DispatchConfig())
+            ->setTaskPerReplica(1) // enforce call of dispatch command on every new task
             ->setImage($this->job->getConfig('image'))
             ->setEnvVariables($this->job->getConfig('env'))
             ->setRegistry($this->job->getConfig('registry'));
