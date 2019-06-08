@@ -249,6 +249,8 @@ class ServerUtility
      * @param string $folder
      * @param string $fileEnding
      * @return array
+     *
+     * TODO: test this, it's quite pecular and only used for apidoc so far
      */
     public static function getAllFilesInFolder(string $folder, string $fileEnding = ''): array
     {

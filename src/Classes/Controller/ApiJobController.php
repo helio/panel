@@ -24,7 +24,6 @@ use Slim\Http\StatusCode;
  *
  * @RoutePrefix('/api/job')
  *
- * @OA\Info(title="Job API", version="0.0.1")
  *
  */
 class ApiJobController extends AbstractController
@@ -156,7 +155,7 @@ class ApiJobController extends AbstractController
      *     @OA\Response(response="200", description="Contains the Status")
      * ),
      *     security={
-     *         {"authByApitoken": {"any"}}
+     *         {"authByJobtoken": {"any"}}
      *     }
      *
      * @Route("/isready", methods={"GET"}, name="exec.job.status")

@@ -24,7 +24,6 @@ use Slim\Http\StatusCode;
  * @package    Helio\Panel\Controller
  * @author    Christoph Buchli <team@opencomputing.cloud>
  *
- * @OA\Info(title="Admin API", version="0.0.1")
  *
  * @RoutePrefix('/api/admin')
  *

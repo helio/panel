@@ -102,14 +102,14 @@ class DefaultController extends AbstractController
     }
 
     /**
-     * @param string $context
      * @return ResponseInterface
      *
-     * @Route("apidoc/{context:[\w]+}", methods={"GET"}, name="api.doc")
+     * @Route("apidoc", methods={"GET"}, name="api.doc")
      */
-    public function ApiDocAction(string $context): ResponseInterface
+    public function ApiDocAction(): ResponseInterface
     {
-        return $this->renderApiDocumentation(['Controller'], ['Api' . ucfirst(strtolower($context)) . 'Controller.php']);
+        // exclude all files named ApiInterface.php because they are meant as single-entry points (see self::JobApiDocAction())
+        return $this->renderApiDocumentation('/^(.(?!Job\/[^\/]{1,}\/ApiInterface\.php))*$/');
     }
 
     /**
@@ -120,26 +120,34 @@ class DefaultController extends AbstractController
      */
     public function JobApiDocAction(string $jobtype): ResponseInterface
     {
-        return $this->renderApiDocumentation(['Job'], ['JobInterface.php', ucfirst(strtolower($jobtype)) . '/ApiInterface.php']);
+        return $this->renderApiDocumentation(['Job/' . ucfirst(strtolower($jobtype)) . '/ApiInterface.php']);
     }
 
 
     /**
-     * @param array $folder
-     * @param array $include
+     * @param array|string $include array of filenames or regex of filenames to include
      * @return ResponseInterface
      *
-     * TODO: test this, it's quite pecular and only used for apidoc so far
      */
-    protected function renderApiDocumentation(array $folder = [], array $include = []): ResponseInterface
+    protected function renderApiDocumentation($include = []): ResponseInterface
     {
-        $path = ServerUtility::getClassesPath($folder);
+        $path = ServerUtility::getClassesPath();
         $exclude = [];
-        if (!empty($include)) {
-            $exclude = array_filter(ServerUtility::getAllFilesInFolder($path, '.php'), function ($object) use ($include, $path) {
-                $filenameInsidePath = substr($object, \strlen($path . DIRECTORY_SEPARATOR));
-                return !\in_array($filenameInsidePath, $include, true);
-            });
+
+        // unfourtunately, OpenApi::scan() only has an exclude functionality, so we need to "invert"  $include
+        if ($include) {
+            if (\is_array($include) && \count($include) === 1) {
+                $path .= DIRECTORY_SEPARATOR . $include[0];
+            } else {
+                $exclude = array_filter(ServerUtility::getAllFilesInFolder($path, '.php'), function ($object) use ($include, $path) {
+                    $filenameInsidePath = substr($object, \strlen($path . DIRECTORY_SEPARATOR));
+
+                    return
+                        (\is_array($include) && !\in_array($filenameInsidePath, $include, true))
+                        ||
+                        (\is_string($include) && preg_match($include, $object) === 0);
+                });
+            }
         }
         $openapi = \OpenApi\scan($path, ['exclude' => $exclude]);
 

@@ -87,10 +87,30 @@ class DispatchConfig
 
     /**
      * @return int
+     * @deprecated
      */
     public function getTaskCountPerReplica(): int
     {
         return $this->taskPerReplica;
+    }
+
+
+    /**
+     * @return int
+     */
+    public function getTaskPerReplica(): int
+    {
+        return $this->taskPerReplica;
+    }
+
+    /**
+     * @param int $taskPerReplica
+     * @return DispatchConfig
+     */
+    public function setTaskPerReplica(int $taskPerReplica): DispatchConfig
+    {
+        $this->taskPerReplica = $taskPerReplica;
+        return $this;
     }
 
 
