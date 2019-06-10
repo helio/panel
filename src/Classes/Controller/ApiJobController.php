@@ -175,7 +175,7 @@ class ApiJobController extends AbstractController
     {
         $result = true;
         $body = $this->request->getParsedBody();
-        LogHelper::debug('Body received into callback:' . print_r($body));
+        LogHelper::debug('Body received into callback:' . print_r($body, true));
 
         // remember manager nodes.
         if (\array_key_exists('nodes', $body)) {
