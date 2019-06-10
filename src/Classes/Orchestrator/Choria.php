@@ -108,7 +108,9 @@ end
         if (\count($job->getManagerNodes()) !== 1) {
             return false;
         }
-        $result = filter_var(trim(ServerUtility::executeShellCommand($this->parseCommand('getInitManagerIp', [$job->getManagerNodes()[0]]))), FILTER_VALIDATE_IP);
+
+        // todo: filter input (it's IP And a Port, thus FILTER_VALIDATE_IP won't work).
+        $result = trim(ServerUtility::executeShellCommand($this->parseCommand('getInitManagerIp', [$job->getManagerNodes()[0]])));
         LogHelper::debug('response from choria at setInitManagerNodeIp:' . print_r($result, true));
         if (!$result) {
             return false;
