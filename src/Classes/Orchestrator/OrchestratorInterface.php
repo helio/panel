@@ -18,7 +18,7 @@ interface OrchestratorInterface
     /**
      * @deprecated
      */
-    public function setClusterToken(Job $job, $result = ''): bool;
+    public function setClusterToken(Job $job): bool;
 
     public function provisionManager(Job $job): bool;
 }

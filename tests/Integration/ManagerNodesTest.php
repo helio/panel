@@ -37,6 +37,16 @@ class ManagerNodesTest extends TestCase
      */
     protected $data = [];
 
+    /**
+     * @var array
+     */
+    protected $callbackDataInit;
+
+    /**
+     * @var array
+     */
+    protected $callbackDataRedundancy;
+
 
     /**
      * @throws \Exception
@@ -60,7 +70,13 @@ class ManagerNodesTest extends TestCase
         $this->assertNotEmpty($matches);
         $url = '/' . $matches[1];
 
-        $this->runApp('POST', $url, true);
+        $this->callbackDataInit = ['nodes' => 'manager-init-' . ServerUtility::getShortHashOfString($jobid) . '.example.com', 'docker_token' => 'blah'];
+        $this->callbackDataRedundancy = ['nodes' => [
+            'manager-redundancy-' . ServerUtility::getShortHashOfString($jobid) . '-1.example.com',
+            'manager-redundancy-' . ServerUtility::getShortHashOfString($jobid) . '-2.example.com'
+        ], 'docker_token' => 'blah'];
+
+        $this->runApp('POST', $url, true, null, $this->callbackDataInit);
 
         // fake it till we make it: since we cannot query puppet for the manager-IP, we force it here.
         /** @var Job $job */
@@ -70,7 +86,8 @@ class ManagerNodesTest extends TestCase
         $this->infrastructure->getEntityManager()->flush();
 
         // call callback again, this time the manager node is "ready"
-        $this->runApp('POST', $url, true);
+        $this->runApp('POST', $url, true, null, $this->callbackDataRedundancy);
+
 
         ServerUtility::resetLastExecutedCommand();
 
@@ -96,7 +113,7 @@ class ManagerNodesTest extends TestCase
     public function testRedundantManagersGetSetupOnCallbackCall(): void
     {
         $jobid = json_decode((string)$this->runApp('POST', '/api/job/add?jobid=_NEW&token=' . $this->user->getToken() . '&jobtype=' . JobType::GITLAB_RUNNER, true, null)->getBody(), true)['id'];
-        $this->assertContains('manager-' . ServerUtility::getShortHashOfString($jobid) . '-0', ServerUtility::getLastExecutedShellCommand());
+        $this->assertContains('manager-init-' . ServerUtility::getShortHashOfString($jobid), ServerUtility::getLastExecutedShellCommand());
         $command = str_replace('\\"', '"', ServerUtility::getLastExecutedShellCommand());
         $pattern = '/^.*"callback":"' . str_replace('/', '\\/', ServerUtility::getBaseUrl()) . '([^"]+)"/';
         $matches = [];
@@ -106,15 +123,17 @@ class ManagerNodesTest extends TestCase
 
         $this->assertStringEndsWith('token=' . $this->user->getToken(), $url);
 
+        // call back
+        $this->runApp('POST', $url, true, null, $this->callbackDataInit);
         // call callback again, this time the manager node is "ready"
-        $this->runApp('POST', $url, true);
+        $this->runApp('POST', $url, true, null, $this->callbackDataRedundancy);
 
         $job = $this->jobRepository->findOneById($jobid);
         $this->assertEquals(JobStatus::READY, $job->getStatus());
         $this->assertCount(3, $job->getManagerNodes());
-        $this->assertNotContains('manager-' . ServerUtility::getShortHashOfString($jobid) . '-0', ServerUtility::getLastExecutedShellCommand());
-        $this->assertContains('manager-' . ServerUtility::getShortHashOfString($jobid) . '-1', ServerUtility::getLastExecutedShellCommand());
-        $this->assertContains('manager-' . ServerUtility::getShortHashOfString($jobid) . '-2', ServerUtility::getLastExecutedShellCommand());
+        $this->assertNotContains('manager-init-' . ServerUtility::getShortHashOfString($jobid), ServerUtility::getLastExecutedShellCommand());
+        $this->assertContains('manager-redundancy-' . ServerUtility::getShortHashOfString($jobid) . '-1', ServerUtility::getLastExecutedShellCommand());
+        $this->assertContains('manager-redundancy-' . ServerUtility::getShortHashOfString($jobid) . '-2', ServerUtility::getLastExecutedShellCommand());
     }
 
 
@@ -183,11 +202,14 @@ class ManagerNodesTest extends TestCase
         $this->assertEquals($statusResult->getStatusCode(), StatusCode::HTTP_FAILED_DEPENDENCY);
 
 
-        $this->runApp('POST', $callbackUrl, true);
+        $this->runApp('POST', $callbackUrl, true, null, $this->callbackDataInit);
+        $this->assertEquals(StatusCode::HTTP_FAILED_DEPENDENCY, $statusResult->getStatusCode());
+
+        $this->runApp('POST', $callbackUrl, true, null, $this->callbackDataRedundancy);
 
         $statusResult = $this->runApp('GET', "/api/job/isready?jobid=${jobid}&token=${jobtoken}");
         $body = (string)$statusResult->getBody();
-        $this->assertEquals($statusResult->getStatusCode(), StatusCode::HTTP_OK);
+        $this->assertEquals(StatusCode::HTTP_OK, $statusResult->getStatusCode());
 
     }
 }

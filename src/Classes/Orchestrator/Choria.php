@@ -27,13 +27,7 @@ class Choria implements OrchestratorInterface
     /**
      * @var string
      */
-    private static $managerPrefix = 'manager-';
-
-
-    /**
-     * @var string
-     */
-    private static $clusterDomain = '.c.peppy-center-135409.internal';
+    private static $managerPrefix = 'manager';
 
 
     /**
@@ -134,14 +128,13 @@ end
 
     /**
      * @param Job $job
-     * @param string $result
      * @return bool
      *
      * @deprecated
      */
-    public function setClusterToken(Job $job, $result = ''): bool
+    public function setClusterToken(Job $job): bool
     {
-        $result = $result ?: filter_var(trim(ServerUtility::executeShellCommand($this->parseCommand('getDockerToken', [$job->getManagerNodes()[0], $job->getManagerNodes()[0]]))), FILTER_SANITIZE_STRING);
+        $result = filter_var(trim(ServerUtility::executeShellCommand($this->parseCommand('getDockerToken', [$job->getManagerNodes()[0], $job->getManagerNodes()[0]]))), FILTER_SANITIZE_STRING, FILTER_FLAG_NO_ENCODE_QUOTES);
         LogHelper::debug('response from choria at setClusterToken:' . print_r($result, true));
         if (!$result) {
             return false;
@@ -211,7 +204,7 @@ end
         try {
             App::getApp()->getContainer()->get('dbHelper')->persist($job);
             App::getApp()->getContainer()->get('dbHelper')->flush($job);
-            $params[] = ServerUtility::getBaseUrl() . 'api/job/callback?jobid=' . $job->getId() . '&token=' . $job->getToken();
+            $params[] = ServerUtility::getBaseUrl() . 'api/job/callback?jobid=' . $job->getId() . '&token=' . $job->getOwner()->getToken();
             $params[] = $job->getId();
             $params[] = $job->getToken();
         } catch (\Exception $e) {

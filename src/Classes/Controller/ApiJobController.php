@@ -173,7 +173,7 @@ class ApiJobController extends AbstractController
      */
     public function callbackAction(): ResponseInterface
     {
-        $result = false;
+        $result = true;
         $body = $this->request->getParsedBody();
         LogHelper::debug('Body received into callback:' . print_r($body));
 
@@ -183,10 +183,12 @@ class ApiJobController extends AbstractController
             foreach ($nodes as $node) {
                 $this->job->addManagerNode($node);
             }
+        } else {
+            $result = false;
         }
 
         // remember swarm token
-        if (\array_key_exists('swarm_token', $body)) {
+        if (\array_key_exists('swarm_token', $body) && !$this->job->getClusterToken()) {
             $this->job->setClusterToken($body['swarm_token']);
         }
 
@@ -202,10 +204,10 @@ class ApiJobController extends AbstractController
 
         // provision missing redundancy nodes
         if ($this->job->getInitManagerIp() && \count($this->job->getManagerNodes()) < 3) {
-            $result = OrchestratorFactory::getOrchestratorForInstance($this->instance)->provisionManager($this->job);
+            $result = $result && OrchestratorFactory::getOrchestratorForInstance($this->instance)->provisionManager($this->job);
         }
 
-        //
+        // finalize
         if ($result !== false && \count($this->job->getManagerNodes()) === 3) {
             $this->job->setStatus(JobStatus::READY);
             $this->persistJob();

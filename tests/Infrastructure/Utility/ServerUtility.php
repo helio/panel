@@ -20,6 +20,9 @@ class ServerUtility extends \Helio\Panel\Utility\ServerUtility
         if (strpos($command, 'RemoteManagers') && strpos($command, 'Addr') !== false) {
             return '5.1.2.3';
         }
+        if (strpos($command, 'docker::swarm_token')) {
+            return '{"_output":"token"}';
+        }
 
         return '{"status":"success"}';
     }
