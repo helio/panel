@@ -134,11 +134,12 @@ end
 
     /**
      * @param Job $job
+     * @param string $result
      * @return bool
      */
-    public function setClusterToken(Job $job): bool
+    public function setClusterToken(Job $job, $result = ''): bool
     {
-        $result = filter_var(trim(ServerUtility::executeShellCommand($this->parseCommand('getDockerToken', [$job->getManagerNodes()[0], $job->getManagerNodes()[0]]))), FILTER_SANITIZE_STRING);
+        $result = $result ?: filter_var(trim(ServerUtility::executeShellCommand($this->parseCommand('getDockerToken', [$job->getManagerNodes()[0], $job->getManagerNodes()[0]]))), FILTER_SANITIZE_STRING);
         LogHelper::debug('response from choria at setClusterToken:' . print_r($result, true));
         if (!$result) {
             return false;

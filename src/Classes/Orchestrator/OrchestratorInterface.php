@@ -15,7 +15,7 @@ interface OrchestratorInterface
 
     public function setInitManagerNodeIp(Job $job): bool;
 
-    public function setClusterToken(Job $job): bool;
+    public function setClusterToken(Job $job, $result = ''): bool;
 
     public function provisionManager(Job $job): bool;
 }

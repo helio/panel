@@ -174,10 +174,17 @@ class ApiJobController extends AbstractController
     {
         $result = false;
 
+
         // have to get init manager node ip
         if (!$this->job->getInitManagerIp() && \count($this->job->getManagerNodes()) === 1) {
-            $result = OrchestratorFactory::getOrchestratorForInstance($this->instance)->setInitManagerNodeIp($this->job)
-                && OrchestratorFactory::getOrchestratorForInstance($this->instance)->setClusterToken($this->job);
+            $result = OrchestratorFactory::getOrchestratorForInstance($this->instance)->setInitManagerNodeIp($this->job);
+
+            if (($body = $this->request->getParsedBody()) && \array_key_exists('swarm_token', $body)) {
+                $this->job->setClusterToken($body['swarm_token'] ?? '');
+            } elseif (!$this->job->getClusterToken()) {
+                $result = $result && OrchestratorFactory::getOrchestratorForInstance($this->instance)->setClusterToken($this->job);
+            }
+
         }
 
         // provision missing redundancy nodes
