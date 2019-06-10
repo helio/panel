@@ -140,7 +140,7 @@ interface ApiInterface
      *         )
      *     ),
      *
-     *     @OA\Response(response="200", description="Create a Job",
+     *     @OA\Response(response="200", description="Job was created. WARNING: This request can take quite some time.",
      *         @OA\JsonContent(
      *           type="object",
      *           @OA\Property(
