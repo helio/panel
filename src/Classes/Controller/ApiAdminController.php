@@ -173,7 +173,9 @@ class ApiAdminController extends AbstractController
         }
 
 
-        return $this->render(['name' => 'profile::docker::backlog', 'jobs' => $jobList]);
+        return $this
+            ->setReturnType('yaml')
+            ->render(['name' => 'profile::docker::backlog', 'jobs' => $jobList]);
     }
 
 
@@ -198,20 +200,26 @@ class ApiAdminController extends AbstractController
             }
         }
 
+        $config = [
+            'profile::docker::clusters' => [
+                $servicename => [
+                    'service_name' => $servicename,
+                    'image' => $dcf->getImage(),
+                    'replicas' => $dcf->getReplicaCountForJob($this->job),
+                    'env' => $env,
+                ]
+            ]
+        ];
+
+        if ($dcf->getArgs()) {
+            $config['profile::docker::clusters'][$servicename]['args'] = '[' . implode(',', $dcf->getArgs()) . ']';
+        }
+        if ($dcf->getRegistry()) {
+            $config['profile::docker::clusters'][$servicename]['registry'] = $dcf->getRegistry();
+        }
+
         return $this
             ->setReturnType('yaml')
-            ->render([
-                    'profile::docker::clusters' => [
-                        $servicename => [
-                            'service_name' => $servicename,
-                            'image' => $dcf->getImage(),
-                            'replicas' => $dcf->getReplicaCountForJob($this->job),
-                            'env' => $env,
-                            'args' => '[' . implode(',', $dcf->getArgs()) . ']',
-                            'registry' => $dcf->getRegistry() ?? ''
-                        ]
-                    ]
-                ]
-            );
+            ->render($config);
     }
 }
