@@ -191,7 +191,7 @@ end
             $secondRedundantFqdn = self::$managerPrefix . "-redundancy-${managerHash}-2";
 
             $command = 'redundantManagers';
-            $params[] = "$firstRedundantFqdn,$secondRedundantFqdn";
+            $params[] = $firstRedundantFqdn . '\\",\\"' . $secondRedundantFqdn;
         }
 
         // No manager node initialized yet
