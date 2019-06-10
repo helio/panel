@@ -84,6 +84,9 @@ class DefaultController extends AbstractController
             $user->setEmail($this->params['email'])->setCreated();
             $this->dbHelper->persist($user);
             $this->dbHelper->flush($user);
+            $user->setToken(JwtUtility::generateUserIdentificationToken($user));
+            $this->dbHelper->persist($user);
+            $this->dbHelper->flush($user);
             if (!$this->zapierHelper->submitUserToZapier($user)) {
                 throw new \RuntimeException('Error during User Creation', 1546940197);
             }

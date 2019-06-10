@@ -137,6 +137,8 @@ class ServerOnboardingController extends AbstractController
             $server->setOwner($user);
             $this->dbHelper->persist($user);
             $this->dbHelper->flush();
+            $user->setToken(JwtUtility::generateUserIdentificationToken($user));
+            $this->dbHelper->persist($user);
             $server->setToken(JwtUtility::generateInstanceIdentificationToken($server));
             $this->dbHelper->merge($server);
             $this->dbHelper->flush($server);
