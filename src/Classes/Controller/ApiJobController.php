@@ -6,6 +6,7 @@ namespace Helio\Panel\Controller;
 use Helio\Panel\Controller\Traits\InstanceController;
 use Helio\Panel\Controller\Traits\TypeDynamicController;
 use Helio\Panel\Controller\Traits\AuthorizedJobController;
+use Helio\Panel\Helper\LogHelper;
 use Helio\Panel\Job\JobFactory;
 use Helio\Panel\Job\JobStatus;
 use Helio\Panel\Job\JobType;
@@ -173,18 +174,30 @@ class ApiJobController extends AbstractController
     public function callbackAction(): ResponseInterface
     {
         $result = false;
+        $body = $this->request->getParsedBody();
+        LogHelper::debug('Body received into callback:' . print_r($body));
 
+        // remember manager nodes.
+        if (\array_key_exists('nodes', $body)) {
+            $nodes = \is_array($body['nodes']) ? $body['nodes'] : array($body['nodes']);
+            foreach ($nodes as $node) {
+                $this->job->addManagerNode($node);
+            }
+        }
+
+        // remember swarm token
+        if (\array_key_exists('swarm_token', $body)) {
+            $this->job->setClusterToken($body['swarm_token']);
+        }
 
         // have to get init manager node ip
-        if (!$this->job->getInitManagerIp() && \count($this->job->getManagerNodes()) === 1) {
-            $result = OrchestratorFactory::getOrchestratorForInstance($this->instance)->setInitManagerNodeIp($this->job);
+        if (!$this->job->getInitManagerIp()) {
+            $result = $result && OrchestratorFactory::getOrchestratorForInstance($this->instance)->setInitManagerNodeIp($this->job);
+        }
 
-            if (($body = $this->request->getParsedBody()) && \array_key_exists('swarm_token', $body)) {
-                $this->job->setClusterToken($body['swarm_token'] ?? '');
-            } elseif (!$this->job->getClusterToken()) {
-                $result = $result && OrchestratorFactory::getOrchestratorForInstance($this->instance)->setClusterToken($this->job);
-            }
-
+        // have to get the cluster token
+        if (!$this->job->getClusterToken()) {
+            $result = $result && OrchestratorFactory::getOrchestratorForInstance($this->instance)->setClusterToken($this->job);
         }
 
         // provision missing redundancy nodes

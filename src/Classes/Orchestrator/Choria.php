@@ -136,6 +136,8 @@ end
      * @param Job $job
      * @param string $result
      * @return bool
+     *
+     * @deprecated
      */
     public function setClusterToken(Job $job, $result = ''): bool
     {
@@ -190,9 +192,8 @@ end
             if (!$job->getInitManagerIp()) {
                 return false;
             }
-            $firstRedundantFqdn = self::$managerPrefix . "${managerHash}-1" . self::$clusterDomain;
-            $secondRedundantFqdn = self::$managerPrefix . "${managerHash}-2" . self::$clusterDomain;
-            $job->addManagerNode($firstRedundantFqdn)->addManagerNode($secondRedundantFqdn);
+            $firstRedundantFqdn = self::$managerPrefix . "-redundancy-${managerHash}-1";
+            $secondRedundantFqdn = self::$managerPrefix . "-redundancy-${managerHash}-2";
 
             $command = 'redundantManagers';
             $params[] = "$firstRedundantFqdn,$secondRedundantFqdn";
@@ -200,8 +201,7 @@ end
 
         // No manager node initialized yet
         if (\count($job->getManagerNodes()) === 0) {
-            $managerFqdn = self::$managerPrefix . "${managerHash}-0" . self::$clusterDomain;
-            $job->addManagerNode($managerFqdn);
+            $managerFqdn = self::$managerPrefix . "-init-${managerHash}";
 
             $command = 'firstManager';
             $params[] = $managerFqdn;
@@ -211,7 +211,7 @@ end
         try {
             App::getApp()->getContainer()->get('dbHelper')->persist($job);
             App::getApp()->getContainer()->get('dbHelper')->flush($job);
-            $params[] = ServerUtility::getBaseUrl() . 'api/job/callback?jobid=' . $job->getId() . '&token=' . $job->getOwner()->getToken();
+            $params[] = ServerUtility::getBaseUrl() . 'api/job/callback?jobid=' . $job->getId() . '&token=' . $job->getToken();
             $params[] = $job->getId();
             $params[] = $job->getToken();
         } catch (\Exception $e) {

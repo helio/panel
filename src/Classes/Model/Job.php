@@ -431,7 +431,9 @@ class Job extends AbstractModel
      */
     public function addManagerNode(string $managerNode): Job
     {
-        $this->managerNodes[] = $managerNode;
+        if (!\in_array($managerNode, $this->managerNodes, true)) {
+            $this->managerNodes[] = $managerNode;
+        }
         return $this;
     }
 
