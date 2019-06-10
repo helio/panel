@@ -33,7 +33,7 @@ class Choria implements OrchestratorInterface
     /**
      * @var string
      */
-    private static $inventoryCommand = 'ssh %s@%s "mco inventory -F %s --script <(echo \\"
+    private static $inventoryCommand = 'ssh %s@%s "mco inventory %s --script <(echo \\"
 inventory do
   format \'{ \\\\\\"uptime\\\\\\": \\\\\\"%%s\\\\\\", \\\\\\"processor0\\\\\\": \\\\\\"%%s\\\\\\", \\\\\\"os\\\\\\": \\\\\\"%%s\\\\\\", \\\\\\"identity\\\\\\": \\\\\\"%%s\\\\\\", \\\\\\"processors\\\\\\": \\\\\\"%%s\\\\\\", \\\\\\"kernelrelease\\\\\\": \\\\\\"%%s\\\\\\", \\\\\\"memorysize\\\\\\": \\\\\\"%%s\\\\\\" }\'
   fields { [ facts[\'system_uptime\'][\'seconds\'], facts[\'processor0\'], facts[\'os\'][\'distro\'][\'description\'], identity, facts[\'processorcount\'], facts[\'kernelrelease\'], facts[\'memorysize\'] ] }
@@ -44,7 +44,7 @@ end
     /**
      * @ string
      */
-    protected static $getInitManagerIpCommand = 'ssh %s@%s "mco inventory -F %s --script <(echo \\"
+    protected static $getInitManagerIpCommand = 'ssh %s@%s "mco inventory %s --script <(echo \\"
 inventory do
   format \'%%s\'
   fields { [ facts[\'docker\'][\'Swarm\'][\'RemoteManagers\'][0][\'Addr\'] ] }
