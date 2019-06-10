@@ -172,7 +172,6 @@ class ApiAdminController extends AbstractController
             ];
         }
 
-
         return $this
             ->setReturnType('yaml')
             ->render(['name' => 'profile::docker::backlog', 'jobs' => $jobList]);

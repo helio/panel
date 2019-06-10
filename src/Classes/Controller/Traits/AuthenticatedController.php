@@ -32,10 +32,13 @@ trait AuthenticatedController
     /**
      * Persist
      */
-    protected function persistUser(): void {
-        $this->user->setLatestAction();
-        $this->user->setActive(true);
-        $this->dbHelper->persist($this->user);
-        $this->dbHelper->flush($this->user);
+    protected function persistUser(): void
+    {
+        if ($this->user) {
+            $this->user->setLatestAction();
+            $this->user->setActive(true);
+            $this->dbHelper->persist($this->user);
+            $this->dbHelper->flush($this->user);
+        }
     }
 }
