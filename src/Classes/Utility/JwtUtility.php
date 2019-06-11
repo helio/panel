@@ -11,6 +11,7 @@ use Helio\Panel\Middleware\ReAuthenticate;
 use Helio\Panel\Model\Instance;
 use Helio\Panel\Model\Job;
 use Helio\Panel\Model\User;
+use Monolog\Logger;
 use Slim\App;
 use Slim\Http\StatusCode;
 use Tuupola\Base62;
@@ -30,6 +31,7 @@ class JwtUtility
      * @param App $app
      *
      * NOTE: Middlewares are processed as a FILO stack, so beware their order
+     * @throws \Exception
      */
     public static function addMiddleware(App $app): void
     {
@@ -48,7 +50,7 @@ class JwtUtility
         $app->add(new LoadUserFromJwt());
 
         $app->add(new JwtAuthentication([
-            'logger' => $container['logger'],
+            'logger' => self::getLogger('jwt'),
             'secret' => ServerUtility::get('JWT_SECRET'),
             'rules' => [
                 new RequestPathRule([
@@ -82,7 +84,7 @@ class JwtUtility
         $app->add(new TokenAttributeToCookie());
 
         $app->add(new CorsMiddleware([
-            'logger' => $container['logger'],
+            'logger' => self::getLogger('cors'),
             'origin' => ['*'],
             'methods' => ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
             'headers.allow' => ['Authorization', 'If-Match', 'If-Unmodified-Since'],
@@ -220,5 +222,21 @@ class JwtUtility
         $token = sha1($id . $timstamp . $salt . ServerUtility::get('JWT_SECRET'));
 
         return $salt . ':' . $token;
+    }
+
+
+    /**
+     * @param string $suffix
+     * @return Logger
+     * @throws \Exception
+     */
+    protected static function getLogger(string $suffix): Logger
+    {
+        $filename = str_replace('.log', '-' . $suffix . '.log', LOG_DEST);
+        $logger = (new Logger('helio.panel.' . $suffix))
+            ->pushProcessor(new \Monolog\Processor\UidProcessor())
+            ->pushHandler(new \Monolog\Handler\StreamHandler($filename, LOG_LVL));
+        $logger::setTimezone(ServerUtility::getTimezoneObject());
+        return $logger;
     }
 }
