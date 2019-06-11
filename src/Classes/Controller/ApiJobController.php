@@ -170,6 +170,8 @@ class ApiJobController extends AbstractController
      * @return ResponseInterface
      *
      * @Route("/callback", methods={"POST", "GET"}, "name="job.callback")
+     *
+     * TODO: Switch to two callbacks, one for fqdn, the other when puppet db is ready (and we can get the manager IP etc.)
      */
     public function callbackAction(): ResponseInterface
     {
@@ -195,10 +197,6 @@ class ApiJobController extends AbstractController
 
         // have to get init manager node ip
         if (!$this->job->getInitManagerIp()) {
-            // TODO: Properly solve this issue that the catalog might not be ready here yet...
-            if (ServerUtility::isProd()) {
-                sleep(120);
-            }
             $result = $result && OrchestratorFactory::getOrchestratorForInstance($this->instance)->setInitManagerNodeIp($this->job);
         }
 
