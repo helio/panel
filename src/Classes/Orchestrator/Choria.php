@@ -73,12 +73,12 @@ end
     /**
      * @var string
      */
-    protected static $dispatchCommand = 'ssh %s@%s "mco tasks run helio::task -I %s"';
+    protected static $dispatchCommand = 'ssh %s@%s "mco tasks run helio::task::update --input \'{\\"cluster_address\\":\\"%s\\"}\'"';
 
     /**
      * @var string
      */
-    protected static $joinWorkersCommand = 'ssh %s@%s "mco tasks run cluster::join -I %s"';
+    protected static $joinWorkersCommand = 'ssh %s@%s "mco tasks run helio::queue --input \'{\\"cluster_join_token\\":\\"%s\\",\\"cluster_join_address\\":\\"%s\\",\\"cluster_join_count\\":\\"%s\\"}\'"';
 
 
     /**
@@ -180,6 +180,19 @@ end
      * @param Job $job
      * @return bool
      */
+    public function joinWorkers(Job $job): bool
+    {
+
+        $result = ServerUtility::executeShellCommand($this->parseCommand('joinWorkers', [$job->getClusterToken(), $job->getInitManagerIp(), 1]));
+        LogHelper::debug('response from choria at provision joinWorkers:' . print_r($result, true));
+        return true;
+    }
+
+
+    /**
+     * @param Job $job
+     * @return bool
+     */
     public function provisionManager(Job $job): bool
     {
         $managerHash = ServerUtility::getShortHashOfString($job->getId());
@@ -228,19 +241,6 @@ end
         $result = ServerUtility::executeShellCommand($this->parseCommand($command, $params));
         LogHelper::debug('response from choria at provision ' . $command . ':' . print_r($result, true));
         return $result;
-    }
-
-
-    /**
-     * @param Job $job
-     * @return bool
-     */
-    public function joinWorkers(Job $job): bool
-    {
-
-        $result = ServerUtility::executeShellCommand($this->parseCommand('joinWorkers', [$job->getManagerNodes()[0]]));
-        LogHelper::debug('response from choria at provision joinWorkers:' . print_r($result, true));
-        return true;
     }
 
 

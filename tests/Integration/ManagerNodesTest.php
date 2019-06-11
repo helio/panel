@@ -134,7 +134,9 @@ class ManagerNodesTest extends TestCase
         // simulate provisioning call backs
         $this->runApp('POST', $url, true, null, $this->callbackDataInit);
         $this->runApp('POST', $url, true, null, $this->callbackDataManagerIp);
-        $this->assertContains('cluster::join', ServerUtility::getLastExecutedShellCommand());
+        $this->assertContains('helio::queue', ServerUtility::getLastExecutedShellCommand());
+        $this->assertContains('1.2.3.4:2345', ServerUtility::getLastExecutedShellCommand());
+        $this->assertContains('blah', ServerUtility::getLastExecutedShellCommand());
 
         $this->runApp('POST', $url, true, null, $this->callbackDataRedundancy);
 
@@ -152,6 +154,8 @@ class ManagerNodesTest extends TestCase
         $this->runApp('POST', '/exec', true, null, ['jobid' => $this->job->getId(), 'token' => $this->job->getToken()]);
         $this->assertContains('ssh', ServerUtility::getLastExecutedShellCommand());
         $this->assertContains('helio::task', ServerUtility::getLastExecutedShellCommand());
+        $this->assertContains('manager-init-', ServerUtility::getLastExecutedShellCommand());
+        $this->assertContains('example.com', ServerUtility::getLastExecutedShellCommand());
     }
 
 
