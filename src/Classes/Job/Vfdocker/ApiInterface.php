@@ -25,6 +25,8 @@ use Psr\Http\Message\ResponseInterface;
  *     name="token"
  * )
  *
+ * @OA\Server(url="https://panel.idling.host")
+ *
  */
 interface ApiInterface
 {
@@ -133,7 +135,7 @@ interface ApiInterface
             }
         }",
      *         @OA\MediaType(
-     *             mediaType="application/x-yaml",
+     *             mediaType="application/json",
      *             @OA\Schema(
      *                 type="string"
      *             )
@@ -243,7 +245,7 @@ interface ApiInterface
             ]
         }",
      *         @OA\MediaType(
-     *             mediaType="application/x-yaml",
+     *             mediaType="application/json",
      *             @OA\Schema(
      *                 type="string"
      *             )
