@@ -87,7 +87,7 @@ class JwtUtility
             'logger' => self::getLogger('cors'),
             'origin' => ['*'],
             'methods' => ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
-            'headers.allow' => ['Authorization', 'If-Match', 'If-Unmodified-Since'],
+            'headers.allow' => ['Authorization', 'If-Match', 'If-Unmodified-Since', 'Content-Type'],
             'headers.expose' => ['Authorization', 'Etag'],
             'credentials' => true,
             'cache' => 60,
