@@ -265,7 +265,7 @@ class ApiAdminController extends AbstractController
             ];
 
             if ($dcf->getArgs()) {
-                $config['profile::docker::clusters'][$servicename]['args'] = '[' . implode(',', $dcf->getArgs()) . ']';
+                $config['profile::docker::clusters'][$servicename]['args'] = implode(' ', $dcf->getArgs());
             }
             if ($dcf->getRegistry()) {
                 $config['profile::docker::clusters'][$servicename]['registry'] = $dcf->getRegistry();
