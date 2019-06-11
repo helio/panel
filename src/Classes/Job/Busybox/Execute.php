@@ -50,7 +50,7 @@ class Execute implements JobInterface, DispatchableInterface
     {
         return (new DispatchConfig())
             ->setImage('gitlab.idling.host:4567/helio/runner/busybox:latest')
-            ->setArgs(['/bin/sh', '-c', '\'i=0; while $i < $LIMIT; do echo "$i: $(date)"; i=$((i+1)); sleep 10; done\''])
+            ->setArgs(['/bin/sh', '-c', '\'i=0; while $i < ${LIMIT:-500}; do echo "$i: $(date)"; i=$((i+1)); sleep 10; done\''])
             ->setEnvVariables([
                 'HELIO_JOBID' => $this->job->getId(),
                 'HELIO_TOKEN' => $this->job->getToken(),

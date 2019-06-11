@@ -78,7 +78,6 @@ abstract class AbstractModel
      * @Column(type="text")
      */
     protected $config = '';
-    private static $decodedConfig;
 
 
     public function __construct()
@@ -236,24 +235,12 @@ abstract class AbstractModel
      */
     public function getConfig(string $option = '')
     {
-        if (!self::$decodedConfig) {
-            self::$decodedConfig = json_decode($this->config, true);
-        }
+        $decodedConfig = json_decode($this->config, true);
 
         if ($option) {
-            return ArrayUtility::getFirstByDotNotation([self::$decodedConfig], [$option]) ?? '';
+            return ArrayUtility::getFirstByDotNotation([$decodedConfig], [$option]) ?? '';
         }
         return $this->config;
-    }
-
-
-    /**
-     * @return null|array
-     */
-    public function getDecodedConfig(): ?array
-    {
-        $this->getConfig();
-        return self::$decodedConfig;
     }
 
     /**

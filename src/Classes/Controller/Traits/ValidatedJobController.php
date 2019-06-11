@@ -24,6 +24,13 @@ trait ValidatedJobController
         return $this->job
             && JobType::isValidType($this->job->getType())
             && JobStatus::isValidActiveStatus($this->job->getStatus())
-            && JwtUtility::verifyJobIdentificationToken($this->job, $this->params['token']);
+            && (
+                JwtUtility::verifyJobIdentificationToken($this->job, $this->params['token'])
+                || (
+                    $this->user !== null
+                    && JwtUtility::verifyUserIdentificationToken($this->user, $this->params['token'])
+                    && ($this->user->isAdmin() || $this->user->getId() === $this->job->getOwner()->getId())
+                )
+            );
     }
 }

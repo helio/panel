@@ -203,7 +203,8 @@ class ApiJobController extends AbstractController
         }
 
         // finalize
-        if ($this->job->getInitManagerIp() && $this->job->getClusterToken() && \count($this->job->getManagerNodes()) === 3) {
+        // TODO: set redundancy to >= 3 again if needed
+        if ($this->job->getInitManagerIp() && $this->job->getClusterToken() && \count($this->job->getManagerNodes()) > 0) {
             $this->job->setStatus(JobStatus::READY);
             $this->persistJob();
         }

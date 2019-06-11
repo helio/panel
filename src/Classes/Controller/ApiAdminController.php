@@ -211,7 +211,7 @@ class ApiAdminController extends AbstractController
         }
 
         $dcf = JobFactory::getDispatchConfigOfJob($this->job)->getDispatchConfig();
-        $servicename = $this->job->getType() . '-' . $this->job->getId();
+        $serviceprefix = $this->job->getType() . '-' . $this->job->getId();
 
         $env = [];
         if ($dcf->getEnvVariables()) {
@@ -219,34 +219,64 @@ class ApiAdminController extends AbstractController
                 // it might be due to json array and object mixup, that value is still an array
                 if (\is_array($value)) {
                     foreach ($value as $subkey => $subvalue) {
-                        $env[] = "$subkey=$subvalue";
+                        $env[$subkey] = $subvalue;
                     }
                 } else {
-                    $env[] = "$key=$value";
+                    $env[$key] = $value;
                 }
             }
         }
 
-        $config = [
-            'profile::docker::clusters' => [
-                $servicename => [
-                    'service_name' => $servicename,
-                    'image' => $dcf->getImage(),
-                    'replicas' => $dcf->getReplicaCountForJob($this->job),
-                    'env' => $env,
-                ]
-            ]
-        ];
+        $services = [];
+        /** @var Task $task */
+        foreach ($this->job->getTasks() as $task) {
+            if (!TaskStatus::isValidPendingStatus($task->getStatus())) {
+                continue;
+            }
+            $servicename = $serviceprefix . '-' . $task->getId();
+            $taskEnv = [];
+            $yamlEnv = [];
 
-        if ($dcf->getArgs()) {
-            $config['profile::docker::clusters'][$servicename]['args'] = '[' . implode(',', $dcf->getArgs()) . ']';
-        }
-        if ($dcf->getRegistry()) {
-            $config['profile::docker::clusters'][$servicename]['registry'] = $dcf->getRegistry();
+            // merge Yaml Config
+            if ($task->getConfig('env')) {
+                foreach ($task->getConfig('env') as $key => $value) {
+                    // it might be due to json array and object mixup, that value is still an array
+                    if (\is_array($value)) {
+                        foreach ($value as $subkey => $subvalue) {
+                            $taskEnv[$subkey] = $subvalue;
+                        }
+                    } else {
+                        $taskEnv[$key] = $value;
+                    }
+                }
+                /** @noinspection SlowArrayOperationsInLoopInspection */
+                $taskEnv = \array_merge($env, $taskEnv);
+            } else {
+                $taskEnv = $env;
+            }
+
+            // make taskEnv docker yaml stuff compatible :(
+            foreach ($taskEnv as $item => $value) {
+                $yamlEnv[] = "$item=$value";
+            }
+
+            $services[$servicename] = [
+                'service_name' => $servicename,
+                'image' => $dcf->getImage(),
+                'replicas' => $dcf->getReplicaCountForJob($this->job),
+                'env' => $yamlEnv
+            ];
+
+            if ($dcf->getArgs()) {
+                $config['profile::docker::clusters'][$servicename]['args'] = '[' . implode(',', $dcf->getArgs()) . ']';
+            }
+            if ($dcf->getRegistry()) {
+                $config['profile::docker::clusters'][$servicename]['registry'] = $dcf->getRegistry();
+            }
         }
 
         return $this
             ->setReturnType('yaml')
-            ->render($config);
+            ->render(['profile::docker::clusters' => $services]);
     }
 }

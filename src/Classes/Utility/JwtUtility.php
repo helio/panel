@@ -66,7 +66,7 @@ class JwtUtility
                 $data['status'] = 'error';
                 $data['message'] = $arguments['message'];
 
-                if (strpos('application/json', ServerUtility::get('HTTP_ACCEPT', '')) !== false) {
+                if (strpos('application/json', ServerUtility::get('HTTP_ACCEPT', 'INVALID')) !== false) {
 
                     return CookieUtility::deleteCookie($response
                         ->withHeader('Content-Type', 'application/json')

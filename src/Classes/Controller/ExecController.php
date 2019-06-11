@@ -3,6 +3,7 @@
 namespace Helio\Panel\Controller;
 
 
+use Helio\Panel\Controller\Traits\AuthenticatedController;
 use Helio\Panel\Controller\Traits\InstanceController;
 use Helio\Panel\Controller\Traits\TaskController;
 use Helio\Panel\Controller\Traits\TypeApiController;
@@ -10,9 +11,11 @@ use Helio\Panel\Controller\Traits\ValidatedJobController;
 use Helio\Panel\Job\JobFactory;
 use Helio\Panel\Job\JobStatus;
 use Helio\Panel\Model\Task;
+use Helio\Panel\Model\User;
 use Helio\Panel\Orchestrator\OrchestratorFactory;
 use Helio\Panel\Task\TaskStatus;
 use Helio\Panel\Utility\ExecUtility;
+use Helio\Panel\Utility\JwtUtility;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\UploadedFileInterface;
 use Slim\Http\StatusCode;
@@ -35,6 +38,17 @@ class ExecController extends AbstractController
     }
     use TypeApiController;
 
+    public function setupUser(): bool {
+        $this->setupParams();
+        if (\array_key_exists('token', $this->params)) {
+            /** @var User $tryToFindUser */
+            $tryToFindUser = $this->dbHelper->getRepository(User::class)->findOneByToken($this->params['token']);
+            if ($tryToFindUser !== null && $tryToFindUser->isAdmin() && JwtUtility::verifyUserIdentificationToken($tryToFindUser, $this->params['token'])) {
+                $this->user = $tryToFindUser;
+            }
+        }
+        return true;
+    }
 
     /**
      * @return ResponseInterface
