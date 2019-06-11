@@ -13,6 +13,7 @@ use Helio\Panel\Model\Job;
 use Helio\Panel\Model\Task;
 use Helio\Panel\Job\JobFactory;
 use Helio\Panel\Model\Instance;
+use Helio\Panel\Orchestrator\OrchestratorFactory;
 use Helio\Panel\Task\TaskStatus;
 use Helio\Panel\Utility\ServerUtility;
 use Psr\Http\Message\ResponseInterface;
@@ -147,6 +148,26 @@ class ApiAdminController extends AbstractController
             'task_avg_wait' => $avgWaitQuery->getQuery()->getArrayResult()[0]['avg'],
             'stale_tasks' => $staleQuery->getQuery()->getArrayResult()[0]['count']
         ]);
+    }
+
+
+    /**
+     * @return ResponseInterface
+     *
+     * @Route("/redispatch", methods={"POST", "PUT", "GET"}, name="job.reexec")
+     */
+    public function execAction(): ResponseInterface
+    {
+        try {
+            if (!JobStatus::isValidActiveStatus($this->job->getStatus())) {
+                throw new \RuntimeException('job not ready');
+            }
+            OrchestratorFactory::getOrchestratorForInstance($this->instance)->dispatchJob($this->job);
+            $this->persistJob();
+            return $this->render(['status' => 'success']);
+        } catch (\Exception $e) {
+            return $this->render(['status' => 'error', 'reason' => $e->getMessage()], StatusCode::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 
 
