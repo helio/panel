@@ -180,6 +180,9 @@ end
         $managerHash = ServerUtility::getShortHashOfString($job->getId());
         $command = '';
 
+        if (\count($job->getManagerNodes()) === 3) {
+            return true;
+        }
         // only one manager node: need to provision two more
         if (\count($job->getManagerNodes()) === 1) {
 

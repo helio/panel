@@ -13,6 +13,9 @@ interface OrchestratorInterface
 
     public function dispatchJob(Job $job): bool;
 
+    /**
+     * @deprecated
+     */
     public function setInitManagerNodeIp(Job $job): bool;
 
     /**

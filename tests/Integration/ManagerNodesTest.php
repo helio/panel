@@ -45,6 +45,11 @@ class ManagerNodesTest extends TestCase
     /**
      * @var array
      */
+    protected $callbackDataManagerIp;
+
+    /**
+     * @var array
+     */
     protected $callbackDataRedundancy;
 
 
@@ -70,18 +75,21 @@ class ManagerNodesTest extends TestCase
         $this->assertNotEmpty($matches);
         $url = '/' . $matches[1];
 
-        $this->callbackDataInit = ['nodes' => 'manager-init-' . ServerUtility::getShortHashOfString($jobid) . '.example.com', 'docker_token' => 'blah'];
+        $this->callbackDataInit = ['nodes' => 'manager-init-' . ServerUtility::getShortHashOfString($jobid) . '.example.com', 'swarm_token' => 'blah'];
+        $this->callbackDataManagerIp = ['manager_ip' => '1.2.3.4:2345'];
         $this->callbackDataRedundancy = ['nodes' => [
             'manager-redundancy-' . ServerUtility::getShortHashOfString($jobid) . '-1.example.com',
             'manager-redundancy-' . ServerUtility::getShortHashOfString($jobid) . '-2.example.com'
         ], 'docker_token' => 'blah'];
 
+
+        // simulate provisioning call backs
         $this->runApp('POST', $url, true, null, $this->callbackDataInit);
 
         // fake it till we make it: since we cannot query puppet for the manager-IP, we force it here.
         /** @var Job $job */
         $job = $this->jobRepository->findOneById($jobid);
-        $job->setInitManagerIp('1.2.3.4');
+        $this->runApp('POST', $url, true, null, $this->callbackDataManagerIp);
         $this->infrastructure->getEntityManager()->persist($job);
         $this->infrastructure->getEntityManager()->flush();
 
@@ -123,9 +131,9 @@ class ManagerNodesTest extends TestCase
 
         $this->assertStringEndsWith('token=' . $this->user->getToken(), $url);
 
-        // call back
+        // simulate provisioning call backs
         $this->runApp('POST', $url, true, null, $this->callbackDataInit);
-        // call callback again, this time the manager node is "ready"
+        $this->runApp('POST', $url, true, null, $this->callbackDataManagerIp);
         $this->runApp('POST', $url, true, null, $this->callbackDataRedundancy);
 
         $job = $this->jobRepository->findOneById($jobid);
@@ -203,6 +211,9 @@ class ManagerNodesTest extends TestCase
 
 
         $this->runApp('POST', $callbackUrl, true, null, $this->callbackDataInit);
+        $this->assertEquals(StatusCode::HTTP_FAILED_DEPENDENCY, $statusResult->getStatusCode());
+
+        $this->runApp('POST', $callbackUrl, true, null, $this->callbackDataManagerIp);
         $this->assertEquals(StatusCode::HTTP_FAILED_DEPENDENCY, $statusResult->getStatusCode());
 
         $this->runApp('POST', $callbackUrl, true, null, $this->callbackDataRedundancy);

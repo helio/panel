@@ -171,11 +171,9 @@ class ApiJobController extends AbstractController
      *
      * @Route("/callback", methods={"POST", "GET"}, "name="job.callback")
      *
-     * TODO: Switch to two callbacks, one for fqdn, the other when puppet db is ready (and we can get the manager IP etc.)
      */
     public function callbackAction(): ResponseInterface
     {
-        $result = true;
         $body = $this->request->getParsedBody();
         LogHelper::debug('Body received into callback:' . print_r($body, true));
 
@@ -185,8 +183,6 @@ class ApiJobController extends AbstractController
             foreach ($nodes as $node) {
                 $this->job->addManagerNode($node);
             }
-        } else {
-            $result = false;
         }
 
         // remember swarm token
@@ -194,30 +190,25 @@ class ApiJobController extends AbstractController
             $this->job->setClusterToken($body['swarm_token']);
         }
 
-
-        // have to get init manager node ip
-        if (!$this->job->getInitManagerIp()) {
-            $result = $result && OrchestratorFactory::getOrchestratorForInstance($this->instance)->setInitManagerNodeIp($this->job);
+        // get manager IP
+        if (\array_key_exists('manager_ip', $body) && !$this->job->getInitManagerIp()) {
+            $this->job->setInitManagerIp($body['manager_ip']);
         }
 
-        // have to get the cluster token
-        if (!$this->job->getClusterToken()) {
-            $result = $result && OrchestratorFactory::getOrchestratorForInstance($this->instance)->setClusterToken($this->job);
-        }
+        $this->persistJob();
 
         // provision missing redundancy nodes
-        if ($this->job->getInitManagerIp() && \count($this->job->getManagerNodes()) < 3) {
-            $result = $result && OrchestratorFactory::getOrchestratorForInstance($this->instance)->provisionManager($this->job);
+        if ($this->job->getInitManagerIp()) {
+            OrchestratorFactory::getOrchestratorForInstance($this->instance)->provisionManager($this->job);
         }
 
         // finalize
-        if ($result !== false && \count($this->job->getManagerNodes()) === 3) {
+        if ($this->job->getInitManagerIp() && $this->job->getClusterToken() && \count($this->job->getManagerNodes()) === 3) {
             $this->job->setStatus(JobStatus::READY);
             $this->persistJob();
-            return $this->render(['message' => 'ok']);
         }
 
-        return $this->render(['message' => 'unknown error', StatusCode::HTTP_INTERNAL_SERVER_ERROR]);
+        return $this->render(['message' => 'ok']);
 
     }
 
