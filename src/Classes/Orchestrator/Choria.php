@@ -73,7 +73,12 @@ end
     /**
      * @var string
      */
-    protected static $dispatchCommand = 'ssh %s@%s "mco tasks run docker::swarm_token --node_role manager -I %s"';
+    protected static $dispatchCommand = 'ssh %s@%s "mco tasks run helio::task -I %s"';
+
+    /**
+     * @var string
+     */
+    protected static $joinWorkersCommand = 'ssh %s@%s "mco tasks run cluster::join -I %s"';
 
 
     /**
@@ -223,6 +228,19 @@ end
         $result = ServerUtility::executeShellCommand($this->parseCommand($command, $params));
         LogHelper::debug('response from choria at provision ' . $command . ':' . print_r($result, true));
         return $result;
+    }
+
+
+    /**
+     * @param Job $job
+     * @return bool
+     */
+    public function joinWorkers(Job $job): bool
+    {
+
+        $result = ServerUtility::executeShellCommand($this->parseCommand('joinWorkers', [$job->getManagerNodes()[0]]));
+        LogHelper::debug('response from choria at provision joinWorkers:' . print_r($result, true));
+        return true;
     }
 
 

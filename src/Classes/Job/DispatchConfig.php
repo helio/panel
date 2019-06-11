@@ -11,6 +11,7 @@ class DispatchConfig
     protected $args = [];
     protected $registry = [];
     protected $taskPerReplica = 5;
+    protected $fixedReplicaCount;
 
     /**
      * @return string
@@ -84,17 +85,6 @@ class DispatchConfig
         return $this;
     }
 
-
-    /**
-     * @return int
-     * @deprecated
-     */
-    public function getTaskCountPerReplica(): int
-    {
-        return $this->taskPerReplica;
-    }
-
-
     /**
      * @return int
      */
@@ -113,6 +103,24 @@ class DispatchConfig
         return $this;
     }
 
+    /**
+     * @return mixed
+     */
+    public function getFixedReplicaCount()
+    {
+        return $this->fixedReplicaCount;
+    }
+
+    /**
+     * @param mixed $fixedReplicaCount
+     * @return DispatchConfig
+     */
+    public function setFixedReplicaCount($fixedReplicaCount): DispatchConfig
+    {
+        $this->fixedReplicaCount = $fixedReplicaCount;
+        return $this;
+    }
+
 
     /**
      * @param Job $job
@@ -124,7 +132,11 @@ class DispatchConfig
             return 0;
         }
 
-        return 1 + ceil(($job->getActiveTaskCount() - ($job->getActiveTaskCount() % $this->getTaskCountPerReplica())) / $this->getTaskCountPerReplica());
+        if ($this->getFixedReplicaCount()) {
+            return $this->getFixedReplicaCount();
+        }
+
+        return 1 + ceil(($job->getActiveTaskCount() - ($job->getActiveTaskCount() % $this->getTaskPerReplica())) / $this->getTaskPerReplica());
     }
 
 }

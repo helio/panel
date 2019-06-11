@@ -101,7 +101,13 @@ class AutoscalerTest extends TestCase
      */
     public function testNoReplicasOnEmptyJob(): void
     {
+
+        $task = (new Task())->setJob($this->job)->setStatus(TaskStatus::UNKNOWN);
+        $this->infrastructure->getEntityManager()->persist($task);
+        $this->infrastructure->getEntityManager()->flush();
+
         $result = $this->exec();
+
         $replicas = $this->findValueOfKeyInHiera($result, 'replicas');
         $this->assertEquals(200, $result->getStatusCode());
         $this->assertEquals(0, $replicas);
@@ -129,7 +135,7 @@ class AutoscalerTest extends TestCase
      */
     public function testReplicaIncreases(): void
     {
-        $tasks = 1 + JobFactory::getDispatchConfigOfJob($this->job)->getDispatchConfig()->getTaskCountPerReplica();
+        $tasks = 1 + JobFactory::getDispatchConfigOfJob($this->job)->getDispatchConfig()->getTaskPerReplica();
         while ($tasks >= 0) {
             $task = (new Task())->setJob($this->job)->setStatus(TaskStatus::READY);
             $this->infrastructure->getEntityManager()->persist($task);

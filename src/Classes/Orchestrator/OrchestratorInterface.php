@@ -24,4 +24,6 @@ interface OrchestratorInterface
     public function setClusterToken(Job $job): bool;
 
     public function provisionManager(Job $job): bool;
+
+    public function joinWorkers(Job $job): bool;
 }

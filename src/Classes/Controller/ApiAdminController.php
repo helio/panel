@@ -230,9 +230,6 @@ class ApiAdminController extends AbstractController
         $services = [];
         /** @var Task $task */
         foreach ($this->job->getTasks() as $task) {
-            if (!TaskStatus::isValidPendingStatus($task->getStatus())) {
-                continue;
-            }
             $servicename = $serviceprefix . '-' . $task->getId();
             $taskEnv = [];
             $yamlEnv = [];

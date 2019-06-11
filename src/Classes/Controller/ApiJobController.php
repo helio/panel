@@ -205,6 +205,8 @@ class ApiJobController extends AbstractController
         // finalize
         // TODO: set redundancy to >= 3 again if needed
         if ($this->job->getInitManagerIp() && $this->job->getClusterToken() && \count($this->job->getManagerNodes()) > 0) {
+            // TODO: properly implement this.
+            OrchestratorFactory::getOrchestratorForInstance($this->instance)->joinWorkers($this->job);
             $this->job->setStatus(JobStatus::READY);
             $this->persistJob();
         }

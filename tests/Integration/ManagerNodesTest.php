@@ -134,14 +134,13 @@ class ManagerNodesTest extends TestCase
         // simulate provisioning call backs
         $this->runApp('POST', $url, true, null, $this->callbackDataInit);
         $this->runApp('POST', $url, true, null, $this->callbackDataManagerIp);
+        $this->assertContains('cluster::join', ServerUtility::getLastExecutedShellCommand());
+
         $this->runApp('POST', $url, true, null, $this->callbackDataRedundancy);
 
         $job = $this->jobRepository->findOneById($jobid);
         $this->assertEquals(JobStatus::READY, $job->getStatus());
         $this->assertCount(3, $job->getManagerNodes());
-        $this->assertNotContains('manager-init-' . ServerUtility::getShortHashOfString($jobid), ServerUtility::getLastExecutedShellCommand());
-        $this->assertContains('manager-redundancy-' . ServerUtility::getShortHashOfString($jobid) . '-1', ServerUtility::getLastExecutedShellCommand());
-        $this->assertContains('manager-redundancy-' . ServerUtility::getShortHashOfString($jobid) . '-2', ServerUtility::getLastExecutedShellCommand());
     }
 
 
@@ -152,7 +151,7 @@ class ManagerNodesTest extends TestCase
     {
         $this->runApp('POST', '/exec', true, null, ['jobid' => $this->job->getId(), 'token' => $this->job->getToken()]);
         $this->assertContains('ssh', ServerUtility::getLastExecutedShellCommand());
-        $this->assertContains('docker::swarm_token', ServerUtility::getLastExecutedShellCommand());
+        $this->assertContains('helio::task', ServerUtility::getLastExecutedShellCommand());
     }
 
 
@@ -163,7 +162,7 @@ class ManagerNodesTest extends TestCase
     {
         $this->runApp('POST', '/exec', true, null, ['jobid' => $this->job->getId(), 'token' => $this->job->getToken()]);
         $this->assertContains('ssh', ServerUtility::getLastExecutedShellCommand());
-        $this->assertContains('docker::swarm_token', ServerUtility::getLastExecutedShellCommand());
+        $this->assertContains('helio::task', ServerUtility::getLastExecutedShellCommand());
 
         ServerUtility::resetLastExecutedCommand();
 
@@ -177,14 +176,14 @@ class ManagerNodesTest extends TestCase
      */
     public function testReplicaGetAdjustedOnManyNewTasks(): void
     {
-        $i = 1 + JobFactory::getDispatchConfigOfJob($this->job)->getDispatchConfig()->getTaskCountPerReplica();
+        $i = 1 + JobFactory::getDispatchConfigOfJob($this->job)->getDispatchConfig()->getTaskPerReplica();
         do {
             --$i;
             $this->runApp('POST', '/exec', true, null, ['jobid' => $this->job->getId(), 'token' => $this->job->getToken()])->getBody();
         } while ($i > 0);
 
         $this->assertContains('ssh', ServerUtility::getLastExecutedShellCommand());
-        $this->assertContains('docker::swarm_token', ServerUtility::getLastExecutedShellCommand());
+        $this->assertContains('helio::task', ServerUtility::getLastExecutedShellCommand());
     }
 
 

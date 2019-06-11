@@ -3,7 +3,6 @@
 namespace Helio\Panel\Controller;
 
 
-use Helio\Panel\Controller\Traits\AuthenticatedController;
 use Helio\Panel\Controller\Traits\InstanceController;
 use Helio\Panel\Controller\Traits\TaskController;
 use Helio\Panel\Controller\Traits\TypeApiController;
