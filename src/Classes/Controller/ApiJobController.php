@@ -192,6 +192,9 @@ class ApiJobController extends AbstractController
             $this->job->setClusterToken($body['swarm_token']);
         }
 
+        // TODO: Properly solve this issue that the catalog might not be ready here yet...
+        sleep(60);
+
         // have to get init manager node ip
         if (!$this->job->getInitManagerIp()) {
             $result = $result && OrchestratorFactory::getOrchestratorForInstance($this->instance)->setInitManagerNodeIp($this->job);

@@ -195,7 +195,14 @@ class ApiAdminController extends AbstractController
         $env = [];
         if ($dcf->getEnvVariables()) {
             foreach ($dcf->getEnvVariables() as $key => $value) {
-                $env[] = "$key=$value";
+                // it might be due to json array and object mixup, that value is still an array
+                if (\is_array($value)) {
+                    foreach ($value as $subkey => $subvalue) {
+                        $env[] = "$subkey=$subvalue";
+                    }
+                } else {
+                    $env[] = "$key=$value";
+                }
             }
         }
 
