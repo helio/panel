@@ -193,7 +193,9 @@ class ApiJobController extends AbstractController
         }
 
         // TODO: Properly solve this issue that the catalog might not be ready here yet...
-        sleep(60);
+        if (ServerUtility::isProd()) {
+            sleep(60);
+        }
 
         // have to get init manager node ip
         if (!$this->job->getInitManagerIp()) {
