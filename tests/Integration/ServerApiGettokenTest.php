@@ -59,7 +59,7 @@ class ServerApiGettokenTest extends TestCase
      */
     public function testUserDoesntExist(): void
     {
-        $this->assertEquals(404, $this->exec()->getStatusCode());
+        $this->assertEquals(403, $this->exec()->getStatusCode());
     }
 
     /**
@@ -102,6 +102,7 @@ class ServerApiGettokenTest extends TestCase
      */
     public function testIpNotSet(): void
     {
+        $this->markTestSkipped('IP Protection removed due to conflicts and it\'s been an insufficient security measures anyways.');
         $this->instance->setOwner($this->user);
         $this->infrastructure->import($this->user);
         $this->infrastructure->import($this->instance);
@@ -115,6 +116,7 @@ class ServerApiGettokenTest extends TestCase
      */
     public function testIpNotProperlySet(): void
     {
+        $this->markTestSkipped('IP Protection removed due to conflicts and it\'s been an insufficient security measures anyways.');
         $this->instance->setOwner($this->user);
         $this->infrastructure->import($this->user);
         $this->infrastructure->import($this->instance->setIp('1.2.3.4'));
