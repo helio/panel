@@ -128,13 +128,14 @@ class DispatchConfig
      */
     public function getReplicaCountForJob(Job $job): int
     {
+        if ($this->getFixedReplicaCount()) {
+            return $this->getFixedReplicaCount();
+        }
+
         if ($job->getActiveTaskCount() === 0) {
             return 0;
         }
 
-        if ($this->getFixedReplicaCount()) {
-            return $this->getFixedReplicaCount();
-        }
 
         return 1 + ceil(($job->getActiveTaskCount() - ($job->getActiveTaskCount() % $this->getTaskPerReplica())) / $this->getTaskPerReplica());
     }
