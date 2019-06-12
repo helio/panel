@@ -186,15 +186,15 @@ class ApiJobController extends AbstractController
         }
 
         // remember swarm token
-        if (\array_key_exists('swarm_token_worker', $body) && !$this->job->getClusterToken()) {
+        if (\array_key_exists('swarm_token_worker', $body)) {
             $this->job->setClusterToken($body['swarm_token_worker']);
         }
-        if (\array_key_exists('swarm_token_manager', $body) && !$this->job->getManagerToken()) {
+        if (\array_key_exists('swarm_token_manager', $body)) {
             $this->job->setManagerToken($body['swarm_token_manager']);
         }
 
         // get manager IP
-        if (\array_key_exists('manager_ip', $body) && !$this->job->getInitManagerIp()) {
+        if (\array_key_exists('manager_ip', $body)) {
             $this->job->setInitManagerIp($body['manager_ip']);
         }
 
