@@ -164,8 +164,9 @@ interface ApiInterface
      *
      * @return ResponseInterface
      */
-    public function addJob(): ResponseInterface;
 
+
+    public function addJob(): ResponseInterface;
     /**
      * @OA\Delete(
      *     path="/api/job/remove",
@@ -189,6 +190,7 @@ interface ApiInterface
      */
     public function removeJob(): ResponseInterface;
 
+
     /**
      * @OA\Get(
      *     path="/api/job/isready",
@@ -211,6 +213,7 @@ interface ApiInterface
      * @return ResponseInterface
      */
     public function isJobReady(): ResponseInterface;
+
 
     /**
      * @OA\Post(
@@ -260,4 +263,50 @@ interface ApiInterface
      * @return ResponseInterface
      */
     public function execute(): ResponseInterface;
+
+
+    /**
+     * @OA\Post(
+     *     path="/exec/work/submitresult",
+     *     @OA\Parameter(
+     *         name="taskid",
+     *         in="query",
+     *         description="Id of the current Task",
+     *         required=true,
+     *         @Oa\Items(
+     *             type="string"
+     *         )
+     *     ),
+     *     @OA\RequestBody(
+     *         description=">- Arbitrary Job result data as JSON
+
+    {
+        "success":true
+    }",
+     *         @OA\MediaType(
+     *             mediaType="application/json",
+     *             @OA\Schema(
+     *                 type="string"
+     *             )
+     *         )
+     *     ),
+     *
+     *     @OA\Response(response="200", description="Create a Job",
+     *         @OA\JsonContent(
+     *           type="object",
+     *           @OA\Property(
+     *               property="success",
+     *               type="string",
+     *               description="boolean if the execution was successful"
+     *           )
+     *         )
+     *     ),
+     *     security={
+     *         {"authByJobtoken": {"any"}}
+     *     }
+     * )
+     *
+     * @return ResponseInterface
+     */
+    public function submitresult(): ResponseInterface;
 }
