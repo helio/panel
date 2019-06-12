@@ -277,6 +277,15 @@ interface ApiInterface
      *             type="string"
      *         )
      *     ),
+     *     @OA\Parameter(
+     *         name="jobid",
+     *         in="query",
+     *         description="Id of the job that the task belongs to",
+     *         required=true,
+     *         @Oa\Items(
+     *             type="string"
+     *         )
+     *     ),
      *     @OA\RequestBody(
      *         description=">- Arbitrary Job result data as JSON
 
