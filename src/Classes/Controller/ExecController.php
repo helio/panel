@@ -65,7 +65,7 @@ class ExecController extends AbstractController
             $job->run($this->params, $this->request, $this->response);
             $newReplicaCount = JobFactory::getDispatchConfigOfJob($this->job)->getDispatchConfig()->getReplicaCountForJob($this->job);
 
-            if ($previousReplicaCount !== $newReplicaCount) {
+            if ($previousReplicaCount !== $newReplicaCount || JobFactory::getDispatchConfigOfJob($this->job)->getDispatchConfig()->getFixedReplicaCount()) {
                 OrchestratorFactory::getOrchestratorForInstance($this->instance)->dispatchJob($this->job);
                 $this->persistJob();
             }
