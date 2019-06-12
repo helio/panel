@@ -213,12 +213,12 @@ class ApiAdminController extends AbstractController
         $services = [];
         /** @var Task $task */
         foreach ($this->job->getTasks() as $task) {
-            $dcfj = JobFactory::getDispatchConfigOfJob($this->job, $task)->getDispatchConfig();
+            $dcfjt = JobFactory::getDispatchConfigOfJob($this->job, $task)->getDispatchConfig();
             $serviceprefix = $this->job->getType() . '-' . $this->job->getId();
 
             $env = [];
-            if ($dcfj->getEnvVariables()) {
-                foreach ($dcfj->getEnvVariables() as $key => $value) {
+            if ($dcfjt->getEnvVariables()) {
+                foreach ($dcfjt->getEnvVariables() as $key => $value) {
                     // it might be due to json array and object mixup, that value is still an array
                     if (\is_array($value)) {
                         foreach ($value as $subkey => $subvalue) {
@@ -258,13 +258,13 @@ class ApiAdminController extends AbstractController
             // compose service config
             $services[$servicename] = [
                 'service_name' => $servicename,
-                'image' => $dcfj->getImage(),
-                'replicas' => $dcfj->getReplicaCountForJob($this->job),
+                'image' => $dcfjt->getImage(),
+                'replicas' => $dcfjt->getReplicaCountForJob($this->job),
                 'env' => $yamlEnv,
             ];
 
             // set args if present
-            $args = $task->getConfig('args') ?: $dcfj->getArgs();
+            $args = $task->getConfig('args') ?: $dcfjt->getArgs();
             if ($args) {
                 $services[$servicename]['args'] = implode(' ', $args);
             }
@@ -272,11 +272,14 @@ class ApiAdminController extends AbstractController
 
         // compose resulting yaml
         $result = [];
-        if ($dcfj->getRegistry()) {
-            $result['profile::docker::private_registry'] = $dcfj->getRegistry();
+
+        $dcfj = JobFactory::getDispatchConfigOfJob($this->job)->getDispatchConfig();
+        {
+            if ($dcfj->getRegistry()) {
+                $result['profile::docker::private_registry'] = $dcfj->getRegistry();
+            }
         }
         $result['profile::docker::clusters'] = $services;
-
 
         return $this
             ->setReturnType('yaml')

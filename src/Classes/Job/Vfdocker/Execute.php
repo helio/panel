@@ -10,6 +10,7 @@ use Helio\Panel\Job\JobInterface;
 use Helio\Panel\Model\Job;
 use Helio\Panel\Model\Task;
 use Helio\Panel\Task\TaskStatus;
+use Helio\Panel\Utility\ExecUtility;
 use Helio\Panel\Utility\ServerUtility;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -78,7 +79,7 @@ class Execute implements JobInterface, DispatchableInterface
                 array_merge($this->job->getConfig('env', []), [
                     'HELIO_JOBID' => $this->job->getId(),
                     'HELIO_TOKEN' => $this->job->getToken(),
-                    'REPORT_URL' => ServerUtility::getBaseUrl() . '/exec/work/submitresult?taskid=' . $this->task->getId() . '&token=' . $this->job->getToken()
+                    'REPORT_URL' => ServerUtility::getBaseUrl() . ExecUtility::getExecUrl('work/submitresult', $this->task, $this->job)
                 ])
             )
             ->setRegistry($this->job->getConfig('registry', []));
