@@ -139,9 +139,13 @@ class ServerUtility
         LogHelper::debug('executing shell command:' . "\n${command}");
         if (self::$testMode) {
             self::$lastExecutedShellCommand[] = $command;
-            return \Helio\Test\Infrastructure\Utility\ServerUtility::getMockResultForShellCommand($command);
         }
-        return trim(@shell_exec($command));
+
+        if (self::isProd() || self::get('ENFORCE_SYS_EXEC', false)) {
+            return trim(@shell_exec($command));
+        }
+
+        return \Helio\Test\Infrastructure\Utility\ServerUtility::getMockResultForShellCommand($command);
     }
 
 
