@@ -122,6 +122,14 @@ class Job extends AbstractModel
 
 
     /**
+     * @var string
+     *
+     * @Column
+     */
+    protected $managerToken = '';
+
+
+    /**
      * @var array<string>
      *
      * @Column(type="simple_array", nullable=TRUE)
@@ -486,6 +494,24 @@ class Job extends AbstractModel
     public function setClusterToken(string $clusterToken): Job
     {
         $this->clusterToken = $clusterToken;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getManagerToken(): string
+    {
+        return $this->managerToken;
+    }
+
+    /**
+     * @param string $managerToken
+     * @return Job
+     */
+    public function setManagerToken(string $managerToken): Job
+    {
+        $this->managerToken = $managerToken;
         return $this;
     }
 

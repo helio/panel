@@ -66,6 +66,8 @@ end
 
     /**
      * @var string
+     *
+     * TODO: implement token (,\\"master_token\\":\\"%s\\")
      */
     protected static $redundantManagersCommand = 'ssh %s@%s "mco playbook run infrastructure::gce::create --input \'{\\"node\\":[\\"%s\\"],\\"callback\\":\\"%s\\",\\"id\\":\\"%s\\",\\"token\\":\\"%s\\"}\'" 2>/dev/null >/dev/null &';
 
@@ -73,12 +75,12 @@ end
     /**
      * @var string
      */
-    protected static $dispatchCommand = 'ssh %s@%s "mco tasks run helio::task::update --input \'{\\"cluster_address\\":\\"%s\\"}\'"';
+    protected static $dispatchCommand = 'ssh %s@%s "mco playbook run helio::task::update --input \'{\\"cluster_address\\":\\"%s\\"}\'"';
 
     /**
      * @var string
      */
-    protected static $joinWorkersCommand = 'ssh %s@%s "mco tasks run helio::queue --input \'{\\"cluster_join_token\\":\\"%s\\",\\"cluster_join_address\\":\\"%s\\",\\"cluster_join_count\\":\\"%s\\"}\'"';
+    protected static $joinWorkersCommand = 'ssh %s@%s "mco playbook run helio::queue --input \'{\\"cluster_join_token\\":\\"%s\\",\\"cluster_join_address\\":\\"%s\\",\\"cluster_join_count\\":\\"%s\\"}\'"';
 
 
     /**
@@ -213,6 +215,8 @@ end
 
             $command = 'redundantManagers';
             $params[] = $firstRedundantFqdn . '\\",\\"' . $secondRedundantFqdn;
+            // TODO: implement token
+            //$params[] = $job->getManagerToken();
         }
 
         // No manager node initialized yet
