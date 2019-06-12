@@ -274,7 +274,7 @@ class ApiAdminController extends AbstractController
         // compose resulting yaml
         $result = [];
         if ($dcf->getRegistry()) {
-            $result['profile::docker::registry'] = $dcf->getRegistry();
+            $result['profile::docker::private_registry'] = $dcf->getRegistry();
         }
         $result['profile::docker::clusters'] = $services;
 
