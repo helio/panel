@@ -210,26 +210,25 @@ class ApiAdminController extends AbstractController
             return $this->render([], StatusCode::HTTP_NOT_ACCEPTABLE);
         }
 
-        $dcf = JobFactory::getDispatchConfigOfJob($this->job)->getDispatchConfig();
-        $serviceprefix = $this->job->getType() . '-' . $this->job->getId();
-
-        $env = [];
-        if ($dcf->getEnvVariables()) {
-            foreach ($dcf->getEnvVariables() as $key => $value) {
-                // it might be due to json array and object mixup, that value is still an array
-                if (\is_array($value)) {
-                    foreach ($value as $subkey => $subvalue) {
-                        $env[$subkey] = $subvalue;
-                    }
-                } else {
-                    $env[$key] = $value;
-                }
-            }
-        }
-
         $services = [];
         /** @var Task $task */
         foreach ($this->job->getTasks() as $task) {
+            $dcfj = JobFactory::getDispatchConfigOfJob($this->job, $task)->getDispatchConfig();
+            $serviceprefix = $this->job->getType() . '-' . $this->job->getId();
+
+            $env = [];
+            if ($dcfj->getEnvVariables()) {
+                foreach ($dcfj->getEnvVariables() as $key => $value) {
+                    // it might be due to json array and object mixup, that value is still an array
+                    if (\is_array($value)) {
+                        foreach ($value as $subkey => $subvalue) {
+                            $env[$subkey] = $subvalue;
+                        }
+                    } else {
+                        $env[$key] = $value;
+                    }
+                }
+            }
             $servicename = $serviceprefix . '-' . $task->getId();
             $taskEnv = [];
             $yamlEnv = [];
@@ -259,13 +258,13 @@ class ApiAdminController extends AbstractController
             // compose service config
             $services[$servicename] = [
                 'service_name' => $servicename,
-                'image' => $dcf->getImage(),
-                'replicas' => $dcf->getReplicaCountForJob($this->job),
+                'image' => $dcfj->getImage(),
+                'replicas' => $dcfj->getReplicaCountForJob($this->job),
                 'env' => $yamlEnv,
             ];
 
             // set args if present
-            $args = $task->getConfig('args') ?: $dcf->getArgs();
+            $args = $task->getConfig('args') ?: $dcfj->getArgs();
             if ($args) {
                 $services[$servicename]['args'] = implode(' ', $args);
             }
@@ -273,8 +272,8 @@ class ApiAdminController extends AbstractController
 
         // compose resulting yaml
         $result = [];
-        if ($dcf->getRegistry()) {
-            $result['profile::docker::private_registry'] = $dcf->getRegistry();
+        if ($dcfj->getRegistry()) {
+            $result['profile::docker::private_registry'] = $dcfj->getRegistry();
         }
         $result['profile::docker::clusters'] = $services;
 
