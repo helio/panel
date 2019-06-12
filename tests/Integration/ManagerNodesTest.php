@@ -157,10 +157,11 @@ class ManagerNodesTest extends TestCase
     public function testReplicaGetAppliedOnNewTask(): void
     {
         $this->runApp('POST', '/exec', true, null, ['jobid' => $this->job->getId(), 'token' => $this->job->getToken()]);
-        $this->assertContains('ssh', ServerUtility::getLastExecutedShellCommand());
-        $this->assertContains('helio::task', ServerUtility::getLastExecutedShellCommand());
-        $this->assertContains('manager-init-', ServerUtility::getLastExecutedShellCommand());
-        $this->assertContains('example.com', ServerUtility::getLastExecutedShellCommand());
+
+        $this->assertContains('helio::queue', ServerUtility::getLastExecutedShellCommand());
+        $this->assertContains('helio::task', ServerUtility::getLastExecutedShellCommand(1));
+        $this->assertContains('manager-init-', ServerUtility::getLastExecutedShellCommand(1));
+        $this->assertContains('example.com', ServerUtility::getLastExecutedShellCommand(1));
     }
 
 
@@ -170,8 +171,9 @@ class ManagerNodesTest extends TestCase
     public function testReplicaDontGetAppliedTwiceOnTwoNewTasks(): void
     {
         $this->runApp('POST', '/exec', true, null, ['jobid' => $this->job->getId(), 'token' => $this->job->getToken()]);
-        $this->assertContains('ssh', ServerUtility::getLastExecutedShellCommand());
-        $this->assertContains('helio::task', ServerUtility::getLastExecutedShellCommand());
+
+        $this->assertContains('helio::queue', ServerUtility::getLastExecutedShellCommand());
+        $this->assertContains('helio::task', ServerUtility::getLastExecutedShellCommand(1));
 
         ServerUtility::resetLastExecutedCommand();
 
@@ -191,8 +193,8 @@ class ManagerNodesTest extends TestCase
             $this->runApp('POST', '/exec', true, null, ['jobid' => $this->job->getId(), 'token' => $this->job->getToken()])->getBody();
         } while ($i > 0);
 
-        $this->assertContains('ssh', ServerUtility::getLastExecutedShellCommand());
-        $this->assertContains('helio::task', ServerUtility::getLastExecutedShellCommand());
+        $this->assertContains('helio::queue', ServerUtility::getLastExecutedShellCommand());
+        $this->assertContains('helio::task', ServerUtility::getLastExecutedShellCommand(1));
     }
 
 
