@@ -75,7 +75,7 @@ class ManagerNodesTest extends TestCase
         $this->assertNotEmpty($matches);
         $url = '/' . $matches[1];
 
-        $this->callbackDataInit = ['nodes' => 'manager-init-' . ServerUtility::getShortHashOfString($jobid) . '.example.com', 'swarm_token' => 'blah'];
+        $this->callbackDataInit = ['nodes' => 'manager-init-' . ServerUtility::getShortHashOfString($jobid) . '.example.com', 'swarm_token_manager' => 'blah:manager', 'swarm_token_worker' => 'blah:worker'];
         $this->callbackDataManagerIp = ['manager_ip' => '1.2.3.4:2345'];
         $this->callbackDataRedundancy = ['nodes' => [
             'manager-redundancy-' . ServerUtility::getShortHashOfString($jobid) . '-1.example.com',
@@ -134,9 +134,14 @@ class ManagerNodesTest extends TestCase
         // simulate provisioning call backs
         $this->runApp('POST', $url, true, null, $this->callbackDataInit);
         $this->runApp('POST', $url, true, null, $this->callbackDataManagerIp);
+
+        // TODO: Reenable this assertion as soon as the manager Token in back in the game.
+        //$this->assertContains('blah:manager', ServerUtility::getLastExecutedShellCommand(1));
+
+        // TODO: Move these assertions below callbackDataRedundancy as soon as job is supposed to have redundant managers.
         $this->assertContains('helio::queue', ServerUtility::getLastExecutedShellCommand());
         $this->assertContains('1.2.3.4:2345', ServerUtility::getLastExecutedShellCommand());
-        $this->assertContains('blah', ServerUtility::getLastExecutedShellCommand());
+        $this->assertContains('blah:worker', ServerUtility::getLastExecutedShellCommand());
 
         $this->runApp('POST', $url, true, null, $this->callbackDataRedundancy);
 

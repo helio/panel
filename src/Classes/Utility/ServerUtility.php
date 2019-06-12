@@ -21,9 +21,10 @@ class ServerUtility
     protected static $testMode = false;
 
     /**
-     * @var
+     * NOTE: This is filled in test mode only!
+     * @var array
      */
-    protected static $lastExecutedShellCommand = '';
+    protected static $lastExecutedShellCommand = [];
 
 
     /**
@@ -136,8 +137,8 @@ class ServerUtility
     public static function executeShellCommand(string $command): ?string
     {
         LogHelper::debug('executing shell command:' . "\n${command}");
-        self::$lastExecutedShellCommand = $command;
         if (self::$testMode) {
+            self::$lastExecutedShellCommand[] = $command;
             return \Helio\Test\Infrastructure\Utility\ServerUtility::getMockResultForShellCommand($command);
         }
         return trim(@shell_exec($command));
@@ -238,11 +239,13 @@ class ServerUtility
     }
 
     /**
+     * @param int $offset
      * @return string
      */
-    public static function getLastExecutedShellCommand(): string
+    public static function getLastExecutedShellCommand(int $offset = 0): string
     {
-        return self::$lastExecutedShellCommand;
+        $index = \count(self::$lastExecutedShellCommand) - $offset - 1;
+        return $index >= 0 ? self::$lastExecutedShellCommand[$index] : '';
     }
 
     /**
