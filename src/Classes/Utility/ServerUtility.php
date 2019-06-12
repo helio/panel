@@ -153,7 +153,7 @@ class ServerUtility
         foreach ($params as $item) {
             $res = preg_match('/[^0-9a-zA-Z\.\-_"]/', $item);
             if ($res === false || $res > 0) {
-                throw new \InvalidArgumentException('suspicious shell command submitted', 1544664506);
+                throw new \InvalidArgumentException('suspicious shell command submitted: ' . $item, 1544664506);
             }
         }
     }

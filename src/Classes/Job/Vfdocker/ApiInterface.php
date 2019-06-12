@@ -221,16 +221,6 @@ interface ApiInterface
      *         description="Id of the job to manipulate",
      *         required=true,
      *         @Oa\Items(
-     *             type="string",
-     *             enum = {"_NEW"}
-     *         )
-     *     ),
-     *     @OA\Parameter(
-     *         name="token",
-     *         in="query",
-     *         description="The token of the *JOB* (received in the response of /api/job/add)",
-     *         required=true,
-     *         @Oa\Items(
      *             type="string"
      *         )
      *     ),
@@ -263,8 +253,7 @@ interface ApiInterface
      *         )
      *     ),
      *     security={
-     *         {"authByJobtoken": {"any"}},
-     *         {"authByApitoken": {"any"}}
+     *         {"authByJobtoken": {"any"}}
      *     }
      * )
      *
