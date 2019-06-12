@@ -251,29 +251,36 @@ class ApiAdminController extends AbstractController
             } else {
                 $taskEnv = $env;
             }
-
             // make taskEnv docker yaml stuff compatible :(
             foreach ($taskEnv as $item => $value) {
                 $yamlEnv[] = "$item=$value";
             }
 
+            // compose service config
             $services[$servicename] = [
                 'service_name' => $servicename,
                 'image' => $dcf->getImage(),
                 'replicas' => $dcf->getReplicaCountForJob($this->job),
-                'env' => $yamlEnv
+                'env' => $yamlEnv,
             ];
 
-            if ($dcf->getArgs()) {
-                $services[$servicename]['args'] = implode(' ', $dcf->getArgs());
-            }
-            if ($dcf->getRegistry()) {
-                $services[$servicename]['registry'] = $dcf->getRegistry();
+            // set args if present
+            $args = $task->getConfig('args') ?: $dcf->getArgs();
+            if ($args) {
+                $services[$servicename]['args'] = implode(' ', $args);
             }
         }
 
+        // compose resulting yaml
+        $result = [];
+        if ($dcf->getRegistry()) {
+            $result['profile::docker::registry'] = $dcf->getRegistry();
+        }
+        $result['profile::docker::clusters'] = $services;
+
+
         return $this
             ->setReturnType('yaml')
-            ->render(['profile::docker::clusters' => $services]);
+            ->render($result);
     }
 }

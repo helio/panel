@@ -231,14 +231,15 @@ abstract class AbstractModel
 
     /**
      * @param string $option
-     * @return mixed
+     * @param mixed $default
+     * @return mixed|string
      */
-    public function getConfig(string $option = '')
+    public function getConfig(string $option = '', $default = '')
     {
         $decodedConfig = json_decode($this->config, true);
 
         if ($option) {
-            return ArrayUtility::getFirstByDotNotation([$decodedConfig], [$option]) ?? '';
+            return ArrayUtility::getFirstByDotNotation([$decodedConfig], [$option]) ?? $default;
         }
         return $this->config;
     }
