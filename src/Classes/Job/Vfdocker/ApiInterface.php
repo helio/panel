@@ -280,9 +280,9 @@ interface ApiInterface
      *     @OA\RequestBody(
      *         description=">- Arbitrary Job result data as JSON
 
-    {
-        "success":true
-    }",
+        {
+            ""success"":true
+        }",
      *         @OA\MediaType(
      *             mediaType="application/json",
      *             @OA\Schema(
