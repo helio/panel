@@ -10,6 +10,14 @@ final class TaskStatus
     public const DONE = 3;
     public const STOPPED = 9;
 
+    public const labels = [
+        'status-0' => 'Unknown',
+        'status-1' => 'Ready',
+        'status-2' => 'Running',
+        'status-3' => 'Done',
+        'status-9' => 'Interrupted'
+    ];
+
 
     public function __construct()
     {
@@ -29,5 +37,10 @@ final class TaskStatus
     {
         return $status === self::READY
             || $status === self::STOPPED;
+    }
+
+    public static function getLabel(int $status): string
+    {
+        return self::labels["status-$status"];
     }
 }

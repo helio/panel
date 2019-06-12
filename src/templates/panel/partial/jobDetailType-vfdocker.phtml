@@ -1,5 +1,23 @@
 <?php /* @var \Helio\Panel\Model\Job $job */ ?>
 <div class="col-lg-12">
-    <p> customerDocker Exec with the config</p>
+    <p> customerDocker Exec with id <strong><?php echo $job->getId() ?></strong> and config</p>
     <pre><?php echo $job->getConfig(); ?></pre>
+
+    <?php
+    if ($job->getTasks()) {
+        echo '<p>List of Tasks associated with this job:</p>';
+        echo '<ul>';
+        /** @var \Helio\Panel\Model\Task $task */
+        foreach ($job->getTasks() as $task) {
+            echo '<li>';
+            echo '<span>Task with id ' . $task->getId() . ' and Status <strong>' . \Helio\Panel\Task\TaskStatus::getLabel($task->getStatus()) . '</strong></span><br />';
+            if ($task->getStats()) {
+                echo '<span>Task Results:</span><br />';
+                echo '<pre class="prettyprint">' . $task->getStats() . '</pre>';
+            }
+            echo '</li>';
+        }
+        echo '</ul>';
+    }
+    ?>
 </div>
