@@ -169,10 +169,12 @@ end
     /**
      * @param Job $job
      * @return bool
+     *
+     * TODO: verify if the joinWorkers call here is necessary or could be solved more elegantly.
      */
     public function dispatchJob(Job $job): bool
     {
-        $result = ServerUtility::executeShellCommand($this->parseCommand('dispatch', [$job->getManagerNodes()[0]]));
+        $result = ServerUtility::executeShellCommand($this->parseCommand('dispatch', [$job->getManagerNodes()[0]])) && $this->joinWorkers($job);
         LogHelper::debug('response from choria at dispatchJob:' . print_r($result, true));
         return $result;
     }
