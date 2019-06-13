@@ -37,7 +37,15 @@ class ExecController extends AbstractController
     }
     use TypeApiController;
 
-    public function setupUser(): bool {
+
+    /**
+     * @var User needed for auth by user token
+     */
+    protected $user;
+
+
+    public function setupUser(): bool
+    {
         $this->setupParams();
         if (\array_key_exists('token', $this->params)) {
             /** @var User $tryToFindUser */
@@ -49,10 +57,11 @@ class ExecController extends AbstractController
         return true;
     }
 
+
     /**
      * @return ResponseInterface
      *
-     * @Route("", methods={"POST", "PUT", "GET"}, name="job.exec")
+     * @Route("", methods={"POST", "PUT", "GET", "DELETE"}, name="job.exec")
      */
     public function execAction(): ResponseInterface
     {
@@ -60,36 +69,31 @@ class ExecController extends AbstractController
             if (!JobStatus::isValidActiveStatus($this->job->getStatus())) {
                 throw new \RuntimeException('job not ready');
             }
-            $previousReplicaCount = JobFactory::getDispatchConfigOfJob($this->job)->getDispatchConfig()->getReplicaCountForJob($this->job);
-            $job = JobFactory::getInstanceOfJob($this->job, $this->task);
-            $job->run($this->params, $this->request, $this->response);
-            $newReplicaCount = JobFactory::getDispatchConfigOfJob($this->job)->getDispatchConfig()->getReplicaCountForJob($this->job);
 
-            if ($previousReplicaCount !== $newReplicaCount || JobFactory::getDispatchConfigOfJob($this->job)->getDispatchConfig()->getFixedReplicaCount()) {
+            // run and stop have the same interface, thus we can reuse the code
+            $command = 'run';
+            if ($this->request->getMethod() === 'DELETE') {
+                $command = 'stop';
+            }
+
+            // run the job and check if the replicas have changed
+            $previousReplicaCount = JobFactory::getDispatchConfigOfJob($this->job, $this->task)->getDispatchConfig()->getReplicaCountForJob($this->job);
+            JobFactory::getInstanceOfJob($this->job, $this->task)->$command($this->params, $this->request, $this->response);
+            $newReplicaCount = JobFactory::getDispatchConfigOfJob($this->job, $this->task)->getDispatchConfig()->getReplicaCountForJob($this->job);
+
+            // if replica count has changed OR we have an enforcement (e.g. one replica per task fixed), dispatch the job
+            if ($previousReplicaCount !== $newReplicaCount || JobFactory::getDispatchConfigOfJob($this->job, $this->task)->getDispatchConfig()->getFixedReplicaCount()) {
                 OrchestratorFactory::getOrchestratorForInstance($this->instance)->dispatchJob($this->job);
+                $this->persistTask();
                 $this->persistJob();
             }
+
             return $this->render(['status' => 'success']);
         } catch (\Exception $e) {
             return $this->render(['status' => 'error', 'reason' => $e->getMessage()], StatusCode::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
-
-    /**
-     * @return ResponseInterface
-     *
-     * @Route("", methods={"DELETE"}, name="job.stop")
-     */
-    public function stopAction(): ResponseInterface
-    {
-        try {
-            JobFactory::getInstanceOfJob($this->job, $this->task)->stop($this->params, $this->request);
-            return $this->render(['status' => 'success']);
-        } catch (\Exception $e) {
-            return $this->render(['status' => 'error'], StatusCode::HTTP_INTERNAL_SERVER_ERROR);
-        }
-    }
 
     /**
      * @return ResponseInterface
@@ -108,6 +112,7 @@ class ExecController extends AbstractController
             ]
         ]);
     }
+
 
     /**
      * @return ResponseInterface
@@ -176,6 +181,7 @@ class ExecController extends AbstractController
         }
     }
 
+
     /**
      * @return ResponseInterface
      *
@@ -192,6 +198,7 @@ class ExecController extends AbstractController
         }
         return $this->render(['error' => $uploadedFile->getError()], StatusCode::HTTP_FAILED_DEPENDENCY);
     }
+
 
     /**
      * @return ResponseInterface

@@ -9,6 +9,7 @@ final class TaskStatus
     public const RUNNING = 2;
     public const DONE = 3;
     public const STOPPED = 9;
+    public const TERMINATED = 9;
 
     public const labels = [
         'status-0' => 'Unknown',
@@ -30,6 +31,7 @@ final class TaskStatus
             || $status === self::READY
             || $status === self::RUNNING
             || $status === self::DONE
+            || $status === self::TERMINATED
             || $status === self::STOPPED;
     }
 
@@ -37,6 +39,12 @@ final class TaskStatus
     {
         return $status === self::READY
             || $status === self::STOPPED;
+    }
+
+    public static function isNotRequiredToRunAnymore(int $status): bool
+    {
+        return $status === self::TERMINATED
+            || $status === self::DONE;
     }
 
     public static function getLabel(int $status): string

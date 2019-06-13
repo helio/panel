@@ -56,6 +56,6 @@ EOM;
      */
     public static function sendMailToAdmin(string $content = ''): bool
     {
-        return @mail('team@opencomputing.cloud', 'Admin Notification from Panel', $content, 'From: hello@idling.host', '-f hello@idling.host');
+        return @mail('team@helio.exchange', 'Admin Notification from Panel', $content, 'From: hello@idling.host', '-f hello@idling.host');
     }
 }

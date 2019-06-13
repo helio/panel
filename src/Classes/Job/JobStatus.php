@@ -8,6 +8,7 @@ final class JobStatus
     public const INIT = 1;
     public const READY = 2;
     public const DONE = 3;
+    public const DELETED = 9;
 
 
     public function __construct()
@@ -20,7 +21,8 @@ final class JobStatus
         return $status === self::UNKNOWN
             || $status === self::INIT
             || $status === self::READY
-            || $status === self::DONE;
+            || $status === self::DONE
+            || $status === self::DELETED;
     }
 
     public static function isValidActiveStatus(int $status): bool

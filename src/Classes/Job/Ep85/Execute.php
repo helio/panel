@@ -46,9 +46,11 @@ class Execute implements JobInterface, DispatchableInterface
     /**
      * @param array $params
      * @param RequestInterface $request
+     * @param ResponseInterface|null $response
+     *
      * @return bool
      */
-    public function create(array $params, RequestInterface $request): bool
+    public function create(array $params, RequestInterface $request, ResponseInterface $response = null): bool
     {
         return true;
     }
@@ -93,18 +95,22 @@ class Execute implements JobInterface, DispatchableInterface
         return true;
     }
 
+
     /**
      * @param array $params
      * @param RequestInterface $request
+     * @param ResponseInterface|null $response
+     *
      * @return bool
+     *
      * @throws \Exception
      */
-    public function stop(array $params, RequestInterface $request): bool
+    public function stop(array $params, RequestInterface $request, ResponseInterface $response = null): bool
     {
         $tasks = DbHelper::getInstance()->getRepository(Task::class)->findByJob($this->job);
         /** @var Task $task */
         foreach ($tasks as $task) {
-            $task->setStatus(TaskStatus::STOPPED);
+            $task->setStatus(TaskStatus::TERMINATED);
             App::getApp()->getContainer()['dbHelper']->persist($task);
         }
         App::getApp()->getContainer()['dbHelper']->flush();
@@ -150,6 +156,7 @@ class Execute implements JobInterface, DispatchableInterface
     {
         return ExecUtility::downloadFile(__DIR__ . '/example.epw', $response);
     }
+
 
     /**
      * @param array $params

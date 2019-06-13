@@ -39,11 +39,16 @@ class ApiAdminController extends AbstractController
     use AdminController;
     use TypeDynamicController;
 
+
+    /**
+     * ApiAdminController constructor.
+     */
     public function __construct()
     {
         parent::__construct();
         $this->setMode('api');
     }
+
 
     /**
      * @return ResponseInterface
@@ -69,6 +74,7 @@ class ApiAdminController extends AbstractController
         }
         return $this->render(['items' => $servers, 'user' => $this->user]);
     }
+
 
     /**
      * @return ResponseInterface
@@ -213,10 +219,21 @@ class ApiAdminController extends AbstractController
         $services = [];
         /** @var Task $task */
         foreach ($this->job->getTasks() as $task) {
-            $dcfjt = JobFactory::getDispatchConfigOfJob($this->job, $task)->getDispatchConfig();
+            // prepare and reset vars
             $serviceprefix = $this->job->getType() . '-' . $this->job->getId();
-
+            $servicename = $serviceprefix . '-' . $task->getId();
+            $services['service_name'] = $servicename;
+            $taskEnv = [];
+            $yamlEnv = [];
             $env = [];
+
+            // catch done or not-yet-ready tasks
+            if (TaskStatus::isNotRequiredToRunAnymore($task->getStatus())) {
+                $services[$servicename]['ensure'] = 'absent';
+                continue;
+            }
+
+            $dcfjt = JobFactory::getDispatchConfigOfJob($this->job, $task)->getDispatchConfig();
             if ($dcfjt->getEnvVariables()) {
                 foreach ($dcfjt->getEnvVariables() as $key => $value) {
                     // it might be due to json array and object mixup, that value is still an array
@@ -229,9 +246,6 @@ class ApiAdminController extends AbstractController
                     }
                 }
             }
-            $servicename = $serviceprefix . '-' . $task->getId();
-            $taskEnv = [];
-            $yamlEnv = [];
 
             // merge Yaml Config
             if ($task->getConfig('env')) {
@@ -257,7 +271,6 @@ class ApiAdminController extends AbstractController
 
             // compose service config
             $services[$servicename] = [
-                'service_name' => $servicename,
                 'image' => $dcfjt->getImage(),
                 'replicas' => $dcfjt->getReplicaCountForJob($this->job),
                 'env' => $yamlEnv,

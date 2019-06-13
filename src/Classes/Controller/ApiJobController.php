@@ -166,6 +166,7 @@ class ApiJobController extends AbstractController
         return $this->render([], $this->job->getStatus() === JobStatus::READY ? StatusCode::HTTP_OK : StatusCode::HTTP_FAILED_DEPENDENCY);
     }
 
+
     /**
      * @return ResponseInterface
      *
@@ -181,7 +182,12 @@ class ApiJobController extends AbstractController
         if (\array_key_exists('nodes', $body)) {
             $nodes = \is_array($body['nodes']) ? $body['nodes'] : array($body['nodes']);
             foreach ($nodes as $node) {
-                $this->job->addManagerNode($node);
+
+                if (\array_key_exists('deleted', $body)) {
+                    $this->job->removeManagerNode($node);
+                } else {
+                    $this->job->addManagerNode($node);
+                }
             }
         }
 
@@ -209,9 +215,12 @@ class ApiJobController extends AbstractController
         // TODO: set redundancy to >= 3 again if needed
         if ($this->job->getInitManagerIp() && $this->job->getClusterToken() && $this->job->getManagerToken() && \count($this->job->getManagerNodes()) > 0) {
             $this->job->setStatus(JobStatus::READY);
-            $this->persistJob();
+        }
+        if (\array_key_exists('deleted', $body) && \count($this->job->getManagerNodes()) === 0) {
+            $this->job->setStatus(JobStatus::DELETED);
         }
 
+        $this->persistJob();
         return $this->render(['message' => 'ok']);
 
     }

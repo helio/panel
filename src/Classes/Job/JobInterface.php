@@ -24,19 +24,21 @@ interface JobInterface
     /**
      * @param array $params
      * @param RequestInterface $request
+     * @param ResponseInterface|null $response
      *
      * @return bool
      */
-    public function create(array $params, RequestInterface $request): bool;
+    public function create(array $params, RequestInterface $request, ResponseInterface $response = null): bool;
 
 
     /**
      * @param array $params
      * @param RequestInterface $request
+     * @param ResponseInterface|null $response
      *
      * @return mixed
      */
-    public function stop(array $params, RequestInterface $request);
+    public function stop(array $params, RequestInterface $request, ResponseInterface $response = null);
 
 
     /**

@@ -78,6 +78,18 @@ end
     /**
      * @var string
      */
+    protected static $deleteInitManagerCommand = 'ssh %s@%s "mco playbook run infrastructure::gce::delete --input \'{\\"node\\":\\"%s\\",\\"callback\\":\\"%s\\",\\"id\\":\\"%s\\",\\"token\\":\\"%s\\"}\'" 2>/dev/null >/dev/null &';
+
+
+    /**
+     * @var string
+     */
+    protected static $deleteRedundantManagersCommand = 'ssh %s@%s "mco playbook run infrastructure::gce::delete --input \'{\\"node\\":[\\"%s\\"],\\"master_token\\":\\"%s\\",\\"callback\\":\\"%s\\",\\"id\\":\\"%s\\",\\"token\\":\\"%s\\"}\'" 2>/dev/null >/dev/null &';
+
+
+    /**
+     * @var string
+     */
     protected static $dispatchCommand = 'ssh %s@%s "mco playbook run helio::task::update --input \'{\\"cluster_address\\":\\"%s\\"}\'"';
 
     /**
@@ -141,10 +153,10 @@ end
 
         // we have to provision the init manager
         if (\count($job->getManagerNodes()) === 0) {
-            $managerFqdn = self::$managerPrefix . "-init-${managerHash}";
+            $managerHostname = self::$managerPrefix . "-init-${managerHash}";
 
             $command = 'firstManager';
-            $params[] = $managerFqdn;
+            $params[] = $managerHostname;
         } else {
 
             // if no init manager exists, we cannot create redundancy managers
@@ -156,7 +168,7 @@ end
 
             $i = self::$redundancyCount + 1;
             while ($i <= self::$redundancyCount) {
-                $redundancyNodes[] = "-redundancy-${managerHash}-${i}";
+                $redundancyNodes[] = self::$managerPrefix . "-redundancy-${managerHash}-${i}";
                 $i--;
             }
 
@@ -171,6 +183,38 @@ end
 
         $result = ServerUtility::executeShellCommand($this->parseCommand($command, $params));
         LogHelper::debug('response from choria at provision ' . $command . ':' . print_r($result, true));
+        return $result;
+    }
+
+    public function removeManager(Job $job): bool
+    {
+        $result = true;
+        $managerHash = ServerUtility::getShortHashOfString($job->getId());
+
+        // remove redundnat managers if existing
+        if (\count($job->getManagerNodes()) > 1) {
+            foreach ($job->getManagerNodes() as $node) {
+                if (strpos($node, self::$managerPrefix . "-redundancy-${managerHash}") === 0) {
+                    $result = $result && ServerUtility::executeShellCommand($this->parseCommand('deleteRedundantManagers', [
+                        substr($node, 0, \strlen(self::$managerPrefix . "-init-${managerHash}-1")),
+                        ServerUtility::getBaseUrl() . 'api/job/callback?jobid=' . $job->getId() . '&token=' . $job->getOwner()->getToken(),
+                        $job->getId(),
+                        $job->getToken(),
+                        $job->getManagerToken()
+                    ]));
+                    LogHelper::debug('response from choria at deleteRedundantManagers:' . print_r($result, true));
+                }
+            }
+        }
+
+        // lastly, delete redundant manager
+        $result = $result && ServerUtility::executeShellCommand($this->parseCommand('deleteInitManager', [
+            self::$managerPrefix . "-init-${managerHash}",
+            ServerUtility::getBaseUrl() . 'api/job/callback?jobid=' . $job->getId() . '&token=' . $job->getOwner()->getToken(),
+            $job->getId(),
+            $job->getToken()
+        ]));
+        LogHelper::debug('response from choria at deleteInitManager:' . print_r($result, true));
         return $result;
     }
 
