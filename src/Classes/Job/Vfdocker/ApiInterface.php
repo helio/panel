@@ -10,7 +10,7 @@ use Psr\Http\Message\ResponseInterface;
  * @package Helio\Panel\Job\VfDocker
  *
  *
- * @OA\Info(title="Docker Dispatch Api for  customerMarkets", version="0.0.1")
+ * @OA\Info(title="Docker Dispatch Api", version="0.0.1")
  *
  * @OA\SecurityScheme(
  *     type="apiKey",
