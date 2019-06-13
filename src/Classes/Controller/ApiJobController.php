@@ -108,7 +108,7 @@ class ApiJobController extends AbstractController
 
         $this->persistJob();
 
-        MailUtility::sendMailToAdmin('New Job was created by ' . $this->user->getEmail() . 'type: ' . $this->job->getType() . ', id: ' . $this->job->getId());
+        MailUtility::sendMailToAdmin('New Job was created by ' . $this->user->getEmail() . ', type: ' . $this->job->getType() . ', id: ' . $this->job->getId());
 
         OrchestratorFactory::getOrchestratorForInstance($this->instance)->provisionManager($this->job);
 
@@ -215,9 +215,11 @@ class ApiJobController extends AbstractController
         // TODO: set redundancy to >= 3 again if needed
         if ($this->job->getInitManagerIp() && $this->job->getClusterToken() && $this->job->getManagerToken() && \count($this->job->getManagerNodes()) > 0) {
             $this->job->setStatus(JobStatus::READY);
+            MailUtility::sendMailToAdmin('Job is now read. By: ' . $this->user->getEmail() . ', type: ' . $this->job->getType() . ', id: ' . $this->job->getId());
         }
         if (\array_key_exists('deleted', $body) && \count($this->job->getManagerNodes()) === 0) {
             $this->job->setStatus(JobStatus::DELETED);
+            MailUtility::sendMailToAdmin('Job was deleted by ' . $this->user->getEmail() . ', type: ' . $this->job->getType() . ', id: ' . $this->job->getId());
         }
 
         $this->persistJob();
