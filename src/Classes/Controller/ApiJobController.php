@@ -200,7 +200,7 @@ class ApiJobController extends AbstractController
 
         $this->persistJob();
 
-        // provision missing redundancy nodes
+        // provision missing redundancy nodes if necessary
         if ($this->job->getInitManagerIp()) {
             OrchestratorFactory::getOrchestratorForInstance($this->instance)->provisionManager($this->job);
         }
@@ -208,8 +208,6 @@ class ApiJobController extends AbstractController
         // finalize
         // TODO: set redundancy to >= 3 again if needed
         if ($this->job->getInitManagerIp() && $this->job->getClusterToken() && $this->job->getManagerToken() && \count($this->job->getManagerNodes()) > 0) {
-            // TODO: properly implement this.
-            OrchestratorFactory::getOrchestratorForInstance($this->instance)->joinWorkers($this->job);
             $this->job->setStatus(JobStatus::READY);
             $this->persistJob();
         }
