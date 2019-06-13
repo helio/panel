@@ -14,6 +14,7 @@ use Helio\Panel\Task\TaskStatus;
 use Helio\Panel\Utility\JwtUtility;
 use Helio\Test\Infrastructure\Utility\ServerUtility;
 use Helio\Test\TestCase;
+use OpenApi\Annotations\Server;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Http\StatusCode;
 
@@ -132,22 +133,23 @@ class ManagerNodesTest extends TestCase
         $this->assertStringEndsWith('token=' . $this->user->getToken(), $url);
 
         // simulate provisioning call backs
+        ServerUtility::resetLastExecutedCommand();
+        $this->assertEmpty(ServerUtility::getLastExecutedShellCommand());
         $this->runApp('POST', $url, true, null, $this->callbackDataInit);
+        $this->assertEmpty(ServerUtility::getLastExecutedShellCommand());
         $this->runApp('POST', $url, true, null, $this->callbackDataManagerIp);
 
-        // TODO: Reenable this assertion as soon as the manager Token in back in the game.
-        //$this->assertContains('blah:manager', ServerUtility::getLastExecutedShellCommand(1));
-
         // TODO: Move these assertions below callbackDataRedundancy as soon as job is supposed to have redundant managers.
-        $this->assertContains('helio::queue', ServerUtility::getLastExecutedShellCommand());
-        $this->assertContains('1.2.3.4:2345', ServerUtility::getLastExecutedShellCommand());
-        $this->assertContains('blah:worker', ServerUtility::getLastExecutedShellCommand());
+        //$this->assertContains('blah:manager', ServerUtility::getLastExecutedShellCommand(1));
+        //$this->assertContains('manager-redundancy-' . ServerUtility::getShortHashOfString($jobid), ServerUtility::getLastExecutedShellCommand());
+        //$this->assertContains('1.2.3.4:2345', ServerUtility::getLastExecutedShellCommand());
+        //$this->assertContains('blah:worker', ServerUtility::getLastExecutedShellCommand());
 
-        $this->runApp('POST', $url, true, null, $this->callbackDataRedundancy);
+        //$this->runApp('POST', $url, true, null, $this->callbackDataRedundancy);
 
         $job = $this->jobRepository->findOneById($jobid);
         $this->assertEquals(JobStatus::READY, $job->getStatus());
-        $this->assertCount(3, $job->getManagerNodes());
+        $this->assertCount(1, $job->getManagerNodes());
     }
 
 
@@ -160,8 +162,7 @@ class ManagerNodesTest extends TestCase
 
         $this->assertContains('helio::queue', ServerUtility::getLastExecutedShellCommand());
         $this->assertContains('helio::task', ServerUtility::getLastExecutedShellCommand(1));
-        $this->assertContains('manager-init-', ServerUtility::getLastExecutedShellCommand(1));
-        $this->assertContains('example.com', ServerUtility::getLastExecutedShellCommand(1));
+        $this->assertContains('manager-init-' . ServerUtility::getShortHashOfString($this->job->getId()) . '.example.com', ServerUtility::getLastExecutedShellCommand(1));
     }
 
 
@@ -229,7 +230,7 @@ class ManagerNodesTest extends TestCase
         $this->runApp('POST', $callbackUrl, true, null, $this->callbackDataRedundancy);
 
         $statusResult = $this->runApp('GET', "/api/job/isready?jobid=${jobid}&token=${jobtoken}");
-        $body = (string)$statusResult->getBody();
+
         $this->assertEquals(StatusCode::HTTP_OK, $statusResult->getStatusCode());
 
     }

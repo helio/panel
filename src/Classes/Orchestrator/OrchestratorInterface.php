@@ -13,17 +13,5 @@ interface OrchestratorInterface
 
     public function dispatchJob(Job $job): bool;
 
-    /**
-     * @deprecated
-     */
-    public function setInitManagerNodeIp(Job $job): bool;
-
-    /**
-     * @deprecated
-     */
-    public function setClusterToken(Job $job): bool;
-
     public function provisionManager(Job $job): bool;
-
-    public function joinWorkers(Job $job): bool;
 }

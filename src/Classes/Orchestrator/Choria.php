@@ -29,6 +29,11 @@ class Choria implements OrchestratorInterface
      */
     private static $managerPrefix = 'manager';
 
+    /**
+     * @var int
+     */
+    private static $redundancyCount = 0;
+
 
     /**
      * @var string
@@ -66,10 +71,8 @@ end
 
     /**
      * @var string
-     *
-     * TODO: implement token (,\\"master_token\\":\\"%s\\")
      */
-    protected static $redundantManagersCommand = 'ssh %s@%s "mco playbook run infrastructure::gce::create --input \'{\\"node\\":[\\"%s\\"],\\"callback\\":\\"%s\\",\\"id\\":\\"%s\\",\\"token\\":\\"%s\\"}\'" 2>/dev/null >/dev/null &';
+    protected static $redundantManagersCommand = 'ssh %s@%s "mco playbook run infrastructure::gce::create --input \'{\\"node\\":[\\"%s\\"],\\"master_token\\":\\"%s\\",\\"callback\\":\\"%s\\",\\"id\\":\\"%s\\",\\"token\\":\\"%s\\"}\'" 2>/dev/null >/dev/null &';
 
 
     /**
@@ -109,87 +112,17 @@ end
     /**
      * @param Job $job
      * @return bool
-     */
-    public function setInitManagerNodeIp(Job $job): bool
-    {
-        if (\count($job->getManagerNodes()) !== 1) {
-            return false;
-        }
-
-        // todo: filter input (it's IP And a Port, thus FILTER_VALIDATE_IP won't work).
-        $result = trim(ServerUtility::executeShellCommand($this->parseCommand('getInitManagerIp', [$job->getManagerNodes()[0]])));
-        LogHelper::debug('response from choria at setInitManagerNodeIp:' . print_r($result, true));
-        if (!$result) {
-            return false;
-        }
-        $job->setInitManagerIp($result);
-
-        try {
-            App::getApp()->getContainer()->get('dbHelper')->persist($job);
-            App::getApp()->getContainer()->get('dbHelper')->flush($job);
-        } catch (\Exception $e) {
-            return false;
-        }
-
-        return true;
-    }
-
-
-    /**
-     * @param Job $job
-     * @return bool
      *
-     * @deprecated
-     */
-    public function setClusterToken(Job $job): bool
-    {
-        $result = filter_var(trim(ServerUtility::executeShellCommand($this->parseCommand('getDockerToken', [$job->getManagerNodes()[0], $job->getManagerNodes()[0]]))), FILTER_SANITIZE_STRING, FILTER_FLAG_NO_ENCODE_QUOTES);
-        LogHelper::debug('response from choria at setClusterToken:' . print_r($result, true));
-        if (!$result) {
-            return false;
-        }
-        $matches = [];
-        preg_match('/"_output":"([\-A-Za-z0-9]+)/', $result, $matches);
-        if (\count($matches) === 0) {
-            return false;
-        }
-        $job->setClusterToken($matches[1]);
-
-        try {
-            App::getApp()->getContainer()->get('dbHelper')->persist($job);
-            App::getApp()->getContainer()->get('dbHelper')->flush($job);
-        } catch (\Exception $e) {
-            return false;
-        }
-
-        return true;
-    }
-
-
-    /**
-     * @param Job $job
-     * @return bool
-     *
-     * TODO: verify if the joinWorkers call here is necessary or could be solved more elegantly.
      */
     public function dispatchJob(Job $job): bool
     {
-        $result = ServerUtility::executeShellCommand($this->parseCommand('dispatch', [$job->getManagerNodes()[0]])) && $this->joinWorkers($job);
-        LogHelper::debug('response from choria at dispatchJob:' . print_r($result, true));
-        return $result;
-    }
+        $resultDispatch = ServerUtility::executeShellCommand($this->parseCommand('dispatch', [$job->getManagerNodes()[0]]));
+        LogHelper::debug('response from choria at dispatchJob dispatch:' . print_r($resultDispatch, true));
 
+        $resultJoinWorkers = ServerUtility::executeShellCommand($this->parseCommand('joinWorkers', [$job->getClusterToken(), $job->getInitManagerIp(), 1]));
+        LogHelper::debug('response from choria at dispatchJob joinWorkers:' . print_r($resultJoinWorkers, true));
 
-    /**
-     * @param Job $job
-     * @return bool
-     */
-    public function joinWorkers(Job $job): bool
-    {
-
-        $result = ServerUtility::executeShellCommand($this->parseCommand('joinWorkers', [$job->getClusterToken(), $job->getInitManagerIp(), 1]));
-        LogHelper::debug('response from choria at provision joinWorkers:' . print_r($result, true));
-        return true;
+        return $resultDispatch && $resultJoinWorkers;
     }
 
 
@@ -200,50 +133,42 @@ end
     public function provisionManager(Job $job): bool
     {
         $managerHash = ServerUtility::getShortHashOfString($job->getId());
-        $command = '';
 
-        if (\count($job->getManagerNodes()) === 3) {
+        // we're good
+        if (\count($job->getManagerNodes()) === (1 + self::$redundancyCount)) {
             return true;
         }
-        // only one manager node: need to provision two more
-        if (\count($job->getManagerNodes()) === 1) {
 
-            // check if manager node is already properly set up
-            if (!$job->getInitManagerIp()) {
-                return false;
-            }
-            $firstRedundantFqdn = self::$managerPrefix . "-redundancy-${managerHash}-1";
-            $secondRedundantFqdn = self::$managerPrefix . "-redundancy-${managerHash}-2";
-
-            $command = 'redundantManagers';
-            $params[] = $firstRedundantFqdn . '\\",\\"' . $secondRedundantFqdn;
-            // TODO: implement token
-            //$params[] = $job->getManagerToken();
-        }
-
-        // No manager node initialized yet
+        // we have to provision the init manager
         if (\count($job->getManagerNodes()) === 0) {
             $managerFqdn = self::$managerPrefix . "-init-${managerHash}";
 
             $command = 'firstManager';
             $params[] = $managerFqdn;
+        } else {
+
+            // if no init manager exists, we cannot create redundancy managers
+            if (!$job->getInitManagerIp()) {
+                return false;
+            }
+
+            $redundancyNodes = [];
+
+            $i = self::$redundancyCount + 1;
+            while ($i <= self::$redundancyCount) {
+                $redundancyNodes[] = "-redundancy-${managerHash}-${i}";
+                $i--;
+            }
+
+            $command = 'redundantManagers';
+            $params[] = implode('\\",\\"', $redundancyNodes);
+            $params[] = $job->getManagerToken();
         }
 
+        $params[] = ServerUtility::getBaseUrl() . 'api/job/callback?jobid=' . $job->getId() . '&token=' . $job->getOwner()->getToken();
+        $params[] = $job->getId();
+        $params[] = $job->getToken();
 
-        try {
-            App::getApp()->getContainer()->get('dbHelper')->persist($job);
-            App::getApp()->getContainer()->get('dbHelper')->flush($job);
-            $params[] = ServerUtility::getBaseUrl() . 'api/job/callback?jobid=' . $job->getId() . '&token=' . $job->getOwner()->getToken();
-            $params[] = $job->getId();
-            $params[] = $job->getToken();
-        } catch (\Exception $e) {
-            return false;
-        }
-
-        if (!$command) {
-            LogHelper::warn('empty command in Choria manager provisioning. this is only valid, if managers are already properly provisioned.');
-            return false;
-        }
         $result = ServerUtility::executeShellCommand($this->parseCommand($command, $params));
         LogHelper::debug('response from choria at provision ' . $command . ':' . print_r($result, true));
         return $result;
