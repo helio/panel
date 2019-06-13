@@ -250,9 +250,9 @@ class ApiAdminController extends AbstractController
             } else {
                 $taskEnv = $env;
             }
-            // make taskEnv docker yaml stuff compatible :(
+            // TODO: These redundante quotes are here to make env stuff `docker service create` compatible :(
             foreach ($taskEnv as $item => $value) {
-                $yamlEnv[] = "$item=$value";
+                $yamlEnv[] = "'$item=$value'";
             }
 
             // compose service config
