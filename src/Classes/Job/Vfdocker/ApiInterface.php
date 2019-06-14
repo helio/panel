@@ -124,14 +124,14 @@ interface ApiInterface
         {
             ""container"": ""nginx:1.8"",
             ""env"": [
-                {""SOURCE_PATH"":""https://account-name>.<zone-name>.web.core.windows.net""},
+                {""SOURCE_PATH"":""https://account-name.zone-name.web.core.windows.net""},
                 {""TARGET_PATH"":""https://bucket.s3.aws-region.amazonaws.com""}
             ],
             ""registry"": {
-                ""server"": ""vattenfall.azurecr.io"",
+                ""server"": ""example.azurecr.io"",
                 ""username"": ""$DOCKER_USER"",
                 ""password"": ""$DOCKER_PASSWORD"",
-                ""email"": ""docker@vattenfall.se""
+                ""email"": ""docker@example.com""
             }
         }",
      *         @OA\MediaType(
