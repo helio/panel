@@ -49,6 +49,13 @@
             <span class="pficon pficon-close"></span>
         </div>
         <div class="row">
+            <div class="col-lg-12">
+                <?php
+                echo '<span>Job Token:</span><pre class="prettyprint">';
+                echo $job->getToken();
+                echo '</pre>';
+                ?>
+            </div>
             <?php
             if (isset($admin)) {
                 \Helio\Panel\Helper\ViewHelper::includePartial('jobDetailAdmin');
