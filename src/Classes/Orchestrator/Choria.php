@@ -128,6 +128,11 @@ end
      */
     public function dispatchJob(Job $job): bool
     {
+        if (!$job->getManagerNodes() || !$job->getClusterToken() || !$job->getInitManagerIp()) {
+            LogHelper::warn('dispatchJob called on job that\'s not ready. Aborting.');
+            return false;
+        }
+
         $resultDispatch = ServerUtility::executeShellCommand($this->parseCommand('dispatch', [$job->getManagerNodes()[0]]));
         LogHelper::debug('response from choria at dispatchJob dispatch:' . print_r($resultDispatch, true));
 
@@ -186,6 +191,11 @@ end
         return $result;
     }
 
+
+    /**
+     * @param Job $job
+     * @return bool
+     */
     public function removeManager(Job $job): bool
     {
         $result = true;

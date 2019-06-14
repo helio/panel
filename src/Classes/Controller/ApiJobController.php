@@ -10,12 +10,14 @@ use Helio\Panel\Helper\LogHelper;
 use Helio\Panel\Job\JobFactory;
 use Helio\Panel\Job\JobStatus;
 use Helio\Panel\Job\JobType;
+use Helio\Panel\Model\Task;
 use Helio\Panel\Orchestrator\OrchestratorFactory;
 use Helio\Panel\Utility\JwtUtility;
 use Helio\Panel\Utility\MailUtility;
 use Helio\Panel\Utility\ServerUtility;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Http\StatusCode;
+
 
 /**
  * Class ApiController
@@ -45,8 +47,15 @@ class ApiJobController extends AbstractController
      */
     public function removeJobAction(): ResponseInterface
     {
-        $this->job->setHidden(true);
+        /** @var Task $task */
+        JobFactory::getInstanceOfJob($this->job)->stop($this->params, $this->request, $this->response);
+
+        // first: set all services to absent. then, remove the managers
+        OrchestratorFactory::getOrchestratorForInstance($this->instance)->dispatchJob($this->job);
+        OrchestratorFactory::getOrchestratorForInstance($this->instance)->removeManager($this->job);
+
         $this->persistJob();
+
         return $this->render(['success' => true]);
     }
 

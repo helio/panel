@@ -14,6 +14,9 @@ trait StatisticsController
     use AuthenticatedController;
 
     protected function statServerByRegion(): array {
+        if (!$this->user) {
+            return [];
+        }
         $query = $this->dbHelper->getRepository(Instance::class)->createQueryBuilder('c');
         return $query
                 ->select('c.region, COUNT(c.id) as cnt')

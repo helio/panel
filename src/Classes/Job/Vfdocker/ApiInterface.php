@@ -16,13 +16,15 @@ use Psr\Http\Message\ResponseInterface;
  *     type="apiKey",
  *     in="query",
  *     securityScheme="authByApitoken",
- *     name="token"
+ *     name="token",
+ *     description="The API Token of your user, obtainable in the WebUI at panel.idling.host"
  * )
  * @OA\SecurityScheme(
  *     type="apiKey",
  *     in="query",
  *     securityScheme="authByJobtoken",
- *     name="token"
+ *     name="token",
+ *     description="The Job specific token received during /api/job/add"
  * )
  *
  * @OA\Server(url="https://panel.idling.host")
@@ -181,7 +183,6 @@ interface ApiInterface
      *     ),
      *     @OA\Response(response="200", description="Job has been deleted"),
      *     security={
-     *         {"authByJobtoken": {"any"}},
      *         {"authByApitoken": {"any"}}
      *     }
      * )
@@ -205,7 +206,6 @@ interface ApiInterface
      *     ),
      *     @OA\Response(response="200", description="Contains the Status"),
      *     security={
-     *         {"authByJobtoken": {"any"}},
      *         {"authByApitoken": {"any"}}
      *     }
      * )
@@ -256,6 +256,7 @@ interface ApiInterface
      *         )
      *     ),
      *     security={
+     *         {"authByJobtoken": {"any"}},
      *         {"authByJobtoken": {"any"}}
      *     }
      * )
@@ -311,7 +312,8 @@ interface ApiInterface
      *         )
      *     ),
      *     security={
-     *         {"authByJobtoken": {"any"}}
+     *         {"authByJobtoken": {"any"}},
+     *         {"authByApitoken": {"any"}}
      *     }
      * )
      *

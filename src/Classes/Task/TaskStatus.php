@@ -41,6 +41,11 @@ final class TaskStatus
             || $status === self::STOPPED;
     }
 
+    public static function isRunning(int $status): bool
+    {
+        return $status === self::RUNNING;
+    }
+
     public static function isNotRequiredToRunAnymore(int $status): bool
     {
         return $status === self::TERMINATED

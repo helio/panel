@@ -16,7 +16,6 @@ trait AuthorizedJobController
     use JobController;
 
 
-
     /**
      * overwrite setupUser to make it possible to authenticate with a job-token only
      *
@@ -44,6 +43,7 @@ trait AuthorizedJobController
         }
         return true;
     }
+
 
     /**
      * @return bool

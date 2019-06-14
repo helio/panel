@@ -6,10 +6,8 @@ use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\OptimisticLockException;
 use Helio\Panel\App;
 use Helio\Panel\Helper\DbHelper;
-use Helio\Panel\Job\DispatchableInterface;
+use Helio\Panel\Job\AbstractExecute;
 use Helio\Panel\Job\DispatchConfig;
-use Helio\Panel\Job\JobInterface;
-use Helio\Panel\Model\Job;
 use Helio\Panel\Model\Task;
 use Helio\Panel\Task\TaskStatus;
 use Helio\Panel\Utility\ExecUtility;
@@ -19,29 +17,8 @@ use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response;
 use Slim\Http\StatusCode;
 
-class Execute implements JobInterface, DispatchableInterface
+class Execute extends AbstractExecute
 {
-    /**
-     * @var Job
-     */
-    protected $job;
-    /**
-     * @var Task
-     */
-    protected $task;
-
-    /**
-     * Execute constructor.
-     *
-     * @param Job $job
-     * @param Task|null $task
-     */
-    public function __construct(Job $job, Task $task = null)
-    {
-        $this->job = $job;
-        $this->task = $task;
-    }
-
 
     /**
      * @param array $params
@@ -95,28 +72,6 @@ class Execute implements JobInterface, DispatchableInterface
         return true;
     }
 
-
-    /**
-     * @param array $params
-     * @param RequestInterface $request
-     * @param ResponseInterface|null $response
-     *
-     * @return bool
-     *
-     * @throws \Exception
-     */
-    public function stop(array $params, RequestInterface $request, ResponseInterface $response = null): bool
-    {
-        $tasks = DbHelper::getInstance()->getRepository(Task::class)->findByJob($this->job);
-        /** @var Task $task */
-        foreach ($tasks as $task) {
-            $task->setStatus(TaskStatus::TERMINATED);
-            App::getApp()->getContainer()['dbHelper']->persist($task);
-        }
-        App::getApp()->getContainer()['dbHelper']->flush();
-
-        return true;
-    }
 
     /**
      * @param array $params

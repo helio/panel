@@ -14,4 +14,6 @@ interface OrchestratorInterface
     public function dispatchJob(Job $job): bool;
 
     public function provisionManager(Job $job): bool;
+
+    public function removeManager(Job $job): bool;
 }
