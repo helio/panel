@@ -172,7 +172,7 @@ class ApiJobController extends AbstractController
      */
     public function jobIsReadyAction(): ResponseInterface
     {
-        return $this->render([], $this->job->getStatus() === JobStatus::READY ? StatusCode::HTTP_OK : StatusCode::HTTP_FAILED_DEPENDENCY);
+        return $this->render(['success' => true], $this->job->getStatus() === JobStatus::READY ? StatusCode::HTTP_OK : StatusCode::HTTP_FAILED_DEPENDENCY);
     }
 
 

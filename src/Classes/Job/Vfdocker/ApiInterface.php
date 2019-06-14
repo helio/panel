@@ -315,7 +315,7 @@ interface ApiInterface
      *         {"authByJobtoken": {"any"}},
      *         {"authByApitoken": {"any"}}
      *     }
-     * )
+     *
      *
      * @return ResponseInterface
      */
