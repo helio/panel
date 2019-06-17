@@ -222,7 +222,7 @@ class ApiAdminController extends AbstractController
             // prepare and reset vars
             $serviceprefix = $this->job->getType() . '-' . $this->job->getId();
             $servicename = $serviceprefix . '-' . $task->getId();
-            $services['service_name'] = $servicename;
+            $services[$servicename]['service_name'] = $servicename;
             $taskEnv = [];
             $yamlEnv = [];
             $env = [];
