@@ -189,7 +189,7 @@ class ApiJobController extends AbstractController
         if (!$this->job->getOwner()) {
             return $this->render([]);
         }
-        return $this->render($this->elastic->getLogEntries($this->job->getOwner()->getId(), $this->job->getId()));
+        return $this->render($this->setWindow()->getLogEntries($this->job->getOwner()->getId(), $this->job->getId()));
     }
 
 

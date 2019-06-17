@@ -8,6 +8,8 @@ class ElasticHelper
 {
     /** @var \Elasticsearch\Client */
     protected $client;
+    protected $from = 0;
+    protected $size = 10;
 
     /**
      * @var string
@@ -36,18 +38,17 @@ class ElasticHelper
      * @param int $userId
      * @param int|null $jobId negative value means the field must not exist
      * @param int|null $taskId negative value means the field must not exist
-     * @param int $from
-     * @param int $size
      * @return array
      */
-    public function getLogEntries(int $userId, int $jobId = null, int $taskId = null, int $from = 0, int $size = 10): array
+    public function getLogEntries(int $userId, int $jobId = null, int $taskId = null): array
     {
         $params = [
-            'index' => vsprintf(self::$indexTemplate, [$userId]),
+            //'index' => vsprintf(self::$indexTemplate, [$userId]),
+            'index' => vsprintf(self::$indexTemplate, [86]),
             'body' => [
                 '_source' => [self::$logEntryFieldName, self::$timestampFieldName],
-                'from' => $from,
-                'size' => $size,
+                'from' => $this->getFrom(),
+                'size' => $this->getSize(),
                 'sort' => [
                     self::$timestampFieldName => 'desc'
                 ],
@@ -93,5 +94,41 @@ class ElasticHelper
             LogHelper::warn('Error in Elastic Query: ' . $e->getMessage());
             return [];
         }
+    }
+
+    /**
+     * @return int
+     */
+    public function getFrom(): int
+    {
+        return $this->from;
+    }
+
+    /**
+     * @param int $from
+     * @return ElasticHelper
+     */
+    public function setFrom(int $from): ElasticHelper
+    {
+        $this->from = $from;
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getSize(): int
+    {
+        return $this->size;
+    }
+
+    /**
+     * @param int $size
+     * @return ElasticHelper
+     */
+    public function setSize(int $size): ElasticHelper
+    {
+        $this->size = $size;
+        return $this;
     }
 }

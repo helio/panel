@@ -136,7 +136,7 @@ class ApiUserController extends AbstractController
      */
     public function logsAction(): ResponseInterface
     {
-        return $this->render($this->elastic->getLogEntries($this->user->getId()));
+        return $this->render($this->setWindow()->getLogEntries($this->user->getId()));
     }
 
 

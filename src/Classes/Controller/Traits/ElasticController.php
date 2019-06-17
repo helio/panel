@@ -26,4 +26,22 @@ trait ElasticController
         $this->elastic = new ElasticHelper($host);
         return true;
     }
+
+    /**
+     * @param int $from
+     * @param int $size
+     * @return ElasticHelper
+     */
+    protected function setWindow(int $from = 0, int $size = 10): ElasticHelper
+    {
+        if (\is_array($this->params) && \array_key_exists('from', $this->params) && $this->params['from']) {
+            $from = (int)$this->params['from'];
+        }
+        if (\is_array($this->params) && \array_key_exists('size', $this->params) && $this->params['size']) {
+            $size = (int)$this->params['size'];
+        }
+        $this->elastic->setFrom($from);
+        $this->elastic->setSize($size);
+        return $this->elastic;
+    }
 }

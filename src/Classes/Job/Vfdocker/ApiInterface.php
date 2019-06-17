@@ -335,6 +335,22 @@ interface ApiInterface
      *             type="string"
      *         )
      *     ),
+     *     @OA\Parameter(
+     *         name="size",
+     *         in="query",
+     *         description="Amount of log entries to retreive",
+     *         @Oa\Items(
+     *             type="integer"
+     *         )
+     *     ),
+     *     @OA\Parameter(
+     *         name="from",
+     *         in="query",
+     *         description="Amount of log entries to skip",
+     *         @Oa\Items(
+     *             type="integer"
+     *         )
+     *     ),
      *     @OA\Response(response="200", description="Contains the Status"),
      *     security={
      *         {"authByApitoken": {"any"}}
@@ -359,6 +375,22 @@ interface ApiInterface
      *             type="string"
      *         )
      *     ),
+     *     @OA\Parameter(
+     *         name="size",
+     *         in="query",
+     *         description="Amount of log entries to retreive",
+     *         @Oa\Items(
+     *             type="integer"
+     *         )
+     *     ),
+     *     @OA\Parameter(
+     *         name="from",
+     *         in="query",
+     *         description="Amount of log entries to skip",
+     *         @Oa\Items(
+     *             type="integer"
+     *         )
+     *     ),
      *     @OA\Response(response="200", description="Contains the Status"),
      *     security={
      *         {"authByApitoken": {"any"}},
@@ -378,7 +410,23 @@ interface ApiInterface
      *     @OA\Response(response="200", description="Contains the Status"),
      *     security={
      *         {"authByApitoken": {"any"}}
-     *     }
+     *     },
+     *     @OA\Parameter(
+     *         name="size",
+     *         in="query",
+     *         description="Amount of log entries to retreive",
+     *         @Oa\Items(
+     *             type="integer"
+     *         )
+     *     ),
+     *     @OA\Parameter(
+     *         name="from",
+     *         in="query",
+     *         description="Amount of log entries to skip",
+     *         @Oa\Items(
+     *             type="integer"
+     *         )
+     *     )
      * )
      *
      * @return ResponseInterface
