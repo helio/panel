@@ -3,6 +3,7 @@
 namespace Helio\Panel\Controller;
 
 
+use Helio\Panel\Controller\Traits\ElasticController;
 use Helio\Panel\Controller\Traits\InstanceController;
 use Helio\Panel\Controller\Traits\TaskController;
 use Helio\Panel\Controller\Traits\TypeApiController;
@@ -35,6 +36,9 @@ class ExecController extends AbstractController
         ValidatedJobController::requiredParameterCheck insteadof TaskController, InstanceController;
         ValidatedJobController::optionalParameterCheck insteadof TaskController, InstanceController;
     }
+
+    use ElasticController;
+
     use TypeApiController;
 
 
@@ -179,6 +183,20 @@ class ExecController extends AbstractController
         } catch (\Exception $e) {
             return $this->render(['status' => 'error'], StatusCode::HTTP_INTERNAL_SERVER_ERROR);
         }
+    }
+
+
+    /**
+     * @return ResponseInterface
+     *
+     * @Route("/logs", methods={"GET"}, name="job.logs")
+     */
+    public function logsAction(): ResponseInterface
+    {
+        if (!$this->job->getOwner()) {
+            return $this->render([]);
+        }
+        return $this->render($this->elastic->getLogEntries($this->job->getOwner()->getId(), $this->job->getId(), $this->task->getId()));
     }
 
 

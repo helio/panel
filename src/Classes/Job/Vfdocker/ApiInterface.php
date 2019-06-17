@@ -315,9 +315,73 @@ interface ApiInterface
      *         {"authByJobtoken": {"any"}},
      *         {"authByApitoken": {"any"}}
      *     }
-     *
+     * )
      *
      * @return ResponseInterface
      */
     public function submitresult(): ResponseInterface;
+
+
+    /**
+     * @OA\Get(
+     *     path="/api/job/logs",
+     *     description="Aggregation of the logs of all tasks of a job",
+     *     @OA\Parameter(
+     *         name="jobid",
+     *         in="query",
+     *         description="Id of the job which logs you wandt to see",
+     *         required=true,
+     *         @Oa\Items(
+     *             type="string"
+     *         )
+     *     ),
+     *     @OA\Response(response="200", description="Contains the Status"),
+     *     security={
+     *         {"authByApitoken": {"any"}}
+     *     }
+     * )
+     *
+     * @return ResponseInterface
+     */
+    public function jobLogs(): ResponseInterface;
+
+
+    /**
+     * @OA\Get(
+     *     path="/exec/logs",
+     *     description="Logs of a task",
+     *     @OA\Parameter(
+     *         name="taskid",
+     *         in="query",
+     *         description="Id of the task which logs you wandt to see",
+     *         required=true,
+     *         @Oa\Items(
+     *             type="string"
+     *         )
+     *     ),
+     *     @OA\Response(response="200", description="Contains the Status"),
+     *     security={
+     *         {"authByApitoken": {"any"}},
+     *         {"authByJobtoken": {"any"}}
+     *     }
+     * )
+     *
+     * @return ResponseInterface
+     */
+    public function taskLogs(): ResponseInterface;
+
+
+    /**
+     * @OA\Get(
+     *     path="/api/user/logs",
+     *     description="Aggregation of the logs of all jobs and tasks of a user",
+     *     @OA\Response(response="200", description="Contains the Status"),
+     *     security={
+     *         {"authByApitoken": {"any"}}
+     *     }
+     * )
+     *
+     * @return ResponseInterface
+     */
+    public function userLogs(): ResponseInterface;
 }

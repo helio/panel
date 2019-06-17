@@ -2,12 +2,8 @@
 
 namespace Helio\Panel\Helper;
 
-use Doctrine\Common\Persistence\ObjectRepository;
-use Doctrine\ORM\EntityManager;
-use Doctrine\ORM\EntityRepository;
-use Doctrine\ORM\Tools\Setup;
-use Helio\Panel\App;
 use Helio\Panel\Utility\ServerUtility;
+use Monolog\Handler\ErrorLogHandler;
 use Monolog\Logger;
 use Psr\Log\LogLevel;
 
@@ -106,6 +102,11 @@ class LogHelper
                 ->pushProcessor(new \Monolog\Processor\UidProcessor())
                 ->pushHandler(new \Monolog\Handler\StreamHandler(LOG_DEST, LOG_LVL));
             self::$logger::setTimezone(ServerUtility::getTimezoneObject());
+
+            // also log to stdout
+            if (ServerUtility::isLocalDevEnv()) {
+                self::$logger->pushHandler(new ErrorLogHandler());
+            }
         }
 
         return self::$logger;

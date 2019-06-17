@@ -72,6 +72,9 @@ class ServerUtility
         return self::get('SITE_ENV') === 'PROD';
     }
 
+    public static function isLocalDevEnv(): bool {
+        return PHP_SAPI === 'cli-server' && SITE_ENV === 'DEV';
+    }
 
     /**
      * @param string $name

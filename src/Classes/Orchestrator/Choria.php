@@ -241,7 +241,7 @@ end
         ],
             $parameter
         );
-        //ServerUtility::validateParams($params);
+        //TODO: Re-add ServerUtility::validateParams($params);
 
         $commandName .= 'Command';
         return vsprintf(self::$$commandName, $params);

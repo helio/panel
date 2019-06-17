@@ -3,6 +3,7 @@
 namespace Helio\Panel\Controller;
 
 
+use Helio\Panel\Controller\Traits\ElasticController;
 use Helio\Panel\Controller\Traits\InstanceController;
 use Helio\Panel\Controller\Traits\TypeDynamicController;
 use Helio\Panel\Controller\Traits\AuthorizedJobController;
@@ -36,6 +37,8 @@ class ApiJobController extends AbstractController
         AuthorizedJobController::requiredParameterCheck insteadof InstanceController;
         AuthorizedJobController::optionalParameterCheck insteadof InstanceController;
     }
+
+    use ElasticController;
 
     use TypeDynamicController;
 
@@ -173,6 +176,20 @@ class ApiJobController extends AbstractController
     public function jobIsReadyAction(): ResponseInterface
     {
         return $this->render(['success' => true], $this->job->getStatus() === JobStatus::READY ? StatusCode::HTTP_OK : StatusCode::HTTP_FAILED_DEPENDENCY);
+    }
+
+
+    /**
+     * @return ResponseInterface
+     *
+     * @Route("/logs", methods={"GET"}, name="job.logs")
+     */
+    public function logsAction(): ResponseInterface
+    {
+        if (!$this->job->getOwner()) {
+            return $this->render([]);
+        }
+        return $this->render($this->elastic->getLogEntries($this->job->getOwner()->getId(), $this->job->getId()));
     }
 
 

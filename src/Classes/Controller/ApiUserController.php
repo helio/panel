@@ -4,6 +4,7 @@ namespace Helio\Panel\Controller;
 
 
 use Helio\Panel\Controller\Traits\AuthenticatedController;
+use Helio\Panel\Controller\Traits\ElasticController;
 use Helio\Panel\Controller\Traits\ParametrizedController;
 use Helio\Panel\Controller\Traits\TypeApiController;
 use Helio\Panel\Model\Instance;
@@ -28,6 +29,7 @@ class ApiUserController extends AbstractController
     use AuthenticatedController;
     use ParametrizedController;
     use TypeApiController;
+    use ElasticController;
 
     protected function getContext(): ?string
     {
@@ -124,6 +126,17 @@ class ApiUserController extends AbstractController
         $this->dbHelper->flush($this->user);
 
         return $this->render(['message' => 'done']);
+    }
+
+
+    /**
+     * @return ResponseInterface
+     *
+     * @Route("/logs", methods={"GET"}, name="job.logs")
+     */
+    public function logsAction(): ResponseInterface
+    {
+        return $this->render($this->elastic->getLogEntries($this->user->getId()));
     }
 
 
