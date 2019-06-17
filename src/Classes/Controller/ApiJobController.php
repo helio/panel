@@ -208,7 +208,6 @@ class ApiJobController extends AbstractController
         if (\array_key_exists('nodes', $body)) {
             $nodes = \is_array($body['nodes']) ? $body['nodes'] : array($body['nodes']);
             foreach ($nodes as $node) {
-
                 if (\array_key_exists('deleted', $body)) {
                     $this->job->removeManagerNode($node);
                 } else {

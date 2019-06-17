@@ -453,10 +453,14 @@ class Job extends AbstractModel
     public function removeManagerNode(string $nodeToRemove): Job
     {
         $this->setManagerNodes(array_filter($this->getManagerNodes(), function ($node) use ($nodeToRemove) {
-            /** @var Task $task */
-            return $node !== $nodeToRemove;
+            if (trim($node) === trim($nodeToRemove)) {
+                return false;
+            }
+            if (strpos(trim($node), trim($nodeToRemove . '.')) === 0) {
+                return false;
+            }
+            return true;
         }));
-        $this->numberOfActiveTasks = null;
 
         return $this;
     }
