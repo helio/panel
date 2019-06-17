@@ -20,7 +20,7 @@ class CookieUtilityTest extends TestCase
         $response = new Response();
         $response = CookieUtility::addCookie($response, 'test', 'value');
         $this->assertCount(1, $response->getHeader('set-cookie'));
-        $this->assertContains('test=value', $response->getHeader('set-cookie')[0]);
+        $this->assertStringContainsString('test=value', $response->getHeader('set-cookie')[0]);
     }
 
 
@@ -33,12 +33,12 @@ class CookieUtilityTest extends TestCase
         $response = new Response();
         $response = CookieUtility::addCookie($response, 'test', 'value');
         $this->assertCount(1, $response->getHeader('set-cookie'));
-        $this->assertContains('test=value', $response->getHeader('set-cookie')[0]);
+        $this->assertStringContainsString('test=value', $response->getHeader('set-cookie')[0]);
 
         $response = CookieUtility::deleteCookie($response, 'test')->getHeader('set-cookie');
-        $this->assertInternalType('array', $response);
+        $this->assertIsArray($response);
         $this->assertCount(2, $response);
-        $this->assertContains('test=deleted', $response[1]);
+        $this->assertStringContainsString('test=deleted', $response[1]);
         $this->assertEquals(0, $this->getMaxAge($response[1]));
         $this->assertEquals(1, $this->getExpires($response[1])->getTimestamp());
     }
@@ -56,7 +56,7 @@ class CookieUtilityTest extends TestCase
 
         $responseCookies = CookieUtility::addCookie($emptyResponse, 'test', 'value',
             $future->getTimestamp())->getHeader('set-cookie');
-        $this->assertInternalType('array', $responseCookies);
+        $this->assertIsArray($responseCookies);
         $this->assertCount(1, $responseCookies);
         $this->assertCloseDateTime($future, $this->getExpires($responseCookies[0]));
         $this->assertCloseInt($future->getTimestamp() - $now->getTimestamp(), $this->getMaxAge($responseCookies[0]), 1);

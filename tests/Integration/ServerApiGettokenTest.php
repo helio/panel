@@ -31,7 +31,7 @@ class ServerApiGettokenTest extends TestCase
     /**
      * @throws \Exception
      */
-    public function setUp()
+    public function setUp(): void
     {
         parent::setUp();
 
@@ -144,7 +144,7 @@ class ServerApiGettokenTest extends TestCase
         /** @var Instance $instance */
         $instance = $this->instanceRepository->findOneByFqdn('testserver.example.com');
         $this->assertNotNull($instance);
-        $this->assertContains('token', $body);
+        $this->assertStringContainsString('token', $body);
         $this->assertEquals($instance->getToken(), $json['token']);
     }
 }

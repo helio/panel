@@ -5,6 +5,7 @@
 /tmp/
 
 .DS_Store
+.phpunit.result.cache
 
 # project files
 /www/pf

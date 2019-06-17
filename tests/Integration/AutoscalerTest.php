@@ -51,7 +51,7 @@ class AutoscalerTest extends TestCase
     /**
      * @throws \Exception
      */
-    public function setUp()
+    public function setUp(): void
     {
         parent::setUp();
         ServerUtility::resetLastExecutedCommand();
@@ -164,7 +164,7 @@ class AutoscalerTest extends TestCase
 
         $this->runApp('POST', '/api/job/add?token=' . $this->user->getToken(), true, null, ['jobid' => $precreatedJob->getId(), 'jobtype' => JobType::ENERGY_PLUS_85, 'jobname' => 'testing 1551430480']);
 
-        $this->assertContains('ssh', ServerUtility::getLastExecutedShellCommand());
-        $this->assertContains('manager-init-' . ServerUtility::getShortHashOfString($precreatedJob->getId()), ServerUtility::getLastExecutedShellCommand());
+        $this->assertStringContainsString('ssh', ServerUtility::getLastExecutedShellCommand());
+        $this->assertStringContainsString('manager-init-' . ServerUtility::getShortHashOfString($precreatedJob->getId()), ServerUtility::getLastExecutedShellCommand());
     }
 }

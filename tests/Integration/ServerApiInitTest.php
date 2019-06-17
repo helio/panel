@@ -25,7 +25,7 @@ class ServerApiInitTest extends TestCase
     /**
      * @throws \Exception
      */
-    public function setUp()
+    public function setUp(): void
     {
         parent::setUp();
 
@@ -110,8 +110,8 @@ class ServerApiInitTest extends TestCase
         $response = $this->exec();
         $this->assertEquals(200, $response->getStatusCode());
         $body = (string)$response->getBody();
-        $this->assertContains('server_id', $body);
-        $this->assertContains('user_id', $body);
+        $this->assertStringContainsString('server_id', $body);
+        $this->assertStringContainsString('user_id', $body);
 
         $json = json_decode($body, true);
         /** @var Instance $instance */

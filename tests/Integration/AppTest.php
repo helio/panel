@@ -45,7 +45,7 @@ class AppTest extends TestCase
 
         $body = (string)$response->getBody();
         $this->assertEquals(200, $response->getStatusCode());
-        $this->assertContains('testuser', $body);
+        $this->assertStringContainsString('testuser', $body);
     }
 
 
@@ -64,7 +64,7 @@ class AppTest extends TestCase
 
         $body = (string)$response->getBody();
         $this->assertEquals(200, $response->getStatusCode());
-        $this->assertContains('testuser', $body);
+        $this->assertStringContainsString('testuser', $body);
     }
 
 
@@ -105,7 +105,7 @@ class AppTest extends TestCase
 
         // guard asserts
         $this->assertEquals(200, $response->getStatusCode());
-        $this->assertInternalType('array', $cookies);
+        $this->assertIsArray($cookies);
         $this->assertCount(1, $cookies);
 
         // actual tests

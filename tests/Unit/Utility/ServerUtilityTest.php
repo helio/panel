@@ -64,7 +64,7 @@ class ServerUtilityTest extends TestCase
         $result = MasterFactory::getMasterForInstance($server)->doSign();
 
         $this->assertStringStartsWith('ssh', ServerUtility::getLastExecutedShellCommand());
-        $this->assertContains($server->getFqdn(), ServerUtility::getLastExecutedShellCommand());
+        $this->assertStringContainsString($server->getFqdn(), ServerUtility::getLastExecutedShellCommand());
     }
 
     /**

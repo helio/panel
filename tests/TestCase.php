@@ -27,7 +27,7 @@ use Webfactory\Doctrine\ORMTestInfrastructure\ORMInfrastructure;
  * @package    Helio\Test\Functional
  * @author    Christoph Buchli <team@opencomputing.cloud>
  */
-class TestCase extends \PHPUnit_Framework_TestCase
+class TestCase extends \PHPUnit\Framework\TestCase
 {
     /**
      * @var ORMInfrastructure
@@ -62,7 +62,7 @@ class TestCase extends \PHPUnit_Framework_TestCase
     /** @see \PHPUnit_Framework_TestCase::setUp()
      * @throws \Exception
      */
-    protected function setUp()
+    protected function setUp(): void
     {
         $_SERVER['JWT_SECRET'] = 'ladida';
         $_SERVER['ZAPIER_HOOK_URL'] = '/blah';
@@ -94,7 +94,7 @@ class TestCase extends \PHPUnit_Framework_TestCase
     /**
      *
      */
-    public static function setUpBeforeClass()
+    public static function setUpBeforeClass(): void
     {
         if (!\defined('APPLICATION_ROOT')) {
             \define('APPLICATION_ROOT', \dirname(__DIR__));

@@ -57,7 +57,7 @@ class ManagerNodesTest extends TestCase
     /**
      * @throws \Exception
      */
-    public function setUp()
+    public function setUp(): void
     {
         parent::setUp();
 
@@ -122,7 +122,7 @@ class ManagerNodesTest extends TestCase
     public function testRedundantManagersGetSetupOnCallbackCall(): void
     {
         $jobid = json_decode((string)$this->runApp('POST', '/api/job/add?jobid=_NEW&token=' . $this->user->getToken() . '&jobtype=' . JobType::GITLAB_RUNNER, true, null)->getBody(), true)['id'];
-        $this->assertContains('manager-init-' . ServerUtility::getShortHashOfString($jobid), ServerUtility::getLastExecutedShellCommand());
+        $this->assertStringContainsString('manager-init-' . ServerUtility::getShortHashOfString($jobid), ServerUtility::getLastExecutedShellCommand());
         $command = str_replace('\\"', '"', ServerUtility::getLastExecutedShellCommand());
         $pattern = '/^.*"callback":"' . str_replace('/', '\\/', ServerUtility::getBaseUrl()) . '([^"]+)"/';
         $matches = [];
@@ -160,9 +160,9 @@ class ManagerNodesTest extends TestCase
     {
         $this->runApp('POST', '/exec', true, null, ['jobid' => $this->job->getId(), 'token' => $this->job->getToken()]);
 
-        $this->assertContains('helio::queue', ServerUtility::getLastExecutedShellCommand());
-        $this->assertContains('helio::task', ServerUtility::getLastExecutedShellCommand(1));
-        $this->assertContains('manager-init-' . ServerUtility::getShortHashOfString($this->job->getId()) . '.example.com', ServerUtility::getLastExecutedShellCommand(1));
+        $this->assertStringContainsString('helio::queue', ServerUtility::getLastExecutedShellCommand());
+        $this->assertStringContainsString('helio::task', ServerUtility::getLastExecutedShellCommand(1));
+        $this->assertStringContainsString('manager-init-' . ServerUtility::getShortHashOfString($this->job->getId()) . '.example.com', ServerUtility::getLastExecutedShellCommand(1));
     }
 
 
@@ -173,8 +173,8 @@ class ManagerNodesTest extends TestCase
     {
         $this->runApp('POST', '/exec', true, null, ['jobid' => $this->job->getId(), 'token' => $this->job->getToken()]);
 
-        $this->assertContains('helio::queue', ServerUtility::getLastExecutedShellCommand());
-        $this->assertContains('helio::task', ServerUtility::getLastExecutedShellCommand(1));
+        $this->assertStringContainsString('helio::queue', ServerUtility::getLastExecutedShellCommand());
+        $this->assertStringContainsString('helio::task', ServerUtility::getLastExecutedShellCommand(1));
 
         ServerUtility::resetLastExecutedCommand();
 
@@ -194,8 +194,8 @@ class ManagerNodesTest extends TestCase
             $this->runApp('POST', '/exec', true, null, ['jobid' => $this->job->getId(), 'token' => $this->job->getToken()])->getBody();
         } while ($i > 0);
 
-        $this->assertContains('helio::queue', ServerUtility::getLastExecutedShellCommand());
-        $this->assertContains('helio::task', ServerUtility::getLastExecutedShellCommand(1));
+        $this->assertStringContainsString('helio::queue', ServerUtility::getLastExecutedShellCommand());
+        $this->assertStringContainsString('helio::task', ServerUtility::getLastExecutedShellCommand(1));
     }
 
 
