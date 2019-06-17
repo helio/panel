@@ -69,6 +69,7 @@ class TestCase extends \PHPUnit\Framework\TestCase
         $_SERVER['SCRIPT_HASH'] = 'TESTSHA1';
         $_SERVER['REMOTE_ADDR'] = '127.0.0.1';
         $_SERVER['SITE_ENV'] = 'TEST';
+        $_SERVER['ELASTIC_HOST'] = 'elastic.neverland.global';
 
 
         // re-init Zapier helper to make sure no Responses are left in the stack etc.

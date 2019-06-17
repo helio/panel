@@ -68,7 +68,8 @@ class ManagerNodesTest extends TestCase
         $this->infrastructure->getEntityManager()->persist($this->user);
         $this->infrastructure->getEntityManager()->flush();
 
-        $jobid = json_decode((string)$this->runApp('POST', '/api/job/add?jobid=_NEW&token=' . $this->user->getToken() . '&jobtype=' . JobType::ENERGY_PLUS_85, true, null)->getBody(), true)['id'];
+        $body = (string)$this->runApp('POST', '/api/job/add?jobid=_NEW&token=' . $this->user->getToken() . '&jobtype=' . JobType::ENERGY_PLUS_85, true, null)->getBody();
+        $jobid = json_decode($body, true)['id'];
         $command = str_replace('\\"', '"', ServerUtility::getLastExecutedShellCommand());
         $pattern = '/^.*"callback":"' . str_replace('/', '\\/', ServerUtility::getBaseUrl()) . '([^"]+)"/';
         $matches = [];
