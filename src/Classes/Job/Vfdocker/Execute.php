@@ -64,7 +64,14 @@ class Execute extends AbstractExecute
      */
     public function create(array $params, RequestInterface $request, ResponseInterface $response = null): bool
     {
-        $this->job->setConfig((string)$request->getBody());
+        $body = (string)$request->getBody();
+
+        // validate JSON
+        if (json_decode($body) === null) {
+            throw new \InvalidArgumentException('Invalid JSON supplied', 1560782976);
+        }
+
+        $this->job->setConfig($body);
         return true;
     }
 
