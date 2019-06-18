@@ -75,7 +75,9 @@ class ElasticHelper
             if ($taskId < 0) {
                 $mustNot[] = ['exists' => ['field' => self::$taskIdFieldName]];
             } else {
-                $filter[] = ['term' => [self::$taskIdFieldName => (string)$taskId]];
+                // TODO: This is a workaround until we have a proper field `task_id` : $filter[] = ['term' => [self::$taskIdFieldName => (string)$taskId]];
+                $filter[] = ['wildcard' => [
+                    'container_name.keyword' => '*/*' . ($jobId ? "-$jobId" : '') . "-$taskId.*"]];
             }
         }
 

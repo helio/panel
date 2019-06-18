@@ -233,7 +233,7 @@ interface ApiInterface
 
         {
             ""env"": [
-                {""SOURCE_PATH"":""https://account-name>.<zone-name>.web.core.windows.net""},
+                {""SOURCE_PATH"":""https://account-name.zone-name.web.core.windows.net""},
                 {""TARGET_PATH"":""https://bucket.s3.aws-region.amazonaws.com""}
             ]
         }",
