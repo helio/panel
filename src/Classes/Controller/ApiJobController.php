@@ -232,7 +232,7 @@ class ApiJobController extends AbstractController
         $this->persistJob();
 
         // provision missing redundancy nodes if necessary
-        if ($this->job->getInitManagerIp()) {
+        if (!\array_key_exists('deleted', $body) && $this->job->getInitManagerIp()) {
             OrchestratorFactory::getOrchestratorForInstance($this->instance)->provisionManager($this->job);
         }
 
