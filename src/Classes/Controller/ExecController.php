@@ -10,6 +10,7 @@ use Helio\Panel\Controller\Traits\TypeApiController;
 use Helio\Panel\Controller\Traits\ValidatedJobController;
 use Helio\Panel\Job\JobFactory;
 use Helio\Panel\Job\JobStatus;
+use Helio\Panel\Model\Job;
 use Helio\Panel\Model\Task;
 use Helio\Panel\Model\User;
 use Helio\Panel\Orchestrator\OrchestratorFactory;
@@ -193,10 +194,16 @@ class ExecController extends AbstractController
      */
     public function logsAction(): ResponseInterface
     {
-        if (!$this->job->getOwner()) {
+        if (!$this->task) {
             return $this->render([]);
         }
-        return $this->render($this->setWindow()->getLogEntries($this->job->getOwner()->getId(), $this->job->getId(), $this->task->getId()));
+
+        /** @var Job $job */
+        $job = $this->task->getJob();
+        if (!$job->getOwner()) {
+            return $this->render([]);
+        }
+        return $this->render($this->setWindow()->getLogEntries($job->getOwner()->getId(), $job->getId(), $this->task->getId()));
     }
 
 

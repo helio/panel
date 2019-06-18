@@ -376,6 +376,15 @@ interface ApiInterface
      *         )
      *     ),
      *     @OA\Parameter(
+     *         name="jobid",
+     *         in="query",
+     *         description="Id of the associated job, needed for authentication and authorisation",
+     *         required=true,
+     *         @Oa\Items(
+     *             type="string"
+     *         )
+     *     ),
+     *     @OA\Parameter(
      *         name="size",
      *         in="query",
      *         description="Amount of log entries to retreive",
