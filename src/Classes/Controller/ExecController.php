@@ -16,7 +16,6 @@ use Helio\Panel\Model\User;
 use Helio\Panel\Orchestrator\OrchestratorFactory;
 use Helio\Panel\Task\TaskStatus;
 use Helio\Panel\Utility\ExecUtility;
-use Helio\Panel\Utility\JwtUtility;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\UploadedFileInterface;
 use Slim\Http\StatusCode;
@@ -55,9 +54,7 @@ class ExecController extends AbstractController
         if (\array_key_exists('token', $this->params)) {
             /** @var User $tryToFindUser */
             $tryToFindUser = $this->dbHelper->getRepository(User::class)->findOneByToken($this->params['token']);
-            if ($tryToFindUser !== null && $tryToFindUser->isAdmin() && JwtUtility::verifyUserIdentificationToken($tryToFindUser, $this->params['token'])) {
-                $this->user = $tryToFindUser;
-            }
+            $this->user = $tryToFindUser;
         }
         return true;
     }
@@ -79,6 +76,8 @@ class ExecController extends AbstractController
             $command = 'run';
             if ($this->request->getMethod() === 'DELETE') {
                 $command = 'stop';
+            } else {
+                $this->task = new Task();
             }
 
             // run the job and check if the replicas have changed

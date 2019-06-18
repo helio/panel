@@ -19,7 +19,6 @@ class Execute extends AbstractExecute
 {
 
 
-
     /**
      * @param array $params
      * @param RequestInterface $request
@@ -29,7 +28,10 @@ class Execute extends AbstractExecute
      */
     public function run(array $params, RequestInterface $request, ResponseInterface $response): bool
     {
-        $this->task = (new Task())->setJob($this->job)->setCreated(new \DateTime('now', ServerUtility::getTimezoneObject()))->setConfig((string)$request->getBody());
+        if (!$this->task) {
+            $this->task = new Task();
+        }
+        $this->task->setJob($this->job)->setCreated(new \DateTime('now', ServerUtility::getTimezoneObject()))->setConfig((string)$request->getBody());
         App::getApp()->getContainer()['dbHelper']->persist($this->task);
         App::getApp()->getContainer()['dbHelper']->flush();
         return true;
