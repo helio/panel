@@ -43,8 +43,7 @@ class ElasticHelper
     public function getLogEntries(int $userId, int $jobId = null, int $taskId = null): array
     {
         $params = [
-            //'index' => vsprintf(self::$indexTemplate, [$userId]),
-            'index' => vsprintf(self::$indexTemplate, [86]),
+            'index' => vsprintf(self::$indexTemplate, [$userId]),
             'body' => [
                 '_source' => [self::$logEntryFieldName, self::$timestampFieldName],
                 'from' => $this->getFrom(),
