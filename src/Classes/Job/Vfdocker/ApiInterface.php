@@ -257,7 +257,7 @@ interface ApiInterface
      *     ),
      *     security={
      *         {"authByJobtoken": {"any"}},
-     *         {"authByJobtoken": {"any"}}
+     *         {"authByApitoken": {"any"}}
      *     }
      * )
      *
