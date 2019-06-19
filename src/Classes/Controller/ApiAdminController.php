@@ -264,6 +264,8 @@ class ApiAdminController extends AbstractController
             } else {
                 $taskEnv = $env;
             }
+            /** @noinspection SlowArrayOperationsInLoopInspection */
+            $taskEnv = \array_merge(['HELIO_JOBID' => $this->job->getId(), 'HELIO_USERID' => $this->job->getOwner()->getId(), 'HELIO_TASKID' => $task->getId()], $taskEnv);
             // TODO: These redundante quotes are here to make env stuff `docker service create` compatible :(
             foreach ($taskEnv as $item => $value) {
                 $yamlEnv[] = "'$item=$value'";
