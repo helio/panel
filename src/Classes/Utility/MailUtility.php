@@ -34,7 +34,7 @@ EOM;
             JwtUtility::generateToken($user->getId(), $linkLifetime)['token']
         ]);
 
-        $return = ServerUtility::get('SITE_ENV', 'PROD') !== 'TEST' ? @mail($user->getEmail(), 'Welcome to Helio', $content, 'From: hello@idling.host', '-f hello@idling.host') : true;
+        $return = ServerUtility::isProd() ? @mail($user->getEmail(), 'Welcome to Helio', $content, 'From: hello@idling.host', '-f hello@idling.host') : true;
         if ($return) {
             LogHelper::info('Sent Confirmation Mail to ' . $user->getEmail());
         } else {
@@ -56,6 +56,13 @@ EOM;
      */
     public static function sendMailToAdmin(string $content = ''): bool
     {
-        return @mail('team@helio.exchange', 'Admin Notification from Panel', $content, 'From: hello@idling.host', '-f hello@idling.host');
+        $return = ServerUtility::isProd() ? @mail('team@helio.exchange', 'Admin Notification from Panel', $content, 'From: hello@idling.host', '-f hello@idling.host') : true;
+        if ($return) {
+            LogHelper::info('Sent Confirmation Mail to admin');
+        } else {
+            LogHelper::warn('Failed to sent Mail to admin. Reason: ' . $return);
+        }
+
+        return $return;
     }
 }

@@ -14,6 +14,7 @@ use Helio\Panel\Task\TaskStatus;
 use Helio\Panel\Utility\JwtUtility;
 use Helio\Test\Infrastructure\Utility\ServerUtility;
 use Helio\Test\TestCase;
+use Helio\Test\Unit\JobTest;
 use OpenApi\Annotations\Server;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Http\StatusCode;
@@ -123,7 +124,12 @@ class ManagerNodesTest extends TestCase
     public function testRedundantManagersGetSetupOnCallbackCall(): void
     {
         $jobid = json_decode((string)$this->runApp('POST', '/api/job/add?jobid=_NEW&token=' . $this->user->getToken() . '&jobtype=' . JobType::GITLAB_RUNNER, true, null)->getBody(), true)['id'];
+        /** @var Job $job */
+        $job = $this->jobRepository->findOneById($jobid);
+        $this->assertCount(0, $job->getManagerNodes());
         $this->assertStringContainsString('manager-init-' . ServerUtility::getShortHashOfString($jobid), ServerUtility::getLastExecutedShellCommand());
+        $this->assertStringContainsString('user_id', ServerUtility::getLastExecutedShellCommand());
+        $this->assertStringContainsString($this->user->getId(), ServerUtility::getLastExecutedShellCommand());
         $command = str_replace('\\"', '"', ServerUtility::getLastExecutedShellCommand());
         $pattern = '/^.*"callback":"' . str_replace('/', '\\/', ServerUtility::getBaseUrl()) . '([^"]+)"/';
         $matches = [];
@@ -160,9 +166,14 @@ class ManagerNodesTest extends TestCase
     public function testReplicaGetAppliedOnNewTask(): void
     {
         $this->runApp('POST', '/exec', true, null, ['jobid' => $this->job->getId(), 'token' => $this->job->getToken()]);
+        $tasks = $this->taskRepository->findByJob($this->job->getId());
+        $this->assertIsArray($tasks);
+        $this->assertCount(1, $tasks);
 
         $this->assertStringContainsString('helio::queue', ServerUtility::getLastExecutedShellCommand());
-        $this->assertStringContainsString('helio::task', ServerUtility::getLastExecutedShellCommand(1));
+        $this->assertStringContainsString('helio::task::update', ServerUtility::getLastExecutedShellCommand(1));
+        $this->assertStringContainsString('task_ids', ServerUtility::getLastExecutedShellCommand(1));
+        $this->assertStringContainsString('[' . $tasks[0]->getId() . ']', ServerUtility::getLastExecutedShellCommand(1));
         $this->assertStringContainsString('manager-init-' . ServerUtility::getShortHashOfString($this->job->getId()) . '.example.com', ServerUtility::getLastExecutedShellCommand(1));
     }
 
@@ -181,6 +192,36 @@ class ManagerNodesTest extends TestCase
 
         $this->runApp('POST', '/exec', true, null, ['jobid' => $this->job->getId(), 'token' => $this->job->getToken()]);
         $this->assertEquals('', ServerUtility::getLastExecutedShellCommand(), 'replicas shouldn\'t have changed, thus don\'t apply infrastrucutre again');
+    }
+
+    /**
+     * @throws \Exception
+     */
+    public function testReplicaGetAppliedOnTwoNewTasksForFixedReplicaJob(): void
+    {
+        $this->job->setType(JobType::VF_DOCKER);
+        $this->infrastructure->getEntityManager()->persist($this->job);
+        $this->infrastructure->getEntityManager()->flush();
+
+        $this->runApp('POST', '/exec', true, null, ['jobid' => $this->job->getId(), 'token' => $this->job->getToken()]);
+
+        $this->assertStringContainsString('helio::queue', ServerUtility::getLastExecutedShellCommand());
+        $this->assertStringContainsString('helio::task', ServerUtility::getLastExecutedShellCommand(1));
+
+        ServerUtility::resetLastExecutedCommand();
+
+        $this->runApp('POST', '/exec', true, null, ['jobid' => $this->job->getId(), 'token' => $this->job->getToken()]);
+        $this->assertStringContainsString('helio::task', ServerUtility::getLastExecutedShellCommand(1));
+        $this->assertStringContainsString('helio::queue', ServerUtility::getLastExecutedShellCommand());
+
+        $tasks = $this->taskRepository->findAll();
+        $ids = '';
+        foreach ($tasks as $task) {
+            /** @var Task $task */
+            $ids .= $task->getId() . ',';
+        }
+        $ids = rtrim($ids, ',');
+        $this->assertStringContainsString('[' . $ids . ']', ServerUtility::getLastExecutedShellCommand(1));
     }
 
 

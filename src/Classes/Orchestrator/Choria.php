@@ -6,6 +6,7 @@ use Helio\Panel\App;
 use Helio\Panel\Helper\LogHelper;
 use Helio\Panel\Model\Instance;
 use Helio\Panel\Model\Job;
+use Helio\Panel\Model\Task;
 use Helio\Panel\Utility\ServerUtility;
 
 class Choria implements OrchestratorInterface
@@ -66,13 +67,13 @@ end
     /**
      * @var string
      */
-    protected static $firstManagerCommand = 'ssh %s@%s "mco playbook run infrastructure::gce::create --input \'{\\"node\\":\\"%s\\",\\"callback\\":\\"%s\\",\\"id\\":\\"%s\\",\\"token\\":\\"%s\\"}\'" 2>/dev/null >/dev/null &';
+    protected static $firstManagerCommand = 'ssh %s@%s "mco playbook run infrastructure::gce::create --input \'{\\"node\\":\\"%s\\",\\"callback\\":\\"%s\\",\\"user_id\\":\\"%s\\",\\"id\\":\\"%s\\",\\"token\\":\\"%s\\"}\'" 2>/dev/null >/dev/null &';
 
 
     /**
      * @var string
      */
-    protected static $redundantManagersCommand = 'ssh %s@%s "mco playbook run infrastructure::gce::create --input \'{\\"node\\":[\\"%s\\"],\\"master_token\\":\\"%s\\",\\"callback\\":\\"%s\\",\\"id\\":\\"%s\\",\\"token\\":\\"%s\\"}\'" 2>/dev/null >/dev/null &';
+    protected static $redundantManagersCommand = 'ssh %s@%s "mco playbook run infrastructure::gce::create --input \'{\\"node\\":[\\"%s\\"],\\"master_token\\":\\"%s\\",\\"callback\\":\\"%s\\",\\"user_id\\":\\"%s\\",\\"id\\":\\"%s\\",\\"token\\":\\"%s\\"}\'" 2>/dev/null >/dev/null &';
 
 
     /**
@@ -90,7 +91,7 @@ end
     /**
      * @var string
      */
-    protected static $dispatchCommand = 'ssh %s@%s "mco playbook run helio::task::update --input \'{\\"cluster_address\\":\\"%s\\"}\'"';
+    protected static $dispatchCommand = 'ssh %s@%s "mco playbook run helio::task::update --input \'{\\"cluster_address\\":\\"%s\\"}\'",\\"task_ids\\":\\"[%s]\\"';
 
     /**
      * @var string
@@ -133,7 +134,16 @@ end
             return false;
         }
 
-        $resultDispatch = ServerUtility::executeShellCommand($this->parseCommand('dispatch', [$job->getManagerNodes()[0]]));
+        $resultDispatch = ServerUtility::executeShellCommand($this->parseCommand('dispatch', [
+            $job->getManagerNodes()[0],
+            array_reduce($job->getTasks()->toArray(), function($carry, $item) {
+                /** @var Task $item */
+                if ($carry !== '') {
+                    $carry .= ',';
+                }
+                return $carry . $item->getId();
+            }, '')
+        ]));
         LogHelper::debug('response from choria at dispatchJob dispatch:' . print_r($resultDispatch, true));
 
         $resultJoinWorkers = ServerUtility::executeShellCommand($this->parseCommand('joinWorkers', [$job->getClusterToken(), $job->getInitManagerIp(), 1]));
@@ -183,6 +193,7 @@ end
         }
 
         $params[] = ServerUtility::getBaseUrl() . 'api/job/callback?jobid=' . $job->getId() . '&token=' . $job->getOwner()->getToken();
+        $params[] = $job->getOwner() ? $job->getOwner()->getId() : null;
         $params[] = $job->getId();
         $params[] = $job->getToken();
 
@@ -206,12 +217,12 @@ end
             foreach ($job->getManagerNodes() as $node) {
                 if (strpos($node, self::$managerPrefix . "-redundancy-${managerHash}") === 0) {
                     $result = $result && ServerUtility::executeShellCommand($this->parseCommand('deleteRedundantManagers', [
-                        substr($node, 0, \strlen(self::$managerPrefix . "-init-${managerHash}-1")),
-                        ServerUtility::getBaseUrl() . 'api/job/callback?jobid=' . $job->getId() . '&token=' . $job->getOwner()->getToken(),
-                        $job->getId(),
-                        $job->getToken(),
-                        $job->getManagerToken()
-                    ]));
+                            substr($node, 0, \strlen(self::$managerPrefix . "-init-${managerHash}-1")),
+                            ServerUtility::getBaseUrl() . 'api/job/callback?jobid=' . $job->getId() . '&token=' . $job->getOwner()->getToken(),
+                            $job->getId(),
+                            $job->getToken(),
+                            $job->getManagerToken()
+                        ]));
                     LogHelper::debug('response from choria at deleteRedundantManagers:' . print_r($result, true));
                 }
             }
@@ -219,11 +230,11 @@ end
 
         // lastly, delete redundant manager
         $result = $result && ServerUtility::executeShellCommand($this->parseCommand('deleteInitManager', [
-            self::$managerPrefix . "-init-${managerHash}",
-            ServerUtility::getBaseUrl() . 'api/job/callback?jobid=' . $job->getId() . '&token=' . $job->getOwner()->getToken(),
-            $job->getId(),
-            $job->getToken()
-        ]));
+                self::$managerPrefix . "-init-${managerHash}",
+                ServerUtility::getBaseUrl() . 'api/job/callback?jobid=' . $job->getId() . '&token=' . $job->getOwner()->getToken(),
+                $job->getId(),
+                $job->getToken()
+            ]));
         LogHelper::debug('response from choria at deleteInitManager:' . print_r($result, true));
         return $result;
     }
