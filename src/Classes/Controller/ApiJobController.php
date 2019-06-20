@@ -50,12 +50,16 @@ class ApiJobController extends AbstractController
      */
     public function removeJobAction(): ResponseInterface
     {
-        /** @var Task $task */
-        JobFactory::getInstanceOfJob($this->job)->stop($this->params, $this->request, $this->response);
+        if (!JobType::isValidType($this->job->getType())) {
+            $this->job->setHidden(true);
+        } else {
+            /** @var Task $task */
+            JobFactory::getInstanceOfJob($this->job)->stop($this->params, $this->request, $this->response);
 
-        // first: set all services to absent. then, remove the managers
-        OrchestratorFactory::getOrchestratorForInstance($this->instance)->dispatchJob($this->job);
-        OrchestratorFactory::getOrchestratorForInstance($this->instance)->removeManager($this->job);
+            // first: set all services to absent. then, remove the managers
+            OrchestratorFactory::getOrchestratorForInstance($this->instance)->dispatchJob($this->job);
+            OrchestratorFactory::getOrchestratorForInstance($this->instance)->removeManager($this->job);
+        }
 
         $this->persistJob();
 
