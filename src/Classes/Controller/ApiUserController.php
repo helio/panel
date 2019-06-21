@@ -142,6 +142,17 @@ class ApiUserController extends AbstractController
 
     /**
      * @return ResponseInterface
+     *
+     * @Route("/strangelogs", methods={"GET"}, name="job.logs")
+     */
+    public function strangeLogsAction(): ResponseInterface
+    {
+        return $this->render($this->setWindow()->getWeirdLogEntries($this->user->getId()));
+    }
+
+
+    /**
+     * @return ResponseInterface
      * @throws \Exception
      *
      * @Route("/settoken", methods={"PUT"}, name="user.settoken")

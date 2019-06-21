@@ -2,6 +2,7 @@
 
 namespace Helio\Panel\Controller\Traits;
 
+use Helio\Panel\App;
 use Helio\Panel\Helper\ElasticHelper;
 use Helio\Panel\Utility\ServerUtility;
 
@@ -12,6 +13,7 @@ trait ElasticController
 
     /**
      * @return bool
+     * @throws \Exception
      */
     public function setupElasticClient(): bool
     {
@@ -23,7 +25,8 @@ trait ElasticController
             }
         }
 
-        $this->elastic = new ElasticHelper($host);
+        $className = App::getApp()->getContainer()['elasticHelperClassName'];
+        $this->elastic = new $className($host);
         return true;
     }
 

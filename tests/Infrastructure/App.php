@@ -6,6 +6,7 @@ use Helio\Panel\Helper\LogHelper;
 use Helio\Panel\Utility\JwtUtility;
 use Helio\Test\Infrastructure\Helper\DbHelper;
 use Helio\Test\Infrastructure\Helper\ZapierHelper;
+use Helio\Test\Infrastructure\Helper\ElasticHelper;
 use Slim\Http\Request;
 
 class App extends \Helio\Panel\App
@@ -30,7 +31,8 @@ class App extends \Helio\Panel\App
         array $middleWaresToApply = [JwtUtility::class],
         string $dbHelperClassName = DbHelper::class,
         string $zapierHelperClassName = ZapierHelper::class,
-        string $logHelperClassName = LogHelper::class
+        string $logHelperClassName = LogHelper::class,
+        string $elasticHelperClassName = ElasticHelper::class
     ): \Helio\Panel\App
     {
         // if a new test is run, we increase the instance index to ensure no two tests run on the same app instance.

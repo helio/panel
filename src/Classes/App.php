@@ -3,6 +3,7 @@
 namespace Helio\Panel;
 
 use Helio\Panel\Helper\DbHelper;
+use Helio\Panel\Helper\ElasticHelper;
 use Helio\Panel\Helper\LogHelper;
 use Helio\Panel\Helper\ZapierHelper;
 use Helio\Panel\Utility\JwtUtility;
@@ -26,6 +27,7 @@ class App extends \Slim\App
      * @param string $dbHelperClassName
      * @param string $zapierHelperClassName
      * @param string $logHelperClassName
+     * @param string $elasticHelperClassName
      * @return App
      * @throws \Exception
      */
@@ -35,7 +37,8 @@ class App extends \Slim\App
         array $middleWaresToApply = [JwtUtility::class],
         string $dbHelperClassName = DbHelper::class,
         string $zapierHelperClassName = ZapierHelper::class,
-        string $logHelperClassName = LogHelper::class
+        string $logHelperClassName = LogHelper::class,
+        string $elasticHelperClassName = ElasticHelper::class
     ): App
     {
         if (!self::$instance) {
@@ -55,6 +58,7 @@ class App extends \Slim\App
             self::$instance->getContainer()['logger'] = $logHelperClassName::get();
             self::$instance->getContainer()['dbHelper'] = $dbHelperClassName::getInstance();
             self::$instance->getContainer()['zapierHelper'] = $zapierHelperClassName::getInstance();
+            self::$instance->getContainer()['elasticHelperClassName'] = $elasticHelperClassName;
             self::$instance->getContainer()['renderer'] = new \Slim\Views\PhpRenderer(APPLICATION_ROOT . '/src/templates');
 
             if ($request) {

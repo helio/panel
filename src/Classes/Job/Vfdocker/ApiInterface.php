@@ -441,4 +441,34 @@ interface ApiInterface
      * @return ResponseInterface
      */
     public function userLogs(): ResponseInterface;
+
+    /**
+     * @OA\Get(
+     *     path="/api/user/strangelogs",
+     *     description="Aggregation of logs not associated to a task or job",
+     *     @OA\Response(response="200", description="Contains the Status"),
+     *     security={
+     *         {"authByApitoken": {"any"}}
+     *     },
+     *     @OA\Parameter(
+     *         name="size",
+     *         in="query",
+     *         description="Amount of log entries to retreive",
+     *         @Oa\Items(
+     *             type="integer"
+     *         )
+     *     ),
+     *     @OA\Parameter(
+     *         name="from",
+     *         in="query",
+     *         description="Amount of log entries to skip",
+     *         @Oa\Items(
+     *             type="integer"
+     *         )
+     *     )
+     * )
+     *
+     * @return ResponseInterface
+     */
+    public function strangeLogs(): ResponseInterface;
 }

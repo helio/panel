@@ -15,8 +15,8 @@ class ElasticHelper
      * @var string
      */
     protected static $indexTemplate = 'log_user_%s';
-    protected static $jobIdFieldName = 'job_id';
-    protected static $taskIdFieldName = 'task_id';
+    protected static $jobIdFieldName = 'HELIO_JOBID';
+    protected static $taskIdFieldName = 'HELIO_TASKID';
     protected static $logEntryFieldName = 'log';
     protected static $timestampFieldName = '@timestamp';
 
@@ -38,14 +38,14 @@ class ElasticHelper
      * @param int $userId
      * @param int|null $jobId negative value means the field must not exist
      * @param int|null $taskId negative value means the field must not exist
+     * @param bool $cleanSource wether or not to only display clean fields
      * @return array
      */
-    public function getLogEntries(int $userId, int $jobId = null, int $taskId = null): array
+    public function getLogEntries(int $userId, int $jobId = null, int $taskId = null, bool $cleanSource = true): array
     {
         $params = [
             'index' => vsprintf(self::$indexTemplate, [$userId]),
             'body' => [
-                '_source' => [self::$logEntryFieldName, self::$timestampFieldName],
                 'from' => $this->getFrom(),
                 'size' => $this->getSize(),
                 'sort' => [
@@ -62,6 +62,11 @@ class ElasticHelper
                 ]
             ]
         ];
+
+        if ($cleanSource) {
+            $params['body']['_source'] = [self::$logEntryFieldName, self::$timestampFieldName];
+        }
+
         $filter = [];
         $mustNot = [];
         if ($jobId) {
@@ -75,9 +80,7 @@ class ElasticHelper
             if ($taskId < 0) {
                 $mustNot[] = ['exists' => ['field' => self::$taskIdFieldName]];
             } else {
-                // TODO: This is a workaround until we have a proper field `task_id` : $filter[] = ['term' => [self::$taskIdFieldName => (string)$taskId]];
-                $filter[] = ['wildcard' => [
-                    'container_name.keyword' => '*/*' . ($jobId ? "-$jobId" : '') . "-$taskId.*"]];
+                $filter[] = ['term' => [self::$taskIdFieldName => (string)$taskId]];
             }
         }
 
@@ -97,10 +100,21 @@ class ElasticHelper
         }
     }
 
+
+    /**
+     * @param int $userId
+     * @return array
+     */
+    public function getWeirdLogEntries(int $userId): array
+    {
+        return $this->getLogEntries($userId, -1, -1, false);
+    }
+
+
     /**
      * @return int
      */
-    public function getFrom(): int
+    protected function getFrom(): int
     {
         return $this->from;
     }
@@ -118,7 +132,7 @@ class ElasticHelper
     /**
      * @return int
      */
-    public function getSize(): int
+    protected function getSize(): int
     {
         return $this->size;
     }
