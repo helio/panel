@@ -91,12 +91,12 @@ end
     /**
      * @var string
      */
-    protected static $dispatchCommand = 'ssh %s@%s "mco playbook run helio::task::update --input \'{\\"cluster_address\\":\\"%s\\"}\'",\\"task_ids\\":\\"[%s]\\"';
+    protected static $dispatchCommand = 'ssh %s@%s "mco playbook run helio::task::update --input \'{\\"cluster_address\\":\\"%s\\"}\'",\\"task_ids\\":\\"[%s]\\" 2>/dev/null >/dev/null &';
 
     /**
      * @var string
      */
-    protected static $joinWorkersCommand = 'ssh %s@%s "mco playbook run helio::queue --input \'{\\"cluster_join_token\\":\\"%s\\",\\"cluster_join_address\\":\\"%s\\",\\"cluster_join_count\\":\\"%s\\"}\'"';
+    protected static $joinWorkersCommand = 'ssh %s@%s "mco playbook run helio::queue --input \'{\\"cluster_join_token\\":\\"%s\\",\\"cluster_join_address\\":\\"%s\\",\\"cluster_join_count\\":\\"%s\\"}\'" 2>/dev/null >/dev/null &';
 
 
     /**
