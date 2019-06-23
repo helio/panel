@@ -91,7 +91,7 @@ end
     /**
      * @var string
      */
-    protected static $dispatchCommand = 'ssh %s@%s "mco playbook run helio::task::update --input \'{\\"cluster_address\\":\\"%s\\"}\'",\\"task_ids\\":\\"[%s]\\" 2>/dev/null >/dev/null &';
+    protected static $dispatchCommand = 'ssh %s@%s "mco playbook run helio::task::update --input \'{\\"cluster_address\\":\\"%s\\",\\"task_ids\\":\\"[%s]\\"}\'" 2>/dev/null >/dev/null &';
 
     /**
      * @var string
