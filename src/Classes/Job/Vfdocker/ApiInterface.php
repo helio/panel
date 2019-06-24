@@ -247,12 +247,17 @@ interface ApiInterface
      *
      *     @OA\Response(response="200", description="Create a Job",
      *         @OA\JsonContent(
-     *           type="object",
-     *           @OA\Property(
-     *               property="success",
-     *               type="string",
-     *               description="boolean if the execution was successful"
-     *           )
+     *             type="object",
+     *             @OA\Property(
+     *                 property="success",
+     *                 type="string",
+     *                 description="boolean if the execution was successful"
+     *             ),
+     *             @OA\Property(
+     *                 property="id",
+     *                 type="string",
+     *                 description="The Id of the newly created task"
+     *             )
      *         )
      *     ),
      *     security={

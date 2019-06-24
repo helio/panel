@@ -92,7 +92,7 @@ class ExecController extends AbstractController
                 $this->persistJob();
             }
 
-            return $this->render(['status' => 'success']);
+            return $this->render(['status' => 'success', 'id' => $this->task->getId()]);
         } catch (\Exception $e) {
             return $this->render(['status' => 'error', 'reason' => $e->getMessage()], StatusCode::HTTP_INTERNAL_SERVER_ERROR);
         }
