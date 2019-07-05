@@ -11,6 +11,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use Slim\Http\Uri;
 use Tuupola\Middleware\DoublePassTrait;
 
 /**
@@ -53,7 +54,8 @@ class LoadUserFromJwt implements MiddlewareInterface
                     $userLoggedOutTime = $user->getLoggedOut()->setTimezone(ServerUtility::getTimezoneObject());
 
                     if ($userLoggedOutTime > $tokenGenerationTime) {
-                        return CookieUtility::deleteCookie($handler->handle($request)->withRedirect('/panel/logout'), 'token');
+                        $container['user'] = $user;
+                        return $handler->handle($request->withUri(new Uri($request->getUri()->getScheme(), $request->getUri()->getHost(), $request->getUri()->getPort(), '/panel/logout')));
                     }
                 }
 

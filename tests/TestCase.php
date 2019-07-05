@@ -59,8 +59,8 @@ class TestCase extends \PHPUnit\Framework\TestCase
     protected $taskRepository;
 
 
-    /** @see \PHPUnit_Framework_TestCase::setUp()
-     * @throws \Exception
+    /** @throws \Exception
+     * @see \PHPUnit_Framework_TestCase::setUp()
      */
     protected function setUp(): void
     {
@@ -153,6 +153,8 @@ class TestCase extends \PHPUnit\Framework\TestCase
         &$app = null
     ): ResponseInterface
     {
+        $requestUri = preg_replace(';^https?://localhost(:[0-9]+)?/;', '/', $requestUri);
+
         // Create a mock environment for testing with
         $environment = Environment::mock(
             [

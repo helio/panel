@@ -68,12 +68,6 @@ class DefaultController extends AbstractController
      */
     public function SubmitUserAction(): ResponseInterface
     {
-        // catch Demo User
-        if (\array_key_exists('email', $this->params) && $this->params['email'] === 'email@example.com') {
-            /** @var User $user */
-            $user = $this->dbHelper->getRepository(User::class)->findOneByEmail('email@example.com');
-            return $this->response->withRedirect(ServerUtility::getBaseUrl() . 'panel?token=' . JwtUtility::generateToken($user->getId(), '+5 minutes')['token']);
-        }
 
         // normal user process
         $this->requiredParameterCheck(['email' => FILTER_SANITIZE_EMAIL]);
@@ -94,6 +88,11 @@ class DefaultController extends AbstractController
 
         if (!MailUtility::sendConfirmationMail($user, $this->request->getParsedBodyParam('permanent') === 'on' ? '+30 days' : '+1 week')) {
             throw new \RuntimeException('Error during User Creation', 1545655919);
+        }
+
+        // catch Demo User
+        if ($user->getEmail() === 'email@example.com') {
+            return $this->response->withRedirect(ServerUtility::getBaseUrl() . 'panel?token=' . JwtUtility::generateToken($user->getId(), '+5 minutes')['token']);
         }
 
         return $this->render(

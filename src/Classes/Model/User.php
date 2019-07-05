@@ -263,7 +263,8 @@ class User extends AbstractModel
     }
 
     /**
-     * @param \DateTime $loggedOut
+     * @param \DateTime|null $loggedOut
+     * @throws \Exception
      */
     public function setLoggedOut(\DateTime $loggedOut = null): void
     {

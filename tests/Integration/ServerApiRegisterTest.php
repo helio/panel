@@ -129,7 +129,7 @@ class ServerApiRegisterTest extends TestCase
 
         $this->data['fqdn'] = 'new.fqdn.example.com';
         $result = $this->exec();
-        $body = (string)$result->getBody();
+
         $this->assertEquals(200, $result->getStatusCode());
         /** @var Instance $instance */
         $instance = $this->instanceRepository->findOneByName('testinstance');
