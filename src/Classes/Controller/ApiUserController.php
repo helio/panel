@@ -7,6 +7,7 @@ use Helio\Panel\Controller\Traits\AuthenticatedController;
 use Helio\Panel\Controller\Traits\ElasticController;
 use Helio\Panel\Controller\Traits\ParametrizedController;
 use Helio\Panel\Controller\Traits\TypeApiController;
+use Helio\Panel\Job\JobStatus;
 use Helio\Panel\Model\Instance;
 use Helio\Panel\Model\Job;
 use Helio\Panel\Model\Task;
@@ -67,11 +68,18 @@ class ApiUserController extends AbstractController
     {
         $limit = (int)($this->params['limit'] ?? 10);
         $offset = (int)($this->params['offset'] ?? 0);
+        $includeTerminated = (bool)($this->params['deleted'] ?? 0);
         $order = explode(' ', filter_var($this->params['orderby'] ?? 'created DESC', FILTER_SANITIZE_STRING));
         $orderBy = [$order[0] => $order[1]];
+        $searchCriteria = ['owner' => $this->user];
+
+        // if the user wants to see terminated workloads, skip the status filter
+        if (!$includeTerminated) {
+            $searchCriteria['status'] = JobStatus::getAllButDeletedStatusCodes();
+        }
 
         $jobs = [];
-        foreach ($this->dbHelper->getRepository(Job::class)->findByOwner($this->user, $orderBy, $limit, $offset) as $job) {
+        foreach ($this->dbHelper->getRepository(Job::class)->findBy($searchCriteria, $orderBy, $limit, $offset) as $job) {
             /**@var Job $job */
             $jobs[] = [
                 'id' => $job->getId(),

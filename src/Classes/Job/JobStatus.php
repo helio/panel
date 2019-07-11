@@ -29,4 +29,14 @@ final class JobStatus
     {
         return $status === self::READY;
     }
+
+    public static function getAllButDeletedStatusCodes(): array
+    {
+        return [
+            self::UNKNOWN,
+            self::INIT,
+            self::READY,
+            self::DONE
+        ];
+    }
 }

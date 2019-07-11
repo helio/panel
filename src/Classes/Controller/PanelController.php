@@ -130,6 +130,7 @@ class PanelController extends AbstractController
      * @return ResponseInterface
      *
      * @Route("/logout", methods={"GET"}, name="user.logout")
+     * @throws \Exception
      */
     public function LogoutUserAction(): ResponseInterface
     {

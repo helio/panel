@@ -9,14 +9,15 @@ final class TaskStatus
     public const RUNNING = 2;
     public const DONE = 3;
     public const STOPPED = 9;
-    public const TERMINATED = 9;
+    public const TERMINATED = 99;
 
     public const labels = [
         'status-0' => 'Unknown',
         'status-1' => 'Ready',
         'status-2' => 'Running',
         'status-3' => 'Done',
-        'status-9' => 'Interrupted'
+        'status-9' => 'Interrupted',
+        'status-99' => 'Deleted by user'
     ];
 
 
@@ -55,5 +56,14 @@ final class TaskStatus
     public static function getLabel(int $status): string
     {
         return self::labels["status-$status"];
+    }
+
+    public static function getAllButTerminatedStatusCodes(): array {
+        return [
+            self::READY,
+            self::RUNNING,
+            self::DONE,
+            self::STOPPED
+        ];
     }
 }

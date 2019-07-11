@@ -166,8 +166,9 @@ abstract class AbstractModel
     }
 
     /**
-     * @param \DateTime $latestAction
-     * @return $this
+     * @param \DateTime|null $latestAction
+     * @return AbstractModel
+     * @throws \Exception
      */
     public function setLatestAction(\DateTime $latestAction = null): self
     {
