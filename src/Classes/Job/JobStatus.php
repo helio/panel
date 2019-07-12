@@ -11,6 +11,16 @@ final class JobStatus
     public const DELETED = 9;
 
 
+
+    public const labels = [
+        'status-0' => 'Unknown',
+        'status-1' => 'Ready',
+        'status-2' => 'Running',
+        'status-3' => 'Done',
+        'status-9' => 'Interrupted'
+    ];
+
+
     public function __construct()
     {
         throw new \RuntimeException('Cannot instanciate ' . __CLASS__);
@@ -28,6 +38,11 @@ final class JobStatus
     public static function isValidActiveStatus(int $status): bool
     {
         return $status === self::READY;
+    }
+
+    public static function getLabel(int $status): string
+    {
+        return self::labels["status-$status"];
     }
 
     public static function getAllButDeletedStatusCodes(): array

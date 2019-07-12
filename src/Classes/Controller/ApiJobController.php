@@ -189,6 +189,17 @@ class ApiJobController extends AbstractController
 
     /**
      * @return ResponseInterface
+     * 
+     * @Route("/status", methods={"GET"}, name="exec.job.status")
+     */
+    public function jobStatusAction(): ResponseInterface
+    {
+        return $this->render(['success' => true, 'status' => JobStatus::getLabel($this->job->getStatus())]);
+    }
+
+
+    /**
+     * @return ResponseInterface
      *
      * @Route("/logs", methods={"GET"}, name="job.logs")
      */
