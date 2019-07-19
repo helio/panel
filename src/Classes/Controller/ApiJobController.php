@@ -189,7 +189,7 @@ class ApiJobController extends AbstractController
 
     /**
      * @return ResponseInterface
-     * 
+     *
      * @Route("/status", methods={"GET"}, name="exec.job.status")
      */
     public function jobStatusAction(): ResponseInterface
