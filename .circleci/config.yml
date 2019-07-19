@@ -15,16 +15,21 @@ jobs:
 
     - restore_cache:
         keys:
-        - v1-dependencies-{{ checksum "composer.json" }}
+        - v1-dependencies-{{ checksum "composer.json" }}-{{ checksum "package.json" }}
+        - v1-dependencies-{{ checksum "composer.json" }}-
+        - v1-dependencies--{{ checksum "package.json" }}
         - v1-dependencies-
 
     - run: composer install -n -q -o
     - run: yarn
+    - run: if ! [[ -d vendor/apt ]]; then mkdir -p vendor/apt; fi
+    - run: if [[ ! -e /usr/bin/rsync ]]; then if ! [[ -d vendor/apt/archives ]]; then sudo apt-get install --download-only rsync && sudo cp -R /var/cache/apt vendor/ && sudo chown -R circleci:circleci vendor/apt; fi; sudo dpkg -i vendor/apt/archives/*.deb; fi
 
     - save_cache:
         paths:
         - ./vendor
-        key: v1-dependencies-{{ checksum "composer.json" }}
+        - ~/.cache/yarn
+        key: v1-dependencies-{{ checksum "composer.json" }}-{{ checksum "package.json" }}
 
     - run: composer run test
 
