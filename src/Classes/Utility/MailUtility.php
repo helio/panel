@@ -5,7 +5,7 @@ namespace Helio\Panel\Utility;
 use Helio\Panel\Helper\LogHelper;
 use Helio\Panel\Model\User;
 
-class MailUtility
+class MailUtility extends AbstractUtility
 {
 
 
@@ -30,8 +30,8 @@ EOM;
     {
         $content = vsprintf(self::$confirmationMailContent, [
             $user->getName(),
-            ServerUtility::getBaseUrl() . 'panel?token=' .
-            JwtUtility::generateToken($user->getId(), $linkLifetime)['token']
+            ServerUtility::getBaseUrl() . 'confirm?signature=' .
+            JwtUtility::generateToken($linkLifetime, $user)['token']
         ]);
 
         $return = ServerUtility::isProd() ? @mail($user->getEmail(), 'Welcome to Helio', $content, 'From: hello@idling.host', '-f hello@idling.host') : true;

@@ -17,6 +17,26 @@
             ?>
         </ul>
     </div>
+    <div>
+        <h2>Generate Eternal Token (BE CAREFUL WITH IT!)</h2>
+        <button class="btn btn-primary generate-eternal-token" data-userid="<?php echo $user->getId(); ?>">
+            Generate
+        </button>
+    </div>
+    <div>
+        <h2>Generate Job Token</h2>
+        <form onsubmit="return false;"><input type="text" placeholder="Job Id" id="jobid" name="jobid"/></form>
+        <button class="btn btn-primary generate-job-token">
+            Generate
+        </button>
+    </div>
+    <div>
+        <h2>Generate Instance Token</h2>
+        <form onsubmit="return false;"><input type="text" placeholder="Instance Id" id="instanceid" name="instanceid"/></form>
+        <button class="btn btn-primary generate-instance-token">
+            Generate
+        </button>
+    </div>
     <div id="helio-joblist" class="list-group list-view-pf list-view-pf-view loadable">
         <div class="list-group-item control loader">
             <div class="list-group-item">

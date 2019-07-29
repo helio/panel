@@ -5,7 +5,7 @@ namespace Helio\Panel\Utility;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
-class CookieUtility
+class CookieUtility extends AbstractUtility
 {
 
     /**

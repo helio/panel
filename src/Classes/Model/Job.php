@@ -38,14 +38,6 @@ class Job extends AbstractModel
      *
      * @Column
      */
-    protected $token = '';
-
-
-    /**
-     * @var string
-     *
-     * @Column
-     */
     protected $type = JobType::UNKNOWN;
 
 
@@ -182,24 +174,6 @@ class Job extends AbstractModel
             $owner->addJob($this);
         }
         $this->owner = $owner;
-        return $this;
-    }
-
-    /**
-     * @return string
-     */
-    public function getToken(): string
-    {
-        return $this->token;
-    }
-
-    /**
-     * @param string $token
-     * @return Job
-     */
-    public function setToken(string $token): Job
-    {
-        $this->token = $token;
         return $this;
     }
 
@@ -525,7 +499,7 @@ class Job extends AbstractModel
      */
     public function getActiveTaskCount(): int
     {
-        return $this->numberOfActiveTasks ?? $this->numberOfActiveTasks = \count(array_filter($this->getTasks()->toArray(), function (Task $task) {
+        return count(array_filter($this->getTasks()->toArray(), function (Task $task) {
                 return TaskStatus::isValidPendingStatus($task->getStatus());
             }));
     }

@@ -2,11 +2,12 @@
 
 namespace Helio\Panel\Orchestrator;
 
-use Helio\Panel\App;
+use \Exception;
 use Helio\Panel\Helper\LogHelper;
 use Helio\Panel\Model\Instance;
 use Helio\Panel\Model\Job;
 use Helio\Panel\Model\Task;
+use Helio\Panel\Utility\JwtUtility;
 use Helio\Panel\Utility\ServerUtility;
 
 class Choria implements OrchestratorInterface
@@ -115,7 +116,7 @@ end
     {
         $result = ServerUtility::executeShellCommand($this->parseCommand('inventory', [str_replace('.', '\\\\.', $this->instance->getFqdn())]));
         LogHelper::debug('response from choria at getInventory:' . print_r($result, true));
-        if (\is_string($result) && $result) {
+        if (is_string($result) && $result) {
             return json_decode($result, true);
         }
         return $result;
@@ -136,7 +137,7 @@ end
 
         $resultDispatch = ServerUtility::executeShellCommand($this->parseCommand('dispatch', [
             $job->getManagerNodes()[0],
-            array_reduce($job->getTasks()->toArray(), function($carry, $item) {
+            array_reduce($job->getTasks()->toArray(), function ($carry, $item) {
                 /** @var Task $item */
                 if ($carry !== '') {
                     $carry .= ',';
@@ -156,18 +157,19 @@ end
     /**
      * @param Job $job
      * @return bool
+     * @throws Exception
      */
     public function provisionManager(Job $job): bool
     {
         $managerHash = ServerUtility::getShortHashOfString($job->getId());
 
         // we're good
-        if (\count($job->getManagerNodes()) === (1 + self::$redundancyCount)) {
+        if (count($job->getManagerNodes()) === (1 + self::$redundancyCount)) {
             return true;
         }
 
         // we have to provision the init manager
-        if (\count($job->getManagerNodes()) === 0) {
+        if (count($job->getManagerNodes()) === 0) {
             $managerHostname = self::$managerPrefix . "-init-${managerHash}";
 
             $command = 'firstManager';
@@ -192,10 +194,10 @@ end
             $params[] = $job->getManagerToken();
         }
 
-        $params[] = ServerUtility::getBaseUrl() . 'api/job/callback?jobid=' . $job->getId() . '&token=' . $job->getOwner()->getToken();
+        $params[] = ServerUtility::getBaseUrl() . 'api/job/callback?jobid=' . $job->getId();
         $params[] = $job->getOwner() ? $job->getOwner()->getId() : null;
         $params[] = $job->getId();
-        $params[] = $job->getToken();
+        $params[] = JwtUtility::generateToken(null, null, null, $job)['token'];
 
         $result = ServerUtility::executeShellCommand($this->parseCommand($command, $params));
         LogHelper::debug('response from choria at provision ' . $command . ':' . print_r($result, true));
@@ -206,6 +208,7 @@ end
     /**
      * @param Job $job
      * @return bool
+     * @throws Exception
      */
     public function removeManager(Job $job): bool
     {
@@ -218,9 +221,9 @@ end
                 if (strpos($node, self::$managerPrefix . "-redundancy-${managerHash}") === 0) {
                     $result = $result && ServerUtility::executeShellCommand($this->parseCommand('deleteRedundantManagers', [
                             substr($node, 0, \strlen(self::$managerPrefix . "-init-${managerHash}-1")),
-                            ServerUtility::getBaseUrl() . 'api/job/callback?jobid=' . $job->getId() . '&token=' . $job->getOwner()->getToken(),
+                            ServerUtility::getBaseUrl() . 'api/job/callback?jobid=' . $job->getId(),
                             $job->getId(),
-                            $job->getToken(),
+                            JwtUtility::generateToken(null, null, null, $job)['token'],
                             $job->getManagerToken()
                         ]));
                     LogHelper::debug('response from choria at deleteRedundantManagers:' . print_r($result, true));
@@ -231,9 +234,9 @@ end
         // lastly, delete redundant manager
         $result = $result && ServerUtility::executeShellCommand($this->parseCommand('deleteInitManager', [
                 self::$managerPrefix . "-init-${managerHash}",
-                ServerUtility::getBaseUrl() . 'api/job/callback?jobid=' . $job->getId() . '&token=' . $job->getOwner()->getToken(),
+                ServerUtility::getBaseUrl() . 'api/job/callback?jobid=' . $job->getId(),
                 $job->getId(),
-                $job->getToken()
+                JwtUtility::generateToken(null, null, null, $job)['token']
             ]));
         LogHelper::debug('response from choria at deleteInitManager:' . print_r($result, true));
         return $result;

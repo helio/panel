@@ -61,14 +61,14 @@
                 <label class="small" for="instancelevel">
                     How secure and reliable are your servers?
                 </label>
-                <?php \Helio\Panel\Helper\ViewHelper::includePartial('instanceSecuritySelect', ['value' => $user->getConfig('instancelevel')]); ?>
+                <?php \Helio\Panel\Utility\ViewUtility::includePartial('instanceSecuritySelect', ['value' => $user->getConfig('instancelevel')]); ?>
                 <span class="small">Select default level.</span>
             </div>
             <div class="form-group">
                 <label class="small" for="instancelocation">
                     Location
                 </label>
-                <?php \Helio\Panel\Helper\ViewHelper::includePartial('instanceLocationSelect', ['value' => $user->getConfig('instancelocation')]); ?>
+                <?php \Helio\Panel\Utility\ViewUtility::includePartial('instanceLocationSelect', ['value' => $user->getConfig('instancelocation')]); ?>
                 <span class="small">Select the default location of your servers.</span>
             </div>
         </div>

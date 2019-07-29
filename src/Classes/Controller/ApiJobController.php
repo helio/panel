@@ -3,8 +3,10 @@
 namespace Helio\Panel\Controller;
 
 
-use Helio\Panel\Controller\Traits\ElasticController;
-use Helio\Panel\Controller\Traits\InstanceController;
+use \Exception;
+use Helio\Panel\App;
+use Helio\Panel\Controller\Traits\HelperElasticController;
+use Helio\Panel\Controller\Traits\ModelInstanceController;
 use Helio\Panel\Controller\Traits\TypeDynamicController;
 use Helio\Panel\Controller\Traits\AuthorizedJobController;
 use Helio\Panel\Helper\LogHelper;
@@ -32,26 +34,28 @@ use Slim\Http\StatusCode;
  */
 class ApiJobController extends AbstractController
 {
-    use AuthorizedJobController, InstanceController {
-        AuthorizedJobController::setupParams insteadof InstanceController;
-        AuthorizedJobController::requiredParameterCheck insteadof InstanceController;
-        AuthorizedJobController::optionalParameterCheck insteadof InstanceController;
+    use AuthorizedJobController, ModelInstanceController {
+        AuthorizedJobController::setupParams insteadof ModelInstanceController;
+        AuthorizedJobController::requiredParameterCheck insteadof ModelInstanceController;
+        AuthorizedJobController::optionalParameterCheck insteadof ModelInstanceController;
     }
 
-    use ElasticController;
+    use HelperElasticController;
 
     use TypeDynamicController;
 
     /**
      * @return ResponseInterface
+     * @throws Exception
      *
      * @Route("/remove", methods={"DELETE"}, name="job.remove")
-     *
      */
     public function removeJobAction(): ResponseInterface
     {
+        $removed = false;
         if (!JobType::isValidType($this->job->getType())) {
             $this->job->setHidden(true);
+            $removed = true;
         } else {
             /** @var Task $task */
             JobFactory::getInstanceOfJob($this->job)->stop($this->params, $this->request, $this->response);
@@ -61,9 +65,15 @@ class ApiJobController extends AbstractController
             OrchestratorFactory::getOrchestratorForInstance($this->instance)->removeManager($this->job);
         }
 
+        // on PROD, we wait for the callbacks to confirm job removal. on Dev, simply set it to deleted.
+        if (!ServerUtility::isProd()) {
+            $this->job->setStatus(JobStatus::DELETED);
+            $removed = true;
+        }
+
         $this->persistJob();
 
-        return $this->render(['success' => true]);
+        return $this->render(['success' => true, 'message' => 'Job scheduled for removal.', 'removed' => $removed]);
     }
 
 
@@ -71,7 +81,7 @@ class ApiJobController extends AbstractController
      * @return ResponseInterface
      *
      * @Route("/add", methods={"POST"}, name="job.add")
-     * @throws \Exception
+     * @throws Exception
      */
     public function addJobAction(): ResponseInterface
     {
@@ -85,12 +95,10 @@ class ApiJobController extends AbstractController
             }
 
             $this->job->setType($this->params['jobtype']);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             // If we have created a new job but haven't passed the jobtype (e.g. during wizard loading), we cannot continue.
-            if (($this->params['jobid'] ?? '') === '_NEW') {
-                $this->job->setToken(JwtUtility::generateJobIdentificationToken($this->job));
-                $this->persistJob();
-                return $this->render(['token' => $this->job->getToken(), 'id' => $this->job->getId()]);
+            if ($this->job->getName() === '___NEW' && $this->job->getStatus() === JobStatus::UNKNOWN) {
+                return $this->render(['token' => JwtUtility::generateToken(null, $this->user, null, $this->job)['token'], 'id' => $this->job->getId()]);
             }
             // if the existing job hasn't got a proper type, we cannot continue either, but that's a hard fail...
             if (!JobType::isValidType($this->job->getType())) {
@@ -109,16 +117,14 @@ class ApiJobController extends AbstractController
         ]);
 
         $this->job->setName($this->params['jobname'] ?? 'Automatically named during add')
-            ->setStatus(JobStatus::INIT)
-            ->setCreated(new \DateTime('now', ServerUtility::getTimezoneObject()))
-            ->setToken(JwtUtility::generateJobIdentificationToken($this->job))
             ->setOwner($this->user)
             ->setCpus($this->params['cpus'] ?? '')
             ->setGpus($this->params['gpus'] ?? '')
             ->setLocation($this->params['location'] ?? '')
             ->setBillingReference($this->params['billingReference'] ?? '')
             ->setBudget($this->params['budget'] ?? '')
-            ->setIsCharity($this->params['free'] ?? '' === 'on');
+            ->setIsCharity($this->params['free'] ?? '' === 'on')
+            ->setStatus(JobStatus::INIT);
 
         JobFactory::getInstanceOfJob($this->job)->create($this->params, $this->request);
 
@@ -130,7 +136,7 @@ class ApiJobController extends AbstractController
 
         return $this->render([
             'success' => true,
-            'token' => $this->job->getToken(),
+            'token' => JwtUtility::generateToken(null, $this->user, null, $this->job)['token'],
             'id' => $this->job->getId(),
             'html' => $this->fetchPartial('listItemJob', ['job' => $this->job, 'user' => $this->user]),
             'message' => 'Job <strong>' . $this->job->getName() . '</strong> added',
@@ -141,14 +147,14 @@ class ApiJobController extends AbstractController
      * @return ResponseInterface
      *
      * @Route("/add/abort", methods={"POST"}, name="job.abort")
-     * @throws \Exception
+     * @throws Exception
      */
     public function abortAddJobAction(): ResponseInterface
     {
         if ($this->job && $this->job->getStatus() === JobStatus::UNKNOWN && $this->job->getOwner() && $this->job->getOwner()->getId() === $this->user->getId()) {
             $this->user->removeJob($this->job);
-            $this->dbHelper->remove($this->job);
-            $this->dbHelper->flush($this->job);
+            App::getDbHelper()->remove($this->job);
+            App::getDbHelper()->flush();
             $this->persistUser();
             return $this->render();
         }
@@ -200,6 +206,7 @@ class ApiJobController extends AbstractController
 
     /**
      * @return ResponseInterface
+     * @throws Exception
      *
      * @Route("/logs", methods={"GET"}, name="job.logs")
      */
@@ -214,9 +221,9 @@ class ApiJobController extends AbstractController
 
     /**
      * @return ResponseInterface
+     * @throws Exception
      *
      * @Route("/callback", methods={"POST", "GET"}, "name="job.callback")
-     *
      */
     public function callbackAction(): ResponseInterface
     {
@@ -224,10 +231,10 @@ class ApiJobController extends AbstractController
         LogHelper::debug('Body received into callback:' . print_r($body, true));
 
         // remember manager nodes.
-        if (\array_key_exists('nodes', $body)) {
-            $nodes = \is_array($body['nodes']) ? $body['nodes'] : array($body['nodes']);
+        if (array_key_exists('nodes', $body)) {
+            $nodes = is_array($body['nodes']) ? $body['nodes'] : array($body['nodes']);
             foreach ($nodes as $node) {
-                if (\array_key_exists('deleted', $body)) {
+                if (array_key_exists('deleted', $body)) {
                     $this->job->removeManagerNode($node);
                 } else {
                     $this->job->addManagerNode($node);
@@ -236,32 +243,32 @@ class ApiJobController extends AbstractController
         }
 
         // remember swarm token
-        if (\array_key_exists('swarm_token_worker', $body)) {
+        if (array_key_exists('swarm_token_worker', $body)) {
             $this->job->setClusterToken($body['swarm_token_worker']);
         }
-        if (\array_key_exists('swarm_token_manager', $body)) {
+        if (array_key_exists('swarm_token_manager', $body)) {
             $this->job->setManagerToken($body['swarm_token_manager']);
         }
 
         // get manager IP
-        if (\array_key_exists('manager_ip', $body)) {
+        if (array_key_exists('manager_ip', $body)) {
             $this->job->setInitManagerIp($body['manager_ip']);
         }
 
         $this->persistJob();
 
         // provision missing redundancy nodes if necessary
-        if (!\array_key_exists('deleted', $body) && $this->job->getInitManagerIp()) {
+        if (!array_key_exists('deleted', $body) && $this->job->getInitManagerIp()) {
             OrchestratorFactory::getOrchestratorForInstance($this->instance)->provisionManager($this->job);
         }
 
         // finalize
         // TODO: set redundancy to >= 3 again if needed
-        if ($this->job->getInitManagerIp() && $this->job->getClusterToken() && $this->job->getManagerToken() && \count($this->job->getManagerNodes()) > 0) {
+        if ($this->job->getInitManagerIp() && $this->job->getClusterToken() && $this->job->getManagerToken() && count($this->job->getManagerNodes()) > 0) {
             $this->job->setStatus(JobStatus::READY);
             MailUtility::sendMailToAdmin('Job is now read. By: ' . $this->user->getEmail() . ', type: ' . $this->job->getType() . ', id: ' . $this->job->getId());
         }
-        if (\array_key_exists('deleted', $body) && \count($this->job->getManagerNodes()) === 0) {
+        if (array_key_exists('deleted', $body) && count($this->job->getManagerNodes()) === 0) {
             $this->job->setStatus(JobStatus::DELETED);
             MailUtility::sendMailToAdmin('Job was deleted by ' . $this->user->getEmail() . ', type: ' . $this->job->getType() . ', id: ' . $this->job->getId());
         }

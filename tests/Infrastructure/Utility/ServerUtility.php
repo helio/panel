@@ -23,6 +23,12 @@ class ServerUtility extends \Helio\Panel\Utility\ServerUtility
         if (strpos($command, 'docker::swarm_token')) {
             return '{"_output":"token"}';
         }
+        if (strpos($command, '{{.ID}}')) {
+            return 'Badklb4lbaDKbasibo4VB';
+        }
+        if (strpos($command, 'node inspect')) {
+            return '{["status":"dummy"]}';
+        }
 
         return '{"status":"success"}';
     }

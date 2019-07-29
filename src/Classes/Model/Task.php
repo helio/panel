@@ -3,6 +3,10 @@
 
 namespace Helio\Panel\Model;
 
+use \Exception;
+use \DateTime;
+use \DateTimeZone;
+
 use Doctrine\{Common\Collections\Collection,
     ORM\Mapping\Entity,
     ORM\Mapping\Table,
@@ -54,6 +58,14 @@ class Task extends AbstractModel
      * @Column(type="text")
      */
     protected $stats = '';
+
+
+    /**
+     * @var DateTime
+     *
+     * @Column(type="datetimetz", nullable=TRUE)
+     */
+    protected $latestHeartbeat;
 
 
     /**
@@ -137,6 +149,36 @@ class Task extends AbstractModel
     public function setStats(string $stats): Task
     {
         $this->stats = $stats;
+        return $this;
+    }
+
+
+    /**
+     * @return DateTime
+     */
+    public function getLatestHeartbeat(): DateTime
+    {
+        if ($this->created->getTimezone()->getName() !== $this->getTimezone()) {
+            $this->created->setTimezone(new DateTimeZone($this->getTimezone()));
+        }
+        return $this->latestHeartbeat;
+    }
+
+    /**
+     * @param DateTime|null $latestHeartbeat
+     * @return Task
+     * @throws Exception
+     */
+    public function setLatestHeartbeat(DateTime $latestHeartbeat = null): self
+    {
+        if ($latestHeartbeat === null) {
+            $latestHeartbeat = new DateTime('now', new DateTimeZone($this->getTimezone()));
+        }
+
+        // Fix Timezone because Doctrine assumes persistend DateTime Objects are always UTC
+        $latestHeartbeat->setTimezone(new DateTimeZone('UTC'));
+
+        $this->latestHeartbeat = $latestHeartbeat;
         return $this;
     }
 }

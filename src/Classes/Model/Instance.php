@@ -55,14 +55,6 @@ class Instance extends AbstractModel
      *
      * @Column
      */
-    protected $token = '';
-
-
-    /**
-     * @var string
-     *
-     * @Column
-     */
     protected $instanceType = InstanceType::__DEFAULT;
 
     /**
@@ -216,26 +208,6 @@ class Instance extends AbstractModel
         }
         $this->owner = $owner;
 
-        return $this;
-    }
-
-
-    /**
-     * @return string
-     */
-    public function getToken(): string
-    {
-        return $this->token;
-    }
-
-
-    /**
-     * @param string $token
-     * @return Instance $this
-     */
-    public function setToken(string $token): Instance
-    {
-        $this->token = $token;
         return $this;
     }
 

@@ -2,17 +2,19 @@
 
 namespace Helio\Panel\Controller;
 
+use \Exception;
+use \RuntimeException;
 
-use Helio\Panel\Controller\Traits\ElasticController;
-use Helio\Panel\Controller\Traits\InstanceController;
-use Helio\Panel\Controller\Traits\TaskController;
+use Helio\Panel\App;
+use Helio\Panel\Controller\Traits\HelperElasticController;
+use Helio\Panel\Controller\Traits\ModelInstanceController;
+use Helio\Panel\Controller\Traits\ModelTaskController;
 use Helio\Panel\Controller\Traits\TypeApiController;
-use Helio\Panel\Controller\Traits\ValidatedJobController;
+use Helio\Panel\Controller\Traits\AuthorizedJobIsActiveController;
 use Helio\Panel\Job\JobFactory;
 use Helio\Panel\Job\JobStatus;
 use Helio\Panel\Model\Job;
 use Helio\Panel\Model\Task;
-use Helio\Panel\Model\User;
 use Helio\Panel\Orchestrator\OrchestratorFactory;
 use Helio\Panel\Task\TaskStatus;
 use Helio\Panel\Utility\ExecUtility;
@@ -26,38 +28,19 @@ use Slim\Http\StatusCode;
  * @package    Helio\Panel\Controller
  * @author    Christoph Buchli <team@opencomputing.cloud>
  *
- * @RoutePrefix('/exec')
+ * @RoutePrefix('/api/exec')
  *
  */
-class ExecController extends AbstractController
+class ApiExecController extends AbstractController
 {
-    use ValidatedJobController, TaskController, InstanceController {
-        ValidatedJobController::setupParams insteadof TaskController, InstanceController;
-        ValidatedJobController::requiredParameterCheck insteadof TaskController, InstanceController;
-        ValidatedJobController::optionalParameterCheck insteadof TaskController, InstanceController;
+    use AuthorizedJobIsActiveController, ModelTaskController, ModelInstanceController {
+        AuthorizedJobIsActiveController::setupParams insteadof ModelTaskController, ModelInstanceController;
+        AuthorizedJobIsActiveController::requiredParameterCheck insteadof ModelTaskController, ModelInstanceController;
+        AuthorizedJobIsActiveController::optionalParameterCheck insteadof ModelTaskController, ModelInstanceController;
     }
 
-    use ElasticController;
-
+    use HelperElasticController;
     use TypeApiController;
-
-
-    /**
-     * @var User needed for auth by user token
-     */
-    protected $user;
-
-
-    public function setupUser(): bool
-    {
-        $this->setupParams();
-        if (\array_key_exists('token', $this->params)) {
-            /** @var User $tryToFindUser */
-            $tryToFindUser = $this->dbHelper->getRepository(User::class)->findOneByToken($this->params['token']);
-            $this->user = $tryToFindUser;
-        }
-        return true;
-    }
 
 
     /**
@@ -69,7 +52,7 @@ class ExecController extends AbstractController
     {
         try {
             if (!JobStatus::isValidActiveStatus($this->job->getStatus())) {
-                throw new \RuntimeException('job not ready');
+                throw new RuntimeException('job not ready');
             }
 
             // run and stop have the same interface, thus we can reuse the code
@@ -77,7 +60,8 @@ class ExecController extends AbstractController
             if ($this->request->getMethod() === 'DELETE') {
                 $command = 'stop';
             } else {
-                $this->task = new Task();
+                $this->task->setName('automatically created');
+                $this->persistTask();
             }
 
             // run the job and check if the replicas have changed
@@ -91,9 +75,8 @@ class ExecController extends AbstractController
                 $this->persistTask();
                 $this->persistJob();
             }
-
             return $this->render(['status' => 'success', 'id' => $this->task->getId()]);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return $this->render(['status' => 'error', 'reason' => $e->getMessage()], StatusCode::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -101,6 +84,7 @@ class ExecController extends AbstractController
 
     /**
      * @return ResponseInterface
+     * @throws Exception
      *
      * @Route("/jobstatus", methods={"GET"}, name="exec.job.status")
      */
@@ -109,10 +93,10 @@ class ExecController extends AbstractController
         return $this->render([
             'status' => $this->job->getStatus(),
             'tasks' => [
-                'total' => $this->dbHelper->getRepository(Task::class)->count(['job' => $this->job]),
-                'pending' => $this->dbHelper->getRepository(Task::class)->count(['job' => $this->job, 'status' => TaskStatus::READY]),
-                'running' => $this->dbHelper->getRepository(Task::class)->count(['job' => $this->job, 'status' => TaskStatus::RUNNING]),
-                'done' => $this->dbHelper->getRepository(Task::class)->count(['job' => $this->job, 'status' => TaskStatus::DONE])
+                'total' => App::getDbHelper()->getRepository(Task::class)->count(['job' => $this->job]),
+                'pending' => App::getDbHelper()->getRepository(Task::class)->count(['job' => $this->job, 'status' => TaskStatus::READY]),
+                'running' => App::getDbHelper()->getRepository(Task::class)->count(['job' => $this->job, 'status' => TaskStatus::RUNNING]),
+                'done' => App::getDbHelper()->getRepository(Task::class)->count(['job' => $this->job, 'status' => TaskStatus::DONE])
             ]
         ]);
     }
@@ -120,12 +104,13 @@ class ExecController extends AbstractController
 
     /**
      * @return ResponseInterface
+     * @throws Exception
      *
      * @Route("/isdone", methods={"GET"}, name="exec.job.status")
      */
     public function jobIsDoneAction(): ResponseInterface
     {
-        $tasksPending = $this->dbHelper->getRepository(Task::class)->count(['job' => $this->job, 'status' => TaskStatus::READY]);
+        $tasksPending = App::getDbHelper()->getRepository(Task::class)->count(['job' => $this->job, 'status' => TaskStatus::READY]);
         return $this->render([], $tasksPending === 0 ? StatusCode::HTTP_OK : StatusCode::HTTP_FAILED_DEPENDENCY);
     }
 
@@ -177,8 +162,8 @@ class ExecController extends AbstractController
                 return $this->render(['error' => 'unknown task', 'params' => $this->params, 'task' => $this->task, StatusCode::HTTP_NOT_FOUND]);
             }
             $this->task->setLatestAction()->setStatus(TaskStatus::RUNNING);
-            $this->dbHelper->persist($this->task);
-            $this->dbHelper->flush();
+            App::getDbHelper()->persist($this->task);
+            App::getDbHelper()->flush();
             return $this->render();
         } catch (\Exception $e) {
             return $this->render(['status' => 'error'], StatusCode::HTTP_INTERNAL_SERVER_ERROR);
@@ -188,6 +173,7 @@ class ExecController extends AbstractController
 
     /**
      * @return ResponseInterface
+     * @throws Exception
      *
      * @Route("/logs", methods={"GET"}, name="job.logs")
      */

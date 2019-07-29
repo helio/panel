@@ -6,7 +6,7 @@ use Helio\Panel\Model\Job;
 use Helio\Panel\Model\Task;
 use Psr\Http\Message\ResponseInterface;
 
-class ExecUtility
+class ExecUtility extends AbstractUtility
 {
 
 
@@ -21,7 +21,7 @@ class ExecUtility
         if ($endpoint && strpos($endpoint, '/') !== 0) {
             $endpoint = '/' . $endpoint;
         }
-        return "exec$endpoint" . ($job || $task ? '?' : '') . ($job ? 'jobid=' . $job->getId() . '&token=' . $job->getToken() : '') . ($job && $task ? '&' : '') . ($task ? 'taskid=' . $task->getId() : '');
+        return "api/exec$endpoint" . ($job || $task ? '?' : '') . ($job ? 'jobid=' . $job->getId() : '') . ($job && $task ? '&' : '') . ($task ? 'taskid=' . $task->getId() : '');
     }
 
 

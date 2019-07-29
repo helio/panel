@@ -34,5 +34,59 @@ $(document).ready(function () {
         let userId = button.data('userid');
         document.cookie = 'impersonate=' + userId + '; path=/';
         window.location = '/';
-    })
+    });
+
+    $('.generate-eternal-token').on('click', function (e) {
+        e.preventDefault();
+        let button = $(this);
+        let userId = button.data('userid');
+        $.ajax({
+            accepts: {
+                mycustomtype: 'application/json'
+            },
+            url: '/api/user/settoken?eternal=true',
+            method: 'put',
+            success: function (data) {
+                if (data.hasOwnProperty('notification')) {
+                    $(data.notification).prependTo($('body'));
+                }
+            }
+        })
+    });
+
+    $('.generate-instance-token').on('click', function (e) {
+        e.preventDefault();
+        let button = $(this);
+        let instanceId = $('#instanceid').val();
+        $.ajax({
+            accepts: {
+                mycustomtype: 'application/json'
+            },
+            url: '/api/admin/getinstancetoken?instanceid=' + instanceId,
+            method: 'get',
+            success: function (data) {
+                if (data.hasOwnProperty('notification')) {
+                    $(data.notification).prependTo($('body'));
+                }
+            }
+        })
+    });
+
+    $('.generate-job-token').on('click', function (e) {
+        e.preventDefault();
+        let button = $(this);
+        let jobId = $('#jobid').val();
+        $.ajax({
+            accepts: {
+                mycustomtype: 'application/json'
+            },
+            url: '/api/admin/getjobtoken?jobid=' + jobId,
+            method: 'get',
+            success: function (data) {
+                if (data.hasOwnProperty('notification')) {
+                    $(data.notification).prependTo($('body'));
+                }
+            }
+        })
+    });
 });

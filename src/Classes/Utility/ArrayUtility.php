@@ -4,7 +4,7 @@ namespace Helio\Panel\Utility;
 
 use Adbar\Dot;
 
-class ArrayUtility
+class ArrayUtility extends AbstractUtility
 {
     /**
      * @param array $dataBags

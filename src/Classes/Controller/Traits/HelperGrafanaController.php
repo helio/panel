@@ -2,17 +2,22 @@
 
 namespace Helio\Panel\Controller\Traits;
 
+use \Exception;
+use \DateTime;
+use GuzzleHttp\Exception\GuzzleException;
 use Helio\Panel\Utility\ServerUtility;
 use Slim\Http\StatusCode;
 
-trait GrafanaController
+trait HelperGrafanaController
 {
-    use GoogleAuthenticatedController;
+    use HelperGoogleAuthenticatedController;
 
-    /** @var \DateTime */
+    /** @var DateTime */
     protected $start;
-    /** @var \DateTime */
+
+    /** @var DateTime */
     protected $end;
+
     /** @var int */
     protected $step;
 
@@ -35,7 +40,7 @@ trait GrafanaController
 
     /**
      * @return array
-     * @throws \GuzzleHttp\Exception\GuzzleException
+     * @throws GuzzleException
      */
     public function createSnapshot(): array
     {
@@ -59,8 +64,8 @@ trait GrafanaController
 
     /**
      * @return array
-     * @throws \GuzzleHttp\Exception\GuzzleException
-     * @throws \Exception
+     * @throws GuzzleException
+     * @throws Exception
      */
     protected function getDashboardSnapshotConfig(): array
     {

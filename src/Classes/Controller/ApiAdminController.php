@@ -3,9 +3,15 @@
 namespace Helio\Panel\Controller;
 
 
-use Helio\Panel\Controller\Traits\AdminController;
-use Helio\Panel\Controller\Traits\InstanceController;
-use Helio\Panel\Controller\Traits\JobController;
+use \Exception;
+use Helio\Panel\Utility\JwtUtility;
+use \RuntimeException;
+use \DateTime;
+use \DateInterval;
+use Helio\Panel\App;
+use Helio\Panel\Controller\Traits\AuthorizedAdminController;
+use Helio\Panel\Controller\Traits\ModelInstanceController;
+use Helio\Panel\Controller\Traits\ModelJobController;
 use Helio\Panel\Controller\Traits\TypeDynamicController;
 use Helio\Panel\Job\JobStatus;
 use Helio\Panel\Job\JobType;
@@ -31,12 +37,12 @@ use Slim\Http\StatusCode;
  */
 class ApiAdminController extends AbstractController
 {
-    use InstanceController, JobController {
-        InstanceController::setupParams insteadof JobController;
-        InstanceController::requiredParameterCheck insteadof JobController;
-        InstanceController::optionalParameterCheck insteadof JobController;
+    use ModelInstanceController, ModelJobController {
+        ModelInstanceController::setupParams insteadof ModelJobController;
+        ModelInstanceController::requiredParameterCheck insteadof ModelJobController;
+        ModelInstanceController::optionalParameterCheck insteadof ModelJobController;
     }
-    use AdminController;
+    use AuthorizedAdminController;
     use TypeDynamicController;
 
 
@@ -54,7 +60,7 @@ class ApiAdminController extends AbstractController
      * @return ResponseInterface
      *
      * @Route("/instancelist", methods={"GET"}, name="user.serverlist")
-     * @throws \Exception
+     * @throws Exception
      */
     public function serverListAction(): ResponseInterface
     {
@@ -68,7 +74,7 @@ class ApiAdminController extends AbstractController
         }
 
         $servers = [];
-        foreach ($this->dbHelper->getRepository(Instance::class)->findBy([], $orderBy, $limit, $offset) as $instance) {
+        foreach (App::getDbHelper()->getRepository(Instance::class)->findBy([], $orderBy, $limit, $offset) as $instance) {
             /** @var Instance $instance */
             $servers[] = ['id' => $instance->getId(), 'html' => $this->fetchPartial('listItemInstance', ['instance' => $instance, 'user' => $this->user, 'admin' => true])];
         }
@@ -80,7 +86,7 @@ class ApiAdminController extends AbstractController
      * @return ResponseInterface
      *
      * @Route("/joblist", methods={"GET"}, name="admin.joblist")
-     * @throws \Exception
+     * @throws Exception
      */
     public function jobListAction(): ResponseInterface
     {
@@ -94,7 +100,7 @@ class ApiAdminController extends AbstractController
         }
 
         $jobs = [];
-        foreach ($this->dbHelper->getRepository(Job::class)->findBy([], $orderBy, $limit, $offset) as $job) {
+        foreach (App::getDbHelper()->getRepository(Job::class)->findBy([], $orderBy, $limit, $offset) as $job) {
             /**@var Job $job */
             $jobs[] = ['id' => $job->getId(), 'html' => $this->fetchPartial('listItemJob', ['job' => $job, 'user' => $this->user, 'admin' => true])];
         }
@@ -104,6 +110,7 @@ class ApiAdminController extends AbstractController
 
     /**
      * @return ResponseInterface
+     * @throws Exception
      *
      * @Route("/update", methods={"POST"}, name="user.update")
      */
@@ -124,7 +131,7 @@ class ApiAdminController extends AbstractController
         if (array_key_exists('email', $this->params)) {
             $this->user->setEmail($this->params['email']);
         }
-        $this->dbHelper->flush($this->user);
+        App::getDbHelper()->flush($this->user);
 
         return $this->render();
     }
@@ -134,23 +141,23 @@ class ApiAdminController extends AbstractController
      * @return ResponseInterface
      *
      * @Route("/stat", methods={"GET"}, name="exec.stats")
-     * @throws \Exception
+     * @throws Exception
      */
     public function statsAction(): ResponseInterface
     {
-        $now = new \DateTime('now', ServerUtility::getTimezoneObject());
-        $stale = $now->sub(new \DateInterval('PT1H'));
+        $now = new DateTime('now', ServerUtility::getTimezoneObject());
+        $stale = $now->sub(new DateInterval('PT1H'));
 
-        $avgWaitQuery = $this->dbHelper->getRepository(Task::class)->createQueryBuilder('avg_wait');
+        $avgWaitQuery = App::getDbHelper()->getRepository(Task::class)->createQueryBuilder('avg_wait');
         $avgWaitQuery->select('AVG(TIMESTAMPDIFF(SECOND, avg_wait.created, ' . $now->format('YmdHis') . ')) as avg')->where('avg_wait.status = ' . TaskStatus::READY);
-        $staleQuery = $this->dbHelper->getRepository(Task::class)->createQueryBuilder('stale');
+        $staleQuery = App::getDbHelper()->getRepository(Task::class)->createQueryBuilder('stale');
         $staleQuery->select('COUNT(stale.id) as count')->where('stale.status = ' . TaskStatus::RUNNING)->andWhere('TIMESTAMPDIFF(SECOND, stale.latestAction, ' . $stale->format('YmdHis') . ') > 600');
 
         return $this->render([
-            'active_jobs' => $this->dbHelper->getRepository(Job::class)->count(['status' => JobStatus::READY]),
-            'running_tasks' => $this->dbHelper->getRepository(Task::class)->count(['status' => TaskStatus::RUNNING]),
-            'waiting_tasks' => $this->dbHelper->getRepository(Task::class)->count(['status' => TaskStatus::READY]),
-            'done_tasks' => $this->dbHelper->getRepository(Task::class)->count(['status' => TaskStatus::DONE]),
+            'active_jobs' => App::getDbHelper()->getRepository(Job::class)->count(['status' => JobStatus::READY]),
+            'running_tasks' => App::getDbHelper()->getRepository(Task::class)->count(['status' => TaskStatus::RUNNING]),
+            'waiting_tasks' => App::getDbHelper()->getRepository(Task::class)->count(['status' => TaskStatus::READY]),
+            'done_tasks' => App::getDbHelper()->getRepository(Task::class)->count(['status' => TaskStatus::DONE]),
             'task_avg_wait' => $avgWaitQuery->getQuery()->getArrayResult()[0]['avg'],
             'stale_tasks' => $staleQuery->getQuery()->getArrayResult()[0]['count']
         ]);
@@ -166,12 +173,12 @@ class ApiAdminController extends AbstractController
     {
         try {
             if (!JobStatus::isValidActiveStatus($this->job->getStatus())) {
-                throw new \RuntimeException('job not ready');
+                throw new RuntimeException('job not ready');
             }
             OrchestratorFactory::getOrchestratorForInstance($this->instance)->dispatchJob($this->job);
             $this->persistJob();
             return $this->render(['status' => 'success']);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return $this->render(['status' => 'error', 'reason' => $e->getMessage()], StatusCode::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -179,12 +186,45 @@ class ApiAdminController extends AbstractController
 
     /**
      * @return ResponseInterface
+     * @throws Exception
+     *
+     * @Route("/getjobtoken", methods={"GET"}, name="admin.getjobtoken")
+     */
+    public function getJobTokenAction(): ResponseInterface
+    {
+        if (!$this->job) {
+            return $this->render(['success' => false, 'message' => 'job not found'], StatusCode::HTTP_NOT_FOUND);
+        }
+        $token = JwtUtility::generateToken(null, null, null, $this->job)['token'];
+        return $this->render(['message' => "<strong>Your Token is $token</strong> Safe it in your Password manager, it cannot be displayed ever again."]);
+    }
+
+
+    /**
+     * @return ResponseInterface
+     * @throws Exception
+     *
+     * @Route("/getinstancetoken", methods={"GET"}, name="admin.getinstancetoken")
+     */
+    public function getInstanceTokenAction(): ResponseInterface
+    {
+        if (!$this->instance) {
+            return $this->render(['success' => false, 'message' => 'instance not found'], StatusCode::HTTP_NOT_FOUND);
+        }
+        $token = JwtUtility::generateToken(null, null, $this->instance)['token'];
+        return $this->render(['message' => "<strong>Your Token is $token</strong> Safe it in your Password manager, it cannot be displayed ever again."]);
+    }
+
+
+    /**
+     * @return ResponseInterface
+     * @throws Exception
      *
      * @Route("/getRunnersHiera", methods={"GET"}, name="admin.getJobHiera")
      */
     public function openJobsListForPuppetAction(): ResponseInterface
     {
-        $jobs = $this->dbHelper->getRepository(Job::class)->findBy(['status' => JobStatus::READY]);
+        $jobs = App::getDbHelper()->getRepository(Job::class)->findBy(['status' => JobStatus::READY]);
 
         $jobList = [];
         $counter = 0;
@@ -237,7 +277,7 @@ class ApiAdminController extends AbstractController
             if ($dcfjt->getEnvVariables()) {
                 foreach ($dcfjt->getEnvVariables() as $key => $value) {
                     // it might be due to json array and object mixup, that value is still an array
-                    if (\is_array($value)) {
+                    if (is_array($value)) {
                         foreach ($value as $subkey => $subvalue) {
                             $env[$subkey] = $subvalue;
                         }
@@ -251,7 +291,7 @@ class ApiAdminController extends AbstractController
             if ($task->getConfig('env')) {
                 foreach ($task->getConfig('env') as $key => $value) {
                     // it might be due to json array and object mixup, that value is still an array
-                    if (\is_array($value)) {
+                    if (is_array($value)) {
                         foreach ($value as $subkey => $subvalue) {
                             $taskEnv[$subkey] = $subvalue;
                         }
@@ -260,12 +300,12 @@ class ApiAdminController extends AbstractController
                     }
                 }
                 /** @noinspection SlowArrayOperationsInLoopInspection */
-                $taskEnv = \array_merge($env, $taskEnv);
+                $taskEnv = array_merge($env, $taskEnv);
             } else {
                 $taskEnv = $env;
             }
             /** @noinspection SlowArrayOperationsInLoopInspection */
-            $taskEnv = \array_merge(['HELIO_JOBID' => $this->job->getId(), 'HELIO_USERID' => $this->job->getOwner()->getId(), 'HELIO_TASKID' => $task->getId()], $taskEnv);
+            $taskEnv = array_merge(['HELIO_JOBID' => $this->job->getId(), 'HELIO_USERID' => $this->job->getOwner()->getId(), 'HELIO_TASKID' => $task->getId()], $taskEnv);
             // TODO: These redundante quotes are here to make env stuff `docker service create` compatible :(
             foreach ($taskEnv as $item => $value) {
                 $yamlEnv[] = "'$item=$value'";

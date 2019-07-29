@@ -9,5 +9,5 @@
         set up your server and then join our cluster (currently Docker Swarm).
         You'll find technical details on our <a href="https://github.com/helio/setup">Github page</a>
     </p><br/><br/>
-    <?php \Helio\Panel\Helper\ViewHelper::includePartial('instanceAddScript', ['email' => $instance->getOwner()->getEmail(), 'token' => $instance->getToken()]); ?>
+    <?php \Helio\Panel\Utility\ViewUtility::includePartial('instanceAddScript', ['email' => $instance->getOwner()->getEmail(), 'token' => \Helio\Panel\Utility\JwtUtility::generateToken(null, null, $instance)['token']]); ?>
 </div>

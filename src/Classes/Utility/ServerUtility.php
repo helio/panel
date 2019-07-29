@@ -5,7 +5,7 @@ namespace Helio\Panel\Utility;
 use Helio\Panel\App;
 use Helio\Panel\Helper\LogHelper;
 
-class ServerUtility
+class ServerUtility extends AbstractUtility
 {
 
     /**

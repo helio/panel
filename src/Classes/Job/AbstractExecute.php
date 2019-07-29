@@ -56,10 +56,10 @@ abstract class AbstractExecute implements JobInterface, DispatchableInterface
         foreach ($tasks as $task) {
             if (TaskStatus::isValidPendingStatus($task->getStatus() || TaskStatus::isRunning($task->getStatus()))) {
                 $task->setStatus(TaskStatus::TERMINATED);
-                App::getApp()->getContainer()['dbHelper']->persist($task);
+                App::getDbHelper()->persist($task);
             }
         }
-        App::getApp()->getContainer()['dbHelper']->flush();
+        App::getDbHelper()->flush();
 
         return true;
     }

@@ -2,9 +2,10 @@
 
 namespace Helio\Panel\Controller;
 
-use Helio\Panel\Controller\Traits\ParametrizedController;
-use Helio\Panel\Controller\Traits\StatisticsController;
+use Helio\Panel\App;
+use Helio\Panel\Controller\Traits\ModelUserController;
 use Helio\Panel\Controller\Traits\TypeBrowserController;
+use Helio\Panel\Model\Instance;
 use Helio\Panel\Model\User;
 use Helio\Panel\Utility\CookieUtility;
 use Psr\Http\Message\ResponseInterface;
@@ -22,8 +23,7 @@ use Slim\Http\StatusCode;
 class PanelController extends AbstractController
 {
 
-    use ParametrizedController;
-    use StatisticsController;
+    use ModelUserController;
     use TypeBrowserController;
 
     protected function getMode(): ?string
@@ -41,8 +41,16 @@ class PanelController extends AbstractController
      */
     public function indexAction(): ResponseInterface
     {
+
+        $query = App::getDbHelper()->getRepository(Instance::class)->createQueryBuilder('c');
+        $statServerByRegion = $query
+            ->select('c.region, COUNT(c.id) as cnt')
+            ->where('c.owner = ' . $this->user->getId())
+            ->groupBy('c.region')
+            ->getQuery()->getArrayResult();
+
         return $this->render([
-            'serverByRegion' => $this->statServerByRegion(),
+            'serverByRegion' => $statServerByRegion,
             'user' => $this->user,
             'title' => 'Dashboard - Helio Panel',
             'dashboardActive' => 'active',
@@ -115,7 +123,7 @@ class PanelController extends AbstractController
             return $this->response->withRedirect('/panel', StatusCode::HTTP_FOUND);
         }
         return $this->render([
-            'users' => $this->dbHelper->getRepository(User::class)->findAll(),
+            'users' => App::getDbHelper()->getRepository(User::class)->findAll(),
             'user' => $this->user,
             'title' => 'Admin - Helio Panel',
             'module' => 'admin',
@@ -135,8 +143,8 @@ class PanelController extends AbstractController
     public function LogoutUserAction(): ResponseInterface
     {
         $this->user->setLoggedOut();
-        $this->dbHelper->persist($this->user);
-        $this->dbHelper->flush($this->user);
+        App::getDbHelper()->persist($this->user);
+        App::getDbHelper()->flush($this->user);
 
         return CookieUtility::deleteCookie($this->response->withRedirect('/loggedout', StatusCode::HTTP_FOUND), 'token');
     }

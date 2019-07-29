@@ -4,6 +4,7 @@ namespace Helio\Panel\Helper;
 
 use Helio\Panel\Utility\ServerUtility;
 use Monolog\Handler\ErrorLogHandler;
+use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
 use Psr\Log\LogLevel;
 
@@ -36,14 +37,14 @@ use Psr\Log\LogLevel;
  * @package    Helio\Panel\Helper
  * @author    Christoph Buchli <support@snowflake.ch>
  */
-class LogHelper
+class LogHelper implements HelperInterface
 {
 
 
     /**
-     * @var Logger
+     * @var array<Logger>
      */
-    protected static $logger;
+    protected static $logger = [];
 
 
     /**
@@ -54,7 +55,7 @@ class LogHelper
      */
     public static function __callStatic($name, $arguments)
     {
-        return \call_user_func_array([self::get(), $name], $arguments);
+        return \call_user_func_array([self::getInstance(), $name], $arguments);
     }
 
 
@@ -88,28 +89,34 @@ class LogHelper
      */
     protected static function write(LogLevel $level, string $message): void
     {
-        self::get()->log($level, $message);
+        self::getInstance()->log($level, $message);
     }
 
     /**
+     * @param string $suffix
      * @return Logger
      * @throws \Exception
      */
-    public static function get(): Logger
+    public static function getInstance(string $suffix = 'app'): Logger
     {
-        if (!self::$logger) {
-            self::$logger = (new Logger('helio.panel'))
+        if (!\array_key_exists($suffix, self::$logger)) {
+            // this needs to be done through str_replace and not enforces, since LOG_DEST can also be a php:// resource
+            $filename = str_replace('.log', '-' . $suffix . '.log', LOG_DEST);
+
+            self::$logger[$suffix] = (new Logger('helio.panel.' . $suffix))
                 ->pushProcessor(new \Monolog\Processor\UidProcessor())
                 ->pushHandler(new \Monolog\Handler\StreamHandler(LOG_DEST, LOG_LVL));
-            self::$logger::setTimezone(ServerUtility::getTimezoneObject());
+            self::$logger[$suffix]::setTimezone(ServerUtility::getTimezoneObject());
 
             // also log to stdout
             if (ServerUtility::isLocalDevEnv()) {
-                self::$logger->pushHandler(new ErrorLogHandler());
+                self::$logger[$suffix]
+                    ->pushHandler(new ErrorLogHandler(ErrorLogHandler::OPERATING_SYSTEM, Logger::WARNING, false))
+                    ->pushHandler(new StreamHandler('php://stdout'));
             }
         }
 
-        return self::$logger;
+        return self::$logger[$suffix];
     }
 
 }

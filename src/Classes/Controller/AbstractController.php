@@ -2,11 +2,9 @@
 
 namespace Helio\Panel\Controller;
 
+use \RuntimeException;
+
 use Ergy\Slim\Annotations\Controller;
-use Helio\Panel\Helper\DbHelper;
-use Helio\Panel\Helper\LogHelper;
-use Helio\Panel\Helper\ZapierHelper;
-use Monolog\Logger;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Request;
 use Slim\Http\Response;
@@ -18,14 +16,22 @@ use Slim\Interfaces\RouterInterface;
 use Slim\Views\PhpRenderer;
 use Symfony\Component\Yaml\Yaml;
 
+use Helio\Panel\Model\Instance;
+use Helio\Panel\Model\Job;
+use Helio\Panel\Model\User;
+use Helio\Panel\Helper\LogHelper;
+use Helio\Panel\Utility\ServerUtility;
+
+use function OpenApi\scan;
+
 /**
  * Abstract Panel Controller
  *
  * @property PhpRenderer renderer
- * @property Logger logger
- * @property DbHelper dbHelper
- * @property array jwt
- * @property ZapierHelper zapierHelper
+ * @property array params
+ * @property User user
+ * @property Instance instance
+ * @property Job job
  *
  * @property-read array settings
  * @property-read EnvironmentInterface environment
@@ -84,7 +90,7 @@ abstract class AbstractController extends Controller
         foreach (get_class_methods($this) as $method) {
             if (strpos($method, 'setup') === 0) {
                 if (!$this->$method()) {
-                    throw new \RuntimeException('Controller Setup failed: ' . $method, 1551432903);
+                    throw new RuntimeException('Controller Setup failed: ' . $method, 1551432903);
                 }
             }
         }
@@ -93,7 +99,7 @@ abstract class AbstractController extends Controller
         foreach (get_class_methods($this) as $method) {
             if (strpos($method, 'validate') === 0) {
                 if (!$this->$method()) {
-                    throw new \RuntimeException('Controller Validation failed: ' . $method, 1551432915);
+                    throw new RuntimeException('Controller Validation failed: ' . $method, 1551432915);
                 }
             }
         }
@@ -130,7 +136,7 @@ abstract class AbstractController extends Controller
      */
     protected function html($data, int $status = StatusCode::HTTP_OK): ResponseInterface
     {
-        if (\array_key_exists('impersonate', $this->request->getCookieParams())) {
+        if (array_key_exists('impersonate', $this->request->getCookieParams())) {
             $data['impersonating'] = true;
         }
 
@@ -152,7 +158,7 @@ abstract class AbstractController extends Controller
         if ($status > 299) {
             LogHelper::warn('API error on ' . $this->request->getUri() . ' with code ' . $status . "\nResponse Data:\n" . print_r($data, true) . "\nRequest:\n" . print_r((string)$this->request->getBody(), true));
         }
-        if (\array_key_exists('message', $data)) {
+        if (array_key_exists('message', $data)) {
             $data['notification'] = $this->fetchPartial('message', [
                 'message' => $data['message'],
                 'status' => $data['status'] ?? 'ok',
@@ -193,7 +199,7 @@ abstract class AbstractController extends Controller
             LogHelper::warn('API error on ' . $this->request->getUri() . ' with code ' . $status . "\nResponse Data:\n" . print_r($data, true) . "\nRequest:\n" . print_r((string)$this->request->getBody(), true));
         }
 
-        if (\is_array($data)) {
+        if (is_array($data)) {
             $data = Yaml::dump($data, 4, 2);
         }
         return $this->rawYaml($data, $status);
@@ -215,6 +221,41 @@ abstract class AbstractController extends Controller
         return $this->response
             ->withHeader('Content-Type', 'application/x-yaml')
             ->withStatus($status);
+    }
 
+
+    /**
+     * @param array|string $include array of filenames or regex of filenames to include
+     * @return ResponseInterface
+     *
+     */
+    protected function renderApiDocumentation($include = []): ResponseInterface
+    {
+        $path = ServerUtility::getClassesPath();
+        $exclude = [];
+
+        // unfourtunately, OpenApi::scan() only has an exclude functionality, so we need to "invert"  $include
+        if ($include) {
+            if (is_array($include) && count($include) === 1) {
+                $path .= DIRECTORY_SEPARATOR . $include[0];
+            } else {
+                $exclude = array_filter(ServerUtility::getAllFilesInFolder($path, '.php'), function ($object) use ($include, $path) {
+                    $filenameInsidePath = substr($object, strlen($path . DIRECTORY_SEPARATOR));
+
+                    return
+                        (is_array($include) && !in_array($filenameInsidePath, $include, true))
+                        ||
+                        (is_string($include) && preg_match($include, $object) === 0);
+                });
+            }
+        }
+        $openapi = scan($path, ['exclude' => $exclude]);
+
+        if ((array_key_exists('format', $this->params) && $this->params['format'] === 'json')
+            || $this->request->getHeader('Content-Type') === 'application/json') {
+            return $this->rawJson($openapi->toJson());
+        }
+
+        return $this->rawYaml($openapi->toYaml());
     }
 }

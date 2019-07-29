@@ -2,10 +2,11 @@
 
 namespace Helio\Panel\Controller;
 
-
-use Helio\Panel\Controller\Traits\AuthenticatedController;
-use Helio\Panel\Controller\Traits\ElasticController;
-use Helio\Panel\Controller\Traits\ParametrizedController;
+use \Exception;
+use Helio\Panel\App;
+use Helio\Panel\Controller\Traits\ModelUserController;
+use Helio\Panel\Controller\Traits\HelperElasticController;
+use Helio\Panel\Controller\Traits\ModelParametrizedController;
 use Helio\Panel\Controller\Traits\TypeApiController;
 use Helio\Panel\Job\JobStatus;
 use Helio\Panel\Model\Instance;
@@ -27,10 +28,10 @@ use Psr\Http\Message\ResponseInterface;
  */
 class ApiUserController extends AbstractController
 {
-    use AuthenticatedController;
-    use ParametrizedController;
+    use ModelUserController;
+    use ModelParametrizedController;
     use TypeApiController;
-    use ElasticController;
+    use HelperElasticController;
 
     protected function getContext(): ?string
     {
@@ -41,7 +42,7 @@ class ApiUserController extends AbstractController
      * @return ResponseInterface
      *
      * @Route("/instancelist", methods={"GET"}, name="user.serverlist")
-     * @throws \Exception
+     * @throws Exception
      */
     public function serverListAction(): ResponseInterface
     {
@@ -51,7 +52,7 @@ class ApiUserController extends AbstractController
         $orderBy = [$order[0] => $order[1]];
 
         $servers = [];
-        foreach ($this->dbHelper->getRepository(Instance::class)->findByOwner($this->user, $orderBy, $limit, $offset) as $instance) {
+        foreach (App::getDbHelper()->getRepository(Instance::class)->findBy(['owner' => $this->user], $orderBy, $limit, $offset) as $instance) {
             /** @var Instance $instance */
             $servers[] = ['id' => $instance->getId(), 'html' => $this->fetchPartial('listItemInstance', ['instance' => $instance, 'user' => $this->user])];
         }
@@ -62,7 +63,7 @@ class ApiUserController extends AbstractController
      * @return ResponseInterface
      *
      * @Route("/joblist", methods={"GET"}, name="user.serverlist")
-     * @throws \Exception
+     * @throws Exception
      */
     public function jobListAction(): ResponseInterface
     {
@@ -79,7 +80,7 @@ class ApiUserController extends AbstractController
         }
 
         $jobs = [];
-        foreach ($this->dbHelper->getRepository(Job::class)->findBy($searchCriteria, $orderBy, $limit, $offset) as $job) {
+        foreach (App::getDbHelper()->getRepository(Job::class)->findBy($searchCriteria, $orderBy, $limit, $offset) as $job) {
             /**@var Job $job */
             $jobs[] = [
                 'id' => $job->getId(),
@@ -90,9 +91,9 @@ class ApiUserController extends AbstractController
                         return strpos($item, '.') !== 0 && strpos($item, '.tar.gz') > 0;
                     }),
                 ]),
-                'tasks' => $this->dbHelper->getRepository(Task::class)->count(['job' => $job]),
-                'open_tasks' => $this->dbHelper->getRepository(Task::class)->count(['job' => $job, 'status' => TaskStatus::READY]),
-                'running_tasks' => $this->dbHelper->getRepository(Task::class)->count(['job' => $job, 'status' => TaskStatus::RUNNING]),
+                'tasks' => App::getDbHelper()->getRepository(Task::class)->count(['job' => $job]),
+                'open_tasks' => App::getDbHelper()->getRepository(Task::class)->count(['job' => $job, 'status' => TaskStatus::READY]),
+                'running_tasks' => App::getDbHelper()->getRepository(Task::class)->count(['job' => $job, 'status' => TaskStatus::RUNNING]),
             ];
         }
         return $this->render(['items' => $jobs]);
@@ -100,6 +101,7 @@ class ApiUserController extends AbstractController
 
     /**
      * @return ResponseInterface
+     * @throws Exception
      *
      * @Route("/update", methods={"POST"}, name="user.update")
      */
@@ -124,14 +126,14 @@ class ApiUserController extends AbstractController
         $config = json_decode($this->user->getConfig(), true);
         $validConfigOptions = ['gitlabtags', 'instancelevel', 'instancelocation'];
         foreach ($validConfigOptions as $option) {
-            if (\array_key_exists($option, $this->params)) {
+            if (array_key_exists($option, $this->params)) {
                 $this->optionalParameterCheck([$option => FILTER_SANITIZE_STRING]);
                 $config[$option] = $this->params[$option];
             }
         }
         $this->user->setConfig(json_encode($config));
 
-        $this->dbHelper->flush($this->user);
+        App::getDbHelper()->flush($this->user);
 
         return $this->render(['message' => 'done']);
     }
@@ -139,6 +141,7 @@ class ApiUserController extends AbstractController
 
     /**
      * @return ResponseInterface
+     * @throws Exception
      *
      * @Route("/logs", methods={"GET"}, name="job.logs")
      */
@@ -150,6 +153,7 @@ class ApiUserController extends AbstractController
 
     /**
      * @return ResponseInterface
+     * @throws Exception
      *
      * @Route("/strangelogs", methods={"GET"}, name="job.logs")
      */
@@ -161,14 +165,15 @@ class ApiUserController extends AbstractController
 
     /**
      * @return ResponseInterface
-     * @throws \Exception
+     * @throws Exception
      *
      * @Route("/settoken", methods={"PUT"}, name="user.settoken")
      */
     public function generateTokenAction(): ResponseInterface
     {
-        $this->user->setToken(JwtUtility::generateUserIdentificationToken($this->user));
-        $this->persistUser();
-        return $this->render(['message' => '<strong>Your Token is ' . $this->user->getToken() . '</strong> Safe it in your Password manager, it cannot be displayed ever again.']);
+        $this->optionalParameterCheck(['eternal', FILTER_SANITIZE_STRING]);
+        $duration = (array_key_exists('eternal', $this->params) && (bool)$this->params['eternal']) ? 'sticky' : null;
+        $token = JwtUtility::generateToken($duration, $this->user)['token'];
+        return $this->render(['message' => "<strong>Your Token is $token</strong> Safe it in your Password manager, it cannot be displayed ever again."]);
     }
 }

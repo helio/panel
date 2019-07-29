@@ -14,13 +14,13 @@ if [[ -z "${1}" ]]; then exit 1; fi
 
 BASE_URL=${2:-http://localhost:8099}
 ID=$(date -j -f "%a %b %d %T %Z %Y" "`date`" "+%s")
-JOB=$(curl -fsSL -m 360 -X POST "${BASE_URL}/api/job/add?jobid=_NEW&jobtype=ep85&jobname=_auto&billingReference=${ID}&token=${1}")
+JOB=$(curl -fsSL -m 360 -X POST -H "Authorization: Bearer ${1}" "${BASE_URL}/api/job/add?jobid=_NEW&jobtype=ep85&jobname=_auto&billingReference=${ID}")
 JOB_ID=$(echo ${JOB} | jq -r .id)
 JOB_TOKEN=$(echo ${JOB} | jq -r .token)
 
 while true; do
     PROGRES="${PROGRES}."
-    if curl -fsSL -o /dev/null "${BASE_URL}/api/job/isready?jobid=${JOB_ID}&token=${JOB_TOKEN}"; then
+    if curl -fsSL -o /dev/null -H "Authorization: Bearer ${JOB_TOKEN}" "${BASE_URL}/api/job/isready?jobid=${JOB_ID}"; then
         break
     fi
     echo -ne "\\rWaiting for job ready state. This may take a while${PROGRES}"
@@ -40,14 +40,14 @@ while [ ${RUNS} -gt 0 ]; do
 
     DATA='{"run_id":"demorun_from_'$(uname -n)'","report_url":"rsync://user@target","epw":"'${EPW}'","idf":"'${IDF}'"}'
 
-    curl -fsSLo /dev/null -X POST -d ${DATA} "${BASE_URL}/exec?jobid=${JOB_ID}&token=${JOB_TOKEN}"
+    curl -fsSLo /dev/null -X POST -d ${DATA} -H "Authorization: Bearer ${JOB_TOKEN}" "${BASE_URL}/exec?jobid=${JOB_ID}"
 
     RUNS=$[${RUNS}-1]
 done
 
 
 while true; do
-    if curl -fsSL -o /dev/null "${BASE_URL}/exec/isdone?jobid=${JOB_ID}&token=${JOB_TOKEN}"; then
+    if curl -fsSL -o /dev/null -H "Authorization: Bearer ${JOB_TOKEN}" "${BASE_URL}/api/exec/isdone?jobid=${JOB_ID}"; then
         exit 0
     fi
     sleep 30;

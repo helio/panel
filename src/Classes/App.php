@@ -2,13 +2,15 @@
 
 namespace Helio\Panel;
 
+use \Exception;
 use Helio\Panel\Helper\DbHelper;
 use Helio\Panel\Helper\ElasticHelper;
 use Helio\Panel\Helper\LogHelper;
 use Helio\Panel\Helper\ZapierHelper;
 use Helio\Panel\Utility\JwtUtility;
+use Helio\Panel\Utility\MiddlewareUtility;
 use Helio\Panel\Utility\ServerUtility;
-use Slim\Http\Request;
+use Monolog\Logger;
 
 class App extends \Slim\App
 {
@@ -19,51 +21,51 @@ class App extends \Slim\App
      */
     protected static $instance;
 
+    /**
+     * @var App
+     */
+    protected static $className;
+
+    /** @var DbHelper */
+    protected static $dbHelperClassName = DbHelper::class;
+
+    /** @var ZapierHelper */
+    protected static $zapierHelperClassName = ZapierHelper::class;
+
+    /** @var LogHelper */
+    protected static $logHelperClassName = LogHelper::class;
+
+    /** @var ElasticHelper */
+    protected static $elasticHelperClassName = ElasticHelper::class;
+
 
     /**
      * @param null|string $appName
-     * @param Request|null $request
      * @param array $middleWaresToApply
-     * @param string $dbHelperClassName
-     * @param string $zapierHelperClassName
-     * @param string $logHelperClassName
-     * @param string $elasticHelperClassName
+     *
      * @return App
      * @throws \Exception
      */
     public static function getApp(
         ?string $appName = null,
-        Request $request = null,
-        array $middleWaresToApply = [JwtUtility::class],
-        string $dbHelperClassName = DbHelper::class,
-        string $zapierHelperClassName = ZapierHelper::class,
-        string $logHelperClassName = LogHelper::class,
-        string $elasticHelperClassName = ElasticHelper::class
+        array $middleWaresToApply = [MiddlewareUtility::class]
     ): App
     {
+
         if (!self::$instance) {
+            // this is a kind of DI-hack to make the app testable
+            self::$className = static::class;
+
             // abort if $instance should exist, but doesn't (e.g. if we call getApp from inside the application)
             if ($appName === null) {
                 throw new \RuntimeException('App instance cannot be created from here.', 1548056859);
             }
 
-            self::$instance = new self(['settings' => [
+            self::$instance = new self::$className(['settings' => [
                 'displayErrorDetails' => !ServerUtility::isProd(),
             ]]);
-            /**
-             * @var DbHelper $dbHelperClassName
-             * @var LogHelper $logHelperClassName
-             * @var ZapierHelper $zapierHelperClassName
-             */
-            self::$instance->getContainer()['logger'] = $logHelperClassName::get();
-            self::$instance->getContainer()['dbHelper'] = $dbHelperClassName::getInstance();
-            self::$instance->getContainer()['zapierHelper'] = $zapierHelperClassName::getInstance();
-            self::$instance->getContainer()['elasticHelperClassName'] = $elasticHelperClassName;
-            self::$instance->getContainer()['renderer'] = new \Slim\Views\PhpRenderer(APPLICATION_ROOT . '/src/templates');
 
-            if ($request) {
-                self::$instance->getContainer()['request'] = $request;
-            }
+            self::$instance->getContainer()['renderer'] = new \Slim\Views\PhpRenderer(APPLICATION_ROOT . '/src/templates');
 
             self::$instance->getContainer()['router'] = new \Ergy\Slim\Annotations\Router(self::$instance,
                 [APPLICATION_ROOT . '/src/Classes/Controller/'],
@@ -85,5 +87,49 @@ class App extends \Slim\App
     public static function isReady(): bool
     {
         return (bool)self::$instance;
+    }
+
+    /**
+     * @return DbHelper
+     * @throws Exception
+     */
+    public static function getDbHelper()
+    {
+        /** @var App $debu */
+        $class = self::$className;
+        return ($class::$dbHelperClassName)::getInstance();
+    }
+
+    /**
+     * @return Logger
+     * @throws Exception
+     */
+    public static function getLogger()
+    {
+        /** @var App $debu */
+        $class = self::$className;
+        return ($class::$logHelperClassName)::getInstance();
+    }
+
+    /**
+     * @return ZapierHelper
+     * @throws Exception
+     */
+    public static function getZapierHelper()
+    {
+        /** @var App $debu */
+        $class = self::$className;
+        return ($class::$zapierHelperClassName)::getInstance();
+    }
+
+    /**
+     * @return ElasticHelper
+     * @throws Exception
+     */
+    public static function getElasticHelper()
+    {
+        /** @var App $debu */
+        $class = self::$className;
+        return ($class::$elasticHelperClassName)::getInstance();
     }
 }

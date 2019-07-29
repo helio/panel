@@ -26,6 +26,7 @@ class ReAuthenticate implements MiddlewareInterface
      */
     use DoublePassTrait;
 
+
     /**
      * @param ServerRequestInterface $request
      * @param RequestHandlerInterface $handler
@@ -41,8 +42,8 @@ class ReAuthenticate implements MiddlewareInterface
         /** @var Request $request */
         $token = $request->getAttribute('token');
 
-        if ($token && !\array_key_exists('block_reauth', $request->getCookieParams()) && $request->getUri()->getPath() !== '/panel/logout') {
-            $token = JwtUtility::generateToken($token['uid'], '+120 minutes');
+        if ($token && strpos($request->getUri()->getPath(), '/api') === false && $request->getUri()->getPath() !== '/panel/logout') {
+            $token = JwtUtility::generateNewTokenForCurrentSession('+120 minutes');
             # re-authenticate by setting a new token
             $response = CookieUtility::addCookie($response, 'token', $token['token'], $token['expires']);
         }

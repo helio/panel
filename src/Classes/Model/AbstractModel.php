@@ -12,6 +12,7 @@ use Doctrine\{
     ORM\Mapping\ManyToOne,
     ORM\Mapping\OneToMany
 };
+use Helio\Panel\Helper\LogHelper;
 use Helio\Panel\Utility\ArrayUtility;
 use Helio\Panel\Utility\ServerUtility;
 
@@ -126,7 +127,8 @@ abstract class AbstractModel
 
     /**
      * @param \DateTime|null $created
-     * @return $this
+     * @return AbstractModel
+     * @throws \Exception
      */
     public function setCreated(\DateTime $created = null): self
     {
@@ -143,13 +145,15 @@ abstract class AbstractModel
 
     /**
      * @param int $timestamp
-     * @return $this
+     * @return AbstractModel
+     * @throws \Exception
      *
      * NOTE: Don't use ths method! It's for testing purposes only!
      * @internal
      */
     public function setCreatedByTimestamp(int $timestamp): self
     {
+        LogHelper::warn('SetCreatedByTimestamp called');
         $this->created = (new \DateTime('now', ServerUtility::getTimezoneObject()))->setTimestamp($timestamp);
         return $this;
     }

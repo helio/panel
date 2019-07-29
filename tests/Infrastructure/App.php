@@ -2,12 +2,13 @@
 
 namespace Helio\Test\Infrastructure;
 
-use Helio\Panel\Helper\LogHelper;
+use \Exception;
 use Helio\Panel\Utility\JwtUtility;
+use Helio\Panel\Utility\MiddlewareUtility;
 use Helio\Test\Infrastructure\Helper\DbHelper;
+use Helio\Test\Infrastructure\Helper\LogHelper;
 use Helio\Test\Infrastructure\Helper\ZapierHelper;
 use Helio\Test\Infrastructure\Helper\ElasticHelper;
-use Slim\Http\Request;
 
 class App extends \Helio\Panel\App
 {
@@ -18,32 +19,43 @@ class App extends \Helio\Panel\App
 
 
     /**
-     * @var
+     * @var int
      */
     protected static $currentIndex;
 
+    /** @var DbHelper */
+    protected static $dbHelperClassName = DbHelper::class;
+
+    /** @var ZapierHelper */
+    protected static $zapierHelperClassName = ZapierHelper::class;
+
+    /** @var LogHelper */
+    protected static $logHelperClassName = LogHelper::class;
+
+    /** @var ElasticHelper */
+    protected static $elasticHelperClassName = ElasticHelper::class;
+
+
     /**
-     * @inheritdoc
+     * @param bool $cleanInstance
+     * @param array $middleWaresToApply
+     * @return \Helio\Panel\App
+     * @throws Exception
      */
-    public static function getApp(
-        ?string $appName = null,
-        Request $request = null,
-        array $middleWaresToApply = [JwtUtility::class],
-        string $dbHelperClassName = DbHelper::class,
-        string $zapierHelperClassName = ZapierHelper::class,
-        string $logHelperClassName = LogHelper::class,
-        string $elasticHelperClassName = ElasticHelper::class
+    public static function getTestApp(
+        bool $cleanInstance = false,
+        array $middleWaresToApply = [MiddlewareUtility::class]
     ): \Helio\Panel\App
     {
-        // if a new test is run, we increase the instance index to ensure no two tests run on the same app instance.
-        if ($appName === 'test') {
+        if ($cleanInstance) {
+            // if a new test is run, we increase the instance index to ensure no two tests run on the same app instance.
             ++self::$currentIndex;
         }
 
 
         if (!self::$instances || !\array_key_exists('test-' . self::$currentIndex, self::$instances)) {
             self::$instance = null;
-            self::$instances['test-' . self::$currentIndex] = \Helio\Panel\App::getApp('test-' . self::$currentIndex, $request, $middleWaresToApply, DbHelper::class, ZapierHelper::class, LogHelper::class);
+            self::$instances['test-' . self::$currentIndex] = static::getApp('test-' . self::$currentIndex, $middleWaresToApply);
         }
         return self::$instances['test-' . self::$currentIndex];
     }

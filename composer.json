@@ -1,56 +1,57 @@
 {
-    "name": "helio/panel",
-    "description": "Prototype of the Helio user Panel",
-    "homepage": "https://panel.idling.host",
-    "license": "MIT",
-    "authors": [
-        {
-            "name": "Christoph Buchli",
-            "email": "team@helio.exchange",
-            "homepage": "https://helio.exchange"
-        }
-    ],
-    "autoload": {
-        "psr-4": {
-            "Helio\\Panel\\": "src/Classes"
-        }
-    },
-    "require": {
-        "php": ">=7.2.0",
-        "ext-json": "*",
-        "monolog/monolog": "^1.17",
-        "doctrine/orm": "^2.6.0",
-        "guzzlehttp/guzzle": "^6.2",
-        "slim/slim": "^3.1",
-        "slim/php-view": "^2.0",
-        "ergy/slim-annotations-router": "^1.0",
-        "firebase/php-jwt": "^5.0",
-        "tuupola/base62": "^0.10.0",
-        "tuupola/slim-basic-auth": "^3.1",
-        "tuupola/slim-jwt-auth": "^3.0",
-        "tuupola/cors-middleware": "^0.9",
-        "google/auth": "^1.4",
-        "adbario/php-dot-notation": "^2.2",
-        "ocramius/proxy-manager": "^2.2",
-        "symfony/yaml": "^4.2",
-        "zircote/swagger-php": "^3.0",
-        "elasticsearch/elasticsearch": "^6.7"
-    },
-    "require-dev": {
-        "roave/security-advisories": "dev-master",
-        "phpunit/phpunit": "*",
-        "webfactory/doctrine-orm-test-infrastructure": "^1.5"
-    },
-    "autoload-dev": {
-        "psr-4": {
-            "Helio\\Test\\": "tests/"
-        }
-    },
-    "config": {
-        "process-timeout": 0
-    },
-    "scripts": {
-        "start": "php -S localhost:8080 -t www",
-        "test": "phpunit"
+  "name": "helio/panel",
+  "description": "Prototype of the Helio user Panel",
+  "homepage": "https://panel.idling.host",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Christoph Buchli",
+      "email": "team@helio.exchange",
+      "homepage": "https://helio.exchange"
     }
+  ],
+  "autoload": {
+    "psr-4": {
+      "Helio\\Panel\\": "src/Classes"
+    }
+  },
+  "require": {
+    "php": ">=7.2.0",
+    "ext-json": "*",
+    "monolog/monolog": "^1.17",
+    "doctrine/orm": "^2.6.0",
+    "guzzlehttp/guzzle": "^6.2",
+    "slim/slim": "^3.1",
+    "slim/php-view": "^2.0",
+    "ergy/slim-annotations-router": "^1.0",
+    "tuupola/base62": "^0.10.0",
+    "tuupola/slim-basic-auth": "^3.1",
+    "tuupola/slim-jwt-auth": "^3.0",
+    "tuupola/cors-middleware": "^0.9",
+    "google/auth": "^1.4",
+    "adbario/php-dot-notation": "^2.2",
+    "ocramius/proxy-manager": "^2.2",
+    "symfony/yaml": "^4.2",
+    "zircote/swagger-php": "^3.0",
+    "elasticsearch/elasticsearch": "^6.7"
+  },
+  "require-dev": {
+    "roave/security-advisories": "dev-master",
+    "phpunit/phpunit": "*",
+    "webfactory/doctrine-orm-test-infrastructure": "^1.5"
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Helio\\Test\\": "tests/"
+    }
+  },
+  "config": {
+    "process-timeout": 0
+  },
+  "scripts": {
+    "start": "php -S localhost:8080 -t www",
+    "test": "phpunit"
+  },
+  "minimum-stability": "dev",
+  "prefer-stable": true
 }

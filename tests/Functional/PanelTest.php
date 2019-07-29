@@ -6,6 +6,7 @@ use GuzzleHttp\Psr7\Response;
 use Helio\Panel\Model\User;
 use Helio\Test\Infrastructure\Helper\ZapierHelper;
 use Helio\Test\TestCase;
+use Slim\Http\StatusCode;
 
 
 /**
@@ -42,9 +43,10 @@ class PanelTest extends TestCase
     {
         ZapierHelper::setResponseStack([new Response(200, [], '{"success" => "true"}')]);
         $response = $this->runApp('POST', '/user/login', true, null, ['email' => 'email@example.com']);
+
         $this->assertEquals(302, $response->getStatusCode());
         $this->assertCount(1, $response->getHeader('Location'));
-        $this->assertStringContainsString('panel', $response->getHeader('Location')[0]);
+        $this->assertStringContainsString('confirm?signature', $response->getHeader('Location')[0]);
     }
 
 
@@ -58,12 +60,14 @@ class PanelTest extends TestCase
         $response = $this->runApp('POST', '/user/login', true, null, ['email' => 'email@example.com']);
         $this->assertEquals(302, $response->getStatusCode());
         $this->assertCount(1, $response->getHeader('Location'));
-        $this->assertStringContainsString('panel', $response->getHeader('Location')[0]);
+        $this->assertStringContainsString('/confirm', $response->getHeader('Location')[0]);
 
         $confirmationUrl = $response->getHeader('Location')[0];
 
         $response = $this->runApp('GET', $confirmationUrl, true);
-        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals(StatusCode::HTTP_FOUND, $response->getStatusCode());
+        $this->assertStringContainsString('/panel', $response->getHeaderLine('location'));
+        $response = $this->runApp('GET', $response->getHeaderLine('location'), true, null, null, $response->getHeaderLine('set-cookie'));
 
         /** @var User $user */
         $user = $this->userRepository->findOneByEmail('email@example.com');
@@ -77,15 +81,18 @@ class PanelTest extends TestCase
     public function testLoggedOutInvalidatesToken(): void
     {
         ZapierHelper::setResponseStack([new Response(200, [], '{"success" => "true"}')]);
-        $response = $this->runApp('POST', '/user/login', true, null, ['email' => 'email@example.com']);
+        $response = $this->runApp('POST', '/user/login', true, null, ['email' => 'email@example.com'], null);
         $this->assertEquals(302, $response->getStatusCode());
         $this->assertCount(1, $response->getHeader('Location'));
-        $this->assertStringContainsString('panel', $response->getHeader('Location')[0]);
+        $this->assertStringContainsString('/confirm', $response->getHeader('Location')[0]);
 
         $confirmationUrl = $response->getHeader('Location')[0];
 
         $response = $this->runApp('GET', $confirmationUrl, true);
-        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals(StatusCode::HTTP_FOUND, $response->getStatusCode());
+        $this->assertStringContainsString('/panel', $response->getHeaderLine('location'));
+        $this->runApp('GET', $response->getHeaderLine('location'), true, null, null, $response->getHeaderLine('set-cookie'));
+
 
         /** @var User $user */
         $user = $this->userRepository->findOneByEmail('email@example.com');

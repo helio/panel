@@ -88,7 +88,7 @@ function initActionButtons(item) {
             data: data,
             method: method,
             success: function (data) {
-                if (method === 'delete') {
+                if (method === 'delete' && data.hasOwnProperty('removed') && !!data['removed']) {
                     item.addClass('hidden');
                 }
 

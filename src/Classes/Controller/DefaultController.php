@@ -2,20 +2,28 @@
 
 namespace Helio\Panel\Controller;
 
-use Helio\Panel\Controller\Traits\ParametrizedController;
+use \Exception;
+use \InvalidArgumentException;
+use \RuntimeException;
+use \DateTime;
+use GuzzleHttp\Exception\GuzzleException;
+use Helio\Panel\App;
+use Helio\Panel\Controller\Traits\ModelParametrizedController;
 use Helio\Panel\Controller\Traits\TypeBrowserController;
+use Helio\Panel\Helper\LogHelper;
+use Helio\Panel\Instance\InstanceStatus;
+use Helio\Panel\Model\Instance;
 use Helio\Panel\Model\User;
 use Helio\Panel\Utility\CookieUtility;
 use Helio\Panel\Utility\JwtUtility;
 use Helio\Panel\Utility\MailUtility;
 use Helio\Panel\Utility\ServerUtility;
-use OpenApi\Annotations\Server;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Http\StatusCode;
 
 
 /**
- * Class Frontend
+ * Everything that requires no auth goes here
  *
  * @package    Helio\Panel\Controller
  * @author    Christoph Buchli <team@opencomputing.cloud>
@@ -24,7 +32,7 @@ use Slim\Http\StatusCode;
  */
 class DefaultController extends AbstractController
 {
-    use ParametrizedController;
+    use ModelParametrizedController;
     use TypeBrowserController;
 
 
@@ -48,6 +56,19 @@ class DefaultController extends AbstractController
     }
 
     /**
+     * @return ResponseInterface
+     * @throws Exception
+     *
+     * @Route("confirm", methods={"GET"})
+     */
+    public function ConfirmAction(): ResponseInterface
+    {
+        $this->requiredParameterCheck(['signature' => FILTER_SANITIZE_STRING]);
+
+        return CookieUtility::addCookie($this->response->withRedirect('/panel', StatusCode::HTTP_FOUND), 'token', $this->params['signature']);
+    }
+
+    /**
      *
      * @return ResponseInterface
      * @Route("loggedout", methods={"GET"})
@@ -61,38 +82,34 @@ class DefaultController extends AbstractController
     /**
      *
      * @return ResponseInterface
-     * @throws \GuzzleHttp\Exception\GuzzleException
-     * @throws \Exception
+     * @throws GuzzleException
+     * @throws Exception
      *
      * @Route("user/login", methods={"POST"}, name="user.submit")
      */
     public function SubmitUserAction(): ResponseInterface
     {
-
         // normal user process
         $this->requiredParameterCheck(['email' => FILTER_SANITIZE_EMAIL]);
 
-        $user = $this->dbHelper->getRepository(User::class)->findOneByEmail($this->params['email']);
+        $user = App::getDbHelper()->getRepository(User::class)->findOneBy(['email' => $this->params['email']]);
         if (!$user) {
             $user = new User();
             $user->setEmail($this->params['email'])->setCreated();
-            $this->dbHelper->persist($user);
-            $this->dbHelper->flush($user);
-            $user->setToken(JwtUtility::generateUserIdentificationToken($user));
-            $this->dbHelper->persist($user);
-            $this->dbHelper->flush($user);
-            if (!$this->zapierHelper->submitUserToZapier($user)) {
-                throw new \RuntimeException('Error during User Creation', 1546940197);
+            App::getDbHelper()->persist($user);
+            App::getDbHelper()->flush();
+            if (!App::getZapierHelper()->submitUserToZapier($user)) {
+                throw new RuntimeException('Error during User Creation', 1546940197);
             }
         }
 
-        if (!MailUtility::sendConfirmationMail($user, $this->request->getParsedBodyParam('permanent') === 'on' ? '+30 days' : '+1 week')) {
-            throw new \RuntimeException('Error during User Creation', 1545655919);
+        if (!MailUtility::sendConfirmationMail($user)) {
+            throw new RuntimeException('Error during User Creation', 1545655919);
         }
 
         // catch Demo User
         if ($user->getEmail() === 'email@example.com') {
-            return $this->response->withRedirect(ServerUtility::getBaseUrl() . 'panel?token=' . JwtUtility::generateToken($user->getId(), '+5 minutes')['token']);
+            return $this->response->withRedirect(ServerUtility::getBaseUrl() . 'confirm?signature=' . JwtUtility::generateToken('+5 minutes', $user)['token']);
         }
 
         return $this->render(
@@ -101,6 +118,124 @@ class DefaultController extends AbstractController
                 'title' => 'Login link sent'
             ]
         );
+    }
+
+
+    /**
+     * (wenn's den User noch nicht gibt)
+     *
+     * @return ResponseInterface
+     *
+     * @throws GuzzleException
+     *
+     * @Route("server/init", methods={"POST"}, name="server.init")
+     *
+     * TODO: Merge User Creation action with above function
+     */
+    public function createAction(): ResponseInterface
+    {
+        try {
+            $this->requiredParameterCheck([
+                'email' => [FILTER_SANITIZE_EMAIL],
+                'fqdn' => [FILTER_SANITIZE_STRING],
+            ]);
+
+            $server = new Instance();
+            $server->setFqdn($this->params['fqdn']);
+            $server->setName('Automatically generated');
+            $server->setCreated(new DateTime('now', ServerUtility::getTimezoneObject()));
+            $server->setStatus(InstanceStatus::INIT);
+
+            /** @var User $user */
+            $user = App::getDbHelper()->getRepository(User::class)->findOneBy(['email' => $this->params['email']]);
+            if ($user) {
+                if (!$user->isActive()) {
+                    throw new InvalidArgumentException('User already exists. Please confirm by clicking the link you received via email.',
+                        1531251350);
+                }
+
+                $server->setOwner($user);
+                App::getDbHelper()->persist($server);
+                App::getDbHelper()->persist($user);
+                App::getDbHelper()->flush();
+
+                return $this->json(['success' => true, 'reason' => 'User already confirmed'], StatusCode::HTTP_REQUESTED_RANGE_NOT_SATISFIABLE);
+            }
+            $user = new User();
+            $user->setEmail($this->params['email'])->setCreated();
+            $server->setOwner($user);
+            App::getDbHelper()->persist($user);
+            App::getDbHelper()->merge($server);
+            App::getDbHelper()->flush();
+
+            if (!App::getZapierHelper()->submitUserToZapier($user)) {
+                throw new RuntimeException('Error during user creation', 1531253379);
+            }
+            if (!MailUtility::sendConfirmationMail($user, '+15 minutes')) {
+                throw new RuntimeException('Couldn\'t send confirmation mail', 1531253400);
+            }
+        } catch (Exception $e) {
+            LogHelper::err('Error during Server init: ' . $e->getMessage());
+            return $this->json(['success' => false, 'reason' => $e->getMessage()], StatusCode::HTTP_NOT_ACCEPTABLE);
+        }
+
+        return $this->json([
+            'success' => true,
+            'user_id' => $user->getId(),
+            'server_id' => $server->getId(),
+            'reason' => 'User and Server created. Please confirm by klicking the link you just received by email.'
+        ], StatusCode::HTTP_OK);
+    }
+
+
+    /**
+     * (wenn's den User schon gibt)
+     *
+     * @return ResponseInterface
+     * @throws Exception
+     *
+     * @Route("server/gettoken", methods={"POST"}, name="server.gettoken")
+     */
+    public function getTokenAction(): ResponseInterface
+    {
+        try {
+            $this->requiredParameterCheck([
+                'email' => [FILTER_SANITIZE_EMAIL],
+                'fqdn' => [FILTER_SANITIZE_STRING],
+            ]);
+            $ip = filter_var(ServerUtility::getClientIp(), FILTER_VALIDATE_IP);
+
+            /** @var User $user */
+            $user = App::getDbHelper()->getRepository(User::class)->findOneBy(['email' => $this->params['email']]);
+
+            if (!$user) {
+                throw new InvalidArgumentException('User not found', StatusCode::HTTP_FORBIDDEN);
+            }
+
+            /** @var Instance $server */
+            $server = App::getDbHelper()->getRepository(Instance::class)->findOneBy(['fqdn' => $this->params['fqdn']]);
+            if (!$server) {
+                $server = (new Instance());
+                $server->setIp($ip)
+                    ->setOwner($user)
+                    ->setFqdn($this->params['fqdn'])
+                    ->setName('Automatically generated during gettoken')
+                    ->setCreated(new DateTime('now', ServerUtility::getTimezoneObject()))
+                    ->setStatus(InstanceStatus::INIT);
+                App::getDbHelper()->persist($server);
+                App::getDbHelper()->flush();
+            }
+
+            if (!$server || !$server->getOwner() || $user->getId() !== $server->getOwner()->getId()) {
+                throw new InvalidArgumentException('Instance not found or not permitted', StatusCode::HTTP_NOT_FOUND);
+            }
+        } catch (Exception $e) {
+            LogHelper::warn('Error at gettoken: ' . $e->getMessage() . "\nsupplied body has been:" . print_r((string)$this->request->getBody(), true));
+            return $this->json(['success' => false, 'reason' => $e->getMessage()],
+                $e->getCode() < 1000 ? $e->getCode() : StatusCode::HTTP_NOT_ACCEPTABLE);
+        }
+
+        return $this->json(['success' => true, 'token' => JwtUtility::generateToken(null, $user, $server)['token']], StatusCode::HTTP_OK);
     }
 
     /**
@@ -123,41 +258,5 @@ class DefaultController extends AbstractController
     public function JobApiDocAction(string $jobtype): ResponseInterface
     {
         return $this->renderApiDocumentation(['Job/' . ucfirst(strtolower($jobtype)) . '/ApiInterface.php']);
-    }
-
-
-    /**
-     * @param array|string $include array of filenames or regex of filenames to include
-     * @return ResponseInterface
-     *
-     */
-    protected function renderApiDocumentation($include = []): ResponseInterface
-    {
-        $path = ServerUtility::getClassesPath();
-        $exclude = [];
-
-        // unfourtunately, OpenApi::scan() only has an exclude functionality, so we need to "invert"  $include
-        if ($include) {
-            if (\is_array($include) && \count($include) === 1) {
-                $path .= DIRECTORY_SEPARATOR . $include[0];
-            } else {
-                $exclude = array_filter(ServerUtility::getAllFilesInFolder($path, '.php'), function ($object) use ($include, $path) {
-                    $filenameInsidePath = substr($object, \strlen($path . DIRECTORY_SEPARATOR));
-
-                    return
-                        (\is_array($include) && !\in_array($filenameInsidePath, $include, true))
-                        ||
-                        (\is_string($include) && preg_match($include, $object) === 0);
-                });
-            }
-        }
-        $openapi = \OpenApi\scan($path, ['exclude' => $exclude]);
-
-        if ((array_key_exists('format', $this->params) && $this->params['format'] === 'json')
-            || $this->request->getHeader('Content-Type') === 'application/json') {
-            return $this->rawJson($openapi->toJson());
-        }
-
-        return $this->rawYaml($openapi->toYaml());
     }
 }

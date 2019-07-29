@@ -7,7 +7,7 @@ use Helio\Panel\Model\User;
 use Helio\Panel\Utility\ServerUtility;
 
 
-class ZapierHelper
+class ZapierHelper implements HelperInterface
 {
 
 

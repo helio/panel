@@ -100,35 +100,6 @@ class ServerApiGettokenTest extends TestCase
     /**
      * @throws \Exception
      */
-    public function testIpNotSet(): void
-    {
-        $this->markTestSkipped('IP Protection removed due to conflicts and it\'s been an insufficient security measures anyways.');
-        $this->instance->setOwner($this->user);
-        $this->infrastructure->import($this->user);
-        $this->infrastructure->import($this->instance);
-
-        $response = $this->exec();
-        $this->assertEquals(403, $response->getStatusCode());
-    }
-
-    /**
-     * @throws \Exception
-     */
-    public function testIpNotProperlySet(): void
-    {
-        $this->markTestSkipped('IP Protection removed due to conflicts and it\'s been an insufficient security measures anyways.');
-        $this->instance->setOwner($this->user);
-        $this->infrastructure->import($this->user);
-        $this->infrastructure->import($this->instance->setIp('1.2.3.4'));
-        $_SERVER['REMOTE_ADDR'] = '2.3.4.5';
-
-        $response = $this->exec();
-        $this->assertEquals(403, $response->getStatusCode());
-    }
-
-    /**
-     * @throws \Exception
-     */
     public function testEverythingOk(): void
     {
         $this->instance->setOwner($this->user)->setIp('1.2.3.4');
@@ -145,6 +116,5 @@ class ServerApiGettokenTest extends TestCase
         $instance = $this->instanceRepository->findOneByFqdn('testserver.example.com');
         $this->assertNotNull($instance);
         $this->assertStringContainsString('token', $body);
-        $this->assertEquals($instance->getToken(), $json['token']);
     }
 }

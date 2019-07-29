@@ -49,6 +49,11 @@ class AutoscalerTest extends TestCase
      */
     protected $url = '/api/admin/getJobHiera';
 
+    /**
+     * @var array
+     */
+    protected $headers = [];
+
 
     /**
      * @throws \Exception
@@ -61,18 +66,14 @@ class AutoscalerTest extends TestCase
 
         $this->user = (new User())->setAdmin(1)->setName('testuser')->setCreated()->setEmail('test-autoscaler@example.com')->setActive(true)->addInstance($this->instance);
         $this->job = (new Job())->setStatus(JobStatus::READY)->setType(JobType::ENERGY_PLUS_85)->setOwner($this->user)->setInitManagerIp('1.1.1.1')->setManagerNodes(['1', '2', '3']);
-        $this->infrastructure->getEntityManager()->persist($this->user);
-        $this->infrastructure->getEntityManager()->persist($this->job);
-        $this->infrastructure->getEntityManager()->flush();
-        $this->user->setToken(JwtUtility::generateUserIdentificationToken($this->user));
-        $this->job->setToken(JwtUtility::generateJobIdentificationToken($this->job));
         $this->user->addJob($this->job);
         $this->infrastructure->getEntityManager()->persist($this->user);
         $this->infrastructure->getEntityManager()->persist($this->job);
         $this->infrastructure->getEntityManager()->flush();
 
 
-        $this->url .= '?token=' . $this->user->getToken() . '&jobid=' . $this->job->getId();
+        $this->headers['Authorization'] = 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token'];
+        $this->url .= '?jobid=' . $this->job->getId();
 
     }
 
@@ -82,7 +83,7 @@ class AutoscalerTest extends TestCase
      */
     protected function exec(): ResponseInterface
     {
-        return $this->runApp('GET', $this->url, true);
+        return $this->runApp('GET', $this->url, true, $this->headers);
     }
 
     /**
@@ -128,8 +129,8 @@ class AutoscalerTest extends TestCase
 
         $result = $this->exec();
 
-        $replicas = $this->findValueOfKeyInHiera($result, $this->job->getType() . '-' . $this->job->getId() . '-' . $task->getId() . '.replicas');
         $this->assertEquals(200, $result->getStatusCode());
+        $replicas = $this->findValueOfKeyInHiera($result, $this->job->getType() . '-' . $this->job->getId() . '-' . $task->getId() . '.replicas');
         $this->assertEquals(0, $replicas);
     }
 
@@ -185,7 +186,6 @@ class AutoscalerTest extends TestCase
 
         $result = $this->exec();
 
-        $debug = "" . $result->getBody();
         $this->assertEquals(200, $result->getStatusCode());
         $this->assertStringContainsString('sleep', $this->findValueOfKeyInHiera($result, $this->job->getType() . '-' . $this->job->getId() . '-' . $task->getId() . '.args'));
     }
@@ -215,15 +215,15 @@ class AutoscalerTest extends TestCase
      */
     public function testReplicaGetAppliedOnNewJob(): void
     {
-        $this->runApp('POST', '/api/job/add?jobid=_NEW&token=' . $this->user->getToken(), true, null);
+        $this->runApp('POST', '/api/job/add', true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']]);
         $this->assertEquals('', ServerUtility::getLastExecutedShellCommand(), 'must not fire node init command as long as no job type is set');
 
         /** @var Job $precreatedJob */
-        $precreatedJob = $this->jobRepository->findOneByName('precreated on request');
+        $precreatedJob = $this->jobRepository->findOneByName('___NEW');
 
         $this->assertNotNull($precreatedJob);
 
-        $this->runApp('POST', '/api/job/add?token=' . $this->user->getToken(), true, null, ['jobid' => $precreatedJob->getId(), 'jobtype' => JobType::ENERGY_PLUS_85, 'jobname' => 'testing 1551430480']);
+        $this->runApp('POST', '/api/job/add', true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']], ['jobid' => $precreatedJob->getId(), 'jobtype' => JobType::ENERGY_PLUS_85, 'jobname' => 'testing 1551430480']);
 
         $this->assertStringContainsString('ssh', ServerUtility::getLastExecutedShellCommand());
         $this->assertStringContainsString('manager-init-' . ServerUtility::getShortHashOfString($precreatedJob->getId()), ServerUtility::getLastExecutedShellCommand());

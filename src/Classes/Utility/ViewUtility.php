@@ -1,10 +1,8 @@
 <?php
 
-namespace Helio\Panel\Helper;
+namespace Helio\Panel\Utility;
 
-use Helio\Panel\Utility\ServerUtility;
-
-class ViewHelper
+class ViewUtility extends AbstractUtility
 {
     public static $fileExtension = '.phtml';
 

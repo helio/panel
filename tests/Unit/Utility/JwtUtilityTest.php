@@ -22,27 +22,8 @@ class JwtUtilityTest extends TestCase {
      * @throws \Exception
      */
     public function testGenerateTokenReturnStructure(): void {
-        $token = JwtUtility::generateToken('test');
+        $token = JwtUtility::generateToken();
         $this->assertTrue(array_key_exists('token', $token));
         $this->assertTrue(array_key_exists('expires', $token));
-    }
-
-
-    /**
-     *
-     * @throws \Exception
-     */
-    public function testServerTokenGeneration(): void {
-        $generated = new \DateTime('now', new \DateTimeZone('Europe/Berlin'));
-        $server = new Instance();
-        $server->setId(99);
-        $server->setCreated($generated);
-
-        $token = JwtUtility::generateInstanceIdentificationToken($server);
-
-
-        $server->setCreatedByTimestamp($generated->getTimestamp());
-
-        $this->assertTrue(JwtUtility::verifyInstanceIdentificationToken($server, $token));
     }
 }

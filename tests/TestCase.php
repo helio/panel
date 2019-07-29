@@ -3,18 +3,19 @@
 namespace Helio\Test;
 
 use Doctrine\DBAL\Types\Type;
-use Helio\Panel\Helper\LogHelper;
 use Helio\Panel\Model\Filter\DeletedFilter;
 use Helio\Panel\Model\Instance;
 use Helio\Panel\Model\Job;
+use Helio\Panel\Model\QueryFunction\TimestampDiff;
 use Helio\Panel\Model\Task;
 use Helio\Panel\Model\Type\UTCDateTimeType;
 use Helio\Panel\Model\User;
-use Helio\Panel\Utility\JwtUtility;
+use Helio\Panel\Utility\MiddlewareUtility;
 use Helio\Panel\Utility\ServerUtility;
 use Helio\Test\Infrastructure\App;
 use Helio\Test\Infrastructure\Helper\DbHelper;
 use Helio\Test\Infrastructure\Helper\ZapierHelper;
+use Monolog\Logger;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Request;
 use Slim\Http\Environment;
@@ -84,7 +85,10 @@ class TestCase extends \PHPUnit\Framework\TestCase
 
         $this->infrastructure = ORMInfrastructure::createWithDependenciesFor([User::class, Instance::class, Job::class, Task::class]);
         $this->infrastructure->getEntityManager()->getConfiguration()->addFilter('deleted', DeletedFilter::class);
+        $this->infrastructure->getEntityManager()->getConfiguration()->addCustomNumericFunction('timestampdiff', TimestampDiff::class);
+
         DbHelper::setInfrastructure($this->infrastructure);
+
 
         $this->userRepository = $this->infrastructure->getRepository(User::class);
         $this->instanceRepository = $this->infrastructure->getRepository(Instance::class);
@@ -99,8 +103,8 @@ class TestCase extends \PHPUnit\Framework\TestCase
     {
         if (!\defined('APPLICATION_ROOT')) {
             \define('APPLICATION_ROOT', \dirname(__DIR__));
-            \define('LOG_DEST', APPLICATION_ROOT . '/log/app-test.log');
-            \define('LOG_LVL', 100);
+            \define('LOG_DEST', 'php://stdout');
+            \define('LOG_LVL', Logger::WARNING);
         }
 
         // make sure no shell commands are being executed.
@@ -132,8 +136,9 @@ class TestCase extends \PHPUnit\Framework\TestCase
      * @param string $requestMethod the request method (e.g. GET, POST, etc.)
      * @param string $requestUri the request URI
      * @param bool $withMiddleware whether the app should include the middlewares (mainly JWT).
-     * @param mixed $cookieData the request data
+     * @param null $headerData
      * @param mixed $requestData the request data
+     * @param array $cookieData the cookies
      * @param array $attributes
      * @param bool|\Helio\Panel\App|App|null $app if set, this variable will contain the app for further analysis of
      *     results and processings
@@ -144,13 +149,7 @@ class TestCase extends \PHPUnit\Framework\TestCase
      * @throws \Exception
      */
     protected function runApp(
-        $requestMethod,
-        $requestUri,
-        $withMiddleware = false,
-        $cookieData = null,
-        $requestData = null,
-        array $attributes = [],
-        &$app = null
+        $requestMethod, $requestUri, $withMiddleware = false, $headerData = null, $requestData = null, $cookieData = null, array $attributes = [], &$app = null
     ): ResponseInterface
     {
         $requestUri = preg_replace(';^https?://localhost(:[0-9]+)?/;', '/', $requestUri);
@@ -164,12 +163,24 @@ class TestCase extends \PHPUnit\Framework\TestCase
             ]
         );
 
-        if ($cookieData) {
-            $environment->set('HTTP_Cookie', $cookieData);
-        }
-
         // Set up a request object based on the environment
         $request = Request::createFromEnvironment($environment);
+
+        if ($cookieData) {
+            if (is_string($cookieData)) {
+                $cookieString = $cookieData;
+                $cookieData = [];
+                list($key, $value) = explode('=', explode(';', $cookieString)[0]);
+                $cookieData[$key] = $value;
+            }
+            $request = $request->withCookieParams($cookieData);
+        }
+
+        if ($headerData) {
+            foreach ($headerData as $headerKey => $headerValue) {
+                $request = $request->withHeader($headerKey, $headerValue);
+            }
+        }
 
         // Add request data, if it exists
         if ($requestData !== null) {
@@ -180,8 +191,10 @@ class TestCase extends \PHPUnit\Framework\TestCase
             $request = $request->withAttributes($attributes);
         }
 
-        $middlewares = $withMiddleware ? [JwtUtility::class] : [];
-        $app = App::getApp('test', $request, $middlewares);
+        $middlewares = $withMiddleware ? [MiddlewareUtility::class] : [];
+        $app = App::getTestApp(true, $middlewares);
+
+        $app->getContainer()['request'] = $request;
 
         return $app->run(true);
     }

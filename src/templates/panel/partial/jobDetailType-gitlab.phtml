@@ -5,13 +5,13 @@
     </p>
     <?php
     echo '<pre class="prettyprint">';
-    echo \Helio\Panel\Utility\ServerUtility::getBaseUrl() . 'exec?jobid=' . $job->getId() . '&token=' . $job->getToken();
+    echo \Helio\Panel\Utility\ServerUtility::getBaseUrl() . 'exec?jobid=' . $job->getId();
     echo '</pre>';
     ?>
     <hr/>
     <h2>Try me!</h2>
     <form class="try-job"
-          data-demourl="<?php echo \Helio\Panel\Utility\ServerUtility::getBaseUrl() . 'exec?jobid=' . $job->getId() . '&token=' . $job->getToken(); ?>">
+          data-demourl="<?php echo \Helio\Panel\Utility\ServerUtility::getBaseUrl() . 'exec?jobid=' . $job->getId() ?>">
         <div class="form-group">
 
             <label for="name">

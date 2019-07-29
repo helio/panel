@@ -21,7 +21,7 @@ if (PHP_SAPI === 'cli-server') {
 require APPLICATION_ROOT . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'autoload.php';
 
 // set logging
-$logfile = APPLICATION_ROOT . DIRECTORY_SEPARATOR . 'log' . DIRECTORY_SEPARATOR . ((PHP_SAPI === 'cli') ? 'console' : 'app') . '.log';
+$logfile = APPLICATION_ROOT . DIRECTORY_SEPARATOR . 'log' . DIRECTORY_SEPARATOR . ((PHP_SAPI === 'cli') ? 'console' : 'web') . '.log';
 define('LOG_DEST', isset($_ENV['docker']) ? 'php://stdout' : $logfile);
 if (\array_key_exists('DEBUG', $_SERVER)) {
     define('LOG_LVL', \Monolog\Logger::DEBUG);

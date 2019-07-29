@@ -39,14 +39,6 @@ class User extends AbstractModel
      *
      * @Column
      */
-    protected $token = '';
-
-
-    /**
-     * @var string
-     *
-     * @Column
-     */
     protected $role = '';
 
 
@@ -118,24 +110,6 @@ class User extends AbstractModel
     {
         $this->email = $email;
 
-        return $this;
-    }
-
-    /**
-     * @return string
-     */
-    public function getToken(): string
-    {
-        return $this->token;
-    }
-
-    /**
-     * @param string $token
-     * @return User
-     */
-    public function setToken(string $token): User
-    {
-        $this->token = $token;
         return $this;
     }
 

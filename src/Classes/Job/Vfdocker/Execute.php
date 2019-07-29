@@ -2,6 +2,7 @@
 
 namespace Helio\Panel\Job\Vfdocker;
 
+use \Exception;
 use Helio\Panel\App;
 use Helio\Panel\Helper\DbHelper;
 use Helio\Panel\Helper\LogHelper;
@@ -10,6 +11,7 @@ use Helio\Panel\Job\DispatchConfig;
 use Helio\Panel\Model\Task;
 use Helio\Panel\Task\TaskStatus;
 use Helio\Panel\Utility\ExecUtility;
+use Helio\Panel\Utility\JwtUtility;
 use Helio\Panel\Utility\ServerUtility;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -25,22 +27,23 @@ class Execute extends AbstractExecute
      * @param RequestInterface $request
      * @param ResponseInterface $response
      * @return bool
-     * @throws \Exception
+     * @throws Exception
      */
     public function run(array $params, RequestInterface $request, ResponseInterface $response): bool
     {
         if (!$this->task) {
             $this->task = new Task();
         }
-        $this->task->setJob($this->job)->setCreated(new \DateTime('now', ServerUtility::getTimezoneObject()))->setConfig((string)$request->getBody());
-        App::getApp()->getContainer()['dbHelper']->persist($this->task);
-        App::getApp()->getContainer()['dbHelper']->flush();
+        $this->task->setJob($this->job)->setCreated()->setConfig((string)$request->getBody());
+        App::getDbHelper()->persist($this->task);
+        App::getDbHelper()->flush();
         return true;
     }
 
 
     /**
      * @return DispatchConfig
+     * @throws Exception
      */
     public function getDispatchConfig(): DispatchConfig
     {
@@ -50,7 +53,7 @@ class Execute extends AbstractExecute
             ->setEnvVariables(
                 array_merge($this->job->getConfig('env', []), [
                     'HELIO_JOBID' => $this->job->getId(),
-                    'HELIO_TOKEN' => $this->job->getToken(),
+                    'HELIO_TOKEN' => JwtUtility::generateToken(null, null, null, $this->job)['token'],
                     'REPORT_URL' => ServerUtility::getBaseUrl() . ExecUtility::getExecUrl('work/submitresult', $this->task, $this->job)
                 ])
             )

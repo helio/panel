@@ -2,23 +2,22 @@
 
 namespace Helio\Panel\Controller\Traits;
 
+use \Exception;
+use Helio\Panel\App;
 use Helio\Panel\Instance\InstanceStatus;
 use Helio\Panel\Master\MasterFactory;
 use Helio\Panel\Model\Instance;
-use Helio\Panel\Model\User;
 use Helio\Panel\Runner\RunnerFactory;
-use Helio\Panel\Utility\JwtUtility;
-use Helio\Panel\Utility\ServerUtility;
+
 
 /**
- * Trait ServerController
+ * Trait ModelInstanceController
  * @package Helio\Panel\Controller\Traits
- * @method User getUser()
- * @method bool hasUser()
  */
-trait InstanceController
+trait ModelInstanceController
 {
-    use ParametrizedController;
+    use ModelUserController;
+    use ModelParametrizedController;
 
     /**
      * @var Instance
@@ -30,61 +29,78 @@ trait InstanceController
      * optionally create a new default instance if none is passed.
      *
      * @return bool
-     * @throws \Exception
+     * @throws Exception
      */
     public function setupInstance(): bool
     {
+        $this->setupUser();
+
+        // if the instance has been set by JWT, we're fine
+        if (App::getApp()->getContainer()->has('instance')) {
+            $this->instance = App::getApp()->getContainer()->get('instance');
+            $this->persistInstance();
+            return true;
+        }
+
+        // if requested by params, pick the instance by query
         $this->setupParams();
-
-        // make it possible to add a new job via api
-        /** @noinspection NotOptimalIfConditionsInspection */
-        if (property_exists($this, 'user') && $this->user !== null && \array_key_exists('instanceid', $this->params) && filter_var($this->params['instanceid'], FILTER_SANITIZE_STRING) === '_NEW') {
-
-            $this->instance = (new Instance())
-                ->setName('precreated automatically')
-                ->setStatus(0)
-                ->setCreated(new \DateTime('now', ServerUtility::getTimezoneObject()));
-            $this->dbHelper->persist($this->instance);
-            $this->dbHelper->flush($this->instance);
-
-            $this->instance->setToken(JwtUtility::generateInstanceIdentificationToken($this->instance))
-                ->setOwner($this->user);
-
-            $this->user->addInstance($this->instance);
-            $this->dbHelper->persist($this->instance);
-            $this->dbHelper->flush($this->instance);
-            $this->persistUser();
-            return true;
-        }
-
         $instanceId = filter_var($this->params['instanceid'] ?? 0, FILTER_VALIDATE_INT);
-        if ($instanceId === 0) {
-            $this->instance = (new Instance())->setId(0);
+        if ($instanceId > 0) {
+            $this->instance = App::getDbHelper()->getRepository(Instance::class)->find($instanceId);
             return true;
         }
-        $this->instance = $this->dbHelper->getRepository(Instance::class)->find($instanceId);
+
+        // finally, if there is no instance, simply create one.
+        $this->instance = (new Instance())
+            ->setName('___NEW')
+            ->setStatus(InstanceStatus::UNKNOWN)
+            ->setOwner($this->user)
+            ->setCreated();
         return true;
     }
 
+
+    /**
+     * @return bool
+     * @throws Exception
+     */
+    public function validateInstanceIsSet(): bool {
+        if ($this->instance) {
+            if ($this->instance->getName() !== '___NEW') {
+                $this->persistInstance();
+            }
+            return true;
+        }
+        return false;
+    }
+
+
     /**
      * Persist
+     * @throws Exception
      */
     protected function persistInstance(): void
     {
-        $this->instance->setLatestAction();
-        $this->dbHelper->persist($this->instance);
-        $this->dbHelper->flush($this->instance);
+        if ($this->instance) {
+            $this->instance->setLatestAction();
+            App::getDbHelper()->persist($this->instance);
+            App::getDbHelper()->flush($this->instance);
+        }
     }
 
+
     /**
-     * @return mixed
+     * Note: This method is called recursively via getStatusAction() which calls this method again.
+     *
+     * @return mixed|string
+     * @throws Exception
      */
     protected function ensureAndGetInstanceStatus()
     {
         switch ($this->instance->getStatus()) {
             case InstanceStatus::CREATED:
                 $status = MasterFactory::getMasterForInstance($this->instance)->getStatus();
-                if (\is_array($status) && \array_key_exists('deactivated', $status) && !$status['deactivated']) {
+                if (is_array($status) && array_key_exists('deactivated', $status) && !$status['deactivated']) {
                     $this->instance->setStatus(InstanceStatus::READY);
                     $this->persistInstance();
                     return $this->getStatusAction();
@@ -93,10 +109,10 @@ trait InstanceController
                 break;
             case InstanceStatus::READY:
                 $status = RunnerFactory::getRunnerForInstance($this->instance)->inspect();
-                if (\is_array($status) && \count($status) > 0) {
+                if (is_array($status) && count($status) > 0) {
                     $status = $status[0];
                 }
-                if (\is_array($status) && \array_key_exists('Status', $status) && \array_key_exists('State', $status['Status']) && $status['Status']['State'] === 'ready') {
+                if (is_array($status) && array_key_exists('Status', $status) && array_key_exists('State', $status['Status']) && $status['Status']['State'] === 'ready') {
                     $this->instance->setStatus(InstanceStatus::RUNNING);
                     $this->persistInstance();
                     return $this->getStatusAction();
@@ -105,10 +121,10 @@ trait InstanceController
                 break;
             case InstanceStatus::RUNNING:
                 $status = RunnerFactory::getRunnerForInstance($this->instance)->inspect();
-                if (\is_array($status) && \count($status) > 0) {
+                if (is_array($status) && count($status) > 0) {
                     $status = $status[0];
                 }
-                if (\is_array($status) && \array_key_exists('Status', $status) && \array_key_exists('State', $status['Status']) && $status['Status']['State'] === 'down') {
+                if (is_array($status) && array_key_exists('Status', $status) && array_key_exists('State', $status['Status']) && $status['Status']['State'] === 'down') {
                     $this->instance->setStatus(InstanceStatus::READY);
                     $this->persistInstance();
                     return $this->getStatusAction();

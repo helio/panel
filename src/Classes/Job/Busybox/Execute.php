@@ -2,8 +2,10 @@
 
 namespace Helio\Panel\Job\Busybox;
 
+use \Exception;
 use Helio\Panel\Job\AbstractExecute;
 use Helio\Panel\Job\DispatchConfig;
+use Helio\Panel\Utility\JwtUtility;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 
@@ -28,6 +30,7 @@ class Execute extends AbstractExecute
 
     /**
      * @return DispatchConfig
+     * @throws Exception
      */
     public function getDispatchConfig(): DispatchConfig
     {
@@ -36,7 +39,7 @@ class Execute extends AbstractExecute
             ->setArgs(['/bin/sh', '-c', '\'i=0; while [ "$i" -le "${LIMIT:-5}" ]; do echo "$i: $(date)"; i=$((i+1)); sleep 10; done\''])
             ->setEnvVariables([
                 'HELIO_JOBID' => $this->job->getId(),
-                'HELIO_TOKEN' => $this->job->getToken(),
+                'HELIO_TOKEN' => JwtUtility::generateToken(null, null, null, $this->job)['token'],
                 'LIMIT' => 100
             ]);
     }

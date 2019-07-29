@@ -4,12 +4,18 @@ namespace Helio\Panel\Helper;
 
 use Elasticsearch\ClientBuilder;
 
-class ElasticHelper
+class ElasticHelper implements HelperInterface
 {
     /** @var \Elasticsearch\Client */
     protected $client;
     protected $from = 0;
     protected $size = 10;
+
+    /**
+     * @var array<ElasticHelper>
+     */
+    protected static $instances;
+
 
     /**
      * @var string
@@ -33,6 +39,18 @@ class ElasticHelper
             ->build();
     }
 
+    /**
+     *
+     * @return $this
+     */
+    public static function getInstance(): self
+    {
+        $class = static::class;
+        if (!self::$instances || !\array_key_exists($class, self::$instances)) {
+            self::$instances[$class] = new static();
+        }
+        return self::$instances[$class];
+    }
 
     /**
      * @param int $userId

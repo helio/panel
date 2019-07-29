@@ -2,12 +2,13 @@
 
 namespace Helio\Panel\Controller\Traits;
 
-use Ergy\Slim\Annotations\RouteInfo;
-use Helio\Panel\Model\User;
-
-trait AdminController
+/**
+ * Trait AuthorizedAdminController
+ * @package Helio\Panel\Controller\Traits
+ */
+trait AuthorizedAdminController
 {
-    use AuthenticatedController;
+    use ModelUserController;
 
     /**
      * @return bool

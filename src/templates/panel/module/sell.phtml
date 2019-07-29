@@ -10,7 +10,7 @@
             Alternatively, you can also register your server by executing the on-boarding script directly on the
             server/vm.
         </p>
-        <?php \Helio\Panel\Helper\ViewHelper::includePartial('instanceAddScript', ['email' => $user->getEmail()]); ?>
+        <?php \Helio\Panel\Utility\ViewUtility::includePartial('instanceAddScript', ['email' => $user->getEmail()]); ?>
     </div>
 </div>
 <div class="container-fluid">

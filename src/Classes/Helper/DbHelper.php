@@ -24,7 +24,7 @@ use Helio\Panel\Utility\ServerUtility;
  * @package    Helio\Panel\Helper
  * @author    Christoph Buchli <support@snowflake.ch>
  */
-class DbHelper
+class DbHelper implements HelperInterface
 {
 
 
@@ -46,7 +46,6 @@ class DbHelper
     {
         $class = static::class;
         if (!self::$instances || !\array_key_exists($class, self::$instances)) {
-            // new $class() will work too
             self::$instances[$class] = new static();
         }
         return self::$instances[$class];

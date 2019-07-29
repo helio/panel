@@ -58,13 +58,10 @@
                         <?php echo $instance->getFqdn() ?: 'FQDN not set!';
                         echo isset($admin) ? ' by ' . $instance->getOwner()->getEmail() : ''; ?>
                     </div>
-                    <div class="list-group-item-text">
-                        <?php echo $instance->getToken() ? 'Token: ' . $instance->getToken() : ''; ?>
-                    </div>
                 </div>
                 <?php
                 if (isset($info)) {
-                    \Helio\Panel\Helper\ViewHelper::includePartial('/instanceAdditionalInfo', ['info' => $info]);
+                    \Helio\Panel\Utility\ViewUtility::includePartial('/instanceAdditionalInfo', ['info' => $info]);
                 }
                 ?>
             </div>
@@ -76,7 +73,14 @@
             <span class="pficon pficon-close"></span>
         </div>
         <div class="row">
-            <?php \Helio\Panel\Helper\ViewHelper::includePartial('instanceDetailStatus-' . $instance->getStatus(), ['instance' => $instance]); ?>
+            <div class="col-lg-12">
+                <?php
+                echo '<span>Instance Token:</span><pre class="prettyprint">';
+                echo \Helio\Panel\Utility\JwtUtility::generateToken(null, null, $instance)['token'];
+                echo '</pre>';
+                ?>
+            </div>
+            <?php \Helio\Panel\Utility\ViewUtility::includePartial('instanceDetailStatus-' . $instance->getStatus(), ['instance' => $instance]); ?>
         </div>
     </div>
 </div>

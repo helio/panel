@@ -7,8 +7,29 @@ use Google\Auth\Middleware\ScopedAccessTokenMiddleware;
 use GuzzleHttp\Client;
 use GuzzleHttp\HandlerStack;
 
-class GoogleIapHelper
+class GoogleIapHelper implements HelperInterface
 {
+
+
+    /**
+     * @var array<GoogleIapHelper>
+     */
+    protected static $instances;
+
+    /**
+     *
+     * @return $this
+     */
+    public static function getInstance(): self
+    {
+        $class = static::class;
+        if (!self::$instances || !\array_key_exists($class, self::$instances)) {
+            self::$instances[$class] = new static();
+        }
+        return self::$instances[$class];
+    }
+
+
     /**
      * @param $baseUrl
      * @param $path

@@ -52,15 +52,15 @@
             <div class="col-lg-12">
                 <?php
                 echo '<span>Job Token:</span><pre class="prettyprint">';
-                echo $job->getToken();
+                echo \Helio\Panel\Utility\JwtUtility::generateToken(null, null, null, $job)['token'];
                 echo '</pre>';
                 ?>
             </div>
             <?php
             if (isset($admin)) {
-                \Helio\Panel\Helper\ViewHelper::includePartial('jobDetailAdmin');
+                \Helio\Panel\Utility\ViewUtility::includePartial('jobDetailAdmin');
             } else {
-                \Helio\Panel\Helper\ViewHelper::includePartial('jobDetailType-' . $job->getType(), ['job' => $job, 'files' => $files ?? []]);
+                \Helio\Panel\Utility\ViewUtility::includePartial('jobDetailType-' . $job->getType(), ['job' => $job, 'files' => $files ?? []]);
             }
             ?>
         </div>

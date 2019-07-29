@@ -6,12 +6,12 @@ use Helio\Panel\Model\User;
 use Slim\Http\Request;
 
 /**
- * Trait ParametrizedController
+ * Trait ModelParametrizedController
  * @package Helio\Panel\Controller\Traits
  *
  * @property array params
  */
-trait ParametrizedController
+trait ModelParametrizedController
 {
 
     /**

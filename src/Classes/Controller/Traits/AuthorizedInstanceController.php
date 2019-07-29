@@ -2,9 +2,6 @@
 
 namespace Helio\Panel\Controller\Traits;
 
-use Helio\Panel\Model\User;
-use Helio\Panel\Utility\JwtUtility;
-
 /**
  * Trait AuthorizedInstanceController
  * @package Helio\Panel\Controller\Traits
@@ -12,8 +9,8 @@ use Helio\Panel\Utility\JwtUtility;
 trait AuthorizedInstanceController
 {
 
-    use AuthenticatedController;
-    use InstanceController;
+    use ModelUserController;
+    use ModelInstanceController;
 
     /**
      * @return bool
@@ -21,6 +18,8 @@ trait AuthorizedInstanceController
     public function validateInstanceAuthorisation(): bool
     {
         // server has to be owned by current user or authenticated by jwt token
-        return ($this->user->getId() === $this->instance->getOwner()->getId());
+        return ($this->instance && $this->user &&
+            ($this->user->isAdmin() || $this->user->getId() === $this->instance->getOwner()->getId())
+        );
     }
 }

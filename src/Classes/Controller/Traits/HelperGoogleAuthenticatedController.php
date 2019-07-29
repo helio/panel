@@ -2,36 +2,27 @@
 
 namespace Helio\Panel\Controller\Traits;
 
+use GuzzleHttp\Exception\GuzzleException;
 use Helio\Panel\Helper\GoogleIapHelper;
 use Helio\Panel\Utility\ServerUtility;
+use Psr\Http\Message\ResponseInterface;
 
-trait GoogleAuthenticatedController
+trait HelperGoogleAuthenticatedController
 {
-    /** @var GoogleIapHelper $auth */
-    protected $auth;
 
     /** @var string $baseUrl */
     protected $baseUrl;
 
     /**
-     * @return bool
-     */
-    public function setupGoogleAuthentication(): bool
-    {
-        $this->auth = new GoogleIapHelper();
-        return true;
-    }
-
-    /**
      * @param string $path
      * @param string $method
      * @param array $options
-     * @return mixed|\Psr\Http\Message\ResponseInterface
-     * @throws \GuzzleHttp\Exception\GuzzleException
+     * @return mixed|ResponseInterface
+     * @throws GuzzleException
      */
     protected function requestIapProtectedResource(string $path, string $method = 'GET', array $options = [])
     {
-        return $this->auth->make_iap_request(
+        return GoogleIapHelper::getInstance()->make_iap_request(
             $this->baseUrl,
             $path,
             ServerUtility::get('GOOGLE_AUTH_USER_ID'),

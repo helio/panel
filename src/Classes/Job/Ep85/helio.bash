@@ -12,7 +12,7 @@ CURRENT_EPW_FILENAME=''
 
 # functions
 DEBUG() {
-    if [ -n "${DEBUG}" ]; then
+    if [[ -n "${DEBUG}" ]]; then
         echo "$@"
     fi
 }
@@ -31,14 +31,14 @@ SUCCESS() {
 }
 
 WARN_ON_ERROR() {
-    if [ -n "${ERROR}" ]; then
+    if [[ -n "${ERROR}" ]]; then
         echo "Warning: ${ERROR} ${@}"
         ERROR=''
     fi
 }
 
 FAIL_ON_ERROR() {
-    if [ -n "${ERROR}" ]; then
+    if [[ -n "${ERROR}" ]]; then
         FAIL ${@}
     fi
 }
@@ -55,11 +55,11 @@ GET_CURRENT_TASK_EPWSUM() {
 }
 
 GET_EXEC_URL() {
-    if [ -n "$(GET_CURRENT_TASK_ID)" ]; then
+    if [[ -n "$(GET_CURRENT_TASK_ID)" ]]; then
         TASK_PART="&taskid=$(GET_CURRENT_TASK_ID)"
     fi
     # NOTE: taskid HAS TO BE the last parameter, otherwise the healthcheck won't work.
-    echo "${HELIO_URL}${@}?jobid=${HELIO_JOBID}&token=${HELIO_TOKEN}${TASK_PART}"
+    echo "${HELIO_URL}${@}?jobid=${HELIO_JOBID}${TASK_PART}"
 }
 GET_CURRENT_TASK_IDFURL() {
     echo $(echo "${TASK_CONFIG}" | jq -r '.idf')
@@ -75,11 +75,11 @@ GET_CURRENT_REPORT_URL() {
 }
 
 SET_CURRENT_TASK_CONFIG() {
-    DEBUG "Setting Task Config from $(GET_EXEC_URL "exec/work/getnextinqueue")"
+    DEBUG "Setting Task Config from $(GET_EXEC_URL "api/exec/work/getnextinqueue")"
     while true; do
-        TASK_CONFIG=$(curl -fsSL -X GET -H "Accept: application/json" $(GET_EXEC_URL "exec/work/getnextinqueue")) && break
+        TASK_CONFIG=$(curl -fsSL -X GET -H "Authorization: Bearer ${HELIO_TOKEN}" -H "Accept: application/json" $(GET_EXEC_URL "api/exec/work/getnextinqueue")) && break
 
-        if [ -z "${KEEP_ALIVE}" ]; then
+        if [[ -z "${KEEP_ALIVE}" ]]; then
             DEBUG "Config update failed. KEEP_ALIVE not set. Exitting."
             return 1
         fi
@@ -98,9 +98,13 @@ UPDATE_SOURCE_FILES() {
     DEBUG "Updating Source Files"
 
     CURRENT_IDF_FILENAME="${WORKDIR_ROOT}/$(GET_CURRENT_TASK_IDFSUM).idf"
-    if [ ! -f ${CURRENT_IDF_FILENAME} ]; then
+    if [[ ! -f ${CURRENT_IDF_FILENAME} ]]; then
         if echo -n "$(GET_CURRENT_TASK_IDFURL)" | sha1sum --status -c <(echo "$(GET_CURRENT_TASK_IDFSUM)  -"); then
-            curl -fsSLo ${CURRENT_IDF_FILENAME} $(GET_CURRENT_TASK_IDFURL) || return 1
+            if [[  $(GET_CURRENT_TASK_IDFURL) = "http"* ]]; then
+                curl -fsSLo ${CURRENT_IDF_FILENAME} $(GET_CURRENT_TASK_IDFURL) || return 1
+            else
+                curl -H "Authorization: Bearer ${HELIO_TOKEN}" -fsSLo ${CURRENT_IDF_FILENAME} $(GET_EXEC_URL $(GET_CURRENT_TASK_IDFURL)) || return 1
+            fi
         else
             echo "shasum of $(GET_CURRENT_TASK_IDFURL) => $(GET_CURRENT_TASK_IDFSUM) failed"
             return 1
@@ -108,9 +112,13 @@ UPDATE_SOURCE_FILES() {
     fi
 
     CURRENT_EPW_FILENAME="${WORKDIR_ROOT}/$(GET_CURRENT_TASK_EPWSUM).epw"
-    if [ ! -f ${CURRENT_EPW_FILENAME} ]; then
+    if [[ ! -f ${CURRENT_EPW_FILENAME} ]]; then
         if echo -n "$(GET_CURRENT_TASK_EPWURL)" | sha1sum --status -c <(echo "$(GET_CURRENT_TASK_EPWSUM)  -"); then
-            curl -fsSLo ${CURRENT_EPW_FILENAME} $(GET_CURRENT_TASK_EPWURL) || return 1
+            if [[  $(GET_CURRENT_TASK_EPWURL) = "http"* ]]; then
+                curl -fsSLo ${CURRENT_EPW_FILENAME} $(GET_CURRENT_TASK_EPWURL) || return 1
+            else
+                curl -H "Authorization: Bearer ${HELIO_TOKEN}" -fsSLo ${CURRENT_EPW_FILENAME} $(GET_EXEC_URL $(GET_CURRENT_TASK_EPWURL)) || return 1
+            fi
         else
             echo "shasum of $(GET_CURRENT_TASK_EPWURL) => $(GET_CURRENT_TASK_EPWSUM) failed"
             return 1
@@ -127,7 +135,7 @@ UPLOAD_RESULT() {
     fi
     if [[ $(GET_CURRENT_UPLOAD_URL) = "http"* ]]; then
         tar czf $(GET_CURRENT_TASK_ID).tar.gz Output && rm -rf Output || return 1
-        curl -fsSLo /dev/null -X POST -F "file=@${@}" $(GET_CURRENT_UPLOAD_URL) || return 1
+        curl -H "Authorization: Bearer ${HELIO_TOKEN}" -fsSLo /dev/null -X POST -F "file=@${@}" $(GET_CURRENT_UPLOAD_URL) || return 1
     fi
     DEBUG "upload done"
 }
@@ -137,16 +145,16 @@ REPORT() {
     # note: unfourtuntately, due to whitespaces and potential linebreaks, we have to go through a file
     echo '{"success":"'${1}'","epw_stat":"'$(wc ${CURRENT_EPW_FILENAME})'","idf_stat":"'$(wc ${CURRENT_IDF_FILENAME})'", "started":"'${STARTED}'", "ended":"'$(date +%s)'","taskid":"'$(GET_CURRENT_TASK_ID)'"}' > /tmp/report
     DEBUG "report data: " $(cat /tmp/report | tr -d '[:space:]')
-    curl -fsSLo /dev/null -X PUT -H "Content-Type: application/json" --data @/tmp/report "$(GET_CURRENT_REPORT_URL)&XDEBUG_SESSION_START=true" && rm -f /tmp/report || return 1
+    curl -H "Authorization: Bearer ${HELIO_TOKEN}" -fsSLo /dev/null -X PUT -H "Content-Type: application/json" --data @/tmp/report "$(GET_CURRENT_REPORT_URL)&XDEBUG_SESSION_START=true" && rm -f /tmp/report || return 1
 }
 
 # Subshell heartbeat
 HEARTBEAT() {
     while true; do
-        if [ -f /tmp/taskId ]; then
+        if [[ -f /tmp/taskId ]]; then
             DEBUG "Hearbeat"
-            if [ -n "$(cat /tmp/taskId | tr -d '[:space:]')" ]; then
-                curl -fsSLo /dev/null -X PUT $(GET_EXEC_URL "exec/heartbeat")\&taskid=$(cat /tmp/taskId | tr -d '[:space:]')
+            if [[ -n "$(cat /tmp/taskId | tr -d '[:space:]')" ]]; then
+                curl -H "Authorization: Bearer ${HELIO_TOKEN}" -fsSLo /dev/null -X PUT $(GET_EXEC_URL "api/exec/heartbeat")\&taskid=$(cat /tmp/taskId | tr -d '[:space:]')
             fi
             DEBUG "Heartbeat done"
         fi
