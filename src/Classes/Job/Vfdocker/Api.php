@@ -10,7 +10,6 @@ class Api implements ApiInterface {
      */
     public function addJob(): ResponseInterface
     {
-        //return ApiJobController::
     }
 
     /**
