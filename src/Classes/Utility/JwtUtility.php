@@ -2,9 +2,9 @@
 
 namespace Helio\Panel\Utility;
 
-use Firebase\JWT\JWT;
-
 use \Exception;
+use \DateTime;
+use Firebase\JWT\JWT;
 use Helio\Panel\App;
 use Helio\Panel\Model\Instance;
 use Helio\Panel\Model\Job;
@@ -26,7 +26,7 @@ class JwtUtility extends AbstractUtility
     public static function generateToken(string $duration = null, User $user = null, Instance $instance = null, Job $job = null): array
     {
 
-        $now = new \DateTime('now', ServerUtility::getTimezoneObject());
+        $now = new DateTime('now', ServerUtility::getTimezoneObject());
         $jti = (new Base62())->encode(random_bytes(16));
         $payload = [
             'iat' => $now->getTimestamp(),
@@ -35,7 +35,7 @@ class JwtUtility extends AbstractUtility
         if ($duration === 'sticky') {
             $payload['sticky'] = true;
         } elseif ($duration) {
-            $payload['exp'] = (new \DateTime($duration, ServerUtility::getTimezoneObject()))->getTimestamp();
+            $payload['exp'] = (new DateTime($duration, ServerUtility::getTimezoneObject()))->getTimestamp();
         }
         if ($user) {
             $payload['u'] = $user->getId();

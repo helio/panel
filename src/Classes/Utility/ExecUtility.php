@@ -2,10 +2,16 @@
 
 namespace Helio\Panel\Utility;
 
+use \RuntimeException;
 use Helio\Panel\Model\Job;
 use Helio\Panel\Model\Task;
 use Psr\Http\Message\ResponseInterface;
+use \GuzzleHttp\Psr7\LazyOpenStream;
 
+/**
+ * Class ExecUtility
+ * @package Helio\Panel\Utility
+ */
 class ExecUtility extends AbstractUtility
 {
 
@@ -32,8 +38,8 @@ class ExecUtility extends AbstractUtility
     public static function getTaskDataFolder(Task $task): string
     {
         $folder = self::getJobDataFolder($task->getJob()) . $task->getId() . DIRECTORY_SEPARATOR;
-        if (!\is_dir($folder) && !mkdir($folder, 0777, true) && !is_dir($folder)) {
-            throw new \RuntimeException(sprintf('Directory "%s" was not created', $folder));
+        if (!is_dir($folder) && !mkdir($folder, 0777, true) && !is_dir($folder)) {
+            throw new RuntimeException(sprintf('Directory "%s" was not created', $folder));
         }
         return $folder;
     }
@@ -46,8 +52,8 @@ class ExecUtility extends AbstractUtility
     public static function getJobDataFolder(Job $job): string
     {
         $folder = ServerUtility::getTmpPath() . DIRECTORY_SEPARATOR . 'jobdata' . DIRECTORY_SEPARATOR . $job->getId() . DIRECTORY_SEPARATOR;
-        if (!\is_dir($folder) && !mkdir($folder, 0777, true) && !is_dir($folder)) {
-            throw new \RuntimeException(sprintf('Directory "%s" was not created', $folder));
+        if (!is_dir($folder) && !mkdir($folder, 0777, true) && !is_dir($folder)) {
+            throw new RuntimeException(sprintf('Directory "%s" was not created', $folder));
         }
         return $folder;
     }
@@ -68,6 +74,6 @@ class ExecUtility extends AbstractUtility
             ->withoutHeader('Cache-Control')->withHeader('Cache-Control', 'must-revalidate')
             ->withoutHeader('Pragma')->withHeader('Pragma', 'public')
             ->withoutHeader('Content-Length')->withHeader('Content-Length', filesize($file))
-            ->withBody(new \GuzzleHttp\Psr7\LazyOpenStream($file, 'r'));
+            ->withBody(new LazyOpenStream($file, 'r'));
     }
 }

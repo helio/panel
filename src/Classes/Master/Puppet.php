@@ -30,11 +30,6 @@ class Puppet implements MasterInterface
      */
     protected static $statusCommand = 'ssh %s@%s "curl -s -X GET https://puppetdb.idling.host/pdb/query/v4/nodes/%s -k"';
 
-    /**
-     * @var string
-     */
-    protected static $cleanupCommand = 'ssh %s@%s "sudo /opt/puppetlabs/bin/puppetserver ca cert clean --certname %s"';
-
 
     /**
      * Puppet constructor.
@@ -70,16 +65,6 @@ class Puppet implements MasterInterface
         }
         return trim($result);
 
-    }
-
-    /**
-     * @return mixed
-     */
-    public function cleanup()
-    {
-        $result = ServerUtility::executeShellCommand($this->parseCommand('cleanup'));
-        LogHelper::debug('response from puppet at cleanup:'.print_r($result,true));
-        return $result;
     }
 
 

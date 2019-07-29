@@ -73,7 +73,7 @@ class ManagerNodesTest extends TestCase
         $body = (string)$response->getBody();
         $jobid = json_decode($body, true)['id'];
         $command = str_replace('\\"', '"', ServerUtility::getLastExecutedShellCommand());
-        $pattern = '/^.*"callback":"' . str_replace('/', '\\/', ServerUtility::getBaseUrl()) . '([^"]+)"/';
+        $pattern = '/^.*\\\\"callback\\\\":\\\\"' . str_replace('/', '\\/', ServerUtility::getBaseUrl()) . '([^"]+)\\\\"/';
         $matches = [];
         preg_match($pattern, $command, $matches);
         $this->assertNotEmpty($matches);
@@ -93,7 +93,7 @@ class ManagerNodesTest extends TestCase
 
         // fake it till we make it: since we cannot query puppet for the manager-IP, we force it here.
         /** @var Job $job */
-        $job = $this->jobRepository->findOneById($jobid);
+        $job = $this->jobRepository->find($jobid);
         $response = $this->runApp('POST', $url, true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']], $this->callbackDataManagerIp);
         $this->assertEquals(StatusCode::HTTP_OK, $response->getStatusCode());
         $this->infrastructure->getEntityManager()->persist($job);
@@ -106,7 +106,7 @@ class ManagerNodesTest extends TestCase
 
         ServerUtility::resetLastExecutedCommand();
 
-        $this->job = $this->jobRepository->findOneById($jobid);
+        $this->job = $this->jobRepository->find($jobid);
 
     }
 
@@ -129,13 +129,13 @@ class ManagerNodesTest extends TestCase
     {
         $jobid = json_decode((string)$this->runApp('POST', '/api/job/add?jobtype=' . JobType::GITLAB_RUNNER, true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']])->getBody(), true)['id'];
         /** @var Job $job */
-        $job = $this->jobRepository->findOneById($jobid);
+        $job = $this->jobRepository->find($jobid);
         $this->assertCount(0, $job->getManagerNodes());
         $this->assertStringContainsString('manager-init-' . ServerUtility::getShortHashOfString($jobid), ServerUtility::getLastExecutedShellCommand());
         $this->assertStringContainsString('user_id', ServerUtility::getLastExecutedShellCommand());
         $this->assertStringContainsString($this->user->getId(), ServerUtility::getLastExecutedShellCommand());
         $command = str_replace('\\"', '"', ServerUtility::getLastExecutedShellCommand());
-        $pattern = '/^.*"callback":"' . str_replace('/', '\\/', ServerUtility::getBaseUrl()) . '([^"]+)"/';
+        $pattern = '/^.*\\\\"callback\\\\":\\\\"' . str_replace('/', '\\/', ServerUtility::getBaseUrl()) . '([^"]+)\\\\"/';
         $matches = [];
         preg_match($pattern, $command, $matches);
         $this->assertNotEmpty($matches);
@@ -158,7 +158,7 @@ class ManagerNodesTest extends TestCase
 
         //$this->runApp('POST', $url, true, null, $this->callbackDataRedundancy);
 
-        $job = $this->jobRepository->findOneById($jobid);
+        $job = $this->jobRepository->find($jobid);
         $this->assertEquals(JobStatus::READY, $job->getStatus());
         $this->assertCount(1, $job->getManagerNodes());
     }
@@ -170,7 +170,7 @@ class ManagerNodesTest extends TestCase
     public function testReplicaGetAppliedOnNewTask(): void
     {
         $this->runApp('POST', '/api/exec', true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']], ['jobid' => $this->job->getId()]);
-        $tasks = $this->taskRepository->findByJob($this->job->getId());
+        $tasks = $this->taskRepository->findBy(['job' => $this->job->getId()]);
         $this->assertIsArray($tasks);
         $this->assertCount(1, $tasks);
 
@@ -209,8 +209,8 @@ class ManagerNodesTest extends TestCase
 
         $this->runApp('POST', '/api/exec', true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']], ['jobid' => $this->job->getId()], null);
 
-        $this->assertStringContainsString('helio::queue', ServerUtility::getLastExecutedShellCommand());
         $this->assertStringContainsString('helio::task', ServerUtility::getLastExecutedShellCommand(1));
+        $this->assertStringContainsString('helio::queue', ServerUtility::getLastExecutedShellCommand());
 
         ServerUtility::resetLastExecutedCommand();
 
@@ -260,7 +260,7 @@ class ManagerNodesTest extends TestCase
         $jobtoken = $body['token'];
 
         $command = str_replace('\\"', '"', ServerUtility::getLastExecutedShellCommand());
-        $pattern = '/^.*"callback":"' . str_replace('/', '\\/', ServerUtility::getBaseUrl()) . '([^"]+)"/';
+        $pattern = '/^.*\\\\"callback\\\\":\\\\"' . str_replace('/', '\\/', ServerUtility::getBaseUrl()) . '([^"]+)\\\\"/';
         $matches = [];
         preg_match($pattern, $command, $matches);
         $this->assertNotEmpty($matches);

@@ -2,15 +2,17 @@
 
 namespace Helio\Panel;
 
+use Ergy\Slim\Annotations\Router;
 use \Exception;
+use \RuntimeException;
 use Helio\Panel\Helper\DbHelper;
 use Helio\Panel\Helper\ElasticHelper;
 use Helio\Panel\Helper\LogHelper;
 use Helio\Panel\Helper\ZapierHelper;
-use Helio\Panel\Utility\JwtUtility;
 use Helio\Panel\Utility\MiddlewareUtility;
 use Helio\Panel\Utility\ServerUtility;
 use Monolog\Logger;
+use Slim\Views\PhpRenderer;
 
 class App extends \Slim\App
 {
@@ -44,7 +46,7 @@ class App extends \Slim\App
      * @param array $middleWaresToApply
      *
      * @return App
-     * @throws \Exception
+     * @throws Exception
      */
     public static function getApp(
         ?string $appName = null,
@@ -58,16 +60,16 @@ class App extends \Slim\App
 
             // abort if $instance should exist, but doesn't (e.g. if we call getApp from inside the application)
             if ($appName === null) {
-                throw new \RuntimeException('App instance cannot be created from here.', 1548056859);
+                throw new RuntimeException('App instance cannot be created from here.', 1548056859);
             }
 
             self::$instance = new self::$className(['settings' => [
                 'displayErrorDetails' => !ServerUtility::isProd(),
             ]]);
 
-            self::$instance->getContainer()['renderer'] = new \Slim\Views\PhpRenderer(APPLICATION_ROOT . '/src/templates');
+            self::$instance->getContainer()['renderer'] = new PhpRenderer(APPLICATION_ROOT . '/src/templates');
 
-            self::$instance->getContainer()['router'] = new \Ergy\Slim\Annotations\Router(self::$instance,
+            self::$instance->getContainer()['router'] = new Router(self::$instance,
                 [APPLICATION_ROOT . '/src/Classes/Controller/'],
                 APPLICATION_ROOT . '/tmp/cache/' . $appName
             );

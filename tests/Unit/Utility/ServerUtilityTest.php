@@ -36,12 +36,10 @@ class ServerUtilityTest extends TestCase
                 ->setId(424234234)
                 ->setFqdn('";sudo init 0')
                 ->setMasterCoordinator('master.domain.tld')
-                ->setMasterType('puppet')
-                ->setRunnerCoordinator('coordinator.domain.tld')
-                ->setRunnerType('docker');
+                ->setMasterType('puppet');
 
         try {
-            MasterFactory::getMasterForInstance($server)->doSign(true);
+            MasterFactory::getMasterForInstance($server)->doSign();
         } catch (\InvalidArgumentException $e) {
             $catch = true;
         }
@@ -58,9 +56,7 @@ class ServerUtilityTest extends TestCase
             ->setId(4434)
             ->setFqdn('test.server.domain.tld')
             ->setMasterCoordinator('master.domain.tld')
-            ->setMasterType('puppet')
-            ->setRunnerCoordinator('coordinator.domain.tld')
-            ->setRunnerType('docker');
+            ->setMasterType('puppet');
         $result = MasterFactory::getMasterForInstance($server)->doSign();
 
         $this->assertStringStartsWith('ssh', ServerUtility::getLastExecutedShellCommand());

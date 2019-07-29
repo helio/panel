@@ -2,6 +2,12 @@
 
 namespace Helio\Panel\Task;
 
+use \RuntimeException;
+
+/**
+ * Class TaskStatus
+ * @package Helio\Panel\Task
+ */
 final class TaskStatus
 {
     public const UNKNOWN = 0;
@@ -23,7 +29,7 @@ final class TaskStatus
 
     public function __construct()
     {
-        throw new \RuntimeException('Cannot instanciate ' . __CLASS__);
+        throw new RuntimeException('Cannot instanciate ' . __CLASS__);
     }
 
     public static function isValidStatus(int $status): bool
@@ -58,7 +64,8 @@ final class TaskStatus
         return self::labels["status-$status"];
     }
 
-    public static function getAllButTerminatedStatusCodes(): array {
+    public static function getAllButTerminatedStatusCodes(): array
+    {
         return [
             self::READY,
             self::RUNNING,

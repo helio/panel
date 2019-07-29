@@ -61,8 +61,8 @@ class ApiJobController extends AbstractController
             JobFactory::getInstanceOfJob($this->job)->stop($this->params, $this->request, $this->response);
 
             // first: set all services to absent. then, remove the managers
-            OrchestratorFactory::getOrchestratorForInstance($this->instance)->dispatchJob($this->job);
-            OrchestratorFactory::getOrchestratorForInstance($this->instance)->removeManager($this->job);
+            OrchestratorFactory::getOrchestratorForInstance($this->instance, $this->job)->dispatchJob();
+            OrchestratorFactory::getOrchestratorForInstance($this->instance, $this->job)->removeManager();
         }
 
         // on PROD, we wait for the callbacks to confirm job removal. on Dev, simply set it to deleted.
@@ -132,7 +132,7 @@ class ApiJobController extends AbstractController
 
         MailUtility::sendMailToAdmin('New Job was created by ' . $this->user->getEmail() . ', type: ' . $this->job->getType() . ', id: ' . $this->job->getId());
 
-        OrchestratorFactory::getOrchestratorForInstance($this->instance)->provisionManager($this->job);
+        OrchestratorFactory::getOrchestratorForInstance($this->instance, $this->job)->provisionManager();
 
         return $this->render([
             'success' => true,
@@ -228,7 +228,7 @@ class ApiJobController extends AbstractController
     public function callbackAction(): ResponseInterface
     {
         $body = $this->request->getParsedBody();
-        LogHelper::debug('Body received into callback:' . print_r($body, true));
+        LogHelper::debug('Body received into job ' . $this->job->getId() . ' callback:' . print_r($body, true));
 
         // remember manager nodes.
         if (array_key_exists('nodes', $body)) {
@@ -259,7 +259,7 @@ class ApiJobController extends AbstractController
 
         // provision missing redundancy nodes if necessary
         if (!array_key_exists('deleted', $body) && $this->job->getInitManagerIp()) {
-            OrchestratorFactory::getOrchestratorForInstance($this->instance)->provisionManager($this->job);
+            OrchestratorFactory::getOrchestratorForInstance($this->instance, $this->job)->provisionManager();
         }
 
         // finalize

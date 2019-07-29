@@ -7,13 +7,21 @@ use Helio\Panel\Model\Job;
 
 interface OrchestratorInterface
 {
-    public function __construct(Instance $server);
+    public function __construct(Instance $server, Job $job = null);
+
+    public function inspect();
 
     public function getInventory();
 
-    public function dispatchJob(Job $job): bool;
+    public function dispatchJob(Job $job = null): bool;
 
-    public function provisionManager(Job $job): bool;
+    public function startComputing();
 
-    public function removeManager(Job $job): bool;
+    public function stopComputing();
+
+    public function provisionManager(Job $job = null): bool;
+
+    public function removeManager(Job $job = null): bool;
+
+    public function removeInstance();
 }

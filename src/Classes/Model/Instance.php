@@ -62,13 +62,6 @@ class Instance extends AbstractModel
      *
      * @Column
      */
-    protected $runnerType = RunnerType::__DEFAULT;
-
-    /**
-     * @var string
-     *
-     * @Column
-     */
     protected $masterType = MasterType::__DEFAULT;
 
     /**
@@ -84,13 +77,6 @@ class Instance extends AbstractModel
      * @Column(type="text")
      */
     protected $snapshotConfig = '';
-
-    /**
-     * @var string
-     *
-     * @Column
-     */
-    protected $runnerCoordinator = 'swarm.idling.host';
 
     /**
      * @var string
@@ -146,6 +132,13 @@ class Instance extends AbstractModel
      */
     protected $supervisorToken = '';
 
+
+    /**
+     * @var string Docker ID
+     */
+    protected $runnerId = '';
+
+
     /**
      * @var bool
      *
@@ -159,6 +152,14 @@ class Instance extends AbstractModel
      * @Column
      */
     protected $priority = 100;
+
+
+    /**
+     * @var string
+     *
+     * @Column(type="text")
+     */
+    protected $inventory = '';
 
 
     /**
@@ -260,44 +261,6 @@ class Instance extends AbstractModel
         if (InstanceType::isValidType($instanceType)) {
             $this->instanceType = $instanceType;
         }
-        return $this;
-    }
-
-    /**
-     * @return string
-     */
-    public function getRunnerType(): string
-    {
-        return $this->runnerType;
-    }
-
-    /**
-     * @param string $runnerType
-     * @return Instance $this
-     */
-    public function setRunnerType(string $runnerType): Instance
-    {
-        if (RunnerType::isValidType($runnerType)) {
-            $this->runnerType = $runnerType;
-        }
-        return $this;
-    }
-
-    /**
-     * @return string
-     */
-    public function getRunnerCoordinator(): string
-    {
-        return $this->runnerCoordinator;
-    }
-
-    /**
-     * @param string $runnerCoordinator
-     * @return Instance $this
-     */
-    public function setRunnerCoordinator(string $runnerCoordinator): Instance
-    {
-        $this->runnerCoordinator = $runnerCoordinator;
         return $this;
     }
 
@@ -513,6 +476,24 @@ class Instance extends AbstractModel
     }
 
     /**
+     * @return string
+     */
+    public function getRunnerId(): string
+    {
+        return $this->runnerId;
+    }
+
+    /**
+     * @param string $runnerId
+     * @return Instance
+     */
+    public function setRunnerId(string $runnerId): Instance
+    {
+        $this->runnerId = $runnerId;
+        return $this;
+    }
+
+    /**
      * @return int
      */
     public function getPriority(): int
@@ -527,6 +508,24 @@ class Instance extends AbstractModel
     public function setPriority(int $priority): Instance
     {
         $this->priority = $priority;
+        return $this;
+    }
+
+    /**
+     * @return array
+     */
+    public function getInventory(): array
+    {
+        return json_decode($this->inventory, true) ?? [];
+    }
+
+    /**
+     * @param string $inventory
+     * @return Instance
+     */
+    public function setInventory(string $inventory): Instance
+    {
+        $this->inventory = $inventory;
         return $this;
     }
 

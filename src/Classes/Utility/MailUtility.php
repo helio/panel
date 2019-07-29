@@ -2,9 +2,14 @@
 
 namespace Helio\Panel\Utility;
 
+use \Exception;
 use Helio\Panel\Helper\LogHelper;
 use Helio\Panel\Model\User;
 
+/**
+ * Class MailUtility
+ * @package Helio\Panel\Utility
+ */
 class MailUtility extends AbstractUtility
 {
 
@@ -24,7 +29,7 @@ EOM;
      * @param string $linkLifetime
      *
      * @return bool
-     * @throws \Exception
+     * @throws Exception
      */
     public static function sendConfirmationMail(User $user, string $linkLifetime = '+1 week'): bool
     {

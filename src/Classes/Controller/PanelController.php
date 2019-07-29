@@ -2,6 +2,7 @@
 
 namespace Helio\Panel\Controller;
 
+use \Exception;
 use Helio\Panel\App;
 use Helio\Panel\Controller\Traits\ModelUserController;
 use Helio\Panel\Controller\Traits\TypeBrowserController;
@@ -35,7 +36,7 @@ class PanelController extends AbstractController
      *
      * @return ResponseInterface
      *
-     * @throws \Exception
+     * @throws Exception
      *
      * @Route("", methods={"GET", "POST"}, name="panel.index")
      */
@@ -114,6 +115,7 @@ class PanelController extends AbstractController
 
     /**
      * @return ResponseInterface
+     * @throws Exception
      *
      * @Route("/admin", methods={"GET"}, name="user.admin")
      */
@@ -138,7 +140,8 @@ class PanelController extends AbstractController
      * @return ResponseInterface
      *
      * @Route("/logout", methods={"GET"}, name="user.logout")
-     * @throws \Exception
+     *
+     * @throws Exception
      */
     public function LogoutUserAction(): ResponseInterface
     {

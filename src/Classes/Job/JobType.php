@@ -2,6 +2,12 @@
 
 namespace Helio\Panel\Job;
 
+use \RuntimeException;
+
+/**
+ * Class JobType
+ * @package Helio\Panel\Job
+ */
 final class JobType
 {
     public const GITLAB_RUNNER = 'gitlab';
@@ -17,7 +23,7 @@ final class JobType
 
     public function __construct()
     {
-        throw new \RuntimeException('Cannot instanciate ' . __CLASS__);
+        throw new RuntimeException('Cannot instanciate ' . __CLASS__);
     }
 
     public static function isValidType(string $type): bool
@@ -44,5 +50,6 @@ final class JobType
 
             return $map[$type] ?? "fa fa-$type";
         }
+        return 'fa fa-question';
     }
 }

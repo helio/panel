@@ -2,6 +2,10 @@
 
 namespace Helio\Panel\Model;
 
+use \Exception;
+use \RuntimeException;
+use \DateTime;
+use \DateTimeZone;
 use Doctrine\{
     Common\Collections\Collection,
     ORM\Mapping\Entity,
@@ -37,7 +41,7 @@ abstract class AbstractModel
 
 
     /**
-     * @var \DateTime
+     * @var DateTime
      *
      * @Column(type="datetimetz", nullable=TRUE)
      */
@@ -45,7 +49,7 @@ abstract class AbstractModel
 
 
     /**
-     * @var \DateTime
+     * @var DateTime
      *
      * @Column(type="datetimetz", nullable=TRUE)
      */
@@ -81,6 +85,10 @@ abstract class AbstractModel
     protected $config = '';
 
 
+    /**
+     * AbstractModel constructor.
+     * @throws Exception
+     */
     public function __construct()
     {
         $this->timezone = ServerUtility::getTimezoneObject()->getName();
@@ -115,27 +123,27 @@ abstract class AbstractModel
 
 
     /**
-     * @return \DateTime
+     * @return DateTime
      */
-    public function getCreated(): \DateTime
+    public function getCreated(): DateTime
     {
         if ($this->created->getTimezone()->getName() !== $this->getTimezone()) {
-            $this->created->setTimezone(new \DateTimeZone($this->getTimezone()));
+            $this->created->setTimezone(new DateTimeZone($this->getTimezone()));
         }
         return $this->created;
     }
 
     /**
-     * @param \DateTime|null $created
+     * @param DateTime|null $created
      * @return AbstractModel
-     * @throws \Exception
+     * @throws Exception
      */
-    public function setCreated(\DateTime $created = null): self
+    public function setCreated(DateTime $created = null): self
     {
         if (!$created) {
-            $created = new \DateTime('now', new \DateTimeZone($this->getTimezone()));
+            $created = new DateTime('now', new DateTimeZone($this->getTimezone()));
         }
-        $created->setTimezone(new \DateTimeZone('UTC'));
+        $created->setTimezone(new DateTimeZone('UTC'));
 
         // Fix Timezone because Doctrine assumes persistend DateTime Objects are always UTC
         $this->created = $created;
@@ -146,7 +154,7 @@ abstract class AbstractModel
     /**
      * @param int $timestamp
      * @return AbstractModel
-     * @throws \Exception
+     * @throws Exception
      *
      * NOTE: Don't use ths method! It's for testing purposes only!
      * @internal
@@ -154,34 +162,34 @@ abstract class AbstractModel
     public function setCreatedByTimestamp(int $timestamp): self
     {
         LogHelper::warn('SetCreatedByTimestamp called');
-        $this->created = (new \DateTime('now', ServerUtility::getTimezoneObject()))->setTimestamp($timestamp);
+        $this->created = (new DateTime('now', ServerUtility::getTimezoneObject()))->setTimestamp($timestamp);
         return $this;
     }
 
     /**
-     * @return \DateTime
+     * @return DateTime
      */
-    public function getLatestAction(): \DateTime
+    public function getLatestAction(): DateTime
     {
         if ($this->created->getTimezone()->getName() !== $this->getTimezone()) {
-            $this->created->setTimezone(new \DateTimeZone($this->getTimezone()));
+            $this->created->setTimezone(new DateTimeZone($this->getTimezone()));
         }
         return $this->latestAction;
     }
 
     /**
-     * @param \DateTime|null $latestAction
+     * @param DateTime|null $latestAction
      * @return AbstractModel
-     * @throws \Exception
+     * @throws Exception
      */
-    public function setLatestAction(\DateTime $latestAction = null): self
+    public function setLatestAction(DateTime $latestAction = null): self
     {
         if ($latestAction === null) {
-            $latestAction = new \DateTime('now', new \DateTimeZone($this->getTimezone()));
+            $latestAction = new DateTime('now', new DateTimeZone($this->getTimezone()));
         }
 
         // Fix Timezone because Doctrine assumes persistend DateTime Objects are always UTC
-        $latestAction->setTimezone(new \DateTimeZone('UTC'));
+        $latestAction->setTimezone(new DateTimeZone('UTC'));
 
         $this->latestAction = $latestAction;
         return $this;
@@ -255,7 +263,7 @@ abstract class AbstractModel
      */
     public function setConfig($config): self
     {
-        if (\is_array($config)) {
+        if (is_array($config)) {
             $config = json_encode($config);
         }
         $this->config = $config;
@@ -271,7 +279,7 @@ abstract class AbstractModel
     public function setId(int $id): self
     {
         if ($id !== 0 && ServerUtility::isProd()) {
-            throw new \RuntimeException('You cannot force IDs, they are auto-incremented on DB-level.', 1548053101);
+            throw new RuntimeException('You cannot force IDs, they are auto-incremented on DB-level.', 1548053101);
         }
         $this->id = $id;
         return $this;

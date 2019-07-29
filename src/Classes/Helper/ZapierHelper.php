@@ -2,6 +2,8 @@
 
 namespace Helio\Panel\Helper;
 
+use \GuzzleHttp\Exception\GuzzleException;
+use \Exception;
 use GuzzleHttp\Client;
 use Helio\Panel\Model\User;
 use Helio\Panel\Utility\ServerUtility;
@@ -25,9 +27,9 @@ class ZapierHelper implements HelperInterface
 
     /**
      * @param User $user
-     *
      * @return bool
-     * @throws \GuzzleHttp\Exception\GuzzleException
+     * @throws GuzzleException
+     * @throws Exception
      */
     public function submitUserToZapier(User $user): bool
     {
@@ -81,7 +83,7 @@ class ZapierHelper implements HelperInterface
 
     /**
      * @return string
-     * @throws \Exception
+     * @throws Exception
      */
     protected function getZapierHookUrl(): string
     {
@@ -96,7 +98,7 @@ class ZapierHelper implements HelperInterface
     public static function getInstance(): self
     {
         $class = static::class;
-        if (!self::$instances || !\array_key_exists($class, self::$instances)) {
+        if (!self::$instances || !array_key_exists($class, self::$instances)) {
             // new $class() will work too
             self::$instances[$class] = new static();
         }

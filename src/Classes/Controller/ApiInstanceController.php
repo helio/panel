@@ -6,6 +6,7 @@ namespace Helio\Panel\Controller;
 use \Exception;
 use GuzzleHttp\Exception\GuzzleException;
 use Helio\Panel\App;
+use Helio\Panel\Helper\LogHelper;
 use \RuntimeException;
 use Helio\Panel\Controller\Traits\HelperGrafanaController;
 use Helio\Panel\Controller\Traits\TypeDynamicController;
@@ -15,7 +16,6 @@ use Helio\Panel\Instance\InstanceStatus;
 use Helio\Panel\Instance\InstanceType;
 use Helio\Panel\Master\MasterFactory;
 use Helio\Panel\Orchestrator\OrchestratorFactory;
-use Helio\Panel\Runner\RunnerFactory;
 use Helio\Panel\Utility\JwtUtility;
 use Helio\Panel\Utility\ServerUtility;
 use Helio\Panel\ViewModel\InstanceInfoViewModel;
@@ -86,7 +86,7 @@ class ApiInstanceController extends AbstractController
      */
     public function stopServerAction(): ResponseInterface
     {
-        if (RunnerFactory::getRunnerForInstance($this->instance)->stopComputing()) {
+        if (OrchestratorFactory::getOrchestratorForInstance($this->instance)->stopComputing()) {
             $this->instance->setStatus(InstanceStatus::READY);
             $this->persistInstance();
             return $this->render();
@@ -103,7 +103,7 @@ class ApiInstanceController extends AbstractController
      */
     public function startInstanceAction(): ResponseInterface
     {
-        if (RunnerFactory::getRunnerForInstance($this->instance)->startComputing()) {
+        if (OrchestratorFactory::getOrchestratorForInstance($this->instance)->startComputing()) {
             $this->instance->setStatus(InstanceStatus::RUNNING);
             $this->persistInstance();
             return $this->render(['message' => 'worked!']);
@@ -121,7 +121,7 @@ class ApiInstanceController extends AbstractController
     {
         $this->instance->setHidden(true);
         $this->persistInstance();
-        return $this->render(['success' => true,'removed' => true]);
+        return $this->render(['success' => true, 'removed' => true]);
     }
 
     /**
@@ -132,10 +132,10 @@ class ApiInstanceController extends AbstractController
      */
     public function cleanupInstanceAction(): ResponseInterface
     {
-        if (RunnerFactory::getRunnerForInstance($this->instance)->stopComputing() && RunnerFactory::getRunnerForInstance($this->instance)->remove() && MasterFactory::getMasterForInstance($this->instance)->cleanup()) {
+        if (OrchestratorFactory::getOrchestratorForInstance($this->instance)->stopComputing() && OrchestratorFactory::getOrchestratorForInstance($this->instance)->removeInstance()) {
             $this->instance->setHidden(true);
             $this->persistInstance();
-            return $this->render(['success' => true,'removed' => true]);
+            return $this->render(['success' => true, 'removed' => true]);
         }
         return $this->render(['message' => ':('], StatusCode::HTTP_INTERNAL_SERVER_ERROR);
     }
@@ -268,10 +268,32 @@ class ApiInstanceController extends AbstractController
         ];
 
         if ($this->instance->getStatus() > InstanceStatus::CREATED) {
-            $data['info'] = new InstanceInfoViewModel([OrchestratorFactory::getOrchestratorForInstance($this->instance)->getInventory(), $status]);
+            if (empty($this->instance->getInventory())) {
+                OrchestratorFactory::getOrchestratorForInstance($this->instance)->getInventory();
+            }
+            $data['info'] = new InstanceInfoViewModel([$this->instance->getInventory(), $status]);
         }
 
         return $this->render(['listItemHtml' => $this->fetchPartial('listItemInstance', $data)]);
+    }
+
+
+    /**
+     * @return ResponseInterface
+     * @throws Exception
+     *
+     * @Route("/callback", methods={"POST", "GET"}, "name="instance.callback")
+     */
+    public function callbackAction(): ResponseInterface
+    {
+        $body = $this->request->getParsedBody();
+        LogHelper::debug('Body received into instance ' . $this->instance->getId() . ' callback:' . print_r($body, true));
+
+        $this->instance->setInventory($body);
+
+        $this->persistInstance();
+        return $this->render(['message' => 'ok']);
+
     }
 
 

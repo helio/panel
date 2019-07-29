@@ -2,6 +2,7 @@
 
 namespace Helio\Panel\Job;
 
+use \Exception;
 use Helio\Panel\App;
 use Helio\Panel\Helper\DbHelper;
 use Helio\Panel\Model\Job;
@@ -47,11 +48,11 @@ abstract class AbstractExecute implements JobInterface, DispatchableInterface
      *
      * @return bool
      *
-     * @throws \Exception
+     * @throws Exception
      */
     public function stop(array $params, RequestInterface $request, ResponseInterface $response = null): bool
     {
-        $tasks = $this->task ? [$this->task] : DbHelper::getInstance()->getRepository(Task::class)->findByJob($this->job);
+        $tasks = $this->task ? [$this->task] : DbHelper::getInstance()->getRepository(Task::class)->findBy(['job' => $this->job]);
         /** @var Task $task */
         foreach ($tasks as $task) {
             if (TaskStatus::isValidPendingStatus($task->getStatus() || TaskStatus::isRunning($task->getStatus()))) {

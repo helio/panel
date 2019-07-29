@@ -2,10 +2,12 @@
 
 namespace Helio\Panel\Helper;
 
+use \Exception;
 use Helio\Panel\Utility\ServerUtility;
 use Monolog\Handler\ErrorLogHandler;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
+use Monolog\Processor\UidProcessor;
 use Psr\Log\LogLevel;
 
 /**
@@ -51,11 +53,11 @@ class LogHelper implements HelperInterface
      * @param $name
      * @param $arguments
      * @return mixed
-     * @throws \Exception
+     * @throws Exception
      */
     public static function __callStatic($name, $arguments)
     {
-        return \call_user_func_array([self::getInstance(), $name], $arguments);
+        return call_user_func_array([self::getInstance(), $name], $arguments);
     }
 
 
@@ -71,7 +73,7 @@ class LogHelper implements HelperInterface
 
         foreach ($args as $arg) {
 
-            if (\is_object($arg) || \is_array($arg) || \is_resource($arg)) {
+            if (is_object($arg) || is_array($arg) || is_resource($arg)) {
                 $output = print_r($arg, true);
             } else {
                 $output = (string)$arg;
@@ -85,7 +87,7 @@ class LogHelper implements HelperInterface
     /**
      * @param LogLevel $level
      * @param string $message
-     * @throws \Exception
+     * @throws Exception
      */
     protected static function write(LogLevel $level, string $message): void
     {
@@ -95,17 +97,17 @@ class LogHelper implements HelperInterface
     /**
      * @param string $suffix
      * @return Logger
-     * @throws \Exception
+     * @throws Exception
      */
     public static function getInstance(string $suffix = 'app'): Logger
     {
-        if (!\array_key_exists($suffix, self::$logger)) {
+        if (!array_key_exists($suffix, self::$logger)) {
             // this needs to be done through str_replace and not enforces, since LOG_DEST can also be a php:// resource
             $filename = str_replace('.log', '-' . $suffix . '.log', LOG_DEST);
 
             self::$logger[$suffix] = (new Logger('helio.panel.' . $suffix))
-                ->pushProcessor(new \Monolog\Processor\UidProcessor())
-                ->pushHandler(new \Monolog\Handler\StreamHandler(LOG_DEST, LOG_LVL));
+                ->pushProcessor(new UidProcessor())
+                ->pushHandler(new StreamHandler($filename, LOG_LVL));
             self::$logger[$suffix]::setTimezone(ServerUtility::getTimezoneObject());
 
             // also log to stdout

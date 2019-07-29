@@ -6,6 +6,8 @@ use Google\Auth\OAuth2;
 use Google\Auth\Middleware\ScopedAccessTokenMiddleware;
 use GuzzleHttp\Client;
 use GuzzleHttp\HandlerStack;
+use \Psr\Http\Message\ResponseInterface;
+use \GuzzleHttp\Exception\GuzzleException;
 
 class GoogleIapHelper implements HelperInterface
 {
@@ -23,7 +25,7 @@ class GoogleIapHelper implements HelperInterface
     public static function getInstance(): self
     {
         $class = static::class;
-        if (!self::$instances || !\array_key_exists($class, self::$instances)) {
+        if (!self::$instances || !array_key_exists($class, self::$instances)) {
             self::$instances[$class] = new static();
         }
         return self::$instances[$class];
@@ -37,8 +39,8 @@ class GoogleIapHelper implements HelperInterface
      * @param $pathToServiceAccount
      * @param string $method
      * @param array $options
-     * @return mixed|\Psr\Http\Message\ResponseInterface
-     * @throws \GuzzleHttp\Exception\GuzzleException
+     * @return mixed|ResponseInterface
+     * @throws GuzzleException
      */
     public function make_iap_request($baseUrl, $path, $clientId, $pathToServiceAccount, $method, $options)
     {

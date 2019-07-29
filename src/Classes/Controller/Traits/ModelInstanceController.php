@@ -7,7 +7,7 @@ use Helio\Panel\App;
 use Helio\Panel\Instance\InstanceStatus;
 use Helio\Panel\Master\MasterFactory;
 use Helio\Panel\Model\Instance;
-use Helio\Panel\Runner\RunnerFactory;
+use Helio\Panel\Orchestrator\OrchestratorFactory;
 
 
 /**
@@ -108,7 +108,7 @@ trait ModelInstanceController
                 return $status;
                 break;
             case InstanceStatus::READY:
-                $status = RunnerFactory::getRunnerForInstance($this->instance)->inspect();
+                $status = OrchestratorFactory::getOrchestratorForInstance($this->instance)->inspect();
                 if (is_array($status) && count($status) > 0) {
                     $status = $status[0];
                 }
@@ -120,7 +120,7 @@ trait ModelInstanceController
                 return $status;
                 break;
             case InstanceStatus::RUNNING:
-                $status = RunnerFactory::getRunnerForInstance($this->instance)->inspect();
+                $status = OrchestratorFactory::getOrchestratorForInstance($this->instance)->inspect();
                 if (is_array($status) && count($status) > 0) {
                     $status = $status[0];
                 }

@@ -2,8 +2,14 @@
 
 namespace Helio\Panel\Utility;
 
+use \Exception;
+use \RuntimeException;
+use \InvalidArgumentException;
+use \DateTime;
+use \DateTimeZone;
 use Helio\Panel\App;
 use Helio\Panel\Helper\LogHelper;
+use Tuupola\Base62;
 
 class ServerUtility extends AbstractUtility
 {
@@ -41,11 +47,11 @@ class ServerUtility extends AbstractUtility
 
 
     /**
-     * @return \DateTimeZone
+     * @return DateTimeZone
      */
-    public static function getTimezoneObject(): \DateTimeZone
+    public static function getTimezoneObject(): DateTimeZone
     {
-        return new \DateTimeZone(self::$timeZone);
+        return new DateTimeZone(self::$timeZone);
     }
 
 
@@ -72,7 +78,8 @@ class ServerUtility extends AbstractUtility
         return self::get('SITE_ENV') === 'PROD';
     }
 
-    public static function isLocalDevEnv(): bool {
+    public static function isLocalDevEnv(): bool
+    {
         return PHP_SAPI === 'cli-server' && SITE_ENV === 'DEV';
     }
 
@@ -87,26 +94,26 @@ class ServerUtility extends AbstractUtility
     public static function get(string $name, $default = null): string
     {
         // local development server has the stuff in _ENV
-        if (PHP_SAPI === 'cli-server' && \array_key_exists($name, $_ENV)) {
+        if (PHP_SAPI === 'cli-server' && array_key_exists($name, $_ENV)) {
             return $_ENV[$name];
         }
 
         // look in _SERVER and request
-        if (!\array_key_exists($name, $_SERVER) || !$_SERVER[$name]) {
+        if (!array_key_exists($name, $_SERVER) || !$_SERVER[$name]) {
             if (App::isReady()) {
                 try {
                     $reqParams = App::getApp()->getContainer()->get('request')->getServerParams();
-                    if (\array_key_exists($name, $reqParams) && $reqParams[$name]) {
+                    if (array_key_exists($name, $reqParams) && $reqParams[$name]) {
                         return $reqParams[$name];
                     }
-                } catch (\Exception $e) {
+                } catch (Exception $e) {
                     // fallback to default.
                 }
             }
             if ($default !== null) {
                 return $default;
             }
-            throw new \RuntimeException('please set the ENV Variable ' . $name, 1530357047);
+            throw new RuntimeException('please set the ENV Variable ' . $name, 1530357047);
         }
 
         return $_SERVER[$name];
@@ -133,22 +140,32 @@ class ServerUtility extends AbstractUtility
 
 
     /**
+     * @noinspection PhpDocMissingThrowsInspection some kind of IntelliJ Bug here...?
      * @param string $command
-     *
-     * @return null|string
+     * @return string|null
      */
     public static function executeShellCommand(string $command): ?string
     {
-        LogHelper::debug('executing shell command:' . "\n${command}");
+        try {
+            $trace = (new Base62())->encode(random_bytes(12));
+        } catch (Exception $e) {
+            LogHelper::warn('random_bytes error: ' . $e->getMessage());
+            $trace = 'etrace' . (new DateTime())->getTimestamp();
+        }
+        LogHelper::debug('executing shell command (' . $trace . '):' . "\n" . $command);
+
         if (self::$testMode) {
             self::$lastExecutedShellCommand[] = $command;
         }
 
         if (self::isProd() || self::get('ENFORCE_SYS_EXEC', false)) {
-            return trim(@shell_exec($command));
+            $result = trim(@shell_exec($command));
+        } else {
+            $result = \Helio\Test\Infrastructure\Utility\ServerUtility::getMockResultForShellCommand($command);
         }
 
-        return \Helio\Test\Infrastructure\Utility\ServerUtility::getMockResultForShellCommand($command);
+        LogHelper::debug('result of shell command (' . $trace . '):' . "\n" . print_r($result, true));
+        return $result;
     }
 
 
@@ -158,9 +175,9 @@ class ServerUtility extends AbstractUtility
     public static function validateParams(array $params): void
     {
         foreach ($params as $item) {
-            $res = preg_match('/[^0-9a-zA-Z\.\-_"]/', $item);
-            if ($res === false || $res > 0) {
-                throw new \InvalidArgumentException('suspicious shell command submitted: ' . $item, 1544664506);
+            $res = preg_match('/[^0-9a-zA-Z\.\-_\/:\?=&",]/', $item);
+            if ($res !== 0) {
+                throw new InvalidArgumentException('suspicious shell command submitted: ' . $item, 1544664506);
             }
         }
     }
@@ -251,7 +268,7 @@ class ServerUtility extends AbstractUtility
      */
     public static function getLastExecutedShellCommand(int $offset = 0): string
     {
-        $index = \count(self::$lastExecutedShellCommand) - $offset - 1;
+        $index = count(self::$lastExecutedShellCommand) - $offset - 1;
         return $index >= 0 ? self::$lastExecutedShellCommand[$index] : '';
     }
 
@@ -271,9 +288,9 @@ class ServerUtility extends AbstractUtility
             }
             if (is_dir($folder . DIRECTORY_SEPARATOR . $node)) {
                 /** @noinspection SlowArrayOperationsInLoopInspection */
-                $result = \array_merge($result, self::getAllFilesInFolder($folder . DIRECTORY_SEPARATOR . $node, $fileEnding));
+                $result = array_merge($result, self::getAllFilesInFolder($folder . DIRECTORY_SEPARATOR . $node, $fileEnding));
             } else if ($fileEnding) {
-                if (strpos($node, $fileEnding) === (\strlen($node) - \strlen($fileEnding))) {
+                if (strpos($node, $fileEnding) === (strlen($node) - strlen($fileEnding))) {
                     $result[] = $folder . DIRECTORY_SEPARATOR . $node;
                 }
             } else {

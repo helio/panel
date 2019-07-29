@@ -175,7 +175,7 @@ class ApiAdminController extends AbstractController
             if (!JobStatus::isValidActiveStatus($this->job->getStatus())) {
                 throw new RuntimeException('job not ready');
             }
-            OrchestratorFactory::getOrchestratorForInstance($this->instance)->dispatchJob($this->job);
+            OrchestratorFactory::getOrchestratorForInstance($this->instance, $this->job)->dispatchJob();
             $this->persistJob();
             return $this->render(['status' => 'success']);
         } catch (Exception $e) {

@@ -2,11 +2,17 @@
 
 namespace Helio\Panel\Helper;
 
+use \Exception;
+use Elasticsearch\Client;
 use Elasticsearch\ClientBuilder;
 
+/**
+ * Class ElasticHelper
+ * @package Helio\Panel\Helper
+ */
 class ElasticHelper implements HelperInterface
 {
-    /** @var \Elasticsearch\Client */
+    /** @var Client */
     protected $client;
     protected $from = 0;
     protected $size = 10;
@@ -46,7 +52,7 @@ class ElasticHelper implements HelperInterface
     public static function getInstance(): self
     {
         $class = static::class;
-        if (!self::$instances || !\array_key_exists($class, self::$instances)) {
+        if (!self::$instances || !array_key_exists($class, self::$instances)) {
             self::$instances[$class] = new static();
         }
         return self::$instances[$class];
@@ -112,7 +118,7 @@ class ElasticHelper implements HelperInterface
         LogHelper::debug('Running Elastic Query: ' . json_encode($params));
         try {
             return $this->client->search($params)['hits'];
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             LogHelper::warn('Error in Elastic Query: ' . $e->getMessage());
             return [];
         }

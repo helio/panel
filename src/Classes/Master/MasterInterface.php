@@ -12,6 +12,4 @@ interface MasterInterface
     public function getStatus();
 
     public function doSign();
-
-    public function cleanup();
 }

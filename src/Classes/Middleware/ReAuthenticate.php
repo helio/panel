@@ -2,6 +2,7 @@
 
 namespace Helio\Panel\Middleware;
 
+use \Exception;
 use Helio\Panel\Utility\CookieUtility;
 use Helio\Panel\Utility\JwtUtility;
 use Psr\Http\Message\ResponseInterface;
@@ -32,7 +33,7 @@ class ReAuthenticate implements MiddlewareInterface
      * @param RequestHandlerInterface $handler
      *
      * @return ResponseInterface
-     * @throws \Exception
+     * @throws Exception
      */
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {

@@ -2,9 +2,10 @@
 
 namespace Helio\Panel\Controller\Traits;
 
-
-use Psr\Http\Message\ResponseInterface;
-
+/**
+ * Trait TypeDynamicController
+ * @package Helio\Panel\Controller\Traits
+ */
 trait TypeDynamicController
 {
     protected $mode = 'panel';

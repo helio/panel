@@ -2,6 +2,12 @@
 
 namespace Helio\Panel\Job;
 
+use \RuntimeException;
+
+/**
+ * Class JobStatus
+ * @package Helio\Panel\Job
+ */
 final class JobStatus
 {
     public const UNKNOWN = 0;
@@ -9,7 +15,6 @@ final class JobStatus
     public const READY = 2;
     public const DONE = 3;
     public const DELETED = 9;
-
 
 
     public const labels = [
@@ -23,7 +28,7 @@ final class JobStatus
 
     public function __construct()
     {
-        throw new \RuntimeException('Cannot instanciate ' . __CLASS__);
+        throw new RuntimeException('Cannot instanciate ' . __CLASS__);
     }
 
     public static function isValidStatus(int $status): bool

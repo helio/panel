@@ -3,6 +3,7 @@
 
 namespace Helio\Panel\Model;
 
+use \Exception;
 use Doctrine\{Common\Collections\ArrayCollection,
     Common\Collections\Collection,
     ORM\Mapping\Entity,
@@ -140,7 +141,8 @@ class Job extends AbstractModel
     private $numberOfActiveTasks;
 
     /**
-     * User constructor.
+     * Job constructor.
+     * @throws Exception
      */
     public function __construct()
     {
@@ -413,7 +415,7 @@ class Job extends AbstractModel
      */
     public function addManagerNode(string $managerNode): Job
     {
-        if (!\in_array($managerNode, $this->managerNodes, true)) {
+        if (!in_array($managerNode, $this->managerNodes, true)) {
             $this->managerNodes[] = $managerNode;
         }
         return $this;

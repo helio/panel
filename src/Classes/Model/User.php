@@ -3,6 +3,9 @@
 
 namespace Helio\Panel\Model;
 
+use \Exception;
+use \DateTime;
+use \DateTimeZone;
 use Doctrine\{
     Common\Collections\Collection,
     ORM\Mapping\Entity,
@@ -59,7 +62,7 @@ class User extends AbstractModel
 
 
     /**
-     * @var \DateTime $loggedOut
+     * @var DateTime $loggedOut
      *
      * @Column(type="datetimetz", nullable=true)
      */
@@ -84,6 +87,7 @@ class User extends AbstractModel
 
     /**
      * User constructor.
+     * @throws Exception
      */
     public function __construct()
     {
@@ -229,24 +233,24 @@ class User extends AbstractModel
     }
 
     /**
-     * @return \DateTime|null
+     * @return DateTime|null
      */
-    public function getLoggedOut(): ?\DateTime
+    public function getLoggedOut(): ?DateTime
     {
         return $this->loggedOut;
     }
 
     /**
-     * @param \DateTime|null $loggedOut
-     * @throws \Exception
+     * @param DateTime|null $loggedOut
+     * @throws Exception
      */
-    public function setLoggedOut(\DateTime $loggedOut = null): void
+    public function setLoggedOut(DateTime $loggedOut = null): void
     {
         if (!$loggedOut) {
-            $loggedOut = new \DateTime('now', ServerUtility::getTimezoneObject());
+            $loggedOut = new DateTime('now', ServerUtility::getTimezoneObject());
         }
         // Fix Timezone because Doctrine assumes persistend DateTime Objects are always UTC
-        $loggedOut->setTimezone(new \DateTimeZone('UTC'));
+        $loggedOut->setTimezone(new DateTimeZone('UTC'));
 
         $this->loggedOut = $loggedOut;
     }

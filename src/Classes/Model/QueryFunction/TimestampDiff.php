@@ -2,6 +2,9 @@
 
 namespace Helio\Panel\Model\QueryFunction;
 
+use \Doctrine\ORM\Query\Parser;
+use \Doctrine\ORM\Query\QueryException;
+use \Doctrine\ORM\Query\SqlWalker;
 use Doctrine\ORM\Query\AST\Functions\FunctionNode;
 use Doctrine\ORM\Query\Lexer;
 
@@ -26,10 +29,10 @@ class TimestampDiff extends FunctionNode
     public $unit = null;
 
     /**
-     * @param \Doctrine\ORM\Query\Parser $parser
-     * @throws \Doctrine\ORM\Query\QueryException
+     * @param Parser $parser
+     * @throws QueryException
      */
-    public function parse(\Doctrine\ORM\Query\Parser $parser): void
+    public function parse(Parser $parser): void
     {
         $parser->match(Lexer::T_IDENTIFIER);
         $parser->match(Lexer::T_OPEN_PARENTHESIS);
@@ -44,10 +47,10 @@ class TimestampDiff extends FunctionNode
     }
 
     /**
-     * @param \Doctrine\ORM\Query\SqlWalker $sql_walker
+     * @param SqlWalker $sql_walker
      * @return string
      */
-    public function getSql(\Doctrine\ORM\Query\SqlWalker $sql_walker): string
+    public function getSql(SqlWalker $sql_walker): string
     {
         return sprintf(
             'TIMESTAMPDIFF(%s, %s, %s)',

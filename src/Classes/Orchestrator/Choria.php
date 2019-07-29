@@ -3,11 +3,11 @@
 namespace Helio\Panel\Orchestrator;
 
 use \Exception;
+use \RuntimeException;
 use Helio\Panel\Helper\LogHelper;
 use Helio\Panel\Model\Instance;
 use Helio\Panel\Model\Job;
 use Helio\Panel\Model\Task;
-use Helio\Panel\Utility\JwtUtility;
 use Helio\Panel\Utility\ServerUtility;
 
 class Choria implements OrchestratorInterface
@@ -18,6 +18,12 @@ class Choria implements OrchestratorInterface
      * @var Instance
      */
     protected $instance;
+
+
+    /**
+     * @var Job
+     */
+    protected $job;
 
 
     /**
@@ -37,76 +43,28 @@ class Choria implements OrchestratorInterface
     private static $redundancyCount = 0;
 
 
-    /**
-     * @var string
-     */
-    private static $inventoryCommand = 'ssh %s@%s "mco inventory -F fqdn=/%s/ --script <(echo \\"
-inventory do
-  format \'{ \\\\\\"uptime\\\\\\": \\\\\\"%%s\\\\\\", \\\\\\"processor0\\\\\\": \\\\\\"%%s\\\\\\", \\\\\\"os\\\\\\": \\\\\\"%%s\\\\\\", \\\\\\"identity\\\\\\": \\\\\\"%%s\\\\\\", \\\\\\"processors\\\\\\": \\\\\\"%%s\\\\\\", \\\\\\"kernelrelease\\\\\\": \\\\\\"%%s\\\\\\", \\\\\\"memorysize\\\\\\": \\\\\\"%%s\\\\\\" }\'
-  fields { [ facts[\'system_uptime\'][\'seconds\'], facts[\'processor0\'], facts[\'os\'][\'distro\'][\'description\'], identity, facts[\'processorcount\'], facts[\'kernelrelease\'], facts[\'memorysize\'] ] }
-end
-\\")"';
-
-
-    /**
-     * @ string
-     */
-    protected static $getInitManagerIpCommand = 'ssh %s@%s "mco inventory -F fqdn=/%s/ --script <(echo \\"
-inventory do
-  format \'%%s\'
-  fields { [ facts[\'docker\'][\'Swarm\'][\'RemoteManagers\'][0][\'Addr\'] ] }
-end
-\\")"';
-
+    private static $firstManagerCommand = 'mco playbook run infrastructure::gce::create --input \'{"node":"%s","callback":"$jobCallback","user_id":"%s","id":"$jobId"}\'';
+    private static $redundantManagersCommand = 'mco playbook run infrastructure::gce::create --input \'{"node":["%s"],"master_token":"%s","callback":"$jobCallback","user_id":"%s","id":"$jobId"\'';
+    private static $deleteInitManagerCommand = 'mco playbook run infrastructure::gce::delete --input \'{"node":"%s","callback":"$jobCallback","id":"$jobId"}\'';
+    private static $deleteRedundantManagersCommand = 'mco playbook run infrastructure::gce::delete --input \'{"node":["%s"],"master_token":"%s","callback":"$jobCallback","id":"$jobId"}\'';
+    private static $inventoryCommand = 'mco playbook run helio::tools::inventory --input \'{"fqdn":"$fqdn","callback":"$instanceCallback"}\'';
+    private static $startComputeCommand = 'mco playbook run helio::cluster::node::start --input \'{"node_id":"%s","node_fqdn":"$fqdn","manager":"%s","callback":"$instanceCallback"}\'';
+    private static $stopComputeCommand = 'mco playbook run helio::cluster::node::stop --input \'{"node_id":"%s","node_fqdn":"$fqdn","manager":"%s","callback":"$instanceCallback"}\'';
+    private static $removeNodeCommand = 'mco playbook run helio::cluster::node::cleanup --input \'{"node_id":"%s","node_fqdn":"$fqdn","manager":"%s","callback":"$instanceCallback"}\'';
+    private static $inspectCommand = 'mco playbook run helio::cluster::node::inspect --input \'{"node_fqdn":"$fqdn","callback":"$instanceCallback"}\'';
+    private static $getRunnderIdCommand = 'mco playbook run helio::cluster::node::getid --input \'{"node_fqdn":"$fqdn","callback":"$instanceCallback"}\'';
+    private static $dispatchCommand = 'mco playbook run helio::task::update --input \'{"cluster_address":"%s","task_ids":"[%s]"}\'';
+    private static $joinWorkersCommand = 'mco playbook run helio::queue --input \'{"cluster_join_token":"%s","cluster_join_address":"%s","cluster_join_count":"%s"}\'';
 
     /**
-     * @var string
-     */
-    protected static $getDockerTokenCommand = 'ssh %s@%s "$(echo $(mco tasks run docker::swarm_token --node_role manager -I %s --background --summary | sed -r \\"s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g\\" | grep -Eo \\"mco tasks status[^\']+\\") -F fqdn=/%s/ --verbose) | grep _output"';
-
-
-    /**
-     * @var string
-     */
-    protected static $firstManagerCommand = 'ssh %s@%s "mco playbook run infrastructure::gce::create --input \'{\\"node\\":\\"%s\\",\\"callback\\":\\"%s\\",\\"user_id\\":\\"%s\\",\\"id\\":\\"%s\\",\\"token\\":\\"%s\\"}\'" 2>/dev/null >/dev/null &';
-
-
-    /**
-     * @var string
-     */
-    protected static $redundantManagersCommand = 'ssh %s@%s "mco playbook run infrastructure::gce::create --input \'{\\"node\\":[\\"%s\\"],\\"master_token\\":\\"%s\\",\\"callback\\":\\"%s\\",\\"user_id\\":\\"%s\\",\\"id\\":\\"%s\\",\\"token\\":\\"%s\\"}\'" 2>/dev/null >/dev/null &';
-
-
-    /**
-     * @var string
-     */
-    protected static $deleteInitManagerCommand = 'ssh %s@%s "mco playbook run infrastructure::gce::delete --input \'{\\"node\\":\\"%s\\",\\"callback\\":\\"%s\\",\\"id\\":\\"%s\\",\\"token\\":\\"%s\\"}\'" 2>/dev/null >/dev/null &';
-
-
-    /**
-     * @var string
-     */
-    protected static $deleteRedundantManagersCommand = 'ssh %s@%s "mco playbook run infrastructure::gce::delete --input \'{\\"node\\":[\\"%s\\"],\\"master_token\\":\\"%s\\",\\"callback\\":\\"%s\\",\\"id\\":\\"%s\\",\\"token\\":\\"%s\\"}\'" 2>/dev/null >/dev/null &';
-
-
-    /**
-     * @var string
-     */
-    protected static $dispatchCommand = 'ssh %s@%s "mco playbook run helio::task::update --input \'{\\"cluster_address\\":\\"%s\\",\\"task_ids\\":\\"[%s]\\"}\'" 2>/dev/null >/dev/null &';
-
-    /**
-     * @var string
-     */
-    protected static $joinWorkersCommand = 'ssh %s@%s "mco playbook run helio::queue --input \'{\\"cluster_join_token\\":\\"%s\\",\\"cluster_join_address\\":\\"%s\\",\\"cluster_join_count\\":\\"%s\\"}\'" 2>/dev/null >/dev/null &';
-
-
-    /**
-     * Puppet constructor.
+     * Choria constructor.
      * @param Instance $instance
+     * @param Job|null $job
      */
-    public function __construct(Instance $instance)
+    public function __construct(Instance $instance, Job $job = null)
     {
         $this->instance = $instance;
+        $this->job = $job;
     }
 
     /**
@@ -114,30 +72,48 @@ end
      */
     public function getInventory()
     {
-        $result = ServerUtility::executeShellCommand($this->parseCommand('inventory', [str_replace('.', '\\\\.', $this->instance->getFqdn())]));
-        LogHelper::debug('response from choria at getInventory:' . print_r($result, true));
-        if (is_string($result) && $result) {
-            return json_decode($result, true);
-        }
-        return $result;
+        return ServerUtility::executeShellCommand($this->parseCommand(self::$inventoryCommand));
+    }
+
+    /**
+     * @return mixed
+     */
+    public function startComputing()
+    {
+        return ServerUtility::executeShellCommand($this->parseCommand(self::$startComputeCommand));
     }
 
 
     /**
-     * @param Job $job
-     * @return bool
-     *
+     * @return mixed
      */
-    public function dispatchJob(Job $job): bool
+    public function stopComputing()
     {
-        if (!$job->getManagerNodes() || !$job->getClusterToken() || !$job->getInitManagerIp()) {
+        return ServerUtility::executeShellCommand($this->parseCommand(self::$stopComputeCommand));
+    }
+
+
+    /**
+     * @param Job|null $job
+     * @return bool
+     */
+    public function dispatchJob(Job $job = null): bool
+    {
+        if ($job) {
+            LogHelper::addWarning('Deprecated call of ' . __METHOD__ . ' with set $job param. Pass it to the factory!');
+            $this->job = $job;
+        }
+        if (!$this->job) {
+            return false;
+        }
+        if (!$this->job->getManagerNodes() || !$this->job->getClusterToken() || !$this->job->getInitManagerIp()) {
             LogHelper::warn('dispatchJob called on job that\'s not ready. Aborting.');
             return false;
         }
 
-        $resultDispatch = ServerUtility::executeShellCommand($this->parseCommand('dispatch', [
-            $job->getManagerNodes()[0],
-            array_reduce($job->getTasks()->toArray(), function ($carry, $item) {
+        $resultDispatch = ServerUtility::executeShellCommand($this->parseCommand(self::$dispatchCommand, true, [
+            $this->job->getManagerNodes()[0],
+            array_reduce($this->job->getTasks()->toArray(), function ($carry, $item) {
                 /** @var Task $item */
                 if ($carry !== '') {
                     $carry .= ',';
@@ -145,39 +121,44 @@ end
                 return $carry . $item->getId();
             }, '')
         ]));
-        LogHelper::debug('response from choria at dispatchJob dispatch:' . print_r($resultDispatch, true));
 
-        $resultJoinWorkers = ServerUtility::executeShellCommand($this->parseCommand('joinWorkers', [$job->getClusterToken(), $job->getInitManagerIp(), 1]));
-        LogHelper::debug('response from choria at dispatchJob joinWorkers:' . print_r($resultJoinWorkers, true));
+        $resultJoinWorkers = ServerUtility::executeShellCommand($this->parseCommand(self::$joinWorkersCommand, false, [$this->job->getClusterToken(), $this->job->getInitManagerIp(), 1]));
 
         return $resultDispatch && $resultJoinWorkers;
     }
 
 
     /**
-     * @param Job $job
+     * @param Job|null $job
      * @return bool
      * @throws Exception
      */
-    public function provisionManager(Job $job): bool
+    public function provisionManager(Job $job = null): bool
     {
-        $managerHash = ServerUtility::getShortHashOfString($job->getId());
+        if ($job) {
+            LogHelper::addWarning('Deprecated call of ' . __METHOD__ . ' with set $job param. Pass it to the factory!');
+            $this->job = $job;
+        }
+        if (!$this->job) {
+            return false;
+        }
+        $managerHash = ServerUtility::getShortHashOfString($this->job->getId());
 
         // we're good
-        if (count($job->getManagerNodes()) === (1 + self::$redundancyCount)) {
+        if (count($this->job->getManagerNodes()) === (1 + self::$redundancyCount)) {
             return true;
         }
 
         // we have to provision the init manager
-        if (count($job->getManagerNodes()) === 0) {
+        if (count($this->job->getManagerNodes()) === 0) {
             $managerHostname = self::$managerPrefix . "-init-${managerHash}";
 
-            $command = 'firstManager';
+            $command = self::$firstManagerCommand;
             $params[] = $managerHostname;
         } else {
 
             // if no init manager exists, we cannot create redundancy managers
-            if (!$job->getInitManagerIp()) {
+            if (!$this->job->getInitManagerIp()) {
                 return false;
             }
 
@@ -189,75 +170,121 @@ end
                 $i--;
             }
 
-            $command = 'redundantManagers';
+            $command = self::$redundantManagersCommand;
             $params[] = implode('\\",\\"', $redundancyNodes);
-            $params[] = $job->getManagerToken();
+            $params[] = $this->job->getManagerToken();
         }
 
-        $params[] = ServerUtility::getBaseUrl() . 'api/job/callback?jobid=' . $job->getId();
-        $params[] = $job->getOwner() ? $job->getOwner()->getId() : null;
-        $params[] = $job->getId();
-        $params[] = JwtUtility::generateToken(null, null, null, $job)['token'];
+        $params[] = $this->job->getOwner() ? $this->job->getOwner()->getId() : null;
 
-        $result = ServerUtility::executeShellCommand($this->parseCommand($command, $params));
-        LogHelper::debug('response from choria at provision ' . $command . ':' . print_r($result, true));
+        $result = ServerUtility::executeShellCommand($this->parseCommand($command, false, $params));
         return $result;
     }
 
 
     /**
-     * @param Job $job
+     * @param Job|null $job
      * @return bool
      * @throws Exception
      */
-    public function removeManager(Job $job): bool
+    public function removeManager(Job $job = null): bool
     {
+        if ($job) {
+            LogHelper::addWarning('Deprecated call of ' . __METHOD__ . ' with set $job param. Pass it to the factory!');
+            $this->job = $job;
+        }
+        if (!$this->job) {
+            return false;
+        }
         $result = true;
-        $managerHash = ServerUtility::getShortHashOfString($job->getId());
+        $managerHash = ServerUtility::getShortHashOfString($this->job->getId());
 
-        // remove redundnat managers if existing
-        if (\count($job->getManagerNodes()) > 1) {
-            foreach ($job->getManagerNodes() as $node) {
+        // remove redundant managers if existing
+        if (count($this->job->getManagerNodes()) > 1) {
+            foreach ($this->job->getManagerNodes() as $node) {
                 if (strpos($node, self::$managerPrefix . "-redundancy-${managerHash}") === 0) {
-                    $result = $result && ServerUtility::executeShellCommand($this->parseCommand('deleteRedundantManagers', [
-                            substr($node, 0, \strlen(self::$managerPrefix . "-init-${managerHash}-1")),
-                            ServerUtility::getBaseUrl() . 'api/job/callback?jobid=' . $job->getId(),
-                            $job->getId(),
-                            JwtUtility::generateToken(null, null, null, $job)['token'],
-                            $job->getManagerToken()
+                    $result = $result && ServerUtility::executeShellCommand($this->parseCommand(self::$deleteRedundantManagersCommand, true, [
+                            substr($node, 0, strlen(self::$managerPrefix . "-init-${managerHash}-1")),
+                            $this->job->getManagerToken()
                         ]));
-                    LogHelper::debug('response from choria at deleteRedundantManagers:' . print_r($result, true));
                 }
             }
         }
 
         // lastly, delete redundant manager
-        $result = $result && ServerUtility::executeShellCommand($this->parseCommand('deleteInitManager', [
-                self::$managerPrefix . "-init-${managerHash}",
-                ServerUtility::getBaseUrl() . 'api/job/callback?jobid=' . $job->getId(),
-                $job->getId(),
-                JwtUtility::generateToken(null, null, null, $job)['token']
+        $result = $result && ServerUtility::executeShellCommand($this->parseCommand(self::$deleteInitManagerCommand, false, [
+                self::$managerPrefix . "-init-${managerHash}"
             ]));
-        LogHelper::debug('response from choria at deleteInitManager:' . print_r($result, true));
         return $result;
     }
 
 
     /**
-     * @param string $commandName
+     * @return string|null
+     */
+    public function inspect()
+    {
+        return ServerUtility::executeShellCommand($this->parseCommand(self::$inspectCommand, true));
+    }
+
+
+    /**
+     * @return string|null
+     */
+    public function removeInstance()
+    {
+        $this->ensureRunnerIdIsSet();
+        return ServerUtility::executeShellCommand($this->parseCommand(self::$removeNodeCommand, false, [$this->instance->getRunnerId()]));
+    }
+
+
+    /**
+     *
+     */
+    protected function ensureRunnerIdIsSet(): void
+    {
+        if (!$this->instance->getRunnerId()) {
+            ServerUtility::executeShellCommand($this->parseCommand(self::$getRunnderIdCommand));
+            throw new RuntimeException('Instance ID not set');
+        }
+    }
+
+
+    /**
+     * @param string $command
+     * @param bool $waitForResult
      * @param array $parameter
      * @return string
      */
-    protected function parseCommand(string $commandName, array $parameter = []): string
+    protected function parseCommand(string $command, bool $waitForResult = false, array $parameter = []): string
     {
         $params = array_merge([
             self::$username, $this->instance->getOrchestratorCoordinator()
         ],
             $parameter
         );
-        //TODO: Re-add ServerUtility::validateParams($params);
+        ServerUtility::validateParams($params);
 
-        $commandName .= 'Command';
-        return vsprintf(self::$$commandName, $params);
+        $command = str_replace(
+            [
+                '"',
+                '$fqdn',
+                '$instanceCallback',
+                '$jobCallback',
+                '$jobId',
+                '$instanceId'
+            ],
+            [
+                '\\\\"',
+                $this->instance->getFqdn(),
+                ServerUtility::getBaseUrl() . 'api/instance/callback?instanceid=' . $this->instance->getId(),
+                ServerUtility::getBaseUrl() . 'api/job/callback?jobid=' . $this->job->getId(),
+                $this->job->getId(),
+                $this->instance->getId()
+            ],
+            $command
+        );
+
+        return vsprintf('ssh %s@%s "' . $command . '"' . ($waitForResult ? '' : ' > /dev/null 2>&1 &'), $params);
     }
 }

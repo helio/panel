@@ -2,6 +2,9 @@
 
 namespace Helio\Panel\Utility;
 
+use \Exception;
+use \DateTime;
+use \DateTimeImmutable;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -32,20 +35,20 @@ class CookieUtility extends AbstractUtility
      * @param int $expires
      *
      * @return ResponseInterface
-     * @throws \Exception
+     * @throws Exception
      */
     public static function addCookie(ResponseInterface $response, string $cookieName, string $cookieValue, int $expires = 0): ResponseInterface
     {
         if ($expires > 0) {
-            $expiry = (new \DateTimeImmutable("@$expires"))->setTimezone(ServerUtility::getTimezoneObject());
-            $maxAge = $expires - (new \DateTime('now', ServerUtility::getTimezoneObject()))->getTimestamp();
+            $expiry = (new DateTimeImmutable("@$expires"))->setTimezone(ServerUtility::getTimezoneObject());
+            $maxAge = $expires - (new DateTime('now', ServerUtility::getTimezoneObject()))->getTimestamp();
         } else {
-            $expiry = new \DateTimeImmutable('now + 10 minutes', ServerUtility::getTimezoneObject());
+            $expiry = new DateTimeImmutable('now + 10 minutes', ServerUtility::getTimezoneObject());
             $maxAge = 600;
         }
 
         $cookie = urlencode($cookieName) . '=' .
-            urlencode($cookieValue) . '; expires=' . $expiry->format(\DateTime::COOKIE) . '; Max-Age=' .
+            urlencode($cookieValue) . '; expires=' . $expiry->format(DateTime::COOKIE) . '; Max-Age=' .
             $maxAge . '; path=/;' . (ServerUtility::isSecure() ? ' secure;' : '') . ' httponly';
         $response = $response->withAddedHeader('Set-Cookie', $cookie);
 

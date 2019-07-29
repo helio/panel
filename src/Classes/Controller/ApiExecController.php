@@ -71,7 +71,7 @@ class ApiExecController extends AbstractController
 
             // if replica count has changed OR we have an enforcement (e.g. one replica per task fixed), dispatch the job
             if ($previousReplicaCount !== $newReplicaCount || JobFactory::getDispatchConfigOfJob($this->job, $this->task)->getDispatchConfig()->getFixedReplicaCount()) {
-                OrchestratorFactory::getOrchestratorForInstance($this->instance)->dispatchJob($this->job);
+                OrchestratorFactory::getOrchestratorForInstance($this->instance, $this->job)->dispatchJob();
                 $this->persistTask();
                 $this->persistJob();
             }
@@ -141,10 +141,10 @@ class ApiExecController extends AbstractController
     {
         try {
             if (!JobStatus::isValidActiveStatus($this->job->getStatus())) {
-                throw new \RuntimeException('job not ready');
+                throw new RuntimeException('job not ready');
             }
             return JobFactory::getInstanceOfJob($this->job, $this->task)->$method($this->params, $this->response, $this->request);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return $this->render(['status' => 'error'], StatusCode::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -165,7 +165,7 @@ class ApiExecController extends AbstractController
             App::getDbHelper()->persist($this->task);
             App::getDbHelper()->flush();
             return $this->render();
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return $this->render(['status' => 'error'], StatusCode::HTTP_INTERNAL_SERVER_ERROR);
         }
     }

@@ -4,10 +4,18 @@ namespace Helio\Panel\Controller\Traits;
 
 use \Exception;
 use \DateTime;
+use \DateInterval;
 use GuzzleHttp\Exception\GuzzleException;
+use Helio\Panel\Model\Instance;
 use Helio\Panel\Utility\ServerUtility;
 use Slim\Http\StatusCode;
 
+/**
+ * Trait HelperGrafanaController
+ * @package Helio\Panel\Controller\Traits
+ *
+ * @property Instance $instance
+ */
 trait HelperGrafanaController
 {
     use HelperGoogleAuthenticatedController;
@@ -28,10 +36,10 @@ trait HelperGrafanaController
     {
         try {
             $this->baseUrl = 'https://graphsapi.idling.host';
-            $this->start = (new \DateTime('now', ServerUtility::getTimezoneObject()))->sub(new \DateInterval('P7D'));
-            $this->end = new \DateTime('now', ServerUtility::getTimezoneObject());
+            $this->start = (new DateTime('now', ServerUtility::getTimezoneObject()))->sub(new DateInterval('P7D'));
+            $this->end = new DateTime('now', ServerUtility::getTimezoneObject());
             $this->step = 1200;
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return false;
         }
         return true;
@@ -73,9 +81,9 @@ trait HelperGrafanaController
 
         // now we fetch all datasets for all panels and due to how ugly grafana processes these snapshots, we have to refine the data a bit...
         foreach ($dashboard['panels'] as $pkey => $panel) {
-            if (\array_key_exists('snapshotData', $panel)) {
+            if (array_key_exists('snapshotData', $panel)) {
                 foreach ($panel['snapshotData'] as $skey => $snapshotDatum) {
-                    if (\array_key_exists('query', $snapshotDatum)) {
+                    if (array_key_exists('query', $snapshotDatum)) {
                         $dashboard['panels'][$pkey]['snapshotData'][$skey]['datapoints'] = $this->parseQueryDataIntoSnapshotData($this->requestIapProtectedResource(
                             $this->getEndpointForQuery($snapshotDatum['query']),
                             'GET',
@@ -99,7 +107,7 @@ trait HelperGrafanaController
         $dashboard = json_decode(file_get_contents(ServerUtility::get('DASHBOARD_CONFIG_JSON', ServerUtility::getClassesPath(['Instance', 'dashboard.json']))), true);
 
         // if someone entered the dashboard json including the outer object, push it up one level
-        if (\array_key_exists('dashboard', $dashboard)) {
+        if (array_key_exists('dashboard', $dashboard)) {
             $dashboard = $dashboard['dashboard'];
         }
 

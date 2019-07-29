@@ -3,6 +3,14 @@
 namespace Helio\Panel\Controller\Traits;
 
 
+use \Slim\Http\Request;
+
+/**
+ * Trait TypeAutoController
+ * @package Helio\Panel\Controller\Traits
+ *
+ * @property Request $request
+ */
 trait TypeAutoController
 {
     protected function getReturnType(): ?string

@@ -2,6 +2,8 @@
 
 namespace Helio\Panel\Instance;
 
+use \RuntimeException;
+
 final class InstanceStatus
 {
     public const UNKNOWN = 0;
@@ -13,7 +15,7 @@ final class InstanceStatus
 
     public function __construct()
     {
-        throw new \RuntimeException('Cannot instanciate ' . __CLASS__);
+        throw new RuntimeException('Cannot instanciate ' . __CLASS__);
     }
 
     public static function isValidStatus(int $status): bool

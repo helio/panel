@@ -3,6 +3,7 @@
 namespace Helio\Panel\Job\Vfdocker;
 
 use \Exception;
+use \InvalidArgumentException;
 use Helio\Panel\App;
 use Helio\Panel\Helper\DbHelper;
 use Helio\Panel\Helper\LogHelper;
@@ -75,7 +76,7 @@ class Execute extends AbstractExecute
         // validate JSON
         if ($body && $request->getHeaderLine('Content-Type') === 'application/json' && json_decode($body) === null) {
             LogHelper::debug('Invalid Json supplied: '.print_r($body, true));
-            throw new \InvalidArgumentException('Invalid JSON supplied', 1560782976);
+            throw new InvalidArgumentException('Invalid JSON supplied', 1560782976);
         }
 
         $this->job->setConfig($body);
@@ -91,7 +92,7 @@ class Execute extends AbstractExecute
      */
     public function submitresult(array $params, Response $response, RequestInterface $request): ResponseInterface
     {
-        if ($this->task && \array_key_exists('success', $params) && $params['success']) {
+        if ($this->task && array_key_exists('success', $params) && $params['success']) {
             /** @var Task $task */
             $this->task->setStatus(TaskStatus::DONE);
             $this->task->setStats((string)$request->getBody());

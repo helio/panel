@@ -1,7 +1,9 @@
 <?php
+
 namespace Helio\Panel\Utility;
 
-use Exception;
+use \Exception;
+use \DateTime;
 use Helio\Panel\App;
 use Helio\Panel\Helper\LogHelper;
 use Helio\Panel\Middleware\ReAuthenticate;
@@ -17,7 +19,12 @@ use Tuupola\Middleware\JwtAuthentication;
 use Tuupola\Middleware\JwtAuthentication\RequestMethodRule;
 use Tuupola\Middleware\JwtAuthentication\RequestPathRule;
 
-class MiddlewareUtility extends AbstractUtility {
+/**
+ * Class MiddlewareUtility
+ * @package Helio\Panel\Utility
+ */
+class MiddlewareUtility extends AbstractUtility
+{
 
     /**
      * @param App $app
@@ -41,11 +48,11 @@ class MiddlewareUtility extends AbstractUtility {
             ],
             'before' => function (Request $request, array $arguments) {
                 // set user if authenticated via jwt
-                if (\array_key_exists('u', $arguments['decoded'])) {
+                if (array_key_exists('u', $arguments['decoded'])) {
                     /** @var User $user */
                     $user = App::getDbHelper()->getRepository(User::class)->find($arguments['decoded']['u']);
                     if ($user->getLoggedOut() && !array_key_exists('sticky', $arguments['decoded'])) {
-                        $tokenGenerationTime = (new \DateTime('now', ServerUtility::getTimezoneObject()))->setTimestamp($arguments['decoded']['iat']);
+                        $tokenGenerationTime = (new DateTime('now', ServerUtility::getTimezoneObject()))->setTimestamp($arguments['decoded']['iat']);
                         $userLoggedOutTime = $user->getLoggedOut()->setTimezone(ServerUtility::getTimezoneObject());
 
                         if ($userLoggedOutTime <= $tokenGenerationTime) {
@@ -54,7 +61,7 @@ class MiddlewareUtility extends AbstractUtility {
                     }
 
                     // impersonation feature for admin users completely mocks another user
-                    if (\array_key_exists('impersonate', $request->getCookieParams()) && $user->isAdmin() && (string)(int)$request->getCookieParams()['impersonate'] === (string)$request->getCookieParams()['impersonate']) {
+                    if (array_key_exists('impersonate', $request->getCookieParams()) && $user->isAdmin() && (string)(int)$request->getCookieParams()['impersonate'] === (string)$request->getCookieParams()['impersonate']) {
                         App::getApp()->getContainer()['impersonatinguser'] = clone $user;
                         $user = App::getDbHelper()->getRepository(User::class)->find((int)$request->getCookieParams()['impersonate']) ?? $user;
                     }
@@ -63,7 +70,7 @@ class MiddlewareUtility extends AbstractUtility {
                 }
 
                 // set instance if authenticated via jwt
-                if (\array_key_exists('i', $arguments['decoded'])) {
+                if (array_key_exists('i', $arguments['decoded'])) {
                     /** @var Instance $instance */
                     $instance = App::getDbHelper()->getRepository(Instance::class)->find($arguments['decoded']['i']);
                     App::getApp()->getContainer()['instance'] = $instance;
@@ -73,7 +80,7 @@ class MiddlewareUtility extends AbstractUtility {
                 }
 
                 // set job if authenticated via jwt
-                if (\array_key_exists('j', $arguments['decoded'])) {
+                if (array_key_exists('j', $arguments['decoded'])) {
                     /** @var Job $job */
                     $job = App::getDbHelper()->getRepository(Job::class)->find($arguments['decoded']['j']);
                     App::getApp()->getContainer()['job'] = $job;

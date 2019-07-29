@@ -2,8 +2,10 @@
 
 namespace Helio\Panel\Job\Gitlab;
 
+use \Exception;
 use Helio\Panel\Job\AbstractExecute;
 use Helio\Panel\Job\DispatchConfig;
+use Helio\Panel\Utility\JwtUtility;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 
@@ -27,6 +29,7 @@ class Execute extends AbstractExecute
 
     /**
      * @return DispatchConfig
+     * @throws Exception
      */
     public function getDispatchConfig(): DispatchConfig
     {
@@ -34,7 +37,7 @@ class Execute extends AbstractExecute
             ->setImage('gitlab/gitlab-runner')
             ->setEnvVariables([
                 'HELIO_JOBID' => $this->job->getId(),
-                'HELIO_TOKEN' => $this->job->getToken(),
+                'HELIO_TOKEN' => JwtUtility::generateToken(null, null, null, $this->job),
                 'GITLAB_TAGS' => $this->job->getConfig('gitlabTags')
             ]);
     }
