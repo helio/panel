@@ -35,6 +35,10 @@ use Slim\Http\StatusCode;
 class ApiJobController extends AbstractController
 {
     use AuthorizedJobController, ModelInstanceController {
+        AuthorizedJobController::setupUser insteadof ModelInstanceController;
+        AuthorizedJobController::validateUserIsSet insteadof ModelInstanceController;
+        AuthorizedJobController::persistUser insteadof ModelInstanceController;
+
         AuthorizedJobController::setupParams insteadof ModelInstanceController;
         AuthorizedJobController::requiredParameterCheck insteadof ModelInstanceController;
         AuthorizedJobController::optionalParameterCheck insteadof ModelInstanceController;

@@ -37,6 +37,14 @@ class ApiExecController extends AbstractController
         AuthorizedJobIsActiveController::setupParams insteadof ModelTaskController, ModelInstanceController;
         AuthorizedJobIsActiveController::requiredParameterCheck insteadof ModelTaskController, ModelInstanceController;
         AuthorizedJobIsActiveController::optionalParameterCheck insteadof ModelTaskController, ModelInstanceController;
+
+        AuthorizedJobIsActiveController::setupUser insteadof ModelInstanceController, ModelTaskController;
+        AuthorizedJobIsActiveController::validateUserIsSet insteadof ModelInstanceController, ModelTaskController;
+        AuthorizedJobIsActiveController::persistUser insteadof ModelInstanceController, ModelTaskController;
+
+        AuthorizedJobIsActiveController::setupJob insteadof ModelInstanceController, ModelTaskController;
+        AuthorizedJobIsActiveController::validateJobIsSet insteadof ModelInstanceController, ModelTaskController;
+        AuthorizedJobIsActiveController::persistJob insteadof ModelInstanceController, ModelTaskController;
     }
 
     use HelperElasticController;

@@ -13,7 +13,6 @@ use Helio\Panel\Task\TaskStatus;
  */
 trait ModelTaskController
 {
-    use ModelParametrizedController;
     use ModelJobController;
 
     /**

@@ -28,10 +28,6 @@ use function OpenApi\scan;
  * Abstract Panel Controller
  *
  * @property PhpRenderer renderer
- * @property array params
- * @property User user
- * @property Instance instance
- * @property Job job
  *
  * @property-read array settings
  * @property-read EnvironmentInterface environment

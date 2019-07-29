@@ -8,8 +8,6 @@ namespace Helio\Panel\Controller\Traits;
  */
 trait AuthorizedJobController
 {
-
-    use ModelUserController;
     use ModelJobController;
 
 

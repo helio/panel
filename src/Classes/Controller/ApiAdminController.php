@@ -4,14 +4,14 @@ namespace Helio\Panel\Controller;
 
 
 use \Exception;
+use Helio\Panel\Controller\Traits\ModelInstanceController;
+use Helio\Panel\Controller\Traits\ModelJobController;
 use Helio\Panel\Utility\JwtUtility;
 use \RuntimeException;
 use \DateTime;
 use \DateInterval;
 use Helio\Panel\App;
 use Helio\Panel\Controller\Traits\AuthorizedAdminController;
-use Helio\Panel\Controller\Traits\ModelInstanceController;
-use Helio\Panel\Controller\Traits\ModelJobController;
 use Helio\Panel\Controller\Traits\TypeDynamicController;
 use Helio\Panel\Job\JobStatus;
 use Helio\Panel\Job\JobType;
@@ -37,12 +37,16 @@ use Slim\Http\StatusCode;
  */
 class ApiAdminController extends AbstractController
 {
-    use ModelInstanceController, ModelJobController {
+
+    use AuthorizedAdminController, ModelInstanceController, ModelJobController {
+        AuthorizedAdminController::setupUser insteadof ModelInstanceController, ModelJobController;
+        AuthorizedAdminController::validateUserIsSet insteadof ModelInstanceController, ModelJobController;
+        AuthorizedAdminController::persistUser insteadof ModelInstanceController, ModelJobController;
+
         ModelInstanceController::setupParams insteadof ModelJobController;
         ModelInstanceController::requiredParameterCheck insteadof ModelJobController;
         ModelInstanceController::optionalParameterCheck insteadof ModelJobController;
     }
-    use AuthorizedAdminController;
     use TypeDynamicController;
 
 

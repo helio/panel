@@ -8,8 +8,6 @@ namespace Helio\Panel\Controller\Traits;
  */
 trait AuthorizedInstanceController
 {
-
-    use ModelUserController;
     use ModelInstanceController;
 
     /**
