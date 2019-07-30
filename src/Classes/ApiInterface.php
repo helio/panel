@@ -35,6 +35,7 @@ namespace Helio\Panel;
  * )
  *
  * @OA\Server(url="https://panel.idling.host")
+ * @OA\Server(url="https://panelprev.idling.host")
  * @OA\Server(url="http://localhost:8099")
  *
  */
