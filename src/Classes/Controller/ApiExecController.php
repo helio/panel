@@ -51,6 +51,9 @@ class ApiExecController extends AbstractController
     use TypeApiController;
 
 
+    protected $idAlias = 'jobid';
+
+
     /**
      * @return ResponseInterface
      *

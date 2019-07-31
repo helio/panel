@@ -48,43 +48,28 @@ class ApiJobController extends AbstractController
 
     use TypeDynamicController;
 
+
+    protected $idAlias = 'jobid';
+
+
+
     /**
-     * @return ResponseInterface
-     * @throws Exception
      *
-     * @Route("/remove", methods={"DELETE"}, name="job.remove")
-     */
-    public function removeJobAction(): ResponseInterface
-    {
-        $removed = false;
-        if (!JobType::isValidType($this->job->getType())) {
-            $this->job->setHidden(true);
-            $removed = true;
-        } else {
-            /** @var Task $task */
-            JobFactory::getInstanceOfJob($this->job)->stop($this->params, $this->request, $this->response);
-
-            // first: set all services to absent. then, remove the managers
-            OrchestratorFactory::getOrchestratorForInstance($this->instance, $this->job)->dispatchJob();
-            OrchestratorFactory::getOrchestratorForInstance($this->instance, $this->job)->removeManager();
-        }
-
-        // on PROD, we wait for the callbacks to confirm job removal. on Dev, simply set it to deleted.
-        if (!ServerUtility::isProd()) {
-            $this->job->setStatus(JobStatus::DELETED);
-            $removed = true;
-        }
-
-        $this->persistJob();
-
-        return $this->render(['success' => true, 'message' => 'Job scheduled for removal.', 'removed' => $removed]);
-    }
-
-
-    /**
+     *
+     *
+     * @OA\Post(
+     *     path="/api/job/add",
+     *     security={
+     *         {"authByApitoken": {"any"}}
+     *     },
+     *     @OA\RequestBody(ref="#/components/requestBodies/job"),
+     * )
+     *
+     *
      * @return ResponseInterface
      *
      * @Route("/add", methods={"POST"}, name="job.add")
+     *
      * @throws Exception
      */
     public function addJobAction(): ResponseInterface
@@ -117,7 +102,8 @@ class ApiJobController extends AbstractController
             'location' => FILTER_SANITIZE_STRING,
             'billingReference' => FILTER_SANITIZE_STRING,
             'budget' => FILTER_SANITIZE_STRING,
-            'free' => FILTER_SANITIZE_STRING
+            'free' => FILTER_SANITIZE_STRING,
+            'config' => FILTER_SANITIZE_STRING
         ]);
 
         $this->job->setName($this->params['jobname'] ?? 'Automatically named during add')
@@ -128,6 +114,7 @@ class ApiJobController extends AbstractController
             ->setBillingReference($this->params['billingReference'] ?? '')
             ->setBudget($this->params['budget'] ?? '')
             ->setIsCharity($this->params['free'] ?? '' === 'on')
+            ->setConfig($this->params['config'] ?? [])
             ->setStatus(JobStatus::INIT);
 
         JobFactory::getInstanceOfJob($this->job)->create($this->params, $this->request);
@@ -147,7 +134,43 @@ class ApiJobController extends AbstractController
         ]);
     }
 
+
     /**
+     * @return ResponseInterface
+     * @throws Exception
+     *
+     * @Route("/remove", methods={"DELETE"}, name="job.remove")
+     */
+    public function removeJobAction(): ResponseInterface
+    {
+        $removed = false;
+        if (!JobType::isValidType($this->job->getType())) {
+            $this->job->setHidden(true);
+            $removed = true;
+        } else {
+            /** @var Task $task */
+            JobFactory::getInstanceOfJob($this->job)->stop($this->params, $this->request, $this->response);
+
+            // first: set all services to absent. then, remove the managers
+            OrchestratorFactory::getOrchestratorForInstance($this->instance, $this->job)->dispatchJob();
+            OrchestratorFactory::getOrchestratorForInstance($this->instance, $this->job)->removeManager();
+        }
+
+        // on PROD, we wait for the callbacks to confirm job removal. on Dev, simply set it to deleted.
+        if (!ServerUtility::isProd()) {
+            $this->job->setStatus(JobStatus::DELETED);
+            $removed = true;
+        }
+
+        $this->persistJob();
+
+        return $this->render(['success' => true, 'message' => 'Job scheduled for removal.', 'removed' => $removed]);
+    }
+
+    /**
+     * This action is only used in the UI upon an "abort" click in the "add Job" wizard.
+     * Therefore, it's not documented in the API doc.
+     *
      * @return ResponseInterface
      *
      * @Route("/add/abort", methods={"POST"}, name="job.abort")
@@ -176,7 +199,7 @@ class ApiJobController extends AbstractController
      *         description="Id of the job which status you wandt to see",
      *         required=true,
      *         @Oa\Items(
-     *             type="string"
+     *             type="integer"
      *         )
      *     ),
      *     @OA\Response(response="200", description="Contains the Status")

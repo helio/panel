@@ -3,6 +3,7 @@
 
 namespace Helio\Panel\Model;
 
+use OpenApi\Annotations as OA;
 use Doctrine\{
     ORM\Mapping\Entity,
     ORM\Mapping\Table,
@@ -16,9 +17,7 @@ use Helio\Panel\Instance\InstanceStatus;
 use Helio\Panel\Instance\InstanceType;
 use Helio\Panel\Master\MasterType;
 use Helio\Panel\Orchestrator\OrchestratorType;
-use Helio\Panel\Runner\RunnerType;
 use Helio\Panel\Master\MasterFactory;
-use Helio\Panel\Runner\RunnerFactory;
 
 /**
  * @Entity @Table(name="instance")

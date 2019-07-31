@@ -3,7 +3,6 @@
 namespace Helio\Panel\Controller;
 
 use \RuntimeException;
-
 use Ergy\Slim\Annotations\Controller;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Request;
@@ -15,17 +14,62 @@ use Slim\Interfaces\InvocationStrategyInterface;
 use Slim\Interfaces\RouterInterface;
 use Slim\Views\PhpRenderer;
 use Symfony\Component\Yaml\Yaml;
-
-use Helio\Panel\Model\Instance;
-use Helio\Panel\Model\Job;
-use Helio\Panel\Model\User;
 use Helio\Panel\Helper\LogHelper;
 use Helio\Panel\Utility\ServerUtility;
 
 use function OpenApi\scan;
 
 /**
- * Abstract Panel Controller
+ * Abstract Controller
+ *
+ *
+ * @OA\SecurityScheme(
+ *     type="http",
+ *     scheme="bearer",
+ *     bearerFormat="JWT",
+ *     securityScheme="authByApitoken",
+ *     description="The API Token of your user, obtainable in the WebUI at panel.idling.host"
+ * )
+ * @OA\SecurityScheme(
+ *     type="http",
+ *     scheme="bearer",
+ *     bearerFormat="JWT",
+ *     securityScheme="authByJobtoken",
+ *     description="The Job specific token received during /api/job/add"
+ * )
+ * @OA\SecurityScheme(
+ *     type="http",
+ *     scheme="bearer",
+ *     bearerFormat="JWT",
+ *     securityScheme="authByInstancetoken",
+ *     description="The Instance specific token received during registering an instance"
+ * )
+ *
+ ***************************** Schemas for Re-Use
+ *
+ * @OA\RequestBody(
+ *     request="job",
+ *     description="Job Settings in Body or Query String",
+ *     @OA\JsonContent(ref="#/components/schemas/Job")
+ * )
+ *
+ *
+ * @OA\Response(response="200", description="Job was created. WARNING: This request can take quite some time.",
+ *     @OA\JsonContent(
+ *       type="object",
+ *       @OA\Property(
+ *           property="token",
+ *           type="string",
+ *           description="The authentication token that's only valid for this job"
+ *       ),
+ *       @OA\Property(
+ *           property="id",
+ *           type="string",
+ *           description="The Id of the newly created job"
+ *       )
+ *     )
+ * )
+ *
  *
  * @property PhpRenderer renderer
  *
@@ -46,6 +90,11 @@ use function OpenApi\scan;
  */
 abstract class AbstractController extends Controller
 {
+
+    /** @var string $idAlias if a param named 'id' is set, what does it stand for? */
+    protected $idAlias = '';
+
+
     /**
      * The return type is used to determine what language the client understands (e.g. json, html, ...)
      *

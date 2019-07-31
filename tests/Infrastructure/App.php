@@ -2,6 +2,7 @@
 
 namespace Helio\Test\Infrastructure;
 
+use Doctrine\Common\Annotations\AnnotationReader;
 use \Exception;
 use Helio\Panel\Utility\JwtUtility;
 use Helio\Panel\Utility\MiddlewareUtility;

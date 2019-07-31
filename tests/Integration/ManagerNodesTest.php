@@ -119,7 +119,7 @@ class ManagerNodesTest extends TestCase
         $result = json_decode((string)$this->runApp('POST', '/api/job/add?jobtype=' . JobType::GITLAB_RUNNER, true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']], null)->getBody(), true);
         $this->assertArrayHasKey('id', $result, 'no ID of new job returned');
         $this->runApp('POST', '/api/job/add', true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']], ['jobid' => $result['id'], 'jobname' => 'testing 1551430509']);
-        $this->assertNotNull($this->jobRepository->findOneByName('testing 1551430509')->getManagerNodes(), 'init node not ready, must not call to create redundant manager nodes yet');
+        $this->assertNotNull($this->jobRepository->findOneBy(['name' => 'testing 1551430509'])->getManagerNodes(), 'init node not ready, must not call to create redundant manager nodes yet');
     }
 
     /**
@@ -281,6 +281,5 @@ class ManagerNodesTest extends TestCase
         $statusResult = $this->runApp('GET', "/api/job/isready?jobid=${jobid}", true, ['Authorization' => 'Bearer ' . $jobtoken]);
 
         $this->assertEquals(StatusCode::HTTP_OK, $statusResult->getStatusCode());
-
     }
 }

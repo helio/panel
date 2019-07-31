@@ -38,6 +38,9 @@ class ApiInstanceController extends AbstractController
     use HelperGrafanaController;
 
 
+    protected $idAlias = 'instanceid';
+
+
     /**
      * (wenn der Token bekannt ist (zB wenn der Server im Panel erstellt worden ist))
      *

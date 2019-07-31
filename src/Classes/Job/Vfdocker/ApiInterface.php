@@ -130,19 +130,19 @@ interface ApiInterface
      *     @OA\RequestBody(
      *         description=">- Your Job JSON config looking like this:
 
-        {
-            ""container"": ""nginx:1.8"",
-            ""env"": [
-                {""SOURCE_PATH"":""https://account-name.zone-name.web.core.windows.net""},
-                {""TARGET_PATH"":""https://bucket.s3.aws-region.amazonaws.com""}
-            ],
-            ""registry"": {
-                ""server"": ""example.azurecr.io"",
-                ""username"": ""$DOCKER_USER"",
-                ""password"": ""$DOCKER_PASSWORD"",
-                ""email"": ""docker@example.com""
-            }
-        }",
+            {
+                ""container"": ""nginx:1.8"",
+                ""env"": [
+                    {""SOURCE_PATH"":""https://account-name.zone-name.web.core.windows.net""},
+                    {""TARGET_PATH"":""https://bucket.s3.aws-region.amazonaws.com""}
+                ],
+                ""registry"": {
+                    ""server"": ""example.azurecr.io"",
+                    ""username"": ""$DOCKER_USER"",
+                    ""password"": ""$DOCKER_PASSWORD"",
+                    ""email"": ""docker@example.com""
+                }
+            }",
      *         @OA\MediaType(
      *             mediaType="application/json",
      *             @OA\Schema(
@@ -176,6 +176,7 @@ interface ApiInterface
 
 
     public function addJob(): ResponseInterface;
+
     /**
      * @OA\Delete(
      *     path="/api/job/remove",
@@ -238,12 +239,12 @@ interface ApiInterface
      *     @OA\RequestBody(
      *         description=">- ENV Variables formated like this
 
-        {
-            ""env"": [
-                {""SOURCE_PATH"":""https://account-name.zone-name.web.core.windows.net""},
-                {""TARGET_PATH"":""https://bucket.s3.aws-region.amazonaws.com""}
-            ]
-        }",
+    {
+    ""env"": [
+    {""SOURCE_PATH"":""https://account-name.zone-name.web.core.windows.net""},
+    {""TARGET_PATH"":""https://bucket.s3.aws-region.amazonaws.com""}
+    ]
+    }",
      *         @OA\MediaType(
      *             mediaType="application/json",
      *             @OA\Schema(
@@ -302,9 +303,9 @@ interface ApiInterface
      *     @OA\RequestBody(
      *         description=">- Arbitrary Job result data as JSON
 
-        {
-            ""success"":true
-        }",
+    {
+    ""success"":true
+    }",
      *         @OA\MediaType(
      *             mediaType="application/json",
      *             @OA\Schema(

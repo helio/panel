@@ -75,11 +75,14 @@ class Execute extends AbstractExecute
 
         // validate JSON
         if ($body && $request->getHeaderLine('Content-Type') === 'application/json' && json_decode($body) === null) {
-            LogHelper::debug('Invalid Json supplied: '.print_r($body, true));
+            LogHelper::debug('Invalid Json supplied: ' . print_r($body, true));
             throw new InvalidArgumentException('Invalid JSON supplied', 1560782976);
         }
 
-        $this->job->setConfig($body);
+        // if no object named config is there, we assume that the whole body is the config... this is merely backwards compatibility
+        if (!array_key_exists('config', json_decode($body, true))) {
+            $this->job->setConfig($body);
+        }
         return true;
     }
 

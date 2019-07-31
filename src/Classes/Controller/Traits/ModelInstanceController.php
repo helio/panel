@@ -44,7 +44,7 @@ trait ModelInstanceController
 
         // if requested by params, pick the instance by query
         $this->setupParams();
-        $instanceId = filter_var($this->params['instanceid'] ?? 0, FILTER_VALIDATE_INT);
+        $instanceId = filter_var($this->params['instanceid'] ?? ($this->idAlias === 'instanceid' ? $this->params['id'] : 0), FILTER_VALIDATE_INT);
         if ($instanceId > 0) {
             $this->instance = App::getDbHelper()->getRepository(Instance::class)->find($instanceId);
             return true;
@@ -64,7 +64,8 @@ trait ModelInstanceController
      * @return bool
      * @throws Exception
      */
-    public function validateInstanceIsSet(): bool {
+    public function validateInstanceIsSet(): bool
+    {
         if ($this->instance) {
             if ($this->instance->getName() !== '___NEW') {
                 $this->persistInstance();

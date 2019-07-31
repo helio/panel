@@ -6,6 +6,7 @@ use \Exception;
 use \RuntimeException;
 use \DateTime;
 use \DateTimeZone;
+use OpenApi\Annotations as OA;
 use Doctrine\{
     Common\Collections\Collection,
     ORM\Mapping\Entity,

@@ -29,7 +29,7 @@ trait ModelTaskController
     {
         $this->setupParams();
         $this->setupJob();
-        $taskId = filter_var($this->params['taskid'] ?? 0, FILTER_SANITIZE_NUMBER_INT);
+        $taskId = filter_var($this->params['taskid'] ?? ($this->idAlias === 'taskid' ? $this->params['id'] : 0), FILTER_SANITIZE_NUMBER_INT);
         if ($taskId > 0) {
             $this->task = App::getDbHelper()->getRepository(Task::class)->find($taskId);
             return true;

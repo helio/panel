@@ -37,7 +37,7 @@ trait ModelJobController
 
         // otherwise, setup job from param
         $this->setupParams();
-        $jobId = filter_var($this->params['jobid'] ?? 0, FILTER_SANITIZE_NUMBER_INT);
+        $jobId = filter_var($this->params['jobid'] ?? ($this->idAlias === 'jobid' ? $this->params['id'] : 0), FILTER_SANITIZE_NUMBER_INT);
         if ($jobId > 0) {
             $this->job = App::getDbHelper()->getRepository(Job::class)->find($jobId);
             return true;

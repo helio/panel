@@ -14,6 +14,19 @@ use Helio\Panel\Utility\ServerUtility;
 use Monolog\Logger;
 use Slim\Views\PhpRenderer;
 
+/**
+ * Class App
+ * @package Helio\Panel
+ *
+ *
+ * @OA\Info(title="Helio API", version="0.0.1")
+ *
+ *
+ * @OA\Server(url="https://panel.idling.host")
+ * @OA\Server(url="https://panelprev.idling.host")
+ * @OA\Server(url="http://localhost:8099")
+ *
+ */
 class App extends \Slim\App
 {
 

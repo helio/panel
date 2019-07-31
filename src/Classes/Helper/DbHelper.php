@@ -2,6 +2,7 @@
 
 namespace Helio\Panel\Helper;
 
+use Doctrine\Common\Annotations\AnnotationReader;
 use Doctrine\Common\Persistence\ObjectRepository;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\ORM\EntityManager;

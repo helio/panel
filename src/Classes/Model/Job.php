@@ -3,38 +3,68 @@
 
 namespace Helio\Panel\Model;
 
-use \Exception;
-use Doctrine\{Common\Collections\ArrayCollection,
-    Common\Collections\Collection,
-    ORM\Mapping\Entity,
-    ORM\Mapping\Table,
-    ORM\Mapping\Id,
-    ORM\Mapping\Column,
-    ORM\Mapping\GeneratedValue,
-    ORM\Mapping\ManyToOne,
-    ORM\Mapping\OneToOne,
-    ORM\Mapping\OneToMany};
-
+use Doctrine\{Common\Collections\ArrayCollection, Common\Collections\Collection};
+use Exception;
 use Helio\Panel\Job\JobStatus;
 use Helio\Panel\Job\JobType;
 use Helio\Panel\Task\TaskStatus;
 
 /**
+ *
+ * @OA\Schema(
+ *     description="Job model",
+ *     type="object",
+ *     title="Job model"
+ * )
+ *
  * @Entity @Table(name="job")
  **/
 class Job extends AbstractModel
 {
 
-
     /**
-     * @var User
+     * @var int
      *
-     * @ManyToOne(targetEntity="User", inversedBy="jobs", cascade={"persist"})
+     * @OA\Property(
+     *     format="integer",
+     *     property="jobid",
+     *     description="Id of the job to manipulate. If empty, a new job will be created"
+     * ),
+     *
+     * @Id @Column(type="integer") @GeneratedValue
      */
-    protected $owner;
+    protected $id;
 
 
     /**
+     * @OA\Property(
+     *         format="object",
+     *         description=">- Your Job specific JSON config looking like this:
+
+            {
+                ""container"": ""nginx:1.8"",
+                ""env"": [
+                    {""SOURCE_PATH"":""https://account-name.zone-name.web.core.windows.net""},
+                    {""TARGET_PATH"":""https://bucket.s3.aws-region.amazonaws.com""}
+                ],
+                ""registry"": {
+                    ""server"": ""example.azurecr.io"",
+                    ""username"": ""$DOCKER_USER"",
+                    ""password"": ""$DOCKER_PASSWORD"",
+                    ""email"": ""docker@example.com""
+                }
+            }",
+     * )
+     *
+     * @var string
+     *
+     * @Column(type="text")
+     */
+    protected $config = '';
+
+    /**
+     * @OA\Property(ref="#/components/schemas/jobtype")
+     *
      * @var string
      *
      * @Column
@@ -43,6 +73,11 @@ class Job extends AbstractModel
 
 
     /**
+     * @OA\Property(
+     *     description="Let us know if you won't pay anything for your job (e.g. you're an Open Source project)",
+     *     format="boolean"
+     * )
+     *
      * @var bool
      *
      * @Column(type="boolean")
@@ -51,6 +86,11 @@ class Job extends AbstractModel
 
 
     /**
+     * @OA\Property(
+     *     description="Specify how much CPUs this job ideally gets",
+     *     format="number"
+     * ),
+     *
      * @var string
      *
      * @Column
@@ -59,6 +99,11 @@ class Job extends AbstractModel
 
 
     /**
+     * @OA\Property(
+     *     description="Specify how much GPUs this job ideally gets",
+     *     format="number"
+     * ),
+     *
      * @var string
      *
      * @Column
@@ -67,6 +112,11 @@ class Job extends AbstractModel
 
 
     /**
+     * @OA\Property(
+     *     description="Specify in which location this job should run",
+     *     format="string"
+     * ),
+     *
      * @var string
      *
      * @Column
@@ -75,6 +125,10 @@ class Job extends AbstractModel
 
 
     /**
+     * @OA\Property(
+     *     description="A billing reference (e.g. your customer's order number)"
+     * )
+     *
      * @var string
      *
      * @Column
@@ -83,11 +137,49 @@ class Job extends AbstractModel
 
 
     /**
+     * @OA\Property(
+     *     description="We terminate jobs automatically once they have reached the maximum budget set here",
+     *     format="number"
+     * )
+     *
      * @var string
      *
      * @Column
      */
     protected $budget = '';
+
+    /**
+     * @OA\Property(
+     *     description="Cron Schedule to automatically execute the Job",
+     *     format="string"
+     * )
+     *
+     * @var string
+     *
+     * @Column
+     */
+    protected $autoExecSchedule = '';
+
+
+    /**
+     * @OA\Property(
+     *     description="Priority. The lower, the more urgent the task.",
+     *     format="integer"
+     * )
+     *
+     * @var int
+     *
+     * @Column
+     */
+    protected $priority = 100;
+
+
+    /**
+     * @var User
+     *
+     * @ManyToOne(targetEntity="User", inversedBy="jobs", cascade={"persist"})
+     */
+    protected $owner;
 
 
     /**
@@ -128,14 +220,6 @@ class Job extends AbstractModel
      * @Column(type="simple_array", nullable=TRUE)
      */
     protected $managerNodes = [];
-
-
-    /**
-     * @var int
-     *
-     * @Column
-     */
-    protected $priority = 100;
 
 
     private $numberOfActiveTasks;
@@ -319,23 +403,21 @@ class Job extends AbstractModel
         return $this;
     }
 
-
     /**
-     * @return Collection
+     * @return string
      */
-    public function getTasks(): Collection
+    public function getAutoExecSchedule(): string
     {
-        return $this->tasks;
+        return $this->autoExecSchedule;
     }
 
     /**
-     * @param array $tasks
+     * @param string $autoExecSchedule
      * @return Job
      */
-    public function setTasks(array $tasks): Job
+    public function setAutoExecSchedule(string $autoExecSchedule): Job
     {
-        $this->tasks = $tasks;
-        $this->numberOfActiveTasks = null;
+        $this->autoExecSchedule = $autoExecSchedule;
         return $this;
     }
 
@@ -374,7 +456,6 @@ class Job extends AbstractModel
         return $this;
     }
 
-
     /**
      * @param Task $taskToRemove
      *
@@ -387,6 +468,56 @@ class Job extends AbstractModel
             return $task->getId() !== $taskToRemove->getId();
         }));
         $this->numberOfActiveTasks = null;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection
+     */
+    public function getTasks(): Collection
+    {
+        return $this->tasks;
+    }
+
+    /**
+     * @param array $tasks
+     * @return Job
+     */
+    public function setTasks(array $tasks): Job
+    {
+        $this->tasks = $tasks;
+        $this->numberOfActiveTasks = null;
+        return $this;
+    }
+
+    /**
+     * @param string $managerNode
+     * @return Job
+     */
+    public function addManagerNode(string $managerNode): Job
+    {
+        if (!in_array($managerNode, $this->managerNodes, true)) {
+            $this->managerNodes[] = $managerNode;
+        }
+        return $this;
+    }
+
+    /**
+     * @param string $nodeToRemove
+     * @return Job
+     */
+    public function removeManagerNode(string $nodeToRemove): Job
+    {
+        $this->setManagerNodes(array_filter($this->getManagerNodes(), function ($node) use ($nodeToRemove) {
+            if (trim($node) === trim($nodeToRemove)) {
+                return false;
+            }
+            if (strpos(trim($node), trim($nodeToRemove . '.')) === 0) {
+                return false;
+            }
+            return true;
+        }));
 
         return $this;
     }
@@ -406,38 +537,6 @@ class Job extends AbstractModel
     public function setManagerNodes(array $managerNodes): Job
     {
         $this->managerNodes = $managerNodes;
-        return $this;
-    }
-
-    /**
-     * @param string $managerNode
-     * @return Job
-     */
-    public function addManagerNode(string $managerNode): Job
-    {
-        if (!in_array($managerNode, $this->managerNodes, true)) {
-            $this->managerNodes[] = $managerNode;
-        }
-        return $this;
-    }
-
-
-    /**
-     * @param string $nodeToRemove
-     * @return Job
-     */
-    public function removeManagerNode(string $nodeToRemove): Job
-    {
-        $this->setManagerNodes(array_filter($this->getManagerNodes(), function ($node) use ($nodeToRemove) {
-            if (trim($node) === trim($nodeToRemove)) {
-                return false;
-            }
-            if (strpos(trim($node), trim($nodeToRemove . '.')) === 0) {
-                return false;
-            }
-            return true;
-        }));
-
         return $this;
     }
 
@@ -502,7 +601,7 @@ class Job extends AbstractModel
     public function getActiveTaskCount(): int
     {
         return count(array_filter($this->getTasks()->toArray(), function (Task $task) {
-                return TaskStatus::isValidPendingStatus($task->getStatus());
-            }));
+            return TaskStatus::isValidPendingStatus($task->getStatus());
+        }));
     }
 }

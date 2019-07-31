@@ -6,6 +6,14 @@ use \RuntimeException;
 
 /**
  * Class JobType
+ *
+ * @OA\Schema(
+ *     schema="jobtype",
+ *     type="string",
+ *     description="The type of the job",
+ *     enum = {"vfdocker", "ep85", "busybox", "gitlab"}
+ * )
+ *
  * @package Helio\Panel\Job
  */
 final class JobType
