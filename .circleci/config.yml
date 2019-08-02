@@ -6,7 +6,7 @@ version: 2
 jobs:
   code:
     docker:
-    - image: circleci/php:7.3-fpm-node-browsers
+    - image: circleci/php:7.2-fpm-node-browsers
 
     working_directory: ~/repo
 
