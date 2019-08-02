@@ -10,21 +10,28 @@ use Psr\Http\Message\ResponseInterface;
  * @package Helio\Panel\Job\VfDocker
  *
  *
- * @OA\Info(title="Docker Dispatch Api", version="0.0.1")
+ * @OA\Info(title="Docker Dispatch Api", version="0.0.2")
  *
  * @OA\SecurityScheme(
- *     type="apiKey",
- *     in="query",
+ *     type="http",
+ *     scheme="bearer",
+ *     bearerFormat="JWT",
  *     securityScheme="authByApitoken",
- *     name="token",
  *     description="The API Token of your user, obtainable in the WebUI at panel.idling.host"
  * )
  * @OA\SecurityScheme(
- *     type="apiKey",
- *     in="query",
+ *     type="http",
+ *     scheme="bearer",
+ *     bearerFormat="JWT",
  *     securityScheme="authByJobtoken",
- *     name="token",
  *     description="The Job specific token received during /api/job/add"
+ * )
+ * @OA\SecurityScheme(
+ *     type="http",
+ *     scheme="bearer",
+ *     bearerFormat="JWT",
+ *     securityScheme="authByInstancetoken",
+ *     description="The Instance specific token received during registering an instance"
  * )
  *
  * @OA\Server(url="https://panel.idling.host")
@@ -217,7 +224,7 @@ interface ApiInterface
 
     /**
      * @OA\Post(
-     *     path="/exec",
+     *     path="/api/exec",
      *     @OA\Parameter(
      *         name="jobid",
      *         in="query",
@@ -273,7 +280,7 @@ interface ApiInterface
 
     /**
      * @OA\Post(
-     *     path="/exec/work/submitresult",
+     *     path="/api/exec/work/submitresult",
      *     @OA\Parameter(
      *         name="taskid",
      *         in="query",
@@ -369,7 +376,7 @@ interface ApiInterface
 
     /**
      * @OA\Get(
-     *     path="/exec/logs",
+     *     path="/api/exec/logs",
      *     description="Logs of a task",
      *     @OA\Parameter(
      *         name="taskid",
