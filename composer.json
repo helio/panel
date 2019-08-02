@@ -16,7 +16,7 @@
     }
   },
   "require": {
-    "php": ">=7.2.0",
+    "php": "7.2.*",
     "ext-json": "*",
     "monolog/monolog": "^1.17",
     "doctrine/orm": "^2.6.0",
