@@ -22,9 +22,9 @@ use Slim\Views\PhpRenderer;
  * @OA\Info(title="Helio API", version="0.0.1")
  *
  *
- * @OA\Server(url="https://panel.idling.host")
- * @OA\Server(url="https://panelprev.idling.host")
- * @OA\Server(url="http://localhost:8099")
+ * @OA\Server(url="http://localhost:8099/api", description="DEV API")
+ * @OA\Server(url="https://panelprev.idling.host/api", description="STAGE API")
+ * @OA\Server(url="https://panel.idling.host/api", description="PROD API")
  *
  */
 class App extends \Slim\App

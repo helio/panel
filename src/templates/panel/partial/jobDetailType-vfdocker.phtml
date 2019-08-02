@@ -4,16 +4,16 @@
     <pre><?php echo $job->getConfig(); ?></pre>
 
     <?php
-    if ($job->getTasks()) {
-        echo '<p>List of Tasks associated with this job:</p>';
+    if ($job->getExecutions()) {
+        echo '<p>List of Executions associated with this job:</p>';
         echo '<ul>';
-        /** @var \Helio\Panel\Model\Task $task */
-        foreach ($job->getTasks() as $task) {
+        /** @var \Helio\Panel\Model\Execution $execution */
+        foreach ($job->getExecutions() as $execution) {
             echo '<li>';
-            echo '<span>Task with id ' . $task->getId() . ' and Status <strong>' . \Helio\Panel\Task\TaskStatus::getLabel($task->getStatus()) . '</strong></span><br />';
-            if ($task->getStats()) {
-                echo '<span>Task Results:</span><br />';
-                echo '<pre class="prettyprint">' . $task->getStats() . '</pre>';
+            echo '<span>Execution with id ' . $execution->getId() . ' and Status <strong>' . \Helio\Panel\Execution\ExecutionStatus::getLabel($execution->getStatus()) . '</strong></span><br />';
+            if ($execution->getStats()) {
+                echo '<span>Execution Results:</span><br />';
+                echo '<pre class="prettyprint">' . $execution->getStats() . '</pre>';
             }
             echo '<hr /></li>';
         }

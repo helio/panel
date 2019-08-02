@@ -26,6 +26,12 @@ abstract class AbstractModel
 
 
     /**
+     *
+     * @OA\Property(
+     *     format="integer",
+     *     description="Id of the item to manipulate. If empty, a new one will be created"
+     * )
+     *
      * @var int
      *
      * @Id @Column(type="integer") @GeneratedValue

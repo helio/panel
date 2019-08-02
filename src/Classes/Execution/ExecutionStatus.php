@@ -1,14 +1,23 @@
 <?php
 
-namespace Helio\Panel\Task;
+namespace Helio\Panel\Execution;
 
 use \RuntimeException;
 
 /**
- * Class TaskStatus
- * @package Helio\Panel\Task
+ * Class ExecutionStatus
+ *
+ * @OA\Schema(
+ *     schema="executionstatus",
+ *     title="Execution Status",
+ *     type="string",
+ *     description="The Status of the Execution",
+ *     enum = {"Creating", "Ready", "Running", "Done", "Interrupted", "Deleted by user"}
+ * )
+ *
+ * @package Helio\Panel\Execution
  */
-final class TaskStatus
+final class ExecutionStatus
 {
     public const UNKNOWN = 0;
     public const READY = 1;

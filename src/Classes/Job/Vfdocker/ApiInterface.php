@@ -7,35 +7,6 @@ use Psr\Http\Message\ResponseInterface;
 /**
  * Interface ApiInterface - Here to collect all relevant endpoints in one documentation for the customer
  *
- * @package Helio\Panel\Job\VfDocker
- *
- *
- * @OA\Info(title="Docker Dispatch Api", version="0.0.2")
- *
- * @OA\SecurityScheme(
- *     type="http",
- *     scheme="bearer",
- *     bearerFormat="JWT",
- *     securityScheme="authByApitoken",
- *     description="The API Token of your user, obtainable in the WebUI at panel.idling.host"
- * )
- * @OA\SecurityScheme(
- *     type="http",
- *     scheme="bearer",
- *     bearerFormat="JWT",
- *     securityScheme="authByJobtoken",
- *     description="The Job specific token received during /api/job/add"
- * )
- * @OA\SecurityScheme(
- *     type="http",
- *     scheme="bearer",
- *     bearerFormat="JWT",
- *     securityScheme="authByInstancetoken",
- *     description="The Instance specific token received during registering an instance"
- * )
- *
- * @OA\Server(url="https://panel.idling.host")
- *
  */
 interface ApiInterface
 {
@@ -264,7 +235,7 @@ interface ApiInterface
      *             @OA\Property(
      *                 property="id",
      *                 type="string",
-     *                 description="The Id of the newly created task"
+     *                 description="The Id of the newly created execution"
      *             )
      *         )
      *     ),
@@ -283,9 +254,9 @@ interface ApiInterface
      * @OA\Post(
      *     path="/api/exec/work/submitresult",
      *     @OA\Parameter(
-     *         name="taskid",
+     *         name="executionid",
      *         in="query",
-     *         description="Id of the current Task",
+     *         description="Id of the current Execution",
      *         required=true,
      *         @Oa\Items(
      *             type="string"
@@ -294,7 +265,7 @@ interface ApiInterface
      *     @OA\Parameter(
      *         name="jobid",
      *         in="query",
-     *         description="Id of the job that the task belongs to",
+     *         description="Id of the job that the execution belongs to",
      *         required=true,
      *         @Oa\Items(
      *             type="string"
@@ -338,7 +309,7 @@ interface ApiInterface
     /**
      * @OA\Get(
      *     path="/api/job/logs",
-     *     description="Aggregation of the logs of all tasks of a job",
+     *     description="Aggregation of the logs of all executions of a job",
      *     @OA\Parameter(
      *         name="jobid",
      *         in="query",
@@ -378,11 +349,11 @@ interface ApiInterface
     /**
      * @OA\Get(
      *     path="/api/exec/logs",
-     *     description="Logs of a task",
+     *     description="Logs of a execution",
      *     @OA\Parameter(
-     *         name="taskid",
+     *         name="executionid",
      *         in="query",
-     *         description="Id of the task which logs you wandt to see",
+     *         description="Id of the execution which logs you wandt to see",
      *         required=true,
      *         @Oa\Items(
      *             type="string"
@@ -422,13 +393,13 @@ interface ApiInterface
      *
      * @return ResponseInterface
      */
-    public function taskLogs(): ResponseInterface;
+    public function executionLogs(): ResponseInterface;
 
 
     /**
      * @OA\Get(
      *     path="/api/user/logs",
-     *     description="Aggregation of the logs of all jobs and tasks of a user",
+     *     description="Aggregation of the logs of all jobs and executions of a user",
      *     @OA\Response(response="200", description="Contains the Status"),
      *     security={
      *         {"authByApitoken": {"any"}}
@@ -458,7 +429,7 @@ interface ApiInterface
     /**
      * @OA\Get(
      *     path="/api/user/strangelogs",
-     *     description="Aggregation of logs not associated to a task or job",
+     *     description="Aggregation of logs not associated to a execution or job",
      *     @OA\Response(response="200", description="Contains the Status"),
      *     security={
      *         {"authByApitoken": {"any"}}

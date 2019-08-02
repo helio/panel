@@ -6,6 +6,15 @@ use \RuntimeException;
 
 /**
  * Class JobStatus
+ *
+ * @OA\Schema(
+ *     schema="jobstatus",
+ *     title="Job Status",
+ *     type="string",
+ *     description="The Status of the job",
+ *     enum = {"Creating", "Ready", "Running", "Done", "Interrupted"}
+ * )
+ *
  * @package Helio\Panel\Job
  */
 final class JobStatus
@@ -18,7 +27,7 @@ final class JobStatus
 
 
     public const labels = [
-        'status-0' => 'Unknown',
+        'status-0' => 'Creating',
         'status-1' => 'Ready',
         'status-2' => 'Running',
         'status-3' => 'Done',

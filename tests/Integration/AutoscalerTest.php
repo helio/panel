@@ -8,9 +8,9 @@ use Helio\Panel\Job\JobStatus;
 use Helio\Panel\Job\JobType;
 use Helio\Panel\Model\Instance;
 use Helio\Panel\Model\Job;
-use Helio\Panel\Model\Task;
+use Helio\Panel\Model\Execution;
 use Helio\Panel\Model\User;
-use Helio\Panel\Task\TaskStatus;
+use Helio\Panel\Execution\ExecutionStatus;
 use Helio\Panel\Utility\ArrayUtility;
 use Helio\Panel\Utility\JwtUtility;
 use Helio\Test\Infrastructure\Utility\ServerUtility;
@@ -123,14 +123,14 @@ class AutoscalerTest extends TestCase
     public function testNoReplicasOnEmptyJob(): void
     {
 
-        $task = (new Task())->setJob($this->job)->setStatus(TaskStatus::UNKNOWN);
-        $this->infrastructure->getEntityManager()->persist($task);
+        $execution = (new Execution())->setJob($this->job)->setStatus(ExecutionStatus::UNKNOWN);
+        $this->infrastructure->getEntityManager()->persist($execution);
         $this->infrastructure->getEntityManager()->flush();
 
         $result = $this->exec();
 
         $this->assertEquals(200, $result->getStatusCode());
-        $replicas = $this->findValueOfKeyInHiera($result, $this->job->getType() . '-' . $this->job->getId() . '-' . $task->getId() . '.replicas');
+        $replicas = $this->findValueOfKeyInHiera($result, $this->job->getType() . '-' . $this->job->getId() . '-' . $execution->getId() . '.replicas');
         $this->assertEquals(0, $replicas);
     }
 
@@ -138,16 +138,16 @@ class AutoscalerTest extends TestCase
     /**
      * @throws \Exception
      */
-    public function testOneReplicaOnOnlyOneTask(): void
+    public function testOneReplicaOnOnlyOneExecution(): void
     {
-        $task = (new Task())->setJob($this->job)->setStatus(TaskStatus::READY);
-        $this->infrastructure->getEntityManager()->persist($task);
+        $execution = (new Execution())->setJob($this->job)->setStatus(ExecutionStatus::READY);
+        $this->infrastructure->getEntityManager()->persist($execution);
         $this->infrastructure->getEntityManager()->flush();
 
         $result = $this->exec();
 
         $this->assertEquals(200, $result->getStatusCode());
-        $this->assertEquals(1, $this->findValueOfKeyInHiera($result, $this->job->getType() . '-' . $this->job->getId() . '-' . $task->getId() . '.replicas'));
+        $this->assertEquals(1, $this->findValueOfKeyInHiera($result, $this->job->getType() . '-' . $this->job->getId() . '-' . $execution->getId() . '.replicas'));
     }
 
 
@@ -157,18 +157,18 @@ class AutoscalerTest extends TestCase
     public function testEnvVariablesInHiera(): void
     {
         $this->job->setType(JobType::VF_DOCKER);
-        $task = (new Task())->setJob($this->job)->setStatus(TaskStatus::READY);
+        $execution = (new Execution())->setJob($this->job)->setStatus(ExecutionStatus::READY);
         $this->infrastructure->getEntityManager()->persist($this->job);
-        $this->infrastructure->getEntityManager()->persist($task);
+        $this->infrastructure->getEntityManager()->persist($execution);
         $this->infrastructure->getEntityManager()->flush();
 
         $result = $this->exec();
 
         $this->assertEquals(200, $result->getStatusCode());
 
-        $envPath = $this->job->getType() . '-' . $this->job->getId() . '-' . $task->getId() . '.env';
+        $envPath = $this->job->getType() . '-' . $this->job->getId() . '-' . $execution->getId() . '.env';
         $this->assertEquals($this->job->getId(), $this->findEnvElementOfArrayInHiera($result, $envPath, 'HELIO_JOBID'));
-        $this->assertEquals($task->getId(), $this->findEnvElementOfArrayInHiera($result, $envPath, 'HELIO_TASKID'));
+        $this->assertEquals($execution->getId(), $this->findEnvElementOfArrayInHiera($result, $envPath, 'HELIO_EXECUTIONID'));
         $this->assertEquals($this->job->getOwner()->getId(), $this->findEnvElementOfArrayInHiera($result, $envPath, 'HELIO_USERID'));
     }
 
@@ -179,15 +179,15 @@ class AutoscalerTest extends TestCase
     public function testArgInHiera(): void
     {
         $this->job->setType(JobType::BUSYBOX);
-        $task = (new Task())->setJob($this->job)->setStatus(TaskStatus::READY);
+        $execution = (new Execution())->setJob($this->job)->setStatus(ExecutionStatus::READY);
         $this->infrastructure->getEntityManager()->persist($this->job);
-        $this->infrastructure->getEntityManager()->persist($task);
+        $this->infrastructure->getEntityManager()->persist($execution);
         $this->infrastructure->getEntityManager()->flush();
 
         $result = $this->exec();
 
         $this->assertEquals(200, $result->getStatusCode());
-        $this->assertStringContainsString('sleep', $this->findValueOfKeyInHiera($result, $this->job->getType() . '-' . $this->job->getId() . '-' . $task->getId() . '.args'));
+        $this->assertStringContainsString('sleep', $this->findValueOfKeyInHiera($result, $this->job->getType() . '-' . $this->job->getId() . '-' . $execution->getId() . '.args'));
     }
 
 
@@ -196,18 +196,18 @@ class AutoscalerTest extends TestCase
      */
     public function testReplicaIncreases(): void
     {
-        $tasks = 1 + JobFactory::getDispatchConfigOfJob($this->job)->getDispatchConfig()->getTaskPerReplica();
-        while ($tasks >= 0) {
-            $task = (new Task())->setJob($this->job)->setStatus(TaskStatus::READY);
-            $this->infrastructure->getEntityManager()->persist($task);
+        $executions = 1 + JobFactory::getDispatchConfigOfJob($this->job)->getDispatchConfig()->getExecutionPerReplica();
+        while ($executions >= 0) {
+            $execution = (new Execution())->setJob($this->job)->setStatus(ExecutionStatus::READY);
+            $this->infrastructure->getEntityManager()->persist($execution);
             $this->infrastructure->getEntityManager()->flush();
-            $tasks--;
+            $executions--;
         }
 
         $result = $this->exec();
 
         $this->assertEquals(200, $result->getStatusCode());
-        $this->assertEquals(2, $this->findValueOfKeyInHiera($result, $this->job->getType() . '-' . $this->job->getId() . '-' . $task->getId() . '.replicas'));
+        $this->assertEquals(2, $this->findValueOfKeyInHiera($result, $this->job->getType() . '-' . $this->job->getId() . '-' . $execution->getId() . '.replicas'));
     }
 
     /**

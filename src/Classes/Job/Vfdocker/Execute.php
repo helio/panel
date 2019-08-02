@@ -9,8 +9,8 @@ use Helio\Panel\Helper\DbHelper;
 use Helio\Panel\Helper\LogHelper;
 use Helio\Panel\Job\AbstractExecute;
 use Helio\Panel\Job\DispatchConfig;
-use Helio\Panel\Model\Task;
-use Helio\Panel\Task\TaskStatus;
+use Helio\Panel\Model\Execution;
+use Helio\Panel\Execution\ExecutionStatus;
 use Helio\Panel\Utility\ExecUtility;
 use Helio\Panel\Utility\JwtUtility;
 use Helio\Panel\Utility\ServerUtility;
@@ -32,11 +32,11 @@ class Execute extends AbstractExecute
      */
     public function run(array $params, RequestInterface $request, ResponseInterface $response): bool
     {
-        if (!$this->task) {
-            $this->task = new Task();
+        if (!$this->execution) {
+            $this->execution = new Execution();
         }
-        $this->task->setJob($this->job)->setCreated()->setConfig((string)$request->getBody());
-        App::getDbHelper()->persist($this->task);
+        $this->execution->setJob($this->job)->setCreated()->setConfig((string)$request->getBody());
+        App::getDbHelper()->persist($this->execution);
         App::getDbHelper()->flush();
         return true;
     }
@@ -49,13 +49,13 @@ class Execute extends AbstractExecute
     public function getDispatchConfig(): DispatchConfig
     {
         return (new DispatchConfig())
-            ->setFixedReplicaCount(1)// enforce call of dispatch command on every new task
+            ->setFixedReplicaCount(1)// enforce call of dispatch command on every new execution
             ->setImage($this->job->getConfig('container'))
             ->setEnvVariables(
                 array_merge($this->job->getConfig('env', []), [
                     'HELIO_JOBID' => $this->job->getId(),
                     'HELIO_TOKEN' => JwtUtility::generateToken(null, null, null, $this->job)['token'],
-                    'REPORT_URL' => ServerUtility::getBaseUrl() . ExecUtility::getExecUrl('work/submitresult', $this->task, $this->job)
+                    'REPORT_URL' => ServerUtility::getBaseUrl() . ExecUtility::getExecUrl($this->job, 'work/submitresult', $this->execution)
                 ])
             )
             ->setRegistry($this->job->getConfig('registry', []));
@@ -84,25 +84,5 @@ class Execute extends AbstractExecute
             $this->job->setConfig($body);
         }
         return true;
-    }
-
-
-    /**
-     * @param array $params
-     * @param Response $response
-     * @param RequestInterface $request
-     * @return ResponseInterface
-     */
-    public function submitresult(array $params, Response $response, RequestInterface $request): ResponseInterface
-    {
-        if ($this->task && array_key_exists('success', $params) && $params['success']) {
-            /** @var Task $task */
-            $this->task->setStatus(TaskStatus::DONE);
-            $this->task->setStats((string)$request->getBody());
-            DbHelper::getInstance()->persist($this->task);
-            DbHelper::getInstance()->flush();
-            return $response;
-        }
-        return $response->withStatus(StatusCode::HTTP_NOT_FOUND);
     }
 }

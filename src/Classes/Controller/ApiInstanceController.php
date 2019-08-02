@@ -162,7 +162,7 @@ class ApiInstanceController extends AbstractController
      * @return ResponseInterface
      * @throws Exception
      *
-     * @Route("/add", methods={"POST"}, name="instance.add")
+     * @Route("", methods={"POST"}, name="instance.add")
      */
     public function addInstanceAction(): ResponseInterface
     {

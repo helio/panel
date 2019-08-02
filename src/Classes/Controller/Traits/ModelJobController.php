@@ -2,6 +2,7 @@
 
 namespace Helio\Panel\Controller\Traits;
 
+use Ergy\Slim\Annotations\RouteInfo;
 use \Exception;
 use Helio\Panel\App;
 use Helio\Panel\Model\Job;
@@ -22,10 +23,11 @@ trait ModelJobController
 
 
     /**
+     * @param RouteInfo $route
      * @return bool
      * @throws Exception
      */
-    public function setupJob(): bool
+    public function setupJob(RouteInfo $route): bool
     {
         $this->setupUser();
 
@@ -36,8 +38,8 @@ trait ModelJobController
         }
 
         // otherwise, setup job from param
-        $this->setupParams();
-        $jobId = filter_var($this->params['jobid'] ?? ($this->idAlias === 'jobid' ? $this->params['id'] : 0), FILTER_SANITIZE_NUMBER_INT);
+        $this->setupParams($route);
+        $jobId = filter_var($this->params['jobid'] ?? ($this->idAlias === 'jobid' ? (array_key_exists('id', $this->params) ? $this->params['id'] : 0) : 0), FILTER_SANITIZE_NUMBER_INT);
         if ($jobId > 0) {
             $this->job = App::getDbHelper()->getRepository(Job::class)->find($jobId);
             return true;
@@ -55,7 +57,8 @@ trait ModelJobController
      * @return bool
      * @throws Exception
      */
-    public function validateJobIsSet(): bool {
+    public function validateJobIsSet(): bool
+    {
         if ($this->job) {
             if ($this->job->getName() !== '___NEW') {
                 $this->persistJob();

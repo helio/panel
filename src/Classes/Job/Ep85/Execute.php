@@ -10,8 +10,8 @@ use Helio\Panel\App;
 use Helio\Panel\Helper\DbHelper;
 use Helio\Panel\Job\AbstractExecute;
 use Helio\Panel\Job\DispatchConfig;
-use Helio\Panel\Model\Task;
-use Helio\Panel\Task\TaskStatus;
+use Helio\Panel\Model\Execution;
+use Helio\Panel\Execution\ExecutionStatus;
 use Helio\Panel\Utility\ExecUtility;
 use Helio\Panel\Utility\JwtUtility;
 use Helio\Panel\Utility\ServerUtility;
@@ -45,13 +45,13 @@ class Execute extends AbstractExecute
      */
     public function run(array $params, RequestInterface $request, ResponseInterface $response): bool
     {
-        $this->task = $this->task ?? (new Task())->setJob($this->job)->setCreated()->setConfig('');
-        App::getDbHelper()->persist($this->task);
+        $this->execution = $this->execution ?? (new Execution())->setJob($this->job)->setCreated()->setConfig('');
+        App::getDbHelper()->persist($this->execution);
         App::getDbHelper()->flush();
 
         $inConfig = json_decode(trim((string)$request->getBody()), true) ?? [];
-        $idf = array_key_exists('idf', $inConfig) ? $inConfig['idf'] : array_key_exists('idf', $params) ? $params['idf'] : ExecUtility::getExecUrl('work/getidfdata', $this->task, $this->job);
-        $epw = array_key_exists('epw', $inConfig) ? $inConfig['epw'] : array_key_exists('epw', $params) ? $params['epw'] : ExecUtility::getExecUrl('work/getwetherdata', $this->task, $this->job);
+        $idf = array_key_exists('idf', $inConfig) ? $inConfig['idf'] : array_key_exists('idf', $params) ? $params['idf'] : ExecUtility::getExecUrl($this->job, 'work/getidfdata', $this->execution);
+        $epw = array_key_exists('epw', $inConfig) ? $inConfig['epw'] : array_key_exists('epw', $params) ? $params['epw'] : ExecUtility::getExecUrl($this->job, 'work/getwetherdata', $this->execution);
 
         $outConfig = [
             'idf' => $idf,
@@ -62,13 +62,13 @@ class Execute extends AbstractExecute
         ];
 
         if (array_key_exists('run_id', $params)) {
-            $this->task->setName($params['run_id']);
+            $this->execution->setName($params['run_id']);
         }
 
-        $this->task->setStatus(TaskStatus::READY)
+        $this->execution->setStatus(ExecutionStatus::READY)
             ->setConfig(json_encode($outConfig, JSON_UNESCAPED_SLASHES));
 
-        App::getApp()->getDbHelper()->persist($this->task);
+        App::getApp()->getDbHelper()->persist($this->execution);
         App::getApp()->getDbHelper()->persist($this->job);
         App::getApp()->getDbHelper()->flush();
 
@@ -84,21 +84,21 @@ class Execute extends AbstractExecute
      */
     public function getnextinqueue(array $params, Response $response): ResponseInterface
     {
-        $tasks = App::getDbHelper()->getRepository(Task::class)->findBy(['job' => $this->job, 'status' => TaskStatus::READY], ['priority' => 'ASC', 'created' => 'ASC'], 5);
-        /** @var Task $task */
-        foreach ($tasks as $task) {
+        $executions = App::getDbHelper()->getRepository(Execution::class)->findBy(['job' => $this->job, 'status' => ExecutionStatus::READY], ['priority' => 'ASC', 'created' => 'ASC'], 5);
+        /** @var Execution $execution */
+        foreach ($executions as $execution) {
             try {
-                /** @var Task $lockedTask */
-                $lockedTask = App::getDbHelper()->getRepository(Task::class)->find($task->getId(), LockMode::OPTIMISTIC, $task->getVersion());
-                $lockedTask->setStatus(TaskStatus::RUNNING);
+                /** @var Execution $lockedExecution */
+                $lockedExecution = App::getDbHelper()->getRepository(Execution::class)->find($execution->getId(), LockMode::OPTIMISTIC, $execution->getVersion());
+                $lockedExecution->setStatus(ExecutionStatus::RUNNING);
                 App::getDbHelper()->flush();
-                return $response->withJson(array_merge(json_decode($lockedTask->getConfig(), true), [
-                    'id' => (string)$lockedTask->getId(),
-                    'report' => ExecUtility::getExecUrl('work/submitresult'),
-                    'upload' => ExecUtility::getExecUrl('upload'),
+                return $response->withJson(array_merge(json_decode($lockedExecution->getConfig(), true), [
+                    'id' => (string)$lockedExecution->getId(),
+                    'report' => ExecUtility::getExecUrl($this->job, 'work/submitresult'),
+                    'upload' => ExecUtility::getExecUrl($this->job, 'upload'),
                 ]), null, JSON_UNESCAPED_SLASHES);
             } catch (OptimisticLockException $e) {
-                // trying next task if the current one was modified in the meantime
+                // trying next execution if the current one was modified in the meantime
             }
         }
         return $response->withStatus(StatusCode::HTTP_NOT_FOUND);
@@ -135,11 +135,11 @@ class Execute extends AbstractExecute
      */
     public function submitresult(array $params, Response $response, RequestInterface $request): ResponseInterface
     {
-        if ($this->task && array_key_exists('success', $params) && $params['success']) {
-            /** @var Task $task */
-            $this->task->setStatus(TaskStatus::DONE);
-            $this->task->setStats((string)$request->getBody());
-            DbHelper::getInstance()->persist($this->task);
+        if ($this->execution && array_key_exists('success', $params) && $params['success']) {
+            /** @var Execution $execution */
+            $this->execution->setStatus(ExecutionStatus::DONE);
+            $this->execution->setStats((string)$request->getBody());
+            DbHelper::getInstance()->persist($this->execution);
             DbHelper::getInstance()->flush();
             return $response;
         }

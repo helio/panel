@@ -4,6 +4,20 @@ namespace Helio\Panel\Instance;
 
 use \RuntimeException;
 
+/**
+ * Class InstanceStatus
+ *
+ * @OA\Schema(
+ *     schema="instancestatus",
+ *     title="Instance Status",
+ *     type="string",
+ *     description="The Status of the job",
+ *     enum = {"Creating", "Initiating", "Created", "Ready", "Running"}
+ * )
+ *
+ *
+ * @package Helio\Panel\Instance
+ */
 final class InstanceStatus
 {
     public const UNKNOWN = 0;

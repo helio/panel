@@ -28,7 +28,7 @@ class ElasticHelper implements HelperInterface
      */
     protected static $indexTemplate = 'log_user_%s';
     protected static $jobIdFieldName = 'HELIO_JOBID';
-    protected static $taskIdFieldName = 'HELIO_TASKID';
+    protected static $executionIdFieldName = 'HELIO_TASKID';
     protected static $logEntryFieldName = 'log';
     protected static $timestampFieldName = '@timestamp';
 
@@ -61,11 +61,11 @@ class ElasticHelper implements HelperInterface
     /**
      * @param int $userId
      * @param int|null $jobId negative value means the field must not exist
-     * @param int|null $taskId negative value means the field must not exist
+     * @param int|null $executionId negative value means the field must not exist
      * @param bool $cleanSource wether or not to only display clean fields
      * @return array
      */
-    public function getLogEntries(int $userId, int $jobId = null, int $taskId = null, bool $cleanSource = true): array
+    public function getLogEntries(int $userId, int $jobId = null, int $executionId = null, bool $cleanSource = true): array
     {
         $params = [
             'index' => vsprintf(self::$indexTemplate, [$userId]),
@@ -100,11 +100,11 @@ class ElasticHelper implements HelperInterface
                 $filter[] = ['term' => [self::$jobIdFieldName => $jobId]];
             }
         }
-        if ($taskId) {
-            if ($taskId < 0) {
-                $mustNot[] = ['exists' => ['field' => self::$taskIdFieldName]];
+        if ($executionId) {
+            if ($executionId < 0) {
+                $mustNot[] = ['exists' => ['field' => self::$executionIdFieldName]];
             } else {
-                $filter[] = ['term' => [self::$taskIdFieldName => (string)$taskId]];
+                $filter[] = ['term' => [self::$executionIdFieldName => (string)$executionId]];
             }
         }
 

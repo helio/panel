@@ -7,7 +7,7 @@ use \RuntimeException;
 use Helio\Panel\Helper\LogHelper;
 use Helio\Panel\Model\Instance;
 use Helio\Panel\Model\Job;
-use Helio\Panel\Model\Task;
+use Helio\Panel\Model\Execution;
 use Helio\Panel\Utility\ServerUtility;
 
 class Choria implements OrchestratorInterface
@@ -53,7 +53,7 @@ class Choria implements OrchestratorInterface
     private static $removeNodeCommand = 'mco playbook run helio::cluster::node::cleanup --input \'{"node_id":"%s","node_fqdn":"$fqdn","manager":"%s","callback":"$instanceCallback"}\'';
     private static $inspectCommand = 'mco playbook run helio::cluster::node::inspect --input \'{"node_fqdn":"$fqdn","callback":"$instanceCallback"}\'';
     private static $getRunnderIdCommand = 'mco playbook run helio::cluster::node::getid --input \'{"node_fqdn":"$fqdn","callback":"$instanceCallback"}\'';
-    private static $dispatchCommand = 'mco playbook run helio::task::update --input \'{"cluster_address":"%s","task_ids":"[%s]"}\'';
+    private static $dispatchCommand = 'mco playbook run helio::execution::update --input \'{"cluster_address":"%s","execution_ids":"[%s]"}\'';
     private static $joinWorkersCommand = 'mco playbook run helio::queue --input \'{"cluster_join_token":"%s","cluster_join_address":"%s","cluster_join_count":"%s"}\'';
 
     /**
@@ -113,8 +113,8 @@ class Choria implements OrchestratorInterface
 
         $resultDispatch = ServerUtility::executeShellCommand($this->parseCommand(self::$dispatchCommand, true, [
             $this->job->getManagerNodes()[0],
-            array_reduce($this->job->getTasks()->toArray(), function ($carry, $item) {
-                /** @var Task $item */
+            array_reduce($this->job->getExecutions()->toArray(), function ($carry, $item) {
+                /** @var Execution $item */
                 if ($carry !== '') {
                     $carry .= ',';
                 }

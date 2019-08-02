@@ -11,8 +11,8 @@ use Helio\Panel\Controller\Traits\TypeApiController;
 use Helio\Panel\Job\JobStatus;
 use Helio\Panel\Model\Instance;
 use Helio\Panel\Model\Job;
-use Helio\Panel\Model\Task;
-use Helio\Panel\Task\TaskStatus;
+use Helio\Panel\Model\Execution;
+use Helio\Panel\Execution\ExecutionStatus;
 use Helio\Panel\Utility\ExecUtility;
 use Helio\Panel\Utility\JwtUtility;
 use Psr\Http\Message\ResponseInterface;
@@ -91,9 +91,9 @@ class ApiUserController extends AbstractController
                         return strpos($item, '.') !== 0 && strpos($item, '.tar.gz') > 0;
                     }),
                 ]),
-                'tasks' => App::getDbHelper()->getRepository(Task::class)->count(['job' => $job]),
-                'open_tasks' => App::getDbHelper()->getRepository(Task::class)->count(['job' => $job, 'status' => TaskStatus::READY]),
-                'running_tasks' => App::getDbHelper()->getRepository(Task::class)->count(['job' => $job, 'status' => TaskStatus::RUNNING]),
+                'executions' => App::getDbHelper()->getRepository(Execution::class)->count(['job' => $job]),
+                'open_executions' => App::getDbHelper()->getRepository(Execution::class)->count(['job' => $job, 'status' => ExecutionStatus::READY]),
+                'running_executions' => App::getDbHelper()->getRepository(Execution::class)->count(['job' => $job, 'status' => ExecutionStatus::RUNNING]),
             ];
         }
         return $this->render(['items' => $jobs]);
@@ -136,30 +136,6 @@ class ApiUserController extends AbstractController
         App::getDbHelper()->flush($this->user);
 
         return $this->render(['message' => 'done']);
-    }
-
-
-    /**
-     * @return ResponseInterface
-     * @throws Exception
-     *
-     * @Route("/logs", methods={"GET"}, name="job.logs")
-     */
-    public function logsAction(): ResponseInterface
-    {
-        return $this->render($this->setWindow()->getLogEntries($this->user->getId()));
-    }
-
-
-    /**
-     * @return ResponseInterface
-     * @throws Exception
-     *
-     * @Route("/strangelogs", methods={"GET"}, name="job.logs")
-     */
-    public function strangeLogsAction(): ResponseInterface
-    {
-        return $this->render($this->setWindow()->getWeirdLogEntries($this->user->getId()));
     }
 
 

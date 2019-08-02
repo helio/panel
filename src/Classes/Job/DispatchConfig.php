@@ -10,7 +10,7 @@ class DispatchConfig
     protected $envVariables = [];
     protected $args = [];
     protected $registry = [];
-    protected $taskPerReplica = 5;
+    protected $executionPerReplica = 5;
     protected $fixedReplicaCount;
 
     /**
@@ -88,18 +88,18 @@ class DispatchConfig
     /**
      * @return int
      */
-    public function getTaskPerReplica(): int
+    public function getExecutionPerReplica(): int
     {
-        return $this->taskPerReplica;
+        return $this->executionPerReplica;
     }
 
     /**
-     * @param int $taskPerReplica
+     * @param int $executionPerReplica
      * @return DispatchConfig
      */
-    public function setTaskPerReplica(int $taskPerReplica): DispatchConfig
+    public function setExecutionPerReplica(int $executionPerReplica): DispatchConfig
     {
-        $this->taskPerReplica = $taskPerReplica;
+        $this->executionPerReplica = $executionPerReplica;
         return $this;
     }
 
@@ -132,12 +132,12 @@ class DispatchConfig
             return $this->getFixedReplicaCount();
         }
 
-        if ($job->getActiveTaskCount() === 0) {
+        if ($job->getActiveExecutionCount() === 0) {
             return 0;
         }
 
 
-        return 1 + ceil(($job->getActiveTaskCount() - ($job->getActiveTaskCount() % $this->getTaskPerReplica())) / $this->getTaskPerReplica());
+        return 1 + ceil(($job->getActiveExecutionCount() - ($job->getActiveExecutionCount() % $this->getExecutionPerReplica())) / $this->getExecutionPerReplica());
     }
 
 }

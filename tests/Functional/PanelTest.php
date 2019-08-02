@@ -2,6 +2,7 @@
 
 namespace Helio\Test\Functional;
 
+use \Exception;
 use GuzzleHttp\Psr7\Response;
 use Helio\Panel\Model\User;
 use Helio\Test\Infrastructure\Helper\ZapierHelper;
@@ -22,7 +23,7 @@ class PanelTest extends TestCase
     /**
      * Test that the index route returns a rendered response
      *
-     * @throws \Exception
+     * @throws Exception
      */
     public function testGetHomeContainsWithLogin(): void
     {

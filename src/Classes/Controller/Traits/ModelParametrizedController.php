@@ -2,6 +2,7 @@
 
 namespace Helio\Panel\Controller\Traits;
 
+use Ergy\Slim\Annotations\RouteInfo;
 use \RuntimeException;
 use Slim\Http\Request;
 
@@ -22,12 +23,13 @@ trait ModelParametrizedController
 
 
     /**
+     * @param RouteInfo $route
      * @return bool
      */
-    public function setupParams(): bool
+    public function setupParams(RouteInfo $route): bool
     {
         if (!$this->params) {
-            $this->params = array_merge(json_decode($this->request->getBody(), true) ?? [], $this->request->getParams() ?? []);
+            $this->params = array_merge(json_decode($this->request->getBody(), true) ?? [], $this->request->getParams() ?? [], $route->params ?? []);
         }
         return true;
     }

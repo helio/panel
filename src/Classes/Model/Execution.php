@@ -20,14 +20,28 @@ use Doctrine\{Common\Collections\Collection,
 };
 
 use Doctrine\Common\Collections\ArrayCollection;
-use Helio\Panel\Task\TaskStatus;
+use Helio\Panel\Execution\ExecutionStatus;
 
 /**
- * @Entity @Table(name="task")
+ *
+ * @OA\Schema(
+ *     type="object",
+ *     title="Execution model"
+ * )
+ *
+ * @Entity @Table(name="execution")
  **/
-class Task extends AbstractModel
+class Execution extends AbstractModel
 {
 
+    /**
+     * @OA\Property(ref="#/components/schemas/executionstatus")
+     *
+     * @var int
+     *
+     * @Column(type="integer")
+     */
+    protected $status = ExecutionStatus::UNKNOWN;
 
     /**
      * @var int
@@ -40,12 +54,17 @@ class Task extends AbstractModel
     /**
      * @var Job
      *
-     * @ManyToOne(targetEntity="Job", inversedBy="tasks", cascade={"persist"})
+     * @ManyToOne(targetEntity="Job", inversedBy="executions", cascade={"persist"})
      */
     protected $job;
 
 
     /**
+     * @OA\Property(
+     *     description="The priority of the execution within each job. The lower, the more important.",
+     *     format="integer"
+     * )
+     *
      * @var int
      *
      * @Column
@@ -54,6 +73,12 @@ class Task extends AbstractModel
 
 
     /**
+     *
+     * @OA\Property(
+     *     description="Execution statistics. The content depends on the JobType.",
+     *     format="string"
+     * )
+     *
      * @var string
      *
      * @Column(type="text")
@@ -62,6 +87,11 @@ class Task extends AbstractModel
 
 
     /**
+     * @OA\Property(
+     *     description="DateTime Object of when the worker last reported operations.",
+     *     format="string"
+     * )
+     *
      * @var DateTime
      *
      * @Column(type="datetimetz", nullable=TRUE)
@@ -79,19 +109,19 @@ class Task extends AbstractModel
 
     /**
      * @param Job $job
-     * @return Task
+     * @return Execution
      */
-    public function setJob(Job $job): Task
+    public function setJob(Job $job): Execution
     {
         $add = true;
         /** @var Job $job */
-        foreach ($job->getTasks() as $task) {
-            if ($task->getId() === $this->getId()) {
+        foreach ($job->getExecutions() as $execution) {
+            if ($execution->getId() === $this->getId()) {
                 $add = false;
             }
         }
         if ($add) {
-            $job->addTask($this);
+            $job->addExecution($this);
         }
         $this->job = $job;
         return $this;
@@ -103,7 +133,7 @@ class Task extends AbstractModel
      */
     public function setStatus(int $status)
     {
-        if (TaskStatus::isValidStatus($status)) {
+        if (ExecutionStatus::isValidStatus($status)) {
             $this->status = $status;
         }
         return $this;
@@ -119,9 +149,9 @@ class Task extends AbstractModel
 
     /**
      * @param int $priority
-     * @return Task
+     * @return Execution
      */
-    public function setPriority(int $priority): Task
+    public function setPriority(int $priority): Execution
     {
         $this->priority = $priority;
         return $this;
@@ -145,9 +175,9 @@ class Task extends AbstractModel
 
     /**
      * @param string $stats
-     * @return Task
+     * @return Execution
      */
-    public function setStats(string $stats): Task
+    public function setStats(string $stats): Execution
     {
         $this->stats = $stats;
         return $this;
@@ -167,7 +197,7 @@ class Task extends AbstractModel
 
     /**
      * @param DateTime|null $latestHeartbeat
-     * @return Task
+     * @return Execution
      * @throws Exception
      */
     public function setLatestHeartbeat(DateTime $latestHeartbeat = null): self

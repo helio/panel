@@ -2,6 +2,7 @@
 
 namespace Helio\Panel\Controller\Traits;
 
+use Ergy\Slim\Annotations\RouteInfo;
 use \Exception;
 use Helio\Panel\App;
 use Helio\Panel\Instance\InstanceStatus;
@@ -28,10 +29,11 @@ trait ModelInstanceController
     /**
      * optionally create a new default instance if none is passed.
      *
+     * @param RouteInfo $route
      * @return bool
      * @throws Exception
      */
-    public function setupInstance(): bool
+    public function setupInstance(RouteInfo $route): bool
     {
         $this->setupUser();
 
@@ -43,8 +45,8 @@ trait ModelInstanceController
         }
 
         // if requested by params, pick the instance by query
-        $this->setupParams();
-        $instanceId = filter_var($this->params['instanceid'] ?? ($this->idAlias === 'instanceid' ? $this->params['id'] : 0), FILTER_VALIDATE_INT);
+        $this->setupParams($route);
+        $instanceId = filter_var($this->params['instanceid'] ?? ($this->idAlias === 'instanceid' ? (array_key_exists('id', $this->params) ? $this->params['id'] : 0) : 0), FILTER_VALIDATE_INT);
         if ($instanceId > 0) {
             $this->instance = App::getDbHelper()->getRepository(Instance::class)->find($instanceId);
             return true;

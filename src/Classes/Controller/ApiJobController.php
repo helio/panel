@@ -9,11 +9,12 @@ use Helio\Panel\Controller\Traits\HelperElasticController;
 use Helio\Panel\Controller\Traits\ModelInstanceController;
 use Helio\Panel\Controller\Traits\TypeDynamicController;
 use Helio\Panel\Controller\Traits\AuthorizedJobController;
+use Helio\Panel\Execution\ExecutionStatus;
 use Helio\Panel\Helper\LogHelper;
 use Helio\Panel\Job\JobFactory;
 use Helio\Panel\Job\JobStatus;
 use Helio\Panel\Job\JobType;
-use Helio\Panel\Model\Task;
+use Helio\Panel\Model\Execution;
 use Helio\Panel\Orchestrator\OrchestratorFactory;
 use Helio\Panel\Utility\JwtUtility;
 use Helio\Panel\Utility\MailUtility;
@@ -52,23 +53,56 @@ class ApiJobController extends AbstractController
     protected $idAlias = 'jobid';
 
 
-
     /**
      *
      *
      *
      * @OA\Post(
-     *     path="/api/job/add",
+     *     path="/job",
      *     security={
-     *         {"authByApitoken": {"any"}}
+     *         {"authByApitoken": {"any"}},
+     *         {"authByJobtoken": {"any"}}
      *     },
      *     @OA\RequestBody(ref="#/components/requestBodies/job"),
+     *     @OA\Response(response="406", ref="#/components/responses/406"),
+     *     @OA\Response(
+     *         response="200",
+     *         description="Job successfully created",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(
+     *                 property="token",
+     *                 type="string",
+     *                 description="The authentication token that's only valid for this job"
+     *             ),
+     *             @OA\Property(
+     *                 property="id",
+     *                 type="string",
+     *                 description="The Id of the newly created job"
+     *             ),
+     *             @OA\Property(
+     *                 property="success",
+     *                 type="boolean",
+     *                 description="Indicates the success of the request"
+     *             ),
+     *             @OA\Property(
+     *                 property="html",
+     *                 type="string",
+     *                 description="A HTML-rendered snipped of the job to embed in UIs"
+     *             ),
+     *             @OA\Property(
+     *                 property="message",
+     *                 type="string",
+     *                 description="The Human readable success message"
+     *             )
+     *         )
+     *     )
      * )
      *
      *
      * @return ResponseInterface
      *
-     * @Route("/add", methods={"POST"}, name="job.add")
+     * @Route("", methods={"POST"}, name="job.add")
      *
      * @throws Exception
      */
@@ -80,7 +114,7 @@ class ApiJobController extends AbstractController
             ]);
 
             if (!JobType::isValidType($this->params['jobtype'])) {
-                return $this->render(['success' => false, 'message' => 'Unknown Job Type'], StatusCode::HTTP_METHOD_NOT_ALLOWED);
+                return $this->render(['success' => false, 'message' => 'Unknown Job Type'], StatusCode::HTTP_NOT_ACCEPTABLE);
             }
 
             $this->job->setType($this->params['jobtype']);
@@ -136,10 +170,48 @@ class ApiJobController extends AbstractController
 
 
     /**
+     * @OA\Delete(
+     *     path="/job",
+     *     security={
+     *         {"authByApitoken": {"any"}},
+     *         {"authByJobtoken": {"any"}}
+     *     },
+     *     @OA\Parameter(
+     *         name="jobid",
+     *         in="query",
+     *         description="Id of the job to delete",
+     *         required=true,
+     *         @Oa\Items(
+     *             type="integer"
+     *         )
+     *     ),
+     *     @OA\Response(
+     *     response="200", description="Job has been deleted",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(
+     *                 property="success",
+     *                 type="boolean",
+     *                 description="Indicates the success of the request"
+     *             ),
+     *             @OA\Property(
+     *                 property="removed",
+     *                 type="boolean",
+     *                 description="Indicates whether the job has been deleted or cleanup still needs to be processed."
+     *             ),
+     *             @OA\Property(
+     *                 property="message",
+     *                 type="string",
+     *                 description="The Human readable success message"
+     *             )
+     *         )
+     *     )
+     * )
+     *
      * @return ResponseInterface
      * @throws Exception
      *
-     * @Route("/remove", methods={"DELETE"}, name="job.remove")
+     * @Route("", methods={"DELETE"}, name="job.remove")
      */
     public function removeJobAction(): ResponseInterface
     {
@@ -148,7 +220,7 @@ class ApiJobController extends AbstractController
             $this->job->setHidden(true);
             $removed = true;
         } else {
-            /** @var Task $task */
+            /** @var Execution $execution */
             JobFactory::getInstanceOfJob($this->job)->stop($this->params, $this->request, $this->response);
 
             // first: set all services to absent. then, remove the managers
@@ -167,34 +239,16 @@ class ApiJobController extends AbstractController
         return $this->render(['success' => true, 'message' => 'Job scheduled for removal.', 'removed' => $removed]);
     }
 
-    /**
-     * This action is only used in the UI upon an "abort" click in the "add Job" wizard.
-     * Therefore, it's not documented in the API doc.
-     *
-     * @return ResponseInterface
-     *
-     * @Route("/add/abort", methods={"POST"}, name="job.abort")
-     * @throws Exception
-     */
-    public function abortAddJobAction(): ResponseInterface
-    {
-        if ($this->job && $this->job->getStatus() === JobStatus::UNKNOWN && $this->job->getOwner() && $this->job->getOwner()->getId() === $this->user->getId()) {
-            $this->user->removeJob($this->job);
-            App::getDbHelper()->remove($this->job);
-            App::getDbHelper()->flush();
-            $this->persistUser();
-            return $this->render();
-        }
-        return $this->render(['message' => 'no access to job'], StatusCode::HTTP_UNAUTHORIZED);
-    }
 
     /**
-     * @return ResponseInterface
-     *
      * @OA\Get(
-     *     path="/api/job/isready",
+     *     path="/job",
+     *     security={
+     *         {"authByApitoken": {"any"}},
+     *         {"authByJobtoken": {"any"}}
+     *     },
      *     @OA\Parameter(
-     *         name="jobid",
+     *         name="id",
      *         in="query",
      *         description="Id of the job which status you wandt to see",
      *         required=true,
@@ -202,11 +256,72 @@ class ApiJobController extends AbstractController
      *             type="integer"
      *         )
      *     ),
-     *     @OA\Response(response="200", description="Contains the Status")
-     * ),
+     *     @OA\Response(response="200", ref="#/components/responses/200")
+     * )
+     *
+     * @return ResponseInterface
+     *
+     * @Route("", methods={"GET"}, name="exec.job.status")
+     * @throws Exception
+     */
+    public function jobStatusAction(): ResponseInterface
+    {
+        return $this->render([
+            'success' => true,
+            'name' => $this->job->getName(),
+            'id' => $this->job->getId(),
+            'billingReference' => $this->job->getBillingReference(),
+            'budget' => $this->job->getBudget(),
+            'type' => $this->job->getType(),
+            'priority' => $this->job->getPriority(),
+            'created' => $this->job->getCreated()->getTimestamp(),
+            'autoExecSchedule' => $this->job->getAutoExecSchedule(),
+            'location' => $this->job->getLocation(),
+            'cpus' => $this->job->getCpus(),
+            'gpus' => $this->job->getGpus(),
+            'status' => $this->job->getStatus(),
+            'message' => 'Job Status is ' . JobStatus::getLabel($this->job->getStatus()),
+            'executions' => [
+                'total' => App::getDbHelper()->getRepository(Execution::class)->count(['job' => $this->job]),
+                'pending' => App::getDbHelper()->getRepository(Execution::class)->count(['job' => $this->job, 'status' => ExecutionStatus::READY]),
+                'running' => App::getDbHelper()->getRepository(Execution::class)->count(['job' => $this->job, 'status' => ExecutionStatus::RUNNING]),
+                'done' => App::getDbHelper()->getRepository(Execution::class)->count(['job' => $this->job, 'status' => ExecutionStatus::DONE])
+            ]
+        ]);
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/job/isready",
+     *     description="HTTP Status Code indicates if the job is properly provisioned and ready to be executed",
      *     security={
+     *         {"authByApitoken": {"any"}},
      *         {"authByJobtoken": {"any"}}
-     *     }
+     *     },
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="query",
+     *         description="Id of the job which status you wandt to see",
+     *         required=true,
+     *         @Oa\Items(
+     *             type="integer"
+     *         )
+     *     ),
+     *     @OA\Response(response="200",
+     *     description="Job is ready and can be executed",
+     *         @OA\JsonContent(
+     *             @OA\Schema(ref="#/components/schemas/default-content")
+     *         )
+     *     ),
+     *     @OA\Response(response="424",
+     *     description="Job is not ready",
+     *         @OA\JsonContent(
+     *             @OA\Schema(ref="#/components/schemas/default-content")
+     *         )
+     *     )
+     * )
+     *
+     * @return ResponseInterface
      *
      * @Route("/isready", methods={"GET"}, name="exec.job.status")
      */
@@ -221,17 +336,41 @@ class ApiJobController extends AbstractController
 
 
     /**
-     * @return ResponseInterface
+     * @OA\Get(
+     *     path="/job/logs",
+     *     security={
+     *         {"authByApitoken": {"any"}},
+     *         {"authByJobtoken": {"any"}}
+     *     },
+     *     description="Aggregation of the logs of all executions of a job",
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="query",
+     *         description="Id of the job which logs you wandt to see",
+     *         required=true,
+     *         @Oa\Items(
+     *             type="integer"
+     *         )
+     *     ),
+     *     @OA\Parameter(
+     *         name="size",
+     *         in="query",
+     *         description="Amount of log entries to retreive",
+     *         @Oa\Items(
+     *             type="integer"
+     *         )
+     *     ),
+     *     @OA\Parameter(
+     *         name="from",
+     *         in="query",
+     *         description="Amount of log entries to skip",
+     *         @Oa\Items(
+     *             type="integer"
+     *         )
+     *     ),
+     *     @OA\Response(response="200", description="The Log Entries")
+     * )
      *
-     * @Route("/status", methods={"GET"}, name="exec.job.status")
-     */
-    public function jobStatusAction(): ResponseInterface
-    {
-        return $this->render(['success' => true, 'status' => JobStatus::getLabel($this->job->getStatus())]);
-    }
-
-
-    /**
      * @return ResponseInterface
      * @throws Exception
      *
@@ -341,5 +480,27 @@ class ApiJobController extends AbstractController
         return $this
             ->setReturnType('yaml')
             ->render($config);
+    }
+
+
+    /**
+     * This action is only used in the UI upon an "abort" click in the "add Job" wizard.
+     * Therefore, it's not documented in the API doc.
+     *
+     * @return ResponseInterface
+     *
+     * @Route("/add/abort", methods={"POST"}, name="job.abort")
+     * @throws Exception
+     */
+    public function abortAddJobAction(): ResponseInterface
+    {
+        if ($this->job && $this->job->getStatus() === JobStatus::UNKNOWN && $this->job->getOwner() && $this->job->getOwner()->getId() === $this->user->getId()) {
+            $this->user->removeJob($this->job);
+            App::getDbHelper()->remove($this->job);
+            App::getDbHelper()->flush();
+            $this->persistUser();
+            return $this->render();
+        }
+        return $this->render(['message' => 'no access to job'], StatusCode::HTTP_UNAUTHORIZED);
     }
 }

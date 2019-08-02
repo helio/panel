@@ -14,6 +14,7 @@ use Slim\Http\StatusCode;
 
 /**
  * Class PanelController
+ * Controller taking care of the actions serving the Panel HTML. This controller requiers an authenticated user.
  *
  * @package    Helio\Panel\Controller
  * @author    Christoph Buchli <team@opencomputing.cloud>
@@ -147,7 +148,7 @@ class PanelController extends AbstractController
     {
         $this->user->setLoggedOut();
         App::getDbHelper()->persist($this->user);
-        App::getDbHelper()->flush($this->user);
+        App::getDbHelper()->flush();
 
         return CookieUtility::deleteCookie($this->response->withRedirect('/loggedout', StatusCode::HTTP_FOUND), 'token');
     }

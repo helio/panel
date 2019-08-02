@@ -3,16 +3,26 @@
 
 namespace Helio\Panel\Model;
 
-use Doctrine\{Common\Collections\ArrayCollection, Common\Collections\Collection};
-use Exception;
+use \Exception;
+use OpenApi\Annotations as OA;
+use Doctrine\{
+    Common\Collections\Collection,
+    Common\Collections\ArrayCollection,
+    ORM\Mapping\Entity,
+    ORM\Mapping\Table,
+    ORM\Mapping\Id,
+    ORM\Mapping\Column,
+    ORM\Mapping\GeneratedValue,
+    ORM\Mapping\ManyToOne,
+    ORM\Mapping\OneToMany
+};
 use Helio\Panel\Job\JobStatus;
 use Helio\Panel\Job\JobType;
-use Helio\Panel\Task\TaskStatus;
+use Helio\Panel\Execution\ExecutionStatus;
 
 /**
  *
  * @OA\Schema(
- *     description="Job model",
  *     type="object",
  *     title="Job model"
  * )
@@ -21,19 +31,6 @@ use Helio\Panel\Task\TaskStatus;
  **/
 class Job extends AbstractModel
 {
-
-    /**
-     * @var int
-     *
-     * @OA\Property(
-     *     format="integer",
-     *     property="jobid",
-     *     description="Id of the job to manipulate. If empty, a new job will be created"
-     * ),
-     *
-     * @Id @Column(type="integer") @GeneratedValue
-     */
-    protected $id;
 
 
     /**
@@ -61,6 +58,15 @@ class Job extends AbstractModel
      * @Column(type="text")
      */
     protected $config = '';
+
+    /**
+     * @OA\Property(ref="#/components/schemas/jobstatus")
+     *
+     * @var string
+     *
+     * @Column
+     */
+    protected $status = JobStatus::UNKNOWN;
 
     /**
      * @OA\Property(ref="#/components/schemas/jobtype")
@@ -163,7 +169,7 @@ class Job extends AbstractModel
 
     /**
      * @OA\Property(
-     *     description="Priority. The lower, the more urgent the task.",
+     *     description="Priority. The lower, the more urgent the execution.",
      *     format="integer"
      * )
      *
@@ -183,11 +189,11 @@ class Job extends AbstractModel
 
 
     /**
-     * @var array<Task>
+     * @var array<Execution>
      *
-     * @OneToMany(targetEntity="Task", mappedBy="job", cascade={"persist"})
+     * @OneToMany(targetEntity="Execution", mappedBy="job", cascade={"persist"})
      */
-    protected $tasks = [];
+    protected $executions = [];
 
 
     /**
@@ -222,7 +228,7 @@ class Job extends AbstractModel
     protected $managerNodes = [];
 
 
-    private $numberOfActiveTasks;
+    private $numberOfActiveExecutions;
 
     /**
      * Job constructor.
@@ -231,7 +237,7 @@ class Job extends AbstractModel
     public function __construct()
     {
         parent::__construct();
-        $this->tasks = new ArrayCollection();
+        $this->executions = new ArrayCollection();
     }
 
 
@@ -440,34 +446,34 @@ class Job extends AbstractModel
     }
 
     /**
-     * @param Task $task
+     * @param Execution $execution
      *
      * @return Job
      */
-    public function addTask(Task $task): Job
+    public function addExecution(Execution $execution): Job
     {
-        $this->tasks[] = $task;
-        if (null === $task->getJob()) {
-            $task->setJob($this);
+        $this->executions[] = $execution;
+        if (null === $execution->getJob()) {
+            $execution->setJob($this);
         }
 
-        $this->numberOfActiveTasks = null;
+        $this->numberOfActiveExecutions = null;
 
         return $this;
     }
 
     /**
-     * @param Task $taskToRemove
+     * @param Execution $executionToRemove
      *
      * @return Job
      */
-    public function removeTask(Task $taskToRemove): Job
+    public function removeExecution(Execution $executionToRemove): Job
     {
-        $this->setTasks(array_filter($this->getTasks()->toArray(), function ($task) use ($taskToRemove) {
-            /** @var Task $task */
-            return $task->getId() !== $taskToRemove->getId();
+        $this->setExecutions(array_filter($this->getExecutions()->toArray(), function ($execution) use ($executionToRemove) {
+            /** @var Execution $execution */
+            return $execution->getId() !== $executionToRemove->getId();
         }));
-        $this->numberOfActiveTasks = null;
+        $this->numberOfActiveExecutions = null;
 
         return $this;
     }
@@ -475,19 +481,19 @@ class Job extends AbstractModel
     /**
      * @return Collection
      */
-    public function getTasks(): Collection
+    public function getExecutions(): Collection
     {
-        return $this->tasks;
+        return $this->executions;
     }
 
     /**
-     * @param array $tasks
+     * @param array $executions
      * @return Job
      */
-    public function setTasks(array $tasks): Job
+    public function setExecutions(array $executions): Job
     {
-        $this->tasks = $tasks;
-        $this->numberOfActiveTasks = null;
+        $this->executions = $executions;
+        $this->numberOfActiveExecutions = null;
         return $this;
     }
 
@@ -598,10 +604,10 @@ class Job extends AbstractModel
     /**
      * @return int
      */
-    public function getActiveTaskCount(): int
+    public function getActiveExecutionCount(): int
     {
-        return count(array_filter($this->getTasks()->toArray(), function (Task $task) {
-            return TaskStatus::isValidPendingStatus($task->getStatus());
+        return count(array_filter($this->getExecutions()->toArray(), function (Execution $execution) {
+            return ExecutionStatus::isValidPendingStatus($execution->getStatus());
         }));
     }
 }

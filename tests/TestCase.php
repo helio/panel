@@ -7,7 +7,7 @@ use Helio\Panel\Model\Filter\DeletedFilter;
 use Helio\Panel\Model\Instance;
 use Helio\Panel\Model\Job;
 use Helio\Panel\Model\QueryFunction\TimestampDiff;
-use Helio\Panel\Model\Task;
+use Helio\Panel\Model\Execution;
 use Helio\Panel\Model\Type\UTCDateTimeType;
 use Helio\Panel\Model\User;
 use Helio\Panel\Utility\MiddlewareUtility;
@@ -57,7 +57,7 @@ class TestCase extends \PHPUnit\Framework\TestCase
     /**
      * @var ObjectRepository
      */
-    protected $taskRepository;
+    protected $executionRepository;
 
 
     /** @throws \Exception
@@ -83,7 +83,7 @@ class TestCase extends \PHPUnit\Framework\TestCase
         Type::overrideType('datetimetz', UTCDateTimeType::class);
 
 
-        $this->infrastructure = ORMInfrastructure::createWithDependenciesFor([User::class, Instance::class, Job::class, Task::class]);
+        $this->infrastructure = ORMInfrastructure::createWithDependenciesFor([User::class, Instance::class, Job::class, Execution::class]);
         $this->infrastructure->getEntityManager()->getConfiguration()->addFilter('deleted', DeletedFilter::class);
         $this->infrastructure->getEntityManager()->getConfiguration()->addCustomNumericFunction('timestampdiff', TimestampDiff::class);
 
@@ -93,7 +93,7 @@ class TestCase extends \PHPUnit\Framework\TestCase
         $this->userRepository = $this->infrastructure->getRepository(User::class);
         $this->instanceRepository = $this->infrastructure->getRepository(Instance::class);
         $this->jobRepository = $this->infrastructure->getRepository(Job::class);
-        $this->taskRepository = $this->infrastructure->getRepository(Task::class);
+        $this->executionRepository = $this->infrastructure->getRepository(Execution::class);
     }
 
     /**

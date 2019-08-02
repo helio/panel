@@ -9,7 +9,7 @@ use Helio\Panel\Job\JobType;
  * Trait ValidatedJobController
  * @package Helio\Panel\Controller\Traits
  */
-trait AuthorizedJobIsActiveController
+trait AuthorizedActiveJobController
 {
     use AuthorizedJobController;
 

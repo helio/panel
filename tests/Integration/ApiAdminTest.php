@@ -5,9 +5,9 @@ namespace Helio\Test\Integration;
 use Helio\Panel\Job\JobStatus;
 use Helio\Panel\Job\JobType;
 use Helio\Panel\Model\Job;
-use Helio\Panel\Model\Task;
+use Helio\Panel\Model\Execution;
 use Helio\Panel\Model\User;
-use Helio\Panel\Task\TaskStatus;
+use Helio\Panel\Execution\ExecutionStatus;
 use Helio\Panel\Utility\JwtUtility;
 use Helio\Test\TestCase;
 use Slim\Http\StatusCode;
@@ -34,10 +34,10 @@ class ApiAdminTest extends TestCase
         $this->infrastructure->getEntityManager()->persist($job);
         $this->infrastructure->getEntityManager()->flush();
 
-        $task1 = (new Task())->setJob($job)->setCreated()->setStatus(TaskStatus::RUNNING);
-        $task2 = (new Task())->setJob($job)->setCreated()->setStatus(TaskStatus::UNKNOWN);
-        $this->infrastructure->getEntityManager()->persist($task1);
-        $this->infrastructure->getEntityManager()->persist($task2);
+        $execution1 = (new Execution())->setJob($job)->setCreated()->setStatus(ExecutionStatus::RUNNING);
+        $execution2 = (new Execution())->setJob($job)->setCreated()->setStatus(ExecutionStatus::UNKNOWN);
+        $this->infrastructure->getEntityManager()->persist($execution1);
+        $this->infrastructure->getEntityManager()->persist($execution2);
         $this->infrastructure->getEntityManager()->persist($user);
         $this->infrastructure->getEntityManager()->persist($job);
         $this->infrastructure->getEntityManager()->flush();
@@ -65,7 +65,7 @@ class ApiAdminTest extends TestCase
     {
         $result = $this->runApp('GET', '/api/admin/getJobHiera?jobid=' . $this->job->getId(), true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']]);
         $hiera = (string)$result->getBody();
-
+$debug="".$result->getBody();
         $this->assertEquals(StatusCode::HTTP_OK, $result->getStatusCode());
         $this->assertStringContainsString('  service_name: vfdocker-', $hiera);
     }

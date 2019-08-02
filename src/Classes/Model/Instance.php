@@ -20,6 +20,12 @@ use Helio\Panel\Orchestrator\OrchestratorType;
 use Helio\Panel\Master\MasterFactory;
 
 /**
+ *
+ * @OA\Schema(
+ *     type="object",
+ *     title="Instance model"
+ * )
+ *
  * @Entity @Table(name="instance")
  **/
 class Instance extends AbstractModel
@@ -27,6 +33,21 @@ class Instance extends AbstractModel
 
 
     /**
+     * @OA\Property(ref="#/components/schemas/instancestatus")
+     *
+     * @var int
+     *
+     * @Column(type="integer")
+     */
+    protected $status = InstanceStatus::UNKNOWN;
+
+
+    /**
+     * @OA\Property(
+     *     description="FQDN of the instance, used for idenfication and ssh purposes.",
+     *     format="string"
+     * )
+     *
      * @var string
      *
      * @Column
@@ -35,6 +56,11 @@ class Instance extends AbstractModel
 
 
     /**
+     * @OA\Property(
+     *     description="IP Address of the instance.",
+     *     format="string"
+     * )
+     *
      * @var string
      *
      * @Column
@@ -93,6 +119,11 @@ class Instance extends AbstractModel
 
 
     /**
+     * @OA\Property(
+     *     description="Region where the server is phisically located",
+     *     format="string"
+     * )
+     *
      * @var string
      *
      * @Column
@@ -101,6 +132,11 @@ class Instance extends AbstractModel
 
 
     /**
+     * @OA\Property(
+     *     description="Security Level according to supplier contract.",
+     *     format="string"
+     * )
+     *
      * @var string
      *
      * @Column
@@ -109,6 +145,11 @@ class Instance extends AbstractModel
 
 
     /**
+     * @OA\Property(
+     *     description="Reference used for pay-outs",
+     *     format="string"
+     * )
+     *
      * @var string
      *
      * @Column
@@ -139,6 +180,11 @@ class Instance extends AbstractModel
 
 
     /**
+     * @OA\Property(
+     *     description="Whether or not this instance may run free compute jobs.",
+     *     format="boolean"
+     * )
+     *
      * @var bool
      *
      * @Column(type="boolean")
@@ -146,6 +192,11 @@ class Instance extends AbstractModel
     protected $allowFreeComputing = true;
 
     /**
+     * @OA\Property(
+     *     description="Priority within the same supplier. Lower number means more jobs.",
+     *     format="integer"
+     * )
+     *
      * @var int
      *
      * @Column
@@ -154,6 +205,11 @@ class Instance extends AbstractModel
 
 
     /**
+     * @OA\Property(
+     *     description="Object with the specs of the instance.",
+     *     format="string"
+     * )
+     *
      * @var string
      *
      * @Column(type="text")

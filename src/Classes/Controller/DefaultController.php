@@ -23,7 +23,7 @@ use Slim\Http\StatusCode;
 
 
 /**
- * Everything that requires no auth goes here
+ * Everything that requires no authentication goes here
  *
  * @package    Helio\Panel\Controller
  * @author    Christoph Buchli <team@opencomputing.cloud>
@@ -195,6 +195,7 @@ class DefaultController extends AbstractController
      * @throws Exception
      *
      * @Route("server/gettoken", methods={"POST"}, name="server.gettoken")
+     *
      */
     public function getTokenAction(): ResponseInterface
     {

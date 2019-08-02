@@ -9,6 +9,7 @@ use \RuntimeException;
  *
  * @OA\Schema(
  *     schema="jobtype",
+ *     title="Job Type",
  *     type="string",
  *     description="The type of the job",
  *     enum = {"vfdocker", "ep85", "busybox", "gitlab"}

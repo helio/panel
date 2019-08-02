@@ -2,6 +2,7 @@
 
 namespace Helio\Panel\Controller;
 
+use Ergy\Slim\Annotations\RouteInfo;
 use \RuntimeException;
 use Ergy\Slim\Annotations\Controller;
 use Psr\Http\Message\ResponseInterface;
@@ -53,26 +54,53 @@ use function OpenApi\scan;
  *     @OA\JsonContent(ref="#/components/schemas/Job")
  * )
  *
+ * @OA\Schema(
+ *     schema="default-content",
+ *     @OA\Property(
+ *         property="success",
+ *         description="Indication whether the call was handeled successfully.",
+ *         @OA\Items(
+ *             type="boolean"
+ *         )
+ *     ),
+ *     @OA\Property(
+ *         property="message",
+ *         description="Human readable message describing what happened.",
+ *         @OA\Items(
+ *             type="string"
+ *         )
+ *     )
+ * )
  *
- * @OA\Response(response="200", description="Job was created. WARNING: This request can take quite some time.",
+ * @OA\Response(
+ *     response="200",
+ *     description="Default success response.",
  *     @OA\JsonContent(
- *       type="object",
- *       @OA\Property(
- *           property="token",
- *           type="string",
- *           description="The authentication token that's only valid for this job"
- *       ),
- *       @OA\Property(
- *           property="id",
- *           type="string",
- *           description="The Id of the newly created job"
- *       )
+ *         @OA\Schema(ref="#/components/schemas/default-content")
+ *     )
+ * )
+ * @OA\Response(
+ *     response="404",
+ *     description="Resource not found"
+ * )
+ * @OA\Response(
+ *     response="405",
+ *     description="You're not authorized to access this resource",
+ *     @OA\JsonContent(
+ *         @OA\Schema(ref="#/components/schemas/default-content")
+ *     )
+ * )
+ * @OA\Response(
+ *     response="406",
+ *     description="You specified invalid parameters",
+ *     @OA\JsonContent(
+ *         @OA\Schema(ref="#/components/schemas/default-content")
  *     )
  * )
  *
  *
- * @property PhpRenderer renderer
  *
+ * @property-read PhpRenderer renderer
  * @property-read array settings
  * @property-read EnvironmentInterface environment
  * @property-read Request request
@@ -91,7 +119,9 @@ use function OpenApi\scan;
 abstract class AbstractController extends Controller
 {
 
-    /** @var string $idAlias if a param named 'id' is set, what does it stand for? */
+    /**
+     * @var string $idAlias if a param named 'id' is set, what does it stand for?
+     */
     protected $idAlias = '';
 
 
@@ -128,13 +158,14 @@ abstract class AbstractController extends Controller
      * magic method to prepare your controllers (e.g. use it with traits)
      * Warning: carefully name your methods
      *
+     * @param RouteInfo $route
      */
-    public function __construct()
+    public function beforeExecuteRoute(RouteInfo $route)
     {
         // first: setup everything
         foreach (get_class_methods($this) as $method) {
             if (strpos($method, 'setup') === 0) {
-                if (!$this->$method()) {
+                if (!$this->$method($route)) {
                     throw new RuntimeException('Controller Setup failed: ' . $method, 1551432903);
                 }
             }
@@ -296,7 +327,7 @@ abstract class AbstractController extends Controller
         }
         $openapi = scan($path, ['exclude' => $exclude]);
 
-        if ((array_key_exists('format', $this->params) && $this->params['format'] === 'json')
+        if (($this->request->getParam('format', 'yaml') === 'json')
             || $this->request->getHeader('Content-Type') === 'application/json') {
             return $this->rawJson($openapi->toJson());
         }
