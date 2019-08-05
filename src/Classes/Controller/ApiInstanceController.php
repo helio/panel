@@ -38,7 +38,13 @@ class ApiInstanceController extends AbstractController
     use HelperGrafanaController;
 
 
-    protected $idAlias = 'instanceid';
+    /**
+     * @return string
+     */
+    protected function getIdAlias(): string
+    {
+        return 'instanceid';
+    }
 
 
     /**

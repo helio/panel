@@ -52,7 +52,7 @@ jobs:
           vendor/bin/doctrine orm:generate-proxies -q /home/${DEPLOY_USERNAME}/tmp"
           sleep 5
           ssh ${DEPLOY_USERNAME}@nbf01.opsserver.ch "sudo /usr/sbin/service php72-fpm reload"
-          if [[ "${CIRCLE_BRANCH}" = 'master' ]]; then ssh docker@nbf01.opsserver.ch "wget -qO swagger/src/dockerdispatch.json 'https://panel.idling.host/apidoc/job/vfdocker?format=json'"; fi
+          if [[ "${CIRCLE_BRANCH}" = 'master' ]]; then ssh docker@nbf01.opsserver.ch "wget -qO swagger/src/dockerdispatch.json 'https://panel.idling.host/apidoc?format=json'"; fi
 
 
   runners:

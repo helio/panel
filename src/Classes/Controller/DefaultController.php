@@ -258,6 +258,6 @@ class DefaultController extends AbstractController
      */
     public function JobApiDocAction(string $jobtype): ResponseInterface
     {
-        return $this->renderApiDocumentation(['Job/' . ucfirst(strtolower($jobtype)) . '/ApiInterface.php']);
+        return $this->renderApiDocumentation(['App.php', 'Job/' . ucfirst(strtolower($jobtype)) . '/ApiInterface.php']);
     }
 }

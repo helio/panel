@@ -46,7 +46,7 @@ trait ModelInstanceController
 
         // if requested by params, pick the instance by query
         $this->setupParams($route);
-        $instanceId = filter_var($this->params['instanceid'] ?? ($this->idAlias === 'instanceid' ? (array_key_exists('id', $this->params) ? $this->params['id'] : 0) : 0), FILTER_VALIDATE_INT);
+        $instanceId = filter_var($this->params['instanceid'] ?? ($this->getIdAlias() === 'instanceid' ? (array_key_exists('id', $this->params) ? $this->params['id'] : 0) : 0), FILTER_VALIDATE_INT);
         if ($instanceId > 0) {
             $this->instance = App::getDbHelper()->getRepository(Instance::class)->find($instanceId);
             return true;

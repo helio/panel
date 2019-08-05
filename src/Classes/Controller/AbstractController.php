@@ -71,6 +71,41 @@ use function OpenApi\scan;
  *         )
  *     )
  * )
+ * @OA\Schema(
+ *     schema="logentry",
+ *     description="Log entry",
+ *     type="object",
+ *     @OA\Property(
+ *         property="@timestamp",
+ *         description="Timestamp of the entry",
+ *         type="number"
+ *     ),
+ *     @OA\Property(
+ *         property="log",
+ *         description="Log Entry",
+ *         type="string"
+ *     )
+ * )
+ * @OA\Schema(
+ *     schema="logs",
+ *     description="List of Log entries",
+ *     type="object",
+ *     @OA\Property(
+ *         property="total",
+ *         description="Total amount of hits",
+ *         type="integer"
+ *     ),
+ *     @OA\Property(
+ *         type="array",
+ *         property="hits",
+ *         @OA\Items(
+ *             @OA\Property(
+ *                 property="_source",
+ *                 @OA\Items(ref="#/components/schemas/logentry")
+ *             )
+ *         )
+ *     )
+ * )
  *
  * @OA\Response(
  *     response="200",
@@ -97,6 +132,11 @@ use function OpenApi\scan;
  *         @OA\Schema(ref="#/components/schemas/default-content")
  *     )
  * )
+ * @OA\Response(
+ *     response="logs",
+ *     description="Log Entries and total count",
+ *     @OA\JsonContent(ref="#/components/schemas/logs")
+ * )
  *
  *
  *
@@ -118,11 +158,6 @@ use function OpenApi\scan;
  */
 abstract class AbstractController extends Controller
 {
-
-    /**
-     * @var string $idAlias if a param named 'id' is set, what does it stand for?
-     */
-    protected $idAlias = '';
 
 
     /**
@@ -155,12 +190,21 @@ abstract class AbstractController extends Controller
 
 
     /**
+     * @return string $idAlias if a param named 'id' is set, what does it stand for?
+     */
+    protected function getIdAlias(): string {
+        return '';
+    }
+
+
+
+    /**
      * magic method to prepare your controllers (e.g. use it with traits)
      * Warning: carefully name your methods
      *
      * @param RouteInfo $route
      */
-    public function beforeExecuteRoute(RouteInfo $route)
+    public function beforeExecuteRoute(RouteInfo $route): void
     {
         // first: setup everything
         foreach (get_class_methods($this) as $method) {

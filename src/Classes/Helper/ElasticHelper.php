@@ -5,6 +5,7 @@ namespace Helio\Panel\Helper;
 use \Exception;
 use Elasticsearch\Client;
 use Elasticsearch\ClientBuilder;
+use Helio\Panel\Utility\ServerUtility;
 
 /**
  * Class ElasticHelper
@@ -53,7 +54,13 @@ class ElasticHelper implements HelperInterface
     {
         $class = static::class;
         if (!self::$instances || !array_key_exists($class, self::$instances)) {
-            self::$instances[$class] = new static();
+            $host = ['host' => ServerUtility::get('ELASTIC_HOST')];
+            foreach (['port', 'scheme', 'user', 'pass', 'path'] as $variableName) {
+                if (ServerUtility::get('ELASTIC_' . strtoupper($variableName), '')) {
+                    $host[$variableName] = ServerUtility::get('ELASTIC_' . strtoupper($variableName));
+                }
+            }
+            self::$instances[$class] = new static($host);
         }
         return self::$instances[$class];
     }

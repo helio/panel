@@ -41,11 +41,11 @@ class ApiLogsController extends AbstractController
     /**
      * @OA\Get(
      *     path="/logs",
-     *     description="Aggregation of the logs of all jobs and executions of a user",
-     *     @OA\Response(response="200", description="Contains the Status"),
+     *     description="Aggregation of logs not associated to an execution or job",
      *     security={
      *         {"authByApitoken": {"any"}}
      *     },
+     *     @OA\Response(response="200", ref="#/components/responses/logs"),
      *     @OA\Parameter(
      *         name="size",
      *         in="query",
@@ -71,43 +71,14 @@ class ApiLogsController extends AbstractController
      */
     public function logsAction(): ResponseInterface
     {
-        return $this->render($this->setWindow()->getLogEntries($this->user->getId()));
-    }
+        $this->optionalParameterCheck([
+            'size' => FILTER_SANITIZE_NUMBER_INT,
+            'from' => FILTER_SANITIZE_NUMBER_INT
+        ]);
 
+        $size = array_key_exists('size', $this->params) ? $this->params['size'] : 10;
+        $from = array_key_exists('from', $this->params) ? $this->params['from'] : 0;
 
-    /**
-     * @OA\Get(
-     *     path="/logs/strange",
-     *     description="Aggregation of logs not associated to a execution or job",
-     *     @OA\Response(response="200", description="Contains the Logs"),
-     *     security={
-     *         {"authByApitoken": {"any"}}
-     *     },
-     *     @OA\Parameter(
-     *         name="size",
-     *         in="query",
-     *         description="Amount of log entries to retreive",
-     *         @Oa\Items(
-     *             type="integer"
-     *         )
-     *     ),
-     *     @OA\Parameter(
-     *         name="from",
-     *         in="query",
-     *         description="Amount of log entries to skip",
-     *         @Oa\Items(
-     *             type="integer"
-     *         )
-     *     )
-     * )
-     *
-     * @return ResponseInterface
-     * @throws Exception
-     *
-     * @Route("/strange", methods={"GET"}, name="logs.strange")
-     */
-    public function strangeLogsAction(): ResponseInterface
-    {
-        return $this->render($this->setWindow()->getWeirdLogEntries($this->user->getId()));
+        return $this->render($this->setWindow($from, $size)->getWeirdLogEntries($this->user->getId()));
     }
 }

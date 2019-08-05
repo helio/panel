@@ -19,7 +19,7 @@ use Slim\Views\PhpRenderer;
  * @package Helio\Panel
  *
  *
- * @OA\Info(title="Helio API", version="0.0.1")
+ * @OA\Info(title="Helio API", version="0.1.0")
  *
  *
  * @OA\Server(url="http://localhost:8099/api", description="DEV API")
@@ -108,7 +108,7 @@ class App extends \Slim\App
      * @return DbHelper
      * @throws Exception
      */
-    public static function getDbHelper()
+    public static function getDbHelper(): DbHelper
     {
         /** @var App $debu */
         $class = self::$className;
@@ -119,7 +119,7 @@ class App extends \Slim\App
      * @return Logger
      * @throws Exception
      */
-    public static function getLogger()
+    public static function getLogger(): Logger
     {
         /** @var App $debu */
         $class = self::$className;
@@ -130,7 +130,7 @@ class App extends \Slim\App
      * @return ZapierHelper
      * @throws Exception
      */
-    public static function getZapierHelper()
+    public static function getZapierHelper(): ZapierHelper
     {
         /** @var App $debu */
         $class = self::$className;
@@ -141,7 +141,7 @@ class App extends \Slim\App
      * @return ElasticHelper
      * @throws Exception
      */
-    public static function getElasticHelper()
+    public static function getElasticHelper(): ElasticHelper
     {
         /** @var App $debu */
         $class = self::$className;

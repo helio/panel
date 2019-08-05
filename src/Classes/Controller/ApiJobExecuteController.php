@@ -54,7 +54,13 @@ class ApiJobExecuteController extends AbstractController
     use TypeApiController;
 
 
-    protected $idAlias = 'executionid';
+    /**
+     * @return string
+     */
+    protected function getIdAlias(): string
+    {
+        return 'executionid';
+    }
 
 
     /**
@@ -137,7 +143,7 @@ class ApiJobExecuteController extends AbstractController
      *
      * @return ResponseInterface
      *
-     * @Route("", methods={"POST", "PUT", "GET", "DELETE"}, name="job.exec")
+     * @Route("", methods={"POST", "PUT", "DELETE"}, name="job.exec")
      */
     public function execAction(): ResponseInterface
     {
@@ -187,17 +193,57 @@ class ApiJobExecuteController extends AbstractController
 
 
     /**
+     * @OA\Get(
+     *    path="/job/{jobid}/execute",
+     *     security={
+     *         {"authByJobtoken": {"any"}},
+     *         {"authByApitoken": {"any"}}
+     *     },
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="query",
+     *         description="Id of the current Execution",
+     *         required=true,
+     *         @Oa\Items(
+     *             type="string"
+     *         )
+     *     ),
+     *     @OA\Parameter(
+     *         name="jobid",
+     *         in="path",
+     *         description="Id of the job that the execution belongs to",
+     *         required=true,
+     *         @Oa\Items(
+     *             type="string"
+     *         )
+     *     ),
+     *     @OA\Response(response="200", description="Get a Job",
+     *         @OA\JsonContent(
+     *           type="object",
+     *           @OA\Property(
+     *               property="success",
+     *               type="string",
+     *               description="boolean if the execution was successful"
+     *           )
+     *         )
+     *     )
+     * )
+     *
      * @return ResponseInterface
      *
-     * @Route("/status", methods={"GET"}, name="exec.execution.status")
+     * @Route("", methods={"GET"}, name="exec.execution.get")
      */
     public function executionStatusAction(): ResponseInterface
     {
         if (!$this->execution) {
-            return $this->render(['error' => 'no execution specified']);
+            return $this->render(['error' => 'no execution specified'], StatusCode::HTTP_NOT_FOUND);
         }
         return $this->render([
-            'success' => 'true',
+            'success' => true,
+            'id' => $this->execution->getId(),
+            'priority' => $this->execution->getPriority(),
+            'results' => $this->execution->getStats(),
+            'latestHeartbeat' => $this->execution->getLatestHeartbeat(),
             'message' => 'The Status of your execution is ' . ExecutionStatus::getLabel($this->execution->getStatus()),
             'status' => $this->execution->getStatus()
         ]);
@@ -244,16 +290,7 @@ class ApiJobExecuteController extends AbstractController
      *         )
      *     ),
      *
-     *     @OA\Response(response="200", description="Create a Job",
-     *         @OA\JsonContent(
-     *           type="object",
-     *           @OA\Property(
-     *               property="success",
-     *               type="string",
-     *               description="boolean if the execution was successful"
-     *           )
-     *         )
-     *     ),
+     *     @OA\Response(response="200", description="Create a Job"),
      *     @OA\Response(response="404", ref="#/components/responses/404")
      * )
      *
@@ -301,7 +338,7 @@ class ApiJobExecuteController extends AbstractController
     /**
      * @return ResponseInterface
      *
-     * @Route("/heartbeat", methods={"GET", "POST", "PUT"}, name="job.heartbeat")
+     * @Route("/heartbeat", methods={"POST", "PUT"}, name="job.heartbeat")
      */
     public function heartbeatAction(): ResponseInterface
     {
@@ -361,7 +398,7 @@ class ApiJobExecuteController extends AbstractController
      *             type="integer"
      *         )
      *     ),
-     *     @OA\Response(response="200", description="Contains the Logs of the specific execution only")
+     *     @OA\Response(response="200", ref="#/components/responses/logs"),
      * )
      *
      * @return ResponseInterface

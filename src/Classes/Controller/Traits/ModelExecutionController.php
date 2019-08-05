@@ -31,7 +31,7 @@ trait ModelExecutionController
     {
         $this->setupParams($route);
         $this->setupJob($route);
-        $executionId = filter_var($this->params['executionid'] ?? ($this->idAlias === 'executionid' ? (array_key_exists('id', $this->params) ? $this->params['id'] : 0) : 0), FILTER_SANITIZE_NUMBER_INT);
+        $executionId = filter_var($this->params['executionid'] ?? ($this->getIdAlias() === 'executionid' ? (array_key_exists('id', $this->params) ? $this->params['id'] : 0) : 0), FILTER_SANITIZE_NUMBER_INT);
         if ($executionId > 0) {
             $this->execution = App::getDbHelper()->getRepository(Execution::class)->find($executionId);
             return true;

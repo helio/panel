@@ -50,7 +50,13 @@ class ApiJobController extends AbstractController
     use TypeDynamicController;
 
 
-    protected $idAlias = 'jobid';
+    /**
+     * @return string
+     */
+    protected function getIdAlias(): string
+    {
+        return 'jobid';
+    }
 
 
     /**
