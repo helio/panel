@@ -4,6 +4,7 @@ namespace Helio\Panel;
 
 use Ergy\Slim\Annotations\Router;
 use \Exception;
+use Helio\Panel\Helper\SlackHelper;
 use \RuntimeException;
 use Helio\Panel\Helper\DbHelper;
 use Helio\Panel\Helper\ElasticHelper;
@@ -52,6 +53,9 @@ class App extends \Slim\App
 
     /** @var ElasticHelper */
     protected static $elasticHelperClassName = ElasticHelper::class;
+
+    /** @var SlackHelper */
+    protected static $slackHelperClassName = SlackHelper::class;
 
 
     /**
@@ -110,7 +114,6 @@ class App extends \Slim\App
      */
     public static function getDbHelper(): DbHelper
     {
-        /** @var App $debu */
         $class = self::$className;
         return ($class::$dbHelperClassName)::getInstance();
     }
@@ -121,7 +124,6 @@ class App extends \Slim\App
      */
     public static function getLogger(): Logger
     {
-        /** @var App $debu */
         $class = self::$className;
         return ($class::$logHelperClassName)::getInstance();
     }
@@ -132,7 +134,6 @@ class App extends \Slim\App
      */
     public static function getZapierHelper(): ZapierHelper
     {
-        /** @var App $debu */
         $class = self::$className;
         return ($class::$zapierHelperClassName)::getInstance();
     }
@@ -143,8 +144,17 @@ class App extends \Slim\App
      */
     public static function getElasticHelper(): ElasticHelper
     {
-        /** @var App $debu */
         $class = self::$className;
         return ($class::$elasticHelperClassName)::getInstance();
+    }
+
+    /**
+     * @return SlackHelper
+     * @throws Exception
+     */
+    public static function getSlackHelper(): SlackHelper
+    {
+        $class = self::$className;
+        return ($class::$slackHelperClassName)::getInstance();
     }
 }

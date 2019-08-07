@@ -3,14 +3,17 @@
 namespace Helio\Panel\Utility;
 
 use \Exception;
+use GuzzleHttp\Exception\GuzzleException;
+use Helio\Panel\App;
 use Helio\Panel\Helper\LogHelper;
 use Helio\Panel\Model\User;
+use OpenApi\Annotations\Server;
 
 /**
  * Class MailUtility
  * @package Helio\Panel\Utility
  */
-class MailUtility extends AbstractUtility
+class NotificationUtility extends AbstractUtility
 {
 
 
@@ -59,9 +62,19 @@ EOM;
      * @param string $content
      * @return bool
      */
-    public static function sendMailToAdmin(string $content = ''): bool
+    public static function notifyAdmin(string $content = ''): bool
     {
-        $return = ServerUtility::isProd() ? @mail('team@helio.exchange', 'Admin Notification from Panel', $content, 'From: hello@idling.host', '-f hello@idling.host') : true;
+        if (ServerUtility::get('SLACK_WEBHOOK', '')) {
+            try {
+                $return = App::getSlackHelper()->sendNotification($content);
+            } catch (GuzzleException $e) {
+                $return = false;
+            } catch (Exception $e) {
+                $return = false;
+            }
+        } else {
+            $return = ServerUtility::isProd() ? @mail('team@helio.exchange', 'Admin Notification from Panel', $content, 'From: hello@idling.host', '-f hello@idling.host') : true;
+        }
         if ($return) {
             LogHelper::info('Sent Confirmation Mail to admin');
         } else {

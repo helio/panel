@@ -17,7 +17,7 @@ use Helio\Panel\Job\JobType;
 use Helio\Panel\Model\Execution;
 use Helio\Panel\Orchestrator\OrchestratorFactory;
 use Helio\Panel\Utility\JwtUtility;
-use Helio\Panel\Utility\MailUtility;
+use Helio\Panel\Utility\NotificationUtility;
 use Helio\Panel\Utility\ServerUtility;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Http\StatusCode;
@@ -161,7 +161,7 @@ class ApiJobController extends AbstractController
 
         $this->persistJob();
 
-        MailUtility::sendMailToAdmin('New Job was created by ' . $this->user->getEmail() . ', type: ' . $this->job->getType() . ', id: ' . $this->job->getId());
+        NotificationUtility::notifyAdmin('New Job was created by ' . $this->user->getEmail() . ', type: ' . $this->job->getType() . ', id: ' . $this->job->getId());
 
         OrchestratorFactory::getOrchestratorForInstance($this->instance, $this->job)->provisionManager();
 
@@ -438,11 +438,11 @@ class ApiJobController extends AbstractController
         // TODO: set redundancy to >= 3 again if needed
         if ($this->job->getInitManagerIp() && $this->job->getClusterToken() && $this->job->getManagerToken() && count($this->job->getManagerNodes()) > 0) {
             $this->job->setStatus(JobStatus::READY);
-            MailUtility::sendMailToAdmin('Job is now read. By: ' . $this->user->getEmail() . ', type: ' . $this->job->getType() . ', id: ' . $this->job->getId());
+            NotificationUtility::notifyAdmin('Job is now read. By: ' . $this->user->getEmail() . ', type: ' . $this->job->getType() . ', id: ' . $this->job->getId());
         }
         if (array_key_exists('deleted', $body) && count($this->job->getManagerNodes()) === 0) {
             $this->job->setStatus(JobStatus::DELETED);
-            MailUtility::sendMailToAdmin('Job was deleted by ' . $this->user->getEmail() . ', type: ' . $this->job->getType() . ', id: ' . $this->job->getId());
+            NotificationUtility::notifyAdmin('Job was deleted by ' . $this->user->getEmail() . ', type: ' . $this->job->getType() . ', id: ' . $this->job->getId());
         }
 
         $this->persistJob();
