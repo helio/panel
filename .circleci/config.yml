@@ -79,6 +79,16 @@ jobs:
             fi
           done
 
+  functional:
+    docker:
+    - image: everpeace/curl-jq
+
+    steps:
+    - checkout
+    - run:
+        name: Functional Test on PROD
+        command: ./.circleci/test.sh
+
 
 workflows:
   version: 2
@@ -96,3 +106,15 @@ workflows:
             only:
             - master
             - development
+
+  functest:
+    triggers:
+      - schedule:
+          cron: "11 * * * *"
+          filters:
+            branches:
+              only:
+                - master
+                - feature/functionalTest
+    jobs:
+    - functional

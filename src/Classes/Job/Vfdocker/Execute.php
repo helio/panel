@@ -10,7 +10,6 @@ use Helio\Panel\Helper\LogHelper;
 use Helio\Panel\Job\AbstractExecute;
 use Helio\Panel\Job\DispatchConfig;
 use Helio\Panel\Model\Execution;
-use Helio\Panel\Execution\ExecutionStatus;
 use Helio\Panel\Utility\ExecUtility;
 use Helio\Panel\Utility\JwtUtility;
 use Helio\Panel\Utility\ServerUtility;

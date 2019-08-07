@@ -40,7 +40,7 @@ class Execute extends AbstractExecute
             ->setEnvVariables([
                 'HELIO_JOBID' => $this->job->getId(),
                 'HELIO_TOKEN' => JwtUtility::generateToken(null, null, null, $this->job)['token'],
-                'LIMIT' => 100
+                'LIMIT' => $this->execution->getConfig('limit', 100)
             ]);
     }
 
