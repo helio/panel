@@ -185,7 +185,7 @@ class AutoscalerTest extends TestCase
         $this->infrastructure->getEntityManager()->flush();
 
         $result = $this->exec();
-
+$debug=$result->getBody()."";
         $this->assertEquals(200, $result->getStatusCode());
         $this->assertStringContainsString('sleep', $this->findValueOfKeyInHiera($result, $this->job->getType() . '-' . $this->job->getId() . '-' . $execution->getId() . '.args'));
     }
