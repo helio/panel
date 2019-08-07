@@ -115,6 +115,5 @@ workflows:
             branches:
               only:
                 - master
-                - feature/functionalTest
     jobs:
     - functional
