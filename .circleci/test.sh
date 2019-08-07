@@ -4,7 +4,7 @@
 # Guards and Variables
 if [[ -z "${TESTUSER_TOKEN}" ]]; then exit 1; fi
 BASE_URL=${1:-https://panel.idling.host}
-ID=$(date -j -f "%a %b %d %T %Z %Y" "`date`" "+%s")
+ID=test-$(date "+%s")
 DATA='{"jobtype":"busybox","jobname":"_test","billingReference":"'${ID}'"}'
 
 ##########
