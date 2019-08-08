@@ -3,6 +3,8 @@
 namespace Helio\Panel\Utility;
 
 use Adbar\Dot;
+use Helio\Panel\Model\AbstractModel;
+use Helio\Panel\Model\Execution;
 
 class ArrayUtility extends AbstractUtility
 {
@@ -23,5 +25,20 @@ class ArrayUtility extends AbstractUtility
             }
         }
         return $default;
+    }
+
+
+    /**
+     * @param array<AbstractModel> $models
+     * @return string
+     */
+    public static function modelsToStringOfIds(array $models): string {
+        return array_reduce($models, function ($carry, $item) {
+            /** @var AbstractModel $item */
+            if ($carry !== '') {
+                $carry .= ',';
+            }
+            return $carry . $item->getId();
+        }, '');
     }
 }

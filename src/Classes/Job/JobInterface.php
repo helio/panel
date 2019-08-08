@@ -22,31 +22,25 @@ interface JobInterface
     public function __construct(Job $job);
 
     /**
-     * @param array $params
-     * @param RequestInterface $request
-     * @param ResponseInterface|null $response
+     * @param array $config
      *
      * @return bool
      */
-    public function create(array $params, RequestInterface $request, ResponseInterface $response = null): bool;
+    public function create(array $config): bool;
 
 
     /**
-     * @param array $params
-     * @param RequestInterface $request
-     * @param ResponseInterface|null $response
+     * @param array $config
      *
      * @return mixed
      */
-    public function stop(array $params, RequestInterface $request, ResponseInterface $response = null);
+    public function stop(array $config);
 
 
     /**
-     * @param array $params
-     * @param RequestInterface $request
-     * @param ResponseInterface $response
+     * @param array $config
      *
      * @return mixed
      */
-    public function run(array $params, RequestInterface $request, ResponseInterface $response);
+    public function run(array $config);
 }

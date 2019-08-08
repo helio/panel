@@ -42,6 +42,13 @@ Zapier captures a few things, if you want to change the hook, here's how:
 ZAPIER_HOOK_URL=/hooks/catch/1234/blahd3d/
 ```
 
+## Slack
+
+Slack Webhook for Admin Notifications. Activates on PROD if the following ENV-Variable is set:
+```bash 
+SLACK_WEBHOOK=dblasdjb/absdljbadso/34jb3lj
+```
+
 ## Varia
 There are a lot more variables that you can set, they are pretty obiously named...
 ```bash

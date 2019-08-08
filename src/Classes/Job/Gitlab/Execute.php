@@ -13,21 +13,6 @@ class Execute extends AbstractExecute
 {
 
     /**
-     * @param array $params
-     * @param RequestInterface $request
-     * @param ResponseInterface $response
-     *
-     * @return bool
-     *
-     * TODO: Implement
-     */
-    public function run(array $params, RequestInterface $request, ResponseInterface $response): bool
-    {
-        return true;
-    }
-
-
-    /**
      * @return DispatchConfig
      * @throws Exception
      */
@@ -44,13 +29,11 @@ class Execute extends AbstractExecute
 
 
     /**
-     * @param array $params
-     * @param RequestInterface $request
-     * @param ResponseInterface|null $response
+     * @param array $config
      *
      * @return bool
      */
-    public function create(array $params, RequestInterface $request, ResponseInterface $response = null): bool
+    public function create(array $config): bool
     {
         $options = [
             'gitlabEndpoint' => FILTER_SANITIZE_URL,
@@ -58,14 +41,13 @@ class Execute extends AbstractExecute
             'gitlabTags' => FILTER_SANITIZE_STRING
         ];
 
-        $config = [];
+        $cleanConfig = [];
         foreach ($options as $name => $filter) {
-            $key = filter_var($name, FILTER_SANITIZE_STRING);
-            if (array_key_exists($key, $params)) {
-                $config[$key] = filter_var($params[$key], $filter);
+            if (array_key_exists($name, $config)) {
+                $cleanConfig[$name] = filter_var($config[$name], $filter);
             }
         }
-        $this->job->setConfig($config);
+        $this->job->setConfig($cleanConfig);
         return true;
     }
 }

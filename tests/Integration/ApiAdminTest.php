@@ -65,7 +65,7 @@ class ApiAdminTest extends TestCase
     {
         $result = $this->runApp('GET', '/api/admin/getJobHiera?jobid=' . $this->job->getId(), true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']]);
         $hiera = (string)$result->getBody();
-$debug="".$result->getBody();
+
         $this->assertEquals(StatusCode::HTTP_OK, $result->getStatusCode());
         $this->assertStringContainsString('  service_name: vfdocker-', $hiera);
     }

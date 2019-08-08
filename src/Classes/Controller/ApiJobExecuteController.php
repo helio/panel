@@ -157,13 +157,13 @@ class ApiJobExecuteController extends AbstractController
             if ($this->request->getMethod() === 'DELETE') {
                 $command = 'stop';
             } else {
-                $this->execution->setName('automatically created');
+                $this->execution->setName(array_key_exists('name', $this->params) ? $this->params['name'] : 'automatically created');
                 $this->persistExecution();
             }
 
             // run the job and check if the replicas have changed
             $previousReplicaCount = JobFactory::getDispatchConfigOfJob($this->job, $this->execution)->getDispatchConfig()->getReplicaCountForJob($this->job);
-            JobFactory::getInstanceOfJob($this->job, $this->execution)->$command($this->params, $this->request, $this->response);
+            JobFactory::getInstanceOfJob($this->job, $this->execution)->$command(array_merge($this->params, json_decode((string)$this->request->getBody(),true)??[]));
             $newReplicaCount = JobFactory::getDispatchConfigOfJob($this->job, $this->execution)->getDispatchConfig()->getReplicaCountForJob($this->job);
 
             // if replica count has changed OR we have an enforcement (e.g. one replica per execution fixed), dispatch the job
@@ -176,19 +176,6 @@ class ApiJobExecuteController extends AbstractController
         } catch (Exception $e) {
             return $this->render(['status' => 'error', 'reason' => $e->getMessage()], StatusCode::HTTP_INTERNAL_SERVER_ERROR);
         }
-    }
-
-
-    /**
-     * @return ResponseInterface
-     * @throws Exception
-     *
-     * @Route("/isdone", methods={"GET"}, name="exec.job.status")
-     */
-    public function jobIsDoneAction(): ResponseInterface
-    {
-        $executionsPending = App::getDbHelper()->getRepository(Execution::class)->count(['job' => $this->job, 'status' => ExecutionStatus::READY]);
-        return $this->render([], $executionsPending === 0 ? StatusCode::HTTP_OK : StatusCode::HTTP_FAILED_DEPENDENCY);
     }
 
 

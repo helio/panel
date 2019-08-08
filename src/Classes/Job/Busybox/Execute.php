@@ -3,6 +3,8 @@
 namespace Helio\Panel\Job\Busybox;
 
 use \Exception;
+use Helio\Panel\App;
+use Helio\Panel\Execution\ExecutionStatus;
 use Helio\Panel\Job\AbstractExecute;
 use Helio\Panel\Job\DispatchConfig;
 use Helio\Panel\Utility\JwtUtility;
@@ -11,21 +13,6 @@ use Psr\Http\Message\ResponseInterface;
 
 class Execute extends AbstractExecute
 {
-
-
-    /**
-     * @param array $params
-     * @param RequestInterface $request
-     * @param ResponseInterface $response
-     *
-     * @return bool
-     *
-     * TODO: Implement if necessary
-     */
-    public function run(array $params, RequestInterface $request, ResponseInterface $response): bool
-    {
-        return true;
-    }
 
 
     /**
@@ -42,20 +29,5 @@ class Execute extends AbstractExecute
                 'HELIO_TOKEN' => JwtUtility::generateToken(null, null, null, $this->job)['token'],
                 'LIMIT' => $this->execution ? $this->execution->getConfig('limit', 100) : 100
             ]);
-    }
-
-
-    /**
-     * @param array $params
-     * @param RequestInterface $request
-     * @param ResponseInterface|null $response
-     *
-     * @return bool
-     *
-     * TODO: Implement if necessary
-     */
-    public function create(array $params, RequestInterface $request, ResponseInterface $response = null): bool
-    {
-        return true;
     }
 }

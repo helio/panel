@@ -157,9 +157,7 @@ class ApiJobController extends AbstractController
             ->setConfig($this->params['config'] ?? [])
             ->setStatus(JobStatus::INIT);
 
-        JobFactory::getInstanceOfJob($this->job)->create($this->params, $this->request);
-
-        $this->persistJob();
+        JobFactory::getInstanceOfJob($this->job)->create($this->params);
 
         NotificationUtility::notifyAdmin('New Job was created by ' . $this->user->getEmail() . ', type: ' . $this->job->getType() . ', id: ' . $this->job->getId());
 
@@ -296,6 +294,7 @@ class ApiJobController extends AbstractController
         ]);
     }
 
+
     /**
      * @OA\Get(
      *     path="/job/isready",
@@ -343,6 +342,50 @@ class ApiJobController extends AbstractController
 
     /**
      * @OA\Get(
+     *     path="/job/isdone",
+     *     description="HTTP Status Code indicates if the job is done already",
+     *     security={
+     *         {"authByApitoken": {"any"}},
+     *         {"authByJobtoken": {"any"}}
+     *     },
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="query",
+     *         description="Id of the job which status you wandt to see",
+     *         required=true,
+     *         @Oa\Items(
+     *             type="integer"
+     *         )
+     *     ),
+     *     @OA\Response(response="200",
+     *     description="Job has no peding executions",
+     *         @OA\JsonContent(
+     *             @OA\Schema(ref="#/components/schemas/default-content")
+     *         )
+     *     ),
+     *     @OA\Response(response="424",
+     *     description="Job has panding and/or running executions",
+     *         @OA\JsonContent(
+     *             @OA\Schema(ref="#/components/schemas/default-content")
+     *         )
+     *     )
+     * )
+     *
+     * @return ResponseInterface
+     * @throws Exception
+     *
+     * @Route("/isdone", methods={"GET"}, name="exec.job.status")
+     */
+    public function isDoneAction(): ResponseInterface
+    {
+        $executionsTotal = App::getDbHelper()->getRepository(Execution::class)->count(['job' => $this->job]);
+        $executionsPending = App::getDbHelper()->getRepository(Execution::class)->count(['job' => $this->job, 'status' => ExecutionStatus::READY]);
+        return $this->render([], $executionsTotal > 0 && $executionsPending === 0 ? StatusCode::HTTP_OK : StatusCode::HTTP_FAILED_DEPENDENCY);
+    }
+
+
+    /**
+     * @OA\Get(
      *     path="/job/logs",
      *     security={
      *         {"authByApitoken": {"any"}},
@@ -384,9 +427,6 @@ class ApiJobController extends AbstractController
      */
     public function logsAction(): ResponseInterface
     {
-        if (!$this->job->getOwner()) {
-            return $this->render([]);
-        }
         return $this->render($this->setWindow()->getLogEntries($this->job->getOwner()->getId(), $this->job->getId()));
     }
 

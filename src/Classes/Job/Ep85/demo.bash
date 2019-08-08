@@ -47,7 +47,7 @@ done
 
 
 while true; do
-    if curl -fsSL -o /dev/null -H "Authorization: Bearer ${JOB_TOKEN}" "${BASE_URL}/api/job/${JOB_ID}/execute/isdone"; then
+    if curl -fsSL -o /dev/null -H "Authorization: Bearer ${JOB_TOKEN}" "${BASE_URL}/api/job/isdone?id=${JOB_ID}"; then
         exit 0
     fi
     sleep 30;
