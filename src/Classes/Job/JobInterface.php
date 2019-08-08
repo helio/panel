@@ -3,7 +3,6 @@
 namespace Helio\Panel\Job;
 
 use Helio\Panel\Model\Job;
-use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 
 /**
@@ -43,4 +42,12 @@ interface JobInterface
      * @return mixed
      */
     public function run(array $config);
+
+
+    /**
+     * @param array $params
+     * @param ResponseInterface $response
+     * @return ResponseInterface
+     */
+    public function getnextinqueue(array $params, ResponseInterface $response): ResponseInterface;
 }

@@ -77,6 +77,14 @@ class Execute extends AbstractExecute
 
 
     /**
+     * @return int
+     */
+    protected function calculateRuntime(): int {
+        return $this->execution->getConfig('estimated_runtime', 300) + 60;
+    }
+
+
+    /**
      * @param array $params
      * @param Response $response
      * @return ResponseInterface

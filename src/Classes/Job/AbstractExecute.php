@@ -2,15 +2,18 @@
 
 namespace Helio\Panel\Job;
 
+
 use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\OptimisticLockException;
 use \Exception;
+use \DateTime;
 use Helio\Panel\App;
 use Helio\Panel\Helper\DbHelper;
 use Helio\Panel\Model\Job;
 use Helio\Panel\Model\Execution;
 use Helio\Panel\Execution\ExecutionStatus;
-use Psr\Http\Message\RequestInterface;
+use Helio\Panel\Utility\ServerUtility;
+use OpenApi\Annotations\Server;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response;
 use Slim\Http\StatusCode;
@@ -19,7 +22,7 @@ use Slim\Http\StatusCode;
 /**
  * Class AbstractExecute
  *
- * @package Helio\Panel\Job\Vfdocker
+ * @package Helio\Panel\Job\Docker
  */
 abstract class AbstractExecute implements JobInterface, DispatchableInterface
 {
@@ -43,7 +46,7 @@ abstract class AbstractExecute implements JobInterface, DispatchableInterface
     public function __construct(Job $job, Execution $execution = null)
     {
         $this->job = $job;
-        $this->execution = $execution ?? (new Execution());
+        $this->execution = $execution ?? new Execution();
     }
 
 
@@ -55,7 +58,9 @@ abstract class AbstractExecute implements JobInterface, DispatchableInterface
     public function create(array $config): bool
     {
         $this->job->setConfig($config);
+        $this->execution->setEstimatedRuntime($this->calculateRuntime());
         App::getDbHelper()->persist($this->execution);
+        App::getDbHelper()->persist($this->job);
         App::getDbHelper()->flush();
         return true;
     }
@@ -101,11 +106,11 @@ abstract class AbstractExecute implements JobInterface, DispatchableInterface
 
     /**
      * @param array $params
-     * @param Response $response
+     * @param ResponseInterface $response
      * @return ResponseInterface
      * @throws Exception
      */
-    public function getnextinqueue(array $params, Response $response): ResponseInterface
+    public function getnextinqueue(array $params, ResponseInterface $response): ResponseInterface
     {
         $executions = App::getDbHelper()->getRepository(Execution::class)->findBy(['job' => $this->job, 'status' => ExecutionStatus::READY], ['priority' => 'ASC', 'created' => 'ASC'], 5);
         /** @var Execution $execution */
@@ -115,6 +120,7 @@ abstract class AbstractExecute implements JobInterface, DispatchableInterface
                 $lockedExecution = App::getDbHelper()->getRepository(Execution::class)->find($execution->getId(), LockMode::OPTIMISTIC, $execution->getVersion());
                 $lockedExecution->setStatus(ExecutionStatus::RUNNING);
                 App::getDbHelper()->flush();
+                /** @var Response $response */
                 return $response->withJson(array_merge(json_decode($lockedExecution->getConfig(), true), [
                     'id' => (string)$lockedExecution->getId(),
                 ]), null, JSON_UNESCAPED_SLASHES);
@@ -123,5 +129,68 @@ abstract class AbstractExecute implements JobInterface, DispatchableInterface
             }
         }
         return $response->withStatus(StatusCode::HTTP_NOT_FOUND);
+    }
+
+
+    /**
+     * @return array
+     * @throws Exception
+     */
+    public function getExecutionEstimates(): array
+    {
+        $pendingExecutions = App::getDbHelper()->getRepository(Execution::class)->count(['status' => ExecutionStatus::READY]);
+
+        // 0 means non-terminating worker
+        if ($this->execution->getEstimatedRuntime() === 0 || $this->job->getActiveExecutionCount()) {
+            return [
+                'duration' => 'infinite',
+                'completion' => 'never',
+                'cost' => $this->job->getBudget() / $pendingExecutions
+            ];
+        }
+
+        return [
+            'duration' => $this->execution->getEstimatedRuntime(),
+            'completion' => $this->calculateCompletion()->getTimestamp(),
+            'cost' => $this->calculateCosts()
+        ];
+    }
+
+
+    /**
+     * @return int
+     */
+    abstract protected function calculateRuntime(): int;
+
+
+    /**
+     * @return DateTime
+     * @throws Exception
+     */
+    protected function calculateCompletion(): DateTime
+    {
+        $pendingQuery = App::getDbHelper()->getRepository(Execution::class)->createQueryBuilder('pending');
+        $pendingQuery
+            ->select('SUM(e.estimatedRuntime) as sum')
+            ->from(Execution::class, 'e')
+            ->join(Job::class, 'j')
+            ->where($pendingQuery->expr()->andX()
+                ->add($pendingQuery->expr()->eq('e.status', ExecutionStatus::READY))
+                ->add($pendingQuery->expr()->eq('j.status', JobStatus::READY))
+                ->add($pendingQuery->expr()->eq('j.autoExecSchedule', ''))
+                ->add($pendingQuery->expr()->lte('e.priority', $this->execution->getPriority()))
+                ->add($pendingQuery->expr()->lte('j.priority', $this->job->getPriority()))
+            );
+        $now = new DateTime('now', ServerUtility::getTimezoneObject());
+        return $now->setTimestamp($now->getTimestamp() + $pendingQuery->getQuery()->getArrayResult()[0]['sum']);
+    }
+
+
+    /**
+     * @return int
+     */
+    protected function calculateCosts(): int
+    {
+        return floor($this->execution->getEstimatedRuntime() * (4 * $this->job->getGpus()) * 10 / 60);
     }
 }

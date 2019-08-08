@@ -3,6 +3,7 @@
 namespace Helio\Panel\Job\Gitlab;
 
 use \Exception;
+use Helio\Panel\App;
 use Helio\Panel\Job\AbstractExecute;
 use Helio\Panel\Job\DispatchConfig;
 use Helio\Panel\Utility\JwtUtility;
@@ -30,8 +31,8 @@ class Execute extends AbstractExecute
 
     /**
      * @param array $config
-     *
      * @return bool
+     * @throws Exception
      */
     public function create(array $config): bool
     {
@@ -48,6 +49,18 @@ class Execute extends AbstractExecute
             }
         }
         $this->job->setConfig($cleanConfig);
+
+        App::getDbHelper()->persist($this->execution);
+        App::getDbHelper()->persist($this->job);
+        App::getDbHelper()->flush();
         return true;
+    }
+
+
+    /**
+     * @return int
+     */
+    protected function calculateRuntime(): int {
+        return 0;
     }
 }

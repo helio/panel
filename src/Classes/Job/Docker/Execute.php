@@ -1,6 +1,6 @@
 <?php
 
-namespace Helio\Panel\Job\Vfdocker;
+namespace Helio\Panel\Job\Docker;
 
 use \Exception;
 use Helio\Panel\Execution\ExecutionStatus;
@@ -46,9 +46,17 @@ class Execute extends AbstractExecute
                 array_merge($this->job->getConfig('env', []), [
                     'HELIO_JOBID' => $this->job->getId(),
                     'HELIO_TOKEN' => JwtUtility::generateToken(null, null, null, $this->job)['token'],
-                    'REPORT_URL' => ServerUtility::getBaseUrl() . ExecUtility::getExecUrl($this->job, 'work/submitresult', $this->execution)
+                    'REPORT_URL' => ServerUtility::getBaseUrl() . ExecUtility::getExecUrl($this->job, 'submitresult', $this->execution)
                 ])
             )
             ->setRegistry($this->job->getConfig('registry', []));
+    }
+
+
+    /**
+     * @return int
+     */
+    protected function calculateRuntime(): int {
+        return $this->execution->getConfig('estimated_runtime', 3600);
     }
 }

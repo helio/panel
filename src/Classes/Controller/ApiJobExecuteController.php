@@ -139,6 +139,7 @@ class ApiJobExecuteController extends AbstractController
      *         )
      *     ),
      *     @OA\Response(response="200", ref="#/components/responses/200")
+     *     @OA\Response(response="200", ref="#/components/responses/500")
      * )
      *
      * @return ResponseInterface
@@ -166,15 +167,21 @@ class ApiJobExecuteController extends AbstractController
             JobFactory::getInstanceOfJob($this->job, $this->execution)->$command(array_merge($this->params, json_decode((string)$this->request->getBody(),true)??[]));
             $newReplicaCount = JobFactory::getDispatchConfigOfJob($this->job, $this->execution)->getDispatchConfig()->getReplicaCountForJob($this->job);
 
+            $estimates = JobFactory::getDispatchConfigOfJob($this->job, $this->execution)->getExecutionEstimates();
+
             // if replica count has changed OR we have an enforcement (e.g. one replica per execution fixed), dispatch the job
             if ($previousReplicaCount !== $newReplicaCount || JobFactory::getDispatchConfigOfJob($this->job, $this->execution)->getDispatchConfig()->getFixedReplicaCount()) {
                 OrchestratorFactory::getOrchestratorForInstance($this->instance, $this->job)->dispatchJob();
                 $this->persistExecution();
                 $this->persistJob();
             }
-            return $this->render(['status' => 'success', 'id' => $this->execution->getId()]);
+            return $this->render([
+                'status' => 'success',
+                'id' => $this->execution->getId(),
+                'estimates' => $estimates
+            ]);
         } catch (Exception $e) {
-            return $this->render(['status' => 'error', 'reason' => $e->getMessage()], StatusCode::HTTP_INTERNAL_SERVER_ERROR);
+            return $this->render(['success' => false, 'message' => $e->getMessage()], StatusCode::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 

@@ -146,14 +146,14 @@ class ApiJobController extends AbstractController
             'config' => FILTER_SANITIZE_STRING
         ]);
 
-        $this->job->setName($this->params['jobname'] ?? 'Automatically named during add')
+        $this->job->setName($this->params['name'] ?? 'Automatically named during add')
             ->setOwner($this->user)
             ->setCpus($this->params['cpus'] ?? '')
             ->setGpus($this->params['gpus'] ?? '')
             ->setLocation($this->params['location'] ?? '')
             ->setBillingReference($this->params['billingReference'] ?? '')
             ->setBudget($this->params['budget'] ?? '')
-            ->setIsCharity($this->params['free'] ?? '' === 'on')
+            ->setIsCharity($this->params['isCharity'] ?? '' === 'on')
             ->setConfig($this->params['config'] ?? [])
             ->setStatus(JobStatus::INIT);
 

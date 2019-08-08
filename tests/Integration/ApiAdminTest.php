@@ -30,7 +30,7 @@ class ApiAdminTest extends TestCase
         $this->infrastructure->getEntityManager()->flush();
 
         /** @var Job $job */
-        $job = (new Job())->setType(JobType::VF_DOCKER)->setOwner($user)->setCreated()->setStatus(JobStatus::READY)->setConfig([]);
+        $job = (new Job())->setType(JobType::DOCKER)->setOwner($user)->setCreated()->setStatus(JobStatus::READY)->setConfig([]);
         $this->infrastructure->getEntityManager()->persist($job);
         $this->infrastructure->getEntityManager()->flush();
 
@@ -46,17 +46,6 @@ class ApiAdminTest extends TestCase
         $this->job = $job;
     }
 
-    /**
-     * @throws \Exception
-     */
-    public function testStatsEndpoint(): void
-    {
-        $this->markTestSkipped('TIMESTAMPDIFF() currently doesn\'t work in SQLite');
-
-        $result = $this->runApp('GET', '/api/admin/stat', true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']]);
-
-        $this->assertEquals(StatusCode::HTTP_OK, $result->getStatusCode());
-    }
 
     /**
      * @throws \Exception
@@ -67,6 +56,6 @@ class ApiAdminTest extends TestCase
         $hiera = (string)$result->getBody();
 
         $this->assertEquals(StatusCode::HTTP_OK, $result->getStatusCode());
-        $this->assertStringContainsString('  service_name: vfdocker-', $hiera);
+        $this->assertStringContainsString('  service_name: docker-', $hiera);
     }
 }
