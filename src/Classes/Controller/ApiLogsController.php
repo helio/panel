@@ -33,11 +33,6 @@ class ApiLogsController extends AbstractController
     use TypeApiController;
     use HelperElasticController;
 
-    protected function getContext(): ?string
-    {
-        return 'panel';
-    }
-
     /**
      * @OA\Get(
      *     path="/logs",

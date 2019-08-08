@@ -187,7 +187,7 @@ class Execution extends AbstractModel
     /**
      * @return DateTime
      */
-    public function getLatestHeartbeat(): DateTime
+    public function getLatestHeartbeat(): ?DateTime
     {
         if ($this->created->getTimezone()->getName() !== $this->getTimezone()) {
             $this->created->setTimezone(new DateTimeZone($this->getTimezone()));

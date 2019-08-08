@@ -33,11 +33,6 @@ class ApiUserController extends AbstractController
     use TypeApiController;
     use HelperElasticController;
 
-    protected function getContext(): ?string
-    {
-        return 'panel';
-    }
-
     /**
      * @return ResponseInterface
      *

@@ -23,7 +23,7 @@ use Tuupola\Middleware\JwtAuthentication\RequestPathRule;
  * Class MiddlewareUtility
  * @package Helio\Panel\Utility
  */
-class MiddlewareUtility extends AbstractUtility
+class MiddlewareForHttpUtility extends AbstractUtility
 {
 
     /**

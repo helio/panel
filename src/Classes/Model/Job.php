@@ -49,8 +49,13 @@ class Job extends AbstractModel
                     ""username"": ""$DOCKER_USER"",
                     ""password"": ""$DOCKER_PASSWORD"",
                     ""email"": ""docker@example.com""
-                }
-            }",
+                },
+     *         ""cliparams"": {
+     *             ""env"": [
+     *                 {""SECRET_SOURCE"":""https://my.vautl:42/""}
+     *             ]
+     *          }
+     *     }",
      * )
      *
      * @var string

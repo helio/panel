@@ -10,7 +10,7 @@ use Helio\Panel\Model\QueryFunction\TimestampDiff;
 use Helio\Panel\Model\Execution;
 use Helio\Panel\Model\Type\UTCDateTimeType;
 use Helio\Panel\Model\User;
-use Helio\Panel\Utility\MiddlewareUtility;
+use Helio\Panel\Utility\MiddlewareForHttpUtility;
 use Helio\Panel\Utility\ServerUtility;
 use Helio\Test\Infrastructure\App;
 use Helio\Test\Infrastructure\Helper\DbHelper;
@@ -191,7 +191,7 @@ class TestCase extends \PHPUnit\Framework\TestCase
             $request = $request->withAttributes($attributes);
         }
 
-        $middlewares = $withMiddleware ? [MiddlewareUtility::class] : [];
+        $middlewares = $withMiddleware ? [MiddlewareForHttpUtility::class] : [];
         $app = App::getTestApp(true, $middlewares);
 
         $app->getContainer()['request'] = $request;

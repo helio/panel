@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "56d22a21637900f0fb2951cd86c9bbd7",
+    "content-hash": "72dab28bf2af109b38b190c3e527b3b8",
     "packages": [
         {
             "name": "adbario/php-dot-notation",
@@ -54,6 +54,51 @@
                 "dotnotation"
             ],
             "time": "2019-01-01T23:59:15+00:00"
+        },
+        {
+            "name": "adhocore/cron-expr",
+            "version": "v0.0.6",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/adhocore/php-cron-expr.git",
+                "reference": "d7bfd342d62795a50ad6377964cf567eb727961a"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/adhocore/php-cron-expr/zipball/d7bfd342d62795a50ad6377964cf567eb727961a",
+                "reference": "d7bfd342d62795a50ad6377964cf567eb727961a",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.4"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^4.8 || ^5.7 || ^6.5"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Ahc\\Cron\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Jitendra Adhikari",
+                    "email": "jiten.adhikary@gmail.com"
+                }
+            ],
+            "description": "Ultra lightweight Cron Expression parser for PHP",
+            "keywords": [
+                "cron",
+                "cron-expr",
+                "cron-expression",
+                "cron-parser"
+            ],
+            "time": "2018-08-16T00:52:45+00:00"
         },
         {
             "name": "container-interop/container-interop",

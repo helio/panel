@@ -43,7 +43,7 @@ jobs:
           if [[ "${CIRCLE_BRANCH}" = 'master' ]]; then DEPLOY_USERNAME=panelproto; fi
           mkdir ~/.ssh || rm -f ~/.ssh/known_hosts
           mv ./.circleci/known_hosts ~/.ssh/
-          rsync -rptgoDzL --delete src www cli-config.php composer.* ${DEPLOY_USERNAME}@nbf01.opsserver.ch:.
+          rsync -rptgoDzL --delete src www bin cli-config.php composer.* ${DEPLOY_USERNAME}@nbf01.opsserver.ch:.
           rsync -rptgoDzL cnf ${DEPLOY_USERNAME}@nbf01.opsserver.ch:.
           ssh ${DEPLOY_USERNAME}@nbf01.opsserver.ch "source .zshrc;
           source .profile;

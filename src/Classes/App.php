@@ -10,7 +10,7 @@ use Helio\Panel\Helper\DbHelper;
 use Helio\Panel\Helper\ElasticHelper;
 use Helio\Panel\Helper\LogHelper;
 use Helio\Panel\Helper\ZapierHelper;
-use Helio\Panel\Utility\MiddlewareUtility;
+use Helio\Panel\Utility\MiddlewareForHttpUtility;
 use Helio\Panel\Utility\ServerUtility;
 use Monolog\Logger;
 use Slim\Views\PhpRenderer;
@@ -67,7 +67,7 @@ class App extends \Slim\App
      */
     public static function getApp(
         ?string $appName = null,
-        array $middleWaresToApply = [MiddlewareUtility::class]
+        array $middleWaresToApply = [MiddlewareForHttpUtility::class]
     ): App
     {
 
@@ -97,6 +97,25 @@ class App extends \Slim\App
         }
 
         return self::$instance;
+    }
+
+
+    /**
+     * @param null|string $appName
+     * @param array $middleWaresToApply
+     *
+     * @return App
+     * @throws Exception
+     */
+    public static function getNewApp(
+        ?string $appName = null,
+        array $middleWaresToApply = [MiddlewareForHttpUtility::class]
+    ): App
+    {
+        self::$instance = null;
+        self::$className = '';
+
+        return self::getApp($appName, $middleWaresToApply);
     }
 
 

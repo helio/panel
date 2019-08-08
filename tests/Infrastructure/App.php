@@ -5,7 +5,7 @@ namespace Helio\Test\Infrastructure;
 use Doctrine\Common\Annotations\AnnotationReader;
 use \Exception;
 use Helio\Panel\Utility\JwtUtility;
-use Helio\Panel\Utility\MiddlewareUtility;
+use Helio\Panel\Utility\MiddlewareForHttpUtility;
 use Helio\Test\Infrastructure\Helper\DbHelper;
 use Helio\Test\Infrastructure\Helper\LogHelper;
 use Helio\Test\Infrastructure\Helper\ZapierHelper;
@@ -45,7 +45,7 @@ class App extends \Helio\Panel\App
      */
     public static function getTestApp(
         bool $cleanInstance = false,
-        array $middleWaresToApply = [MiddlewareUtility::class]
+        array $middleWaresToApply = [MiddlewareForHttpUtility::class]
     ): \Helio\Panel\App
     {
         if ($cleanInstance) {

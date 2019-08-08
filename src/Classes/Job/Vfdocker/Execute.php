@@ -15,8 +15,6 @@ use Helio\Panel\Utility\JwtUtility;
 use Helio\Panel\Utility\ServerUtility;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
-use Slim\Http\Response;
-use Slim\Http\StatusCode;
 
 class Execute extends AbstractExecute
 {

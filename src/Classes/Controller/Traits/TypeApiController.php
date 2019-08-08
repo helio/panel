@@ -17,6 +17,6 @@ trait TypeApiController
 
     protected function getContext(): ?string
     {
-        return 'api';
+        return 'panel';
     }
 }

@@ -9,6 +9,7 @@ use \DateTime;
 use \DateTimeZone;
 use Helio\Panel\App;
 use Helio\Panel\Helper\LogHelper;
+use Slim\Http\Request;
 use Tuupola\Base62;
 
 class ServerUtility extends AbstractUtility
@@ -93,30 +94,30 @@ class ServerUtility extends AbstractUtility
      */
     public static function get(string $name, $default = null): string
     {
-        // local development server has the stuff in _ENV
-        if (PHP_SAPI === 'cli-server' && array_key_exists($name, $_ENV)) {
-            return $_ENV[$name];
-        }
-
-        // look in _SERVER and request
-        if (!array_key_exists($name, $_SERVER) || !$_SERVER[$name]) {
-            if (App::isReady()) {
-                try {
+        try {
+            // look in _SERVER and request
+            if (!array_key_exists($name, $_SERVER) || !$_SERVER[$name]) {
+                if (App::isReady()) {
                     $reqParams = App::getApp()->getContainer()->get('request')->getServerParams();
                     if (array_key_exists($name, $reqParams) && $reqParams[$name]) {
                         return $reqParams[$name];
                     }
-                } catch (Exception $e) {
-                    // fallback to default.
-                }
-            }
-            if ($default !== null) {
-                return $default;
-            }
-            throw new RuntimeException('please set the ENV Variable ' . $name, 1530357047);
-        }
 
-        return $_SERVER[$name];
+                }
+                // local development server has the stuff in _ENV
+                if (self::isLocalDevEnv() && array_key_exists($name, $_ENV)) {
+                    return $_ENV[$name];
+                }
+            } else {
+                return $_SERVER[$name];
+            }
+        } catch (Exception $e) {
+            // fallback to default.
+        }
+        if ($default !== null) {
+            return $default;
+        }
+        throw new RuntimeException('please set the ENV Variable ' . $name, 1530357047);
     }
 
 
@@ -153,10 +154,7 @@ class ServerUtility extends AbstractUtility
             $trace = 'etrace' . (new DateTime())->getTimestamp();
         }
         LogHelper::debug('executing shell command (' . $trace . '):' . "\n" . $command);
-
-        if (self::$testMode) {
-            self::$lastExecutedShellCommand[] = $command;
-        }
+        self::$lastExecutedShellCommand[] = $command;
 
         if (self::isProd() || self::get('ENFORCE_SYS_EXEC', false)) {
             $result = trim(@shell_exec($command));
