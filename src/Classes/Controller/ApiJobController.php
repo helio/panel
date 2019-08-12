@@ -116,14 +116,14 @@ class ApiJobController extends AbstractController
     {
         try {
             $this->requiredParameterCheck([
-                'jobtype' => FILTER_SANITIZE_STRING
+                'type' => FILTER_SANITIZE_STRING
             ]);
 
-            if (!JobType::isValidType($this->params['jobtype'])) {
+            if (!JobType::isValidType($this->params['type'])) {
                 return $this->render(['success' => false, 'message' => 'Unknown Job Type'], StatusCode::HTTP_NOT_ACCEPTABLE);
             }
 
-            $this->job->setType($this->params['jobtype']);
+            $this->job->setType($this->params['type']);
         } catch (Exception $e) {
             // If we have created a new job but haven't passed the jobtype (e.g. during wizard loading), we cannot continue.
             if ($this->job->getName() === '___NEW' && $this->job->getStatus() === JobStatus::UNKNOWN) {

@@ -23,6 +23,7 @@ final class JobType
     public const ENERGY_PLUS_85 = 'ep85';
     public const DOCKER = 'docker';
     public const BUSYBOX = 'busybox';
+    public const INFINITEBOX = 'infinitebox';
     public const UNKNOWN = '';
 
     /**
@@ -41,6 +42,7 @@ final class JobType
             || $type === self::ENERGY_PLUS_85
             || $type === self::DOCKER
             || $type === self::BUSYBOX
+            || $type === self::INFINITEBOX
             || $type === self::UNKNOWN;
     }
 
@@ -54,7 +56,8 @@ final class JobType
             $map = [
                 self::ENERGY_PLUS_85 => 'fa fa-plus',
                 self::DOCKER => 'fa fa-bolt',
-                self::BUSYBOX => 'fa fa-clock-o'
+                self::BUSYBOX => 'fa fa-clock-o',
+                self::INFINITEBOX => 'fa fa-clock-o'
             ];
 
             return $map[$type] ?? "fa fa-$type";

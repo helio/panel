@@ -5,7 +5,6 @@ namespace Helio\Panel\Job;
 
 use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\OptimisticLockException;
-use Doctrine\ORM\Query\Expr\Join;
 use \Exception;
 use \DateTime;
 use Helio\Panel\App;
@@ -145,10 +144,10 @@ abstract class AbstractExecute implements JobInterface, DispatchableInterface
             return [
                 'duration' => 'infinite',
                 'completion' => 'never',
-                'cost' => $this->job->getBudget() / $pendingExecutions
+                'cost' => $this->job->getBudget() ?? 0 / $pendingExecutions
             ];
         }
-$debug = $this->calculateCompletion();
+
         return [
             'duration' => $this->calculateRuntime(),
             'completion' => $this->calculateCompletion()->getTimestamp(),
@@ -177,10 +176,12 @@ $debug = $this->calculateCompletion();
                 ->add($pendingQuery->expr()->gt($pendingQuery->expr()->length('j.autoExecSchedule'), 0))
                 ->add($pendingQuery->expr()->eq('e.status', ExecutionStatus::READY))
                 ->add($pendingQuery->expr()->eq('j.status', JobStatus::READY))
+
                 ->add($pendingQuery->expr()->lte('e.priority', $this->execution->getPriority()))
                 ->add($pendingQuery->expr()->lte('j.priority', $this->job->getPriority()))
             );
         $now = new DateTime('now', ServerUtility::getTimezoneObject());
+
         $duration = $pendingQuery->getQuery()->getArrayResult()[0]['sum'];
 
         return $now->setTimestamp($now->getTimestamp() + $duration);

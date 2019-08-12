@@ -46,6 +46,6 @@ class SlackHelper implements HelperInterface
         ]);
 
         # Make an authenticated HTTP Request
-        return $http_client->request('POST', ServerUtility::get('SLACK_WEBHOOK'), ['body' => '{"text":"' . $message . '"}']);
+        return $http_client->request('POST', ServerUtility::get('SLACK_WEBHOOK'), ['body' => '{"text":"' . $message . '"}'])->getStatusCode() === 200;
     }
 }

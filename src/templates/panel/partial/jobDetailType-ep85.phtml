@@ -5,13 +5,13 @@
     </p>
     <?php
     echo '<pre class="prettyprint">';
-    echo \Helio\Panel\Utility\ServerUtility::getBaseUrl() . 'exec?jobid=' . $job->getId();
+    echo \Helio\Panel\Utility\ExecUtility::getExecUrl($job);
     echo '</pre>';
     ?>
     <hr/>
     <h2>Try me!</h2>
     <form class="try-job"
-          data-demourl="<?php echo \Helio\Panel\Utility\ServerUtility::getBaseUrl() . 'exec?jobid=' . $job->getId() ?>">
+          data-demourl="<?php echo \Helio\Panel\Utility\ExecUtility::getExecUrl($job); ?>">
         <div class="form-group">
 
             <label for="epw">
@@ -50,7 +50,7 @@
         echo '<p>Files associated to this job</p><ul>';
         foreach ($files as $file) {
             if (strpos($file, 'tar.gz') !== false) {
-                echo '<li><a target="_blank" href="/exec/download/' . $file . '?jobid=' . $job->getId() . '">' . $file . '</a></li>';
+                echo '<li><a target="_blank" href="' . \Helio\Panel\Utility\ExecUtility::getExecUrl($job, 'download/' . $file) . '>' . $file . '</a></li>';
             }
         }
         echo '</ul>';
