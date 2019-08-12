@@ -66,14 +66,15 @@ class ManagerNodesTest extends TestCase
         $this->infrastructure->getEntityManager()->persist($this->user);
         $this->infrastructure->getEntityManager()->flush();
 
-        $response = $this->runApp('POST', '/api/job?jobtype=' . JobType::ENERGY_PLUS_85, true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']]);
+        $response = $this->runApp('POST', '/api/job?type=' . JobType::ENERGY_PLUS_85, true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']]);
 
         $this->assertEquals(StatusCode::HTTP_OK, $response->getStatusCode());
 
         $body = (string)$response->getBody();
         $jobid = json_decode($body, true)['id'];
+        $rawcommand = ServerUtility::getLastExecutedShellCommand();
         $command = str_replace('\\"', '"', ServerUtility::getLastExecutedShellCommand());
-        $pattern = '/^.*\\\\"callback\\\\":\\\\"' . str_replace('/', '\\/', ServerUtility::getBaseUrl()) . '([^"]+)\\\\"/';
+        $pattern = '/^.*"callback":"' . str_replace('/', '\\/', ServerUtility::getBaseUrl()) . '([^"]+)"/';
         $matches = [];
         preg_match($pattern, $command, $matches);
         $this->assertNotEmpty($matches);
@@ -116,7 +117,7 @@ class ManagerNodesTest extends TestCase
      */
     public function testOnlyOneManagerNodesGetInitializedOnNewJob(): void
     {
-        $result = json_decode((string)$this->runApp('POST', '/api/job?jobtype=' . JobType::GITLAB_RUNNER, true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']], null)->getBody(), true);
+        $result = json_decode((string)$this->runApp('POST', '/api/job?type=' . JobType::GITLAB_RUNNER, true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']], null)->getBody(), true);
         $this->assertArrayHasKey('id', $result, 'no ID of new job returned');
         $this->runApp('POST', '/api/job', true, ['Authorization' => 'Bearer ' . $result['token']], ['jobid' => $result['id'], 'name' => 'testing 1551430509']);
         $this->assertNotNull($this->jobRepository->findOneBy(['name' => 'testing 1551430509'])->getManagerNodes(), 'init node not ready, must not call to create redundant manager nodes yet');
@@ -128,7 +129,7 @@ class ManagerNodesTest extends TestCase
      */
     public function testRedundantManagersGetSetupOnCallbackCall(): void
     {
-        $jobid = json_decode((string)$this->runApp('POST', '/api/job?jobtype=' . JobType::GITLAB_RUNNER, true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']])->getBody(), true)['id'];
+        $jobid = json_decode((string)$this->runApp('POST', '/api/job?type=' . JobType::GITLAB_RUNNER, true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']])->getBody(), true)['id'];
         /** @var Job $job */
         $job = $this->jobRepository->find($jobid);
         $this->assertCount(0, $job->getManagerNodes());
@@ -136,7 +137,7 @@ class ManagerNodesTest extends TestCase
         $this->assertStringContainsString('user_id', ServerUtility::getLastExecutedShellCommand());
         $this->assertStringContainsString($this->user->getId(), ServerUtility::getLastExecutedShellCommand());
         $command = str_replace('\\"', '"', ServerUtility::getLastExecutedShellCommand());
-        $pattern = '/^.*\\\\"callback\\\\":\\\\"' . str_replace('/', '\\/', ServerUtility::getBaseUrl()) . '([^"]+)\\\\"/';
+        $pattern = '/^.*"callback":"' . str_replace('/', '\\/', ServerUtility::getBaseUrl()) . '([^"]+)"/';
         $matches = [];
         preg_match($pattern, $command, $matches);
         $this->assertNotEmpty($matches);
@@ -229,6 +230,23 @@ class ManagerNodesTest extends TestCase
         $this->assertStringContainsString('[' . $ids . ']', ServerUtility::getLastExecutedShellCommand(1));
     }
 
+    /**
+     * @throws \Exception
+     */
+    public function testReplicaGetToZeroAfterHavingRunFixedReplicaCountJob(): void
+    {
+        $this->job->setType(JobType::DOCKER);
+        $this->user->setAdmin(true);
+        $this->infrastructure->getEntityManager()->persist($this->user);
+        $this->infrastructure->getEntityManager()->persist($this->job);
+        $this->infrastructure->getEntityManager()->flush();
+
+        $this->runApp('POST', '/api/job/' . $this->job->getId() . '/execute', true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']]);
+        $this->runApp('POST', '/api/job/' . $this->job->getId() . '/execute/submitresult', true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']], ['result' => 42]);
+
+
+    }
+
 
     /**
      * @throws \Exception
@@ -253,7 +271,7 @@ class ManagerNodesTest extends TestCase
     {
 
 
-        $result = $this->runApp('POST', '/api/job?jobtype=' . JobType::GITLAB_RUNNER, true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']]);
+        $result = $this->runApp('POST', '/api/job?type=' . JobType::GITLAB_RUNNER, true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']]);
         $this->assertEquals(StatusCode::HTTP_OK, $result->getStatusCode());
         $body = json_decode((string)$result->getBody(), true);
         $this->assertNotNull($body);
@@ -261,7 +279,7 @@ class ManagerNodesTest extends TestCase
         $jobtoken = $body['token'];
 
         $command = str_replace('\\"', '"', ServerUtility::getLastExecutedShellCommand());
-        $pattern = '/^.*\\\\"callback\\\\":\\\\"' . str_replace('/', '\\/', ServerUtility::getBaseUrl()) . '([^"]+)\\\\"/';
+        $pattern = '/^.*"callback":"' . str_replace('/', '\\/', ServerUtility::getBaseUrl()) . '([^"]+)"/';
         $matches = [];
         preg_match($pattern, $command, $matches);
         $this->assertNotEmpty($matches);

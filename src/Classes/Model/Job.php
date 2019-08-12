@@ -73,6 +73,7 @@ class Job extends AbstractModel
      */
     protected $status = JobStatus::UNKNOWN;
 
+
     /**
      * @OA\Property(ref="#/components/schemas/jobtype")
      *

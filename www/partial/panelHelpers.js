@@ -215,7 +215,7 @@ const wizard = function (id) {
             accepts: {
                 mycustomtype: 'application/json'
             },
-            url: '/api/' + $(self.modal).data('endpoint') + '/add?' + $(self.modal).data('idName') + '=_NEW',
+            url: '/api/' + $(self.modal).data('endpoint'),
             method: 'post',
             success: function (data) {
                 $(self.modal).data($(self.modal).data('idName'), data['id']);
@@ -631,7 +631,7 @@ const wizard = function (id) {
             accepts: {
                 mycustomtype: 'application/json'
             },
-            url: '/api/' + endpoint + '/add',
+            url: '/api/' + endpoint,
             method: 'post',
             data: data,
             success: function (data) {

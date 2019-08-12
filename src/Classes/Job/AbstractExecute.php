@@ -145,7 +145,7 @@ abstract class AbstractExecute implements JobInterface, DispatchableInterface
             return [
                 'duration' => 'infinite',
                 'completion' => 'never',
-                'cost' => $this->job->getBudget() / $pendingExecutions
+                'cost' => $this->job->getBudget() ?? 0 / $pendingExecutions
             ];
         }
 

@@ -270,7 +270,7 @@ class Choria implements OrchestratorInterface
                 '$instanceId'
             ],
             [
-                '\\\\"',
+                '\\"',
                 $this->instance->getFqdn(),
                 ServerUtility::getBaseUrl() . 'api/instance/callback?instanceid=' . $this->instance->getId(),
                 ServerUtility::getBaseUrl() . 'api/job/callback?jobid=' . $this->job->getId(),

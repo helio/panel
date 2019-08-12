@@ -185,7 +185,7 @@ class AutoscalerTest extends TestCase
         $this->infrastructure->getEntityManager()->flush();
 
         $result = $this->exec();
-$debug=$result->getBody()."";
+
         $this->assertEquals(200, $result->getStatusCode());
         $this->assertStringContainsString('sleep', $this->findValueOfKeyInHiera($result, $this->job->getType() . '-' . $this->job->getId() . '-' . $execution->getId() . '.args'));
     }
@@ -210,6 +210,51 @@ $debug=$result->getBody()."";
         $this->assertEquals(2, $this->findValueOfKeyInHiera($result, $this->job->getType() . '-' . $this->job->getId() . '-' . $execution->getId() . '.replicas'));
     }
 
+
+    /**
+     * @throws \Exception
+     */
+    public function testReplicaDontIncreaseOnFixedJobType(): void
+    {
+        $job = (new Job())->setInitManagerIp('1.1.1.1')->setManagerNodes(['1', '2', '3'])->setOwner($this->user)->setStatus(JobStatus::READY)->setType(JobType::INFINITEBOX);
+        $this->infrastructure->getEntityManager()->persist($job);
+        $this->infrastructure->getEntityManager()->flush();
+        $result = $this->runApp('GET', '/api/admin/getJobHiera?jobid=' . $job->getId(), true, $this->headers);
+
+        $this->assertEquals(200, $result->getStatusCode());
+
+        // first execution
+        $execution1 = (new Execution())->setJob($job)->setStatus(ExecutionStatus::READY);
+        $this->infrastructure->getEntityManager()->persist($execution1);
+        $this->infrastructure->getEntityManager()->persist($job);
+        $this->infrastructure->getEntityManager()->flush();
+
+        $result = $this->runApp('GET', '/api/admin/getJobHiera?jobid=' . $job->getId(), true, $this->headers);
+        $this->assertEquals(200, $result->getStatusCode());
+        $this->assertEquals(1, $this->findValueOfKeyInHiera($result, $job->getType() . '-' . $job->getId() . '-' . $execution1->getId() . '.replicas'));
+
+        // second execution
+        $execution2 = (new Execution())->setJob($job)->setStatus(ExecutionStatus::READY);
+        $this->infrastructure->getEntityManager()->persist($execution2);
+        $this->infrastructure->getEntityManager()->persist($job);
+        $this->infrastructure->getEntityManager()->flush();
+
+        $result = $this->runApp('GET', '/api/admin/getJobHiera?jobid=' . $job->getId(), true, $this->headers);
+        $this->assertEquals(200, $result->getStatusCode());
+        $this->assertEquals(1, $this->findValueOfKeyInHiera($result, $job->getType() . '-' . $job->getId() . '-' . $execution1->getId() . '.replicas'));
+
+        $execution1->setStatus(ExecutionStatus::DONE);
+        $execution2->setStatus(ExecutionStatus::DONE);
+        $this->infrastructure->getEntityManager()->persist($execution1);
+        $this->infrastructure->getEntityManager()->persist($execution2);
+        $this->infrastructure->getEntityManager()->flush();
+
+
+        $result = $this->runApp('GET', '/api/admin/getJobHiera?jobid=' . $job->getId(), true, $this->headers);
+        $this->assertEquals(200, $result->getStatusCode());
+        $this->assertEquals('absent', $this->findValueOfKeyInHiera($result, $job->getType() . '-' . $job->getId() . '-' . $execution1->getId() . '.ensure'));
+    }
+
     /**
      * @throws \Exception
      */
@@ -223,7 +268,7 @@ $debug=$result->getBody()."";
 
         $this->assertNotNull($precreatedJob);
 
-        $this->runApp('POST', '/api/job', true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']], ['jobid' => $precreatedJob->getId(), 'jobtype' => JobType::ENERGY_PLUS_85, 'jobname' => 'testing 1551430480']);
+        $this->runApp('POST', '/api/job', true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']], ['jobid' => $precreatedJob->getId(), 'type' => JobType::ENERGY_PLUS_85, 'jobname' => 'testing 1551430480']);
 
         $this->assertStringContainsString('ssh', ServerUtility::getLastExecutedShellCommand());
         $this->assertStringContainsString('manager-init-' . ServerUtility::getShortHashOfString($precreatedJob->getId()), ServerUtility::getLastExecutedShellCommand());
