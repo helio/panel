@@ -12,7 +12,8 @@ use \RuntimeException;
  *     title="Job Status",
  *     type="string",
  *     description="The Status of the job",
- *     enum = {"Creating", "Ready", "Running", "Done", "Interrupted"}
+ *     enum = {"Creating", "Ready", "Running", "Done", "Interrupted"},
+ *     example="Creating"
  * )
  *
  * @package Helio\Panel\Job

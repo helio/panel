@@ -318,7 +318,7 @@ class ApiAdminController extends AbstractController
             // compose service config
             $services[$servicename] = [
                 'service_name' => $servicename,
-                'image' => $dcfjt->getImage(),
+                'image' => $dcfjt->getImage() ?? 'hello-worlc',
                 'replicas' => $dcfjt->getReplicaCountForJob($this->job),
                 'env' => $yamlEnv,
             ];

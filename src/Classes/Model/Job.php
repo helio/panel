@@ -39,7 +39,7 @@ class Job extends AbstractModel
      *         description=">- Your Job specific JSON config looking like this:
 
             {
-                ""container"": ""nginx:1.8"",
+                ""image"": ""nginx:1.8"",
                 ""env"": [
                     {""SOURCE_PATH"":""https://account-name.zone-name.web.core.windows.net""},
                     {""TARGET_PATH"":""https://bucket.s3.aws-region.amazonaws.com""}
@@ -50,12 +50,13 @@ class Job extends AbstractModel
                     ""password"": ""$DOCKER_PASSWORD"",
                     ""email"": ""docker@example.com""
                 },
-     *         ""cliparams"": {
-     *             ""env"": [
-     *                 {""SECRET_SOURCE"":""https://my.vautl:42/""}
-     *             ]
-     *          }
-     *     }",
+               ""cliparams"": {
+                   ""env"": [
+                       {""SECRET_SOURCE"":""https://my.vautl:42/""}
+                   ]
+                }
+           }",
+     *         example="{""image"":""nginx:1.8"",""env"":[{""SOURCE_PATH"":""https://account-name.zone-name.web.core.windows.net""},{""TARGET_PATH"":""https://bucket.s3.aws-region.amazonaws.com""}],""registry"":{""server"":""example.azurecr.io"",""username"":""$DOCKER_USER"",""password"":""$DOCKER_PASSWORD"",""email"":""docker@example.com""},""cliparams"":{""env"":[{""SECRET_SOURCE"":""https://my.vautl:42/""}]}}"
      * )
      *
      * @var string
