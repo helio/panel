@@ -3,6 +3,7 @@
 namespace Helio\Panel\Job\Gitlab;
 
 use \Exception;
+use Helio\Panel\App;
 use Helio\Panel\Job\AbstractExecute;
 use Helio\Panel\Job\DispatchConfig;
 use Helio\Panel\Utility\JwtUtility;
@@ -11,21 +12,6 @@ use Psr\Http\Message\ResponseInterface;
 
 class Execute extends AbstractExecute
 {
-
-    /**
-     * @param array $params
-     * @param RequestInterface $request
-     * @param ResponseInterface $response
-     *
-     * @return bool
-     *
-     * TODO: Implement
-     */
-    public function run(array $params, RequestInterface $request, ResponseInterface $response): bool
-    {
-        return true;
-    }
-
 
     /**
      * @return DispatchConfig
@@ -44,13 +30,11 @@ class Execute extends AbstractExecute
 
 
     /**
-     * @param array $params
-     * @param RequestInterface $request
-     * @param ResponseInterface|null $response
-     *
+     * @param array $config
      * @return bool
+     * @throws Exception
      */
-    public function create(array $params, RequestInterface $request, ResponseInterface $response = null): bool
+    public function create(array $config): bool
     {
         $options = [
             'gitlabEndpoint' => FILTER_SANITIZE_URL,
@@ -58,14 +42,27 @@ class Execute extends AbstractExecute
             'gitlabTags' => FILTER_SANITIZE_STRING
         ];
 
-        $config = [];
+        $cleanConfig = [];
         foreach ($options as $name => $filter) {
-            $key = filter_var($name, FILTER_SANITIZE_STRING);
-            if (array_key_exists($key, $params)) {
-                $config[$key] = filter_var($params[$key], $filter);
+            if (array_key_exists($name, $config)) {
+                $cleanConfig[$name] = filter_var($config[$name], $filter);
             }
         }
-        $this->job->setConfig($config);
+        $this->job->setConfig($cleanConfig);
+        $this->execution->setEstimatedRuntime(0);
+
+        App::getDbHelper()->persist($this->execution);
+        App::getDbHelper()->persist($this->job);
+        App::getDbHelper()->flush();
         return true;
+    }
+
+
+    /**
+     * @return int
+     */
+    protected function calculateRuntime(): int
+    {
+        return 0;
     }
 }

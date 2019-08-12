@@ -3,7 +3,6 @@
 namespace Helio\Panel\Job;
 
 use Helio\Panel\Model\Job;
-use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 
 /**
@@ -22,31 +21,33 @@ interface JobInterface
     public function __construct(Job $job);
 
     /**
-     * @param array $params
-     * @param RequestInterface $request
-     * @param ResponseInterface|null $response
+     * @param array $config
      *
      * @return bool
      */
-    public function create(array $params, RequestInterface $request, ResponseInterface $response = null): bool;
+    public function create(array $config): bool;
 
 
     /**
-     * @param array $params
-     * @param RequestInterface $request
-     * @param ResponseInterface|null $response
+     * @param array $config
      *
      * @return mixed
      */
-    public function stop(array $params, RequestInterface $request, ResponseInterface $response = null);
+    public function stop(array $config);
+
+
+    /**
+     * @param array $config
+     *
+     * @return mixed
+     */
+    public function run(array $config);
 
 
     /**
      * @param array $params
-     * @param RequestInterface $request
      * @param ResponseInterface $response
-     *
-     * @return mixed
+     * @return ResponseInterface
      */
-    public function run(array $params, RequestInterface $request, ResponseInterface $response);
+    public function getnextinqueue(array $params, ResponseInterface $response): ResponseInterface;
 }

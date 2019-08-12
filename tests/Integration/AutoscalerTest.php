@@ -156,7 +156,7 @@ class AutoscalerTest extends TestCase
      */
     public function testEnvVariablesInHiera(): void
     {
-        $this->job->setType(JobType::VF_DOCKER);
+        $this->job->setType(JobType::DOCKER);
         $execution = (new Execution())->setJob($this->job)->setStatus(ExecutionStatus::READY);
         $this->infrastructure->getEntityManager()->persist($this->job);
         $this->infrastructure->getEntityManager()->persist($execution);

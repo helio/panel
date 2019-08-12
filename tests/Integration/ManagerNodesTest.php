@@ -118,9 +118,10 @@ class ManagerNodesTest extends TestCase
     {
         $result = json_decode((string)$this->runApp('POST', '/api/job?jobtype=' . JobType::GITLAB_RUNNER, true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']], null)->getBody(), true);
         $this->assertArrayHasKey('id', $result, 'no ID of new job returned');
-        $this->runApp('POST', '/api/job', true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']], ['jobid' => $result['id'], 'jobname' => 'testing 1551430509']);
+        $this->runApp('POST', '/api/job', true, ['Authorization' => 'Bearer ' . $result['token']], ['jobid' => $result['id'], 'name' => 'testing 1551430509']);
         $this->assertNotNull($this->jobRepository->findOneBy(['name' => 'testing 1551430509'])->getManagerNodes(), 'init node not ready, must not call to create redundant manager nodes yet');
     }
+
 
     /**
      * @throws \Exception
@@ -175,8 +176,8 @@ class ManagerNodesTest extends TestCase
         $this->assertCount(1, $executions);
 
         $this->assertStringContainsString('helio::queue', ServerUtility::getLastExecutedShellCommand());
-        $this->assertStringContainsString('helio::execution::update', ServerUtility::getLastExecutedShellCommand(1));
-        $this->assertStringContainsString('execution_ids', ServerUtility::getLastExecutedShellCommand(1));
+        $this->assertStringContainsString('helio::task::update', ServerUtility::getLastExecutedShellCommand(1));
+        $this->assertStringContainsString('task_ids', ServerUtility::getLastExecutedShellCommand(1));
         $this->assertStringContainsString('[' . $executions[0]->getId() . ']', ServerUtility::getLastExecutedShellCommand(1));
         $this->assertStringContainsString('manager-init-' . ServerUtility::getShortHashOfString($this->job->getId()) . '.example.com', ServerUtility::getLastExecutedShellCommand(1));
     }
@@ -190,7 +191,7 @@ class ManagerNodesTest extends TestCase
         $this->runApp('POST', '/api/job/' . $this->job->getId() . '/execute', true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']]);
 
         $this->assertStringContainsString('helio::queue', ServerUtility::getLastExecutedShellCommand());
-        $this->assertStringContainsString('helio::execution', ServerUtility::getLastExecutedShellCommand(1));
+        $this->assertStringContainsString('helio::task', ServerUtility::getLastExecutedShellCommand(1));
 
         ServerUtility::resetLastExecutedCommand();
 
@@ -203,22 +204,22 @@ class ManagerNodesTest extends TestCase
      */
     public function testReplicaGetAppliedOnTwoNewExecutionsForFixedReplicaJob(): void
     {
-        $this->job->setType(JobType::VF_DOCKER);
+        $this->job->setType(JobType::DOCKER);
         $this->infrastructure->getEntityManager()->persist($this->job);
         $this->infrastructure->getEntityManager()->flush();
 
         $this->runApp('POST', '/api/job/' . $this->job->getId() . '/execute', true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']]);
 
-        $this->assertStringContainsString('helio::execution', ServerUtility::getLastExecutedShellCommand(1));
+        $this->assertStringContainsString('helio::task', ServerUtility::getLastExecutedShellCommand(1));
         $this->assertStringContainsString('helio::queue', ServerUtility::getLastExecutedShellCommand());
 
         ServerUtility::resetLastExecutedCommand();
 
         $this->runApp('POST', '/api/job/' . $this->job->getId() . '/execute', true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']]);
-        $this->assertStringContainsString('helio::execution', ServerUtility::getLastExecutedShellCommand(1));
+        $this->assertStringContainsString('helio::task', ServerUtility::getLastExecutedShellCommand(1));
         $this->assertStringContainsString('helio::queue', ServerUtility::getLastExecutedShellCommand());
 
-        $executions = $this->executionRepository->findAll();
+        $executions = $this->executionRepository->findBy(['job' => $this->job]);
         $ids = '';
         foreach ($executions as $execution) {
             /** @var Execution $execution */
@@ -241,7 +242,7 @@ class ManagerNodesTest extends TestCase
         } while ($i > 0);
 
         $this->assertStringContainsString('helio::queue', ServerUtility::getLastExecutedShellCommand());
-        $this->assertStringContainsString('helio::execution', ServerUtility::getLastExecutedShellCommand(1));
+        $this->assertStringContainsString('helio::task', ServerUtility::getLastExecutedShellCommand(1));
     }
 
 

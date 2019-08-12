@@ -73,6 +73,19 @@ class Execution extends AbstractModel
 
 
     /**
+     * @OA\Property(
+     *     description="Estimated Runtime on ideal Hardware in Seconds; 0 means the execution won't terminate itself.",
+     *     format="integer"
+     * )
+     *
+     * @var int
+     *
+     * @Column
+     */
+    protected $estimatedRuntime = 0;
+
+
+    /**
      *
      * @OA\Property(
      *     description="Execution statistics. The content depends on the JobType.",
@@ -156,6 +169,25 @@ class Execution extends AbstractModel
         $this->priority = $priority;
         return $this;
     }
+
+    /**
+     * @return int
+     */
+    public function getEstimatedRuntime(): int
+    {
+        return $this->estimatedRuntime;
+    }
+
+    /**
+     * @param int $estimatedRuntime
+     * @return Execution
+     */
+    public function setEstimatedRuntime(int $estimatedRuntime): Execution
+    {
+        $this->estimatedRuntime = $estimatedRuntime;
+        return $this;
+    }
+
 
     /**
      * @return int

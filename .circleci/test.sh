@@ -31,7 +31,7 @@ done
 
 ##########
 # Execute job and wait for it to be done
-curl -fsSLo /dev/null -X POST -d '{"env":[{"limit":"42"}]}' -H "Authorization: Bearer ${JOB_TOKEN}" "${BASE_URL}/api/job/${JOB_ID}/execute" || exit 2
+curl -fsSL -o /dev/null -X POST -d '{"env":[{"limit":"42"}]}' -H "Authorization: Bearer ${JOB_TOKEN}" "${BASE_URL}/api/job/${JOB_ID}/execute" || exit 2
 
 TIMEOUT=400
 echo -ne "Waiting for job to be completed. This may take a while"
@@ -40,7 +40,7 @@ while true; do
         echo "Job never executed completely"
         exit 1;
     fi
-    if curl -fsL -o /dev/null -H "Authorization: Bearer ${JOB_TOKEN}" "${BASE_URL}/api/job/${JOB_ID}/execute/isdone"; then
+    if curl -fsL -o /dev/null -d '{"id":"'${JOB_ID}'"}' -H "Authorization: Bearer ${JOB_TOKEN}" "${BASE_URL}/api/job/isdone"; then
         break
     fi
     echo -ne "."

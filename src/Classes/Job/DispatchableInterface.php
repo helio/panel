@@ -7,4 +7,6 @@ interface DispatchableInterface {
     public function __construct(Job $job);
 
     public function getDispatchConfig(): DispatchConfig;
+
+    public function getExecutionEstimates(): array;
 }

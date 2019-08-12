@@ -58,7 +58,7 @@ class ExecuteScheduledJob extends Command
             'REQUEST_METHOD' => 'POST',
             'REQUEST_URI' => '/'
         ]));
-        $response = new Response();
+
         $app = App::getApp('cli', [MiddlewareForCliUtility::class]);
         $app->getContainer()['request'] = $request;
 
@@ -74,7 +74,7 @@ class ExecuteScheduledJob extends Command
 
                     // run the job and check if the replicas have changed
                     $previousReplicaCount = JobFactory::getDispatchConfigOfJob($job, $execution)->getDispatchConfig()->getReplicaCountForJob($job);
-                    JobFactory::getInstanceOfJob($job, $execution)->run($job->getConfig('cliparams', []), $request->withBody($job->getConfig('cliparams', [])), $response);
+                    JobFactory::getInstanceOfJob($job, $execution)->run($job->getConfig('cliparams', []));
                     $newReplicaCount = JobFactory::getDispatchConfigOfJob($job, $execution)->getDispatchConfig()->getReplicaCountForJob($job);
 
                     // if replica count has changed OR we have an enforcement (e.g. one replica per execution fixed), dispatch the job

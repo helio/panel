@@ -102,11 +102,11 @@ class Job extends AbstractModel
      *     format="number"
      * ),
      *
-     * @var string
+     * @var int
      *
      * @Column
      */
-    protected $cpus = '';
+    protected $cpus = 0;
 
 
     /**
@@ -115,11 +115,11 @@ class Job extends AbstractModel
      *     format="number"
      * ),
      *
-     * @var string
+     * @var int
      *
      * @Column
      */
-    protected $gpus = '';
+    protected $gpus = 0;
 
 
     /**
@@ -153,11 +153,12 @@ class Job extends AbstractModel
      *     format="number"
      * )
      *
-     * @var string
+     * @var int
      *
      * @Column
      */
-    protected $budget = '';
+    protected $budget = 0;
+
 
     /**
      * @OA\Property(
@@ -325,36 +326,36 @@ class Job extends AbstractModel
     }
 
     /**
-     * @return string
+     * @return int
      */
-    public function getCpus(): string
+    public function getCpus(): int
     {
         return $this->cpus;
     }
 
     /**
-     * @param string $cpus
+     * @param int $cpus
      * @return Job
      */
-    public function setCpus(string $cpus): Job
+    public function setCpus(int $cpus): Job
     {
         $this->cpus = $cpus;
         return $this;
     }
 
     /**
-     * @return string
+     * @return int
      */
-    public function getGpus(): string
+    public function getGpus(): int
     {
         return $this->gpus;
     }
 
     /**
-     * @param string $gpus
+     * @param int $gpus
      * @return Job
      */
-    public function setGpus(string $gpus): Job
+    public function setGpus(int $gpus): Job
     {
         $this->gpus = $gpus;
         return $this;
@@ -397,18 +398,18 @@ class Job extends AbstractModel
     }
 
     /**
-     * @return string
+     * @return int
      */
-    public function getBudget(): string
+    public function getBudget(): int
     {
         return $this->budget;
     }
 
     /**
-     * @param string $budget
+     * @param int $budget
      * @return Job
      */
-    public function setBudget(string $budget): Job
+    public function setBudget(int $budget): Job
     {
         $this->budget = $budget;
         return $this;

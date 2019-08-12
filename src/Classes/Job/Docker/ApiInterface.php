@@ -1,6 +1,6 @@
 <?php
 
-namespace Helio\Panel\Job\Vfdocker;
+namespace Helio\Panel\Job\Docker;
 
 use Psr\Http\Message\ResponseInterface;
 
@@ -31,7 +31,7 @@ interface ApiInterface
      *         required=true,
      *         @OA\Items(
      *             type="string",
-     *             enum = {"vfdocker"}
+     *             enum = {"docker"}
      *         )
      *     ),
      *     @OA\Parameter(

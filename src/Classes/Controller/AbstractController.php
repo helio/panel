@@ -106,6 +106,26 @@ use function OpenApi\scan;
  *         )
  *     )
  * )
+ * @OA\Schema(
+ *     schema="estimates",
+ *     description="Estimates about the current execution",
+ *     type="object",
+ *     @OA\Property(
+ *         property="duration",
+ *         description="Estimated duration of the job",
+ *         type="integer",
+ *     )
+ *     @OA\Property(
+ *         property="completion",
+ *         description="Estimated completion Timestamp",
+ *         type="integer",
+ *     )
+ *     @OA\Property(
+ *         property="cost",
+ *         description="Estimated cost in USD",
+ *         type="integer",
+ *     )
+ * )
  *
  * @OA\Response(
  *     response="200",
@@ -128,6 +148,13 @@ use function OpenApi\scan;
  * @OA\Response(
  *     response="406",
  *     description="You specified invalid parameters",
+ *     @OA\JsonContent(
+ *         @OA\Schema(ref="#/components/schemas/default-content")
+ *     )
+ * )
+ * @OA\Response(
+ *     response="500",
+ *     description="Server Error or Exception.",
  *     @OA\JsonContent(
  *         @OA\Schema(ref="#/components/schemas/default-content")
  *     )
