@@ -112,7 +112,7 @@ class Choria implements OrchestratorInterface
             return false;
         }
 
-        $resultDispatch = ServerUtility::executeShellCommand($this->parseCommand(self::$dispatchCommand, true, [
+        $resultDispatch = ServerUtility::executeShellCommand($this->parseCommand(self::$dispatchCommand, false, [
             $this->job->getManagerNodes()[0],
             ArrayUtility::modelsToStringOfIds($this->job->getExecutions()->toArray())
         ]));

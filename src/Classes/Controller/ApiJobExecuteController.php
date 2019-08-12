@@ -66,6 +66,7 @@ class ApiJobExecuteController extends AbstractController
     /**
      * @OA\Post(
      *     path="/job/{jobid}/execute",
+     *     description="Executes a Job and therefore creates an execution environment. This may take a while!",
      *     security={
      *         {"authByJobtoken": {"any"}},
      *         {"authByApitoken": {"any"}}
@@ -116,6 +117,7 @@ class ApiJobExecuteController extends AbstractController
      *
      * @OA\Delete(
      *     path="/job/{jobid}/execute",
+     *     description="Removes an execution and destroys that specific execution environment. This may take a while!",
      *     security={
      *         {"authByApitoken": {"any"}},
      *         {"authByJobtoken": {"any"}}
@@ -167,10 +169,7 @@ class ApiJobExecuteController extends AbstractController
             // run the job and check if the replicas have changed
             $previousReplicaCount = JobFactory::getDispatchConfigOfJob($this->job, $this->execution)->getDispatchConfig()->getReplicaCountForJob($this->job);
             JobFactory::getInstanceOfJob($this->job, $this->execution)->$command(array_merge($this->params, json_decode((string)$this->request->getBody(), true) ?? []));
-
             $newReplicaCount = JobFactory::getDispatchConfigOfJob($this->job, $this->execution)->getDispatchConfig()->getReplicaCountForJob($this->job);
-
-            $estimates = JobFactory::getDispatchConfigOfJob($this->job, $this->execution)->getExecutionEstimates();
 
             // if replica count has changed OR we have an enforcement (e.g. one replica per execution fixed), dispatch the job
             if ($previousReplicaCount !== $newReplicaCount || JobFactory::getDispatchConfigOfJob($this->job, $this->execution)->getDispatchConfig()->getFixedReplicaCount()) {
