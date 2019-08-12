@@ -20,6 +20,7 @@ jobs:
         - v1-dependencies--{{ checksum "package.json" }}
         - v1-dependencies-
 
+    - run: sudo docker-php-ext-install pdo_mysql && sudo docker-php-ext-enable pdo_mysql
     - run: composer install -n -q -o
     - run: yarn
     - run: if ! [[ -d vendor/apt ]]; then mkdir -p vendor/apt; fi
