@@ -21,11 +21,10 @@ interface JobInterface
     public function __construct(Job $job);
 
     /**
-     * @param array $config
-     *
+     * @param array $jobObject
      * @return bool
      */
-    public function create(array $config): bool;
+    public function create(array $jobObject): bool;
 
 
     /**

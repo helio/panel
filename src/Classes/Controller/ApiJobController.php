@@ -146,17 +146,6 @@ class ApiJobController extends AbstractController
             'config' => FILTER_SANITIZE_STRING
         ]);
 
-        $this->job->setName($this->params['name'] ?? 'Automatically named during add')
-            ->setOwner($this->user)
-            ->setCpus((int)($this->params['cpus'] ?? 0))
-            ->setGpus((int)($this->params['gpus'] ?? 0))
-            ->setLocation($this->params['location'] ?? '')
-            ->setBillingReference($this->params['billingReference'] ?? '')
-            ->setBudget((int)($this->params['budget'] ?? 0))
-            ->setIsCharity($this->params['isCharity'] ?? '' === 'on')
-            ->setConfig($this->params['config'] ?? [])
-            ->setStatus(JobStatus::INIT);
-
         JobFactory::getInstanceOfJob($this->job)->create($this->params);
 
         NotificationUtility::notifyAdmin('New Job was created by ' . $this->user->getEmail() . ', type: ' . $this->job->getType() . ', id: ' . $this->job->getId());

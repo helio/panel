@@ -28,12 +28,13 @@ class Execute extends AbstractExecute
 
 
     /**
-     * @param array $config
+     * @param array $jobObject
      * @return bool
      * @throws Exception
      */
-    public function create(array $config): bool
+    public function create(array $jobObject): bool
     {
+        parent::create($jobObject);
         $options = [
             'gitlabEndpoint' => FILTER_SANITIZE_URL,
             'gitlabToken' => FILTER_SANITIZE_STRING,
@@ -42,14 +43,12 @@ class Execute extends AbstractExecute
 
         $cleanConfig = [];
         foreach ($options as $name => $filter) {
-            if (array_key_exists($name, $config)) {
-                $cleanConfig[$name] = filter_var($config[$name], $filter);
+            if (array_key_exists('config', $jobObject) && array_key_exists($name, $jobObject['config'])) {
+                $cleanConfig[$name] = filter_var($jobObject['config'][$name], $filter);
             }
         }
         $this->job->setConfig($cleanConfig);
-        $this->execution->setEstimatedRuntime(0);
 
-        App::getDbHelper()->persist($this->execution);
         App::getDbHelper()->persist($this->job);
         App::getDbHelper()->flush();
         return true;

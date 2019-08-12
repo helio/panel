@@ -65,6 +65,7 @@ class Job extends AbstractModel
      */
     protected $config = '';
 
+
     /**
      * @OA\Property(ref="#/components/schemas/jobstatus")
      *
@@ -236,7 +237,12 @@ class Job extends AbstractModel
     protected $managerNodes = [];
 
 
+    /**
+     * @var int
+     * @internal
+     */
     private $numberOfActiveExecutions;
+
 
     /**
      * Job constructor.

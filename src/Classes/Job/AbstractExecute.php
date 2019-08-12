@@ -50,16 +50,31 @@ abstract class AbstractExecute implements JobInterface, DispatchableInterface
 
 
     /**
-     * @param array $config
+     * @param array $jobObject
      * @return bool
      * @throws Exception
      */
-    public function create(array $config): bool
+    public function create(array $jobObject): bool
     {
-        $this->job->setConfig($config);
-        $this->execution->setEstimatedRuntime($this->calculateRuntime());
-        App::getDbHelper()->persist($this->execution);
+
+
+        $this->job->setName($jobObject['name'] ?? 'Automatically named during add')
+            ->setCpus((int)($jobObject['cpus'] ?? 0))
+            ->setGpus((int)($jobObject['gpus'] ?? 0))
+            ->setLocation($jobObject['location'] ?? '')
+            ->setBillingReference($jobObject['billingReference'] ?? '')
+            ->setBudget((int)($jobObject['budget'] ?? 0))
+            ->setIsCharity($jobObject['isCharity'] ?? '' === 'on')
+            ->setConfig($jobObject['config'] ?? [])
+            ->setStatus(JobStatus::INIT);
         App::getDbHelper()->persist($this->job);
+
+        // set execution
+        if ($this->execution->getId()) {
+            $this->execution->setJob($this->job)->setEstimatedRuntime($this->calculateRuntime());
+            App::getDbHelper()->persist($this->execution);
+        }
+
         App::getDbHelper()->flush();
         return true;
     }
