@@ -42,8 +42,7 @@ final class JobType
             || $type === self::ENERGY_PLUS_85
             || $type === self::DOCKER
             || $type === self::BUSYBOX
-            || $type === self::INFINITEBOX
-            || $type === self::UNKNOWN;
+            || $type === self::INFINITEBOX;
     }
 
     /**

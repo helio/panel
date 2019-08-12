@@ -256,7 +256,7 @@ class ApiAdminController extends AbstractController
      */
     public function jobConfigForPuppetAction(): ResponseInterface
     {
-        if (!$this->job || !JobType::isValidType($this->job->getType())) {
+        if (!$this->job->getId() || !JobType::isValidType($this->job->getType())) {
             return $this->render([], StatusCode::HTTP_NOT_ACCEPTABLE);
         }
 
