@@ -102,7 +102,7 @@ interface ApiInterface
      *         description=">- Your Job JSON config looking like this:
 
             {
-                ""container"": ""nginx:1.8"",
+                ""image"": ""nginx:1.8"",
                 ""env"": [
                     {""SOURCE_PATH"":""https://account-name.zone-name.web.core.windows.net""},
                     {""TARGET_PATH"":""https://bucket.s3.aws-region.amazonaws.com""}

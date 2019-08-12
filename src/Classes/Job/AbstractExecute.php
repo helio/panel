@@ -176,7 +176,6 @@ abstract class AbstractExecute implements JobInterface, DispatchableInterface
                 ->add($pendingQuery->expr()->gt($pendingQuery->expr()->length('j.autoExecSchedule'), 0))
                 ->add($pendingQuery->expr()->eq('e.status', ExecutionStatus::READY))
                 ->add($pendingQuery->expr()->eq('j.status', JobStatus::READY))
-
                 ->add($pendingQuery->expr()->lte('e.priority', $this->execution->getPriority()))
                 ->add($pendingQuery->expr()->lte('j.priority', $this->job->getPriority()))
             );

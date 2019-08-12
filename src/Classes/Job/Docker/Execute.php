@@ -41,7 +41,7 @@ class Execute extends AbstractExecute
     {
         return (new DispatchConfig())
             ->setFixedReplicaCount(1)// enforce call of dispatch command on every new execution
-            ->setImage($this->job->getConfig('container'))
+            ->setImage($this->job->getConfig('image'))
             ->setEnvVariables(
                 array_merge($this->job->getConfig('env', []), [
                     'HELIO_JOBID' => $this->job->getId(),
