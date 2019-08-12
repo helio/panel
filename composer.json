@@ -18,6 +18,8 @@
   "require": {
     "php": "7.2.*",
     "ext-json": "*",
+    "ext-pdo": "*",
+    "ext-pdo_mysql": "*",
     "monolog/monolog": "^1.17",
     "doctrine/orm": "^2.6.0",
     "guzzlehttp/guzzle": "^6.2",

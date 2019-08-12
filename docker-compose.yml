@@ -1,18 +1,29 @@
-version: '2'
+version: '3'
 
 volumes:
     logs:
         driver: local
 
 services:
-    slim:
-        image: php:7-alpine
+    panel:
+        build: .
         working_dir: /var/www
-        command: php -S 0.0.0.0:8080 -t public
-        environment:
-            docker: "true"
+        command: php -S 0.0.0.0:8080 -t www
+        env_file:
+            - ./.panel.env
         ports:
             - 8080:8080
         volumes:
             - .:/var/www
             - logs:/var/www/logs
+    database:
+        image: mariadb:10.4
+        environment:
+            MYSQL_ROOT_PASSWORD: b7yujnx
+            MYSQL_DATABASE: panel
+            MYSQL_USER: helio-panel
+            MYSQL_PASSWORD: helio-panel-356tyjl
+    search:
+        image: elasticsearch:7.3.0
+        environment:
+            discovery.type: single-node

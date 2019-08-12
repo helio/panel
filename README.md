@@ -3,61 +3,61 @@
 This is a prototype of a user panel including an API.
 Detailed documentation will follow, for now it's just nerdnotes.
 
-# ENV Variables etc.
-You can configure a lot of stuff through ENV-Variables. Here's how.
+## Dev env setup
 
-## Google
-This panel makes calls to our backends via google IAP. Therefore, you have to set your service account's credentials.
+* Requires [docker](https://docker.com) and [docker compose](https://docs.docker.com/compose/install/).
+* Use the [EditorConfig](https://editorconfig.org/#download) plugin of the editor of your choice for no indenting pain.
 
-### `googleauth.json`
-If you need to change the user-config for Google auth, just set the following two env variables.
+## Installation
+
+1. Copy `.panel.env.dist` to `.panel.env` and adjust the settings to contain the right values.
+2. Ensure you have a valid  `./cnf/google-auth.json`
+3. Start docker services, install dependencies and setup the DB
 ```bash
-GOOGLE_AUTH_USER_ID=demo-542.googleusercontent.com
-GOOGLE_AUTH_JSON_PATH=~/cnf/googleauth.json
+$ ./scripts/docker/up.sh
+$ ./scripts/docker/init.sh
 ```
 
-## Grafana
-To access Grafana, do as follows.
-### `dashboard.json`
+If the `Dockerfile` got changed, rebuild it using `./scripts/docker/build.sh`.
+
+## Configuration
+You can configure a lot of stuff using environment variables. Available env variables are listed in `.panel.env.dist`.
+
+## External services
+
+### Google
+This panel makes calls to our backends via google IAP. Therefore, you have to set your service account's credentials in the env file and in `./cnf/google-auth.json`.
+
+### Grafana
+Grafana is used for visualizing statistics. 
+
+#### `dashboard.json`
 If you need to edit the grafana dashboard config, click "share" in your desired dashboard and use your browser's inspect tool to catch the request to `/api/snapshots`.
  
-You want to copy the whole body into your json file 
+Copy the whole body into a new file called `dashboard.json`. 
 
 You can place the file anywhere, just make sure to set the following ENV-Variable to the desired path:
 ```bash
 DASHBOARD_CONFIG_JSON=~/cnf/dashboard.json
 ```
 
-### API Key
-the Barier-Token must be set in this varialbe
+#### API Key
+The Bearer-Token must be set in this varialbe
 ```bash
 GRAFANA_API_KEY=apikey
 ```
 **WARNING** Please note, that the key will be sent in `X-Grafana-Authorization`, not `Authorization` which is overwritten by Googles IAP. 
 
-## Zapier
+### Zapier
 
 Zapier captures a few things, if you want to change the hook, here's how:
 ```bash 
 ZAPIER_HOOK_URL=/hooks/catch/1234/blahd3d/
 ```
 
-## Slack
+### Slack
 
 Slack Webhook for Admin Notifications. Activates on PROD if the following ENV-Variable is set:
 ```bash 
 SLACK_WEBHOOK=dblasdjb/absdljbadso/34jb3lj
-```
-
-## Varia
-There are a lot more variables that you can set, they are pretty obiously named...
-```bash
-SCRIPT_HASH=sha1 of the setup script
-SCRIPT_HASH_FILE=File where to find the hash (takes precedence over the above)
-JWT_SECRET=random secret for jwt etc.
-SITE_ENV
-DB_USERNAME
-DB_NAME
-DB_HOST
-DB_PASSWORD
 ```
