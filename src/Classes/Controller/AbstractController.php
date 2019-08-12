@@ -113,17 +113,17 @@ use function OpenApi\scan;
  *     @OA\Property(
  *         property="duration",
  *         description="Estimated duration of the job",
- *         type="integer",
- *     )
+ *         type="integer"
+ *     ),
  *     @OA\Property(
  *         property="completion",
  *         description="Estimated completion Timestamp",
- *         type="integer",
- *     )
+ *         type="integer"
+ *     ),
  *     @OA\Property(
  *         property="cost",
  *         description="Estimated cost in USD",
- *         type="integer",
+ *         type="integer"
  *     )
  * )
  *

@@ -138,8 +138,8 @@ class ApiJobExecuteController extends AbstractController
      *             type="integer"
      *         )
      *     ),
-     *     @OA\Response(response="200", ref="#/components/responses/200")
-     *     @OA\Response(response="200", ref="#/components/responses/500")
+     *     @OA\Response(response="200", ref="#/components/responses/200"),
+     *     @OA\Response(response="500", ref="#/components/responses/500")
      * )
      *
      * @return ResponseInterface
