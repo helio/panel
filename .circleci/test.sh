@@ -61,7 +61,7 @@ done
 
 ##########
 # Delete Job and wait for its disappearance
-curl -fsSL -m 360 -X DELETE -H "Authorization: Bearer ${TESTUSER_TOKEN}" "${BASE_URL}/api/job" || exit 2
+curl -fsL -X DELETE -H "Authorization: Bearer ${JOB_TOKEN}" "${BASE_URL}/api/job?id=${JOB_ID}"
 
 TIMEOUT=300
 echo -ne "Waiting for job to be completed. This may take a while"
@@ -71,11 +71,12 @@ while true; do
         echo "Job never was deleted properly"
         exit 1;
     fi
-    if !curl -fsL -o /dev/null -X GET -H "Authorization: Bearer ${JOB_TOKEN}" "${BASE_URL}/api/job?id=${JOB_ID}"; then
+    if curl -fsL -o /dev/null -X GET -H "Authorization: Bearer ${JOB_TOKEN}" "${BASE_URL}/api/job?id=${JOB_ID}"; then
+        echo -ne "."
+    else
         echo " Job was deleted!"
         break
     fi
-    echo -ne "."
     TIMEOUT=$(expr ${TIMEOUT} - 15)
     sleep 15;
 done
