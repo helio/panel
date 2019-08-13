@@ -456,11 +456,11 @@ class ApiJobController extends AbstractController
         // TODO: set redundancy to >= 3 again if needed
         if ($this->job->getInitManagerIp() && $this->job->getClusterToken() && $this->job->getManagerToken() && count($this->job->getManagerNodes()) > 0) {
             $this->job->setStatus(JobStatus::READY);
-            NotificationUtility::notifyAdmin('Job is now read. By: ' . $this->user->getEmail() . ', type: ' . $this->job->getType() . ', id: ' . $this->job->getId());
+            NotificationUtility::notifyAdmin('Job is now read. By: ' . $this->job->getOwner()->getEmail() . ', type: ' . $this->job->getType() . ', id: ' . $this->job->getId());
         }
         if (array_key_exists('deleted', $body) && 0 === count($this->job->getManagerNodes())) {
             $this->job->setStatus(JobStatus::DELETED);
-            NotificationUtility::notifyAdmin('Job was deleted by ' . $this->user->getEmail() . ', type: ' . $this->job->getType() . ', id: ' . $this->job->getId());
+            NotificationUtility::notifyAdmin('Job was deleted by ' . $this->job->getOwner()->getEmail() . ', type: ' . $this->job->getType() . ', id: ' . $this->job->getId());
         }
 
         $this->persistJob();

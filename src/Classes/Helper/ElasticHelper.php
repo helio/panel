@@ -27,7 +27,7 @@ class ElasticHelper implements HelperInterface
      */
     protected static $indexTemplate = 'log_user_%s';
     protected static $jobIdFieldName = 'HELIO_JOBID';
-    protected static $executionIdFieldName = 'HELIO_TASKID';
+    protected static $executionIdFieldName = 'HELIO_EXECUTIONID';
     protected static $logEntryFieldName = 'log';
     protected static $timestampFieldName = '@timestamp';
 

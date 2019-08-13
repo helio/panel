@@ -84,7 +84,7 @@ abstract class AbstractExecute implements JobInterface, DispatchableInterface
      */
     public function run(array $config): bool
     {
-        $this->execution->setJob($this->job)->setCreated()->setStatus(ExecutionStatus::READY);
+        $this->execution->setJob($this->job)->setConfig($config)->setCreated()->setStatus(ExecutionStatus::READY);
         App::getDbHelper()->persist($this->execution);
         App::getDbHelper()->flush();
 
@@ -186,11 +186,11 @@ abstract class AbstractExecute implements JobInterface, DispatchableInterface
             ->join(Job::class, 'j')
             ->where(
                 $pendingQuery->expr()->andX()
-                ->add($pendingQuery->expr()->gt($pendingQuery->expr()->length('j.autoExecSchedule'), 0))
-                ->add($pendingQuery->expr()->eq('e.status', ExecutionStatus::READY))
-                ->add($pendingQuery->expr()->eq('j.status', JobStatus::READY))
-                ->add($pendingQuery->expr()->lte('e.priority', $this->execution->getPriority()))
-                ->add($pendingQuery->expr()->lte('j.priority', $this->job->getPriority()))
+                    ->add($pendingQuery->expr()->gt($pendingQuery->expr()->length('j.autoExecSchedule'), 0))
+                    ->add($pendingQuery->expr()->eq('e.status', ExecutionStatus::READY))
+                    ->add($pendingQuery->expr()->eq('j.status', JobStatus::READY))
+                    ->add($pendingQuery->expr()->lte('e.priority', $this->execution->getPriority()))
+                    ->add($pendingQuery->expr()->lte('j.priority', $this->job->getPriority()))
             );
         $now = new DateTime('now', ServerUtility::getTimezoneObject());
 
