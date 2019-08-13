@@ -2,11 +2,10 @@
 
 namespace Helio\Panel\Job;
 
-
 use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\OptimisticLockException;
-use \Exception;
-use \DateTime;
+use Exception;
+use DateTime;
 use Helio\Panel\App;
 use Helio\Panel\Helper\DbHelper;
 use Helio\Panel\Model\Job;
@@ -17,15 +16,11 @@ use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response;
 use Slim\Http\StatusCode;
 
-
 /**
- * Class AbstractExecute
- *
- * @package Helio\Panel\Job\Docker
+ * Class AbstractExecute.
  */
 abstract class AbstractExecute implements JobInterface, DispatchableInterface
 {
-
     /**
      * @var Job
      */
@@ -38,8 +33,9 @@ abstract class AbstractExecute implements JobInterface, DispatchableInterface
     /**
      * Execute constructor.
      *
-     * @param Job $job
+     * @param Job            $job
      * @param Execution|null $execution
+     *
      * @throws Exception
      */
     public function __construct(Job $job, Execution $execution = null)
@@ -48,22 +44,21 @@ abstract class AbstractExecute implements JobInterface, DispatchableInterface
         $this->execution = $execution ?? new Execution();
     }
 
-
     /**
      * @param array $jobObject
+     *
      * @return bool
+     *
      * @throws Exception
      */
     public function create(array $jobObject): bool
     {
-
-
         $this->job->setName($jobObject['name'] ?? 'Automatically named during add')
-            ->setCpus((int)($jobObject['cpus'] ?? 0))
-            ->setGpus((int)($jobObject['gpus'] ?? 0))
+            ->setCpus((int) ($jobObject['cpus'] ?? 0))
+            ->setGpus((int) ($jobObject['gpus'] ?? 0))
             ->setLocation($jobObject['location'] ?? '')
             ->setBillingReference($jobObject['billingReference'] ?? '')
-            ->setBudget((int)($jobObject['budget'] ?? 0))
+            ->setBudget((int) ($jobObject['budget'] ?? 0))
             ->setIsCharity($jobObject['isCharity'] ?? '' === 'on')
             ->setConfig($jobObject['config'] ?? [])
             ->setStatus(JobStatus::INIT);
@@ -76,24 +71,25 @@ abstract class AbstractExecute implements JobInterface, DispatchableInterface
         }
 
         App::getDbHelper()->flush();
+
         return true;
     }
 
-
     /**
      * @param array $config
+     *
      * @return bool
+     *
      * @throws Exception
      */
     public function run(array $config): bool
     {
-
         $this->execution->setJob($this->job)->setCreated()->setStatus(ExecutionStatus::READY);
         App::getDbHelper()->persist($this->execution);
         App::getDbHelper()->flush();
+
         return true;
     }
-
 
     /**
      * @param array $config
@@ -117,11 +113,12 @@ abstract class AbstractExecute implements JobInterface, DispatchableInterface
         return true;
     }
 
-
     /**
-     * @param array $params
+     * @param array             $params
      * @param ResponseInterface $response
+     *
      * @return ResponseInterface
+     *
      * @throws Exception
      */
     public function getnextinqueue(array $params, ResponseInterface $response): ResponseInterface
@@ -134,20 +131,21 @@ abstract class AbstractExecute implements JobInterface, DispatchableInterface
                 $lockedExecution = App::getDbHelper()->getRepository(Execution::class)->find($execution->getId(), LockMode::OPTIMISTIC, $execution->getVersion());
                 $lockedExecution->setStatus(ExecutionStatus::RUNNING);
                 App::getDbHelper()->flush();
-                /** @var Response $response */
+                /* @var Response $response */
                 return $response->withJson(array_merge(json_decode($lockedExecution->getConfig(), true), [
-                    'id' => (string)$lockedExecution->getId(),
+                    'id' => (string) $lockedExecution->getId(),
                 ]), null, JSON_UNESCAPED_SLASHES);
             } catch (OptimisticLockException $e) {
                 // trying next execution if the current one was modified in the meantime
             }
         }
+
         return $response->withStatus(StatusCode::HTTP_NOT_FOUND);
     }
 
-
     /**
      * @return array
+     *
      * @throws Exception
      */
     public function getExecutionEstimates(): array
@@ -155,30 +153,29 @@ abstract class AbstractExecute implements JobInterface, DispatchableInterface
         $pendingExecutions = App::getDbHelper()->getRepository(Execution::class)->count(['status' => ExecutionStatus::READY, 'job' => $this->job]);
 
         // 0 means non-terminating worker
-        if ($this->calculateRuntime() === 0) {
+        if (0 === $this->calculateRuntime()) {
             return [
                 'duration' => 'infinite',
                 'completion' => 'never',
-                'cost' => $this->job->getBudget() ?? 0 / $pendingExecutions
+                'cost' => $this->job->getBudget() ?? 0 / $pendingExecutions,
             ];
         }
 
         return [
             'duration' => $this->calculateRuntime(),
             'completion' => $this->calculateCompletion()->getTimestamp(),
-            'cost' => $this->calculateCosts()
+            'cost' => $this->calculateCosts(),
         ];
     }
-
 
     /**
      * @return int
      */
     abstract protected function calculateRuntime(): int;
 
-
     /**
      * @return DateTime
+     *
      * @throws Exception
      */
     protected function calculateCompletion(): DateTime
@@ -187,7 +184,8 @@ abstract class AbstractExecute implements JobInterface, DispatchableInterface
         $pendingQuery
             ->select('SUM(e.estimatedRuntime) as sum')
             ->join(Job::class, 'j')
-            ->where($pendingQuery->expr()->andX()
+            ->where(
+                $pendingQuery->expr()->andX()
                 ->add($pendingQuery->expr()->gt($pendingQuery->expr()->length('j.autoExecSchedule'), 0))
                 ->add($pendingQuery->expr()->eq('e.status', ExecutionStatus::READY))
                 ->add($pendingQuery->expr()->eq('j.status', JobStatus::READY))
@@ -200,7 +198,6 @@ abstract class AbstractExecute implements JobInterface, DispatchableInterface
 
         return $now->setTimestamp($now->getTimestamp() + $duration);
     }
-
 
     /**
      * @return int

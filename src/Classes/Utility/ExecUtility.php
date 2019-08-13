@@ -2,37 +2,36 @@
 
 namespace Helio\Panel\Utility;
 
-use \RuntimeException;
+use RuntimeException;
 use Helio\Panel\Model\Job;
 use Helio\Panel\Model\Execution;
 use Psr\Http\Message\ResponseInterface;
-use \GuzzleHttp\Psr7\LazyOpenStream;
+use GuzzleHttp\Psr7\LazyOpenStream;
 
 /**
- * Class ExecUtility
- * @package Helio\Panel\Utility
+ * Class ExecUtility.
  */
 class ExecUtility extends AbstractUtility
 {
-
-
     /**
-     * @param Job $job
-     * @param string $endpoint
+     * @param Job            $job
+     * @param string         $endpoint
      * @param Execution|null $execution
+     *
      * @return string
      */
     public static function getExecUrl(Job $job, string $endpoint = '', Execution $execution = null): string
     {
-        if ($endpoint && strpos($endpoint, '/') !== 0) {
+        if ($endpoint && 0 !== strpos($endpoint, '/')) {
             $endpoint = '/' . $endpoint;
         }
-        return "api/job/" . $job->getId() . "/execute$endpoint" . ($execution ? '?id=' . $execution->getId() : '');
-    }
 
+        return 'api/job/' . $job->getId() . "/execute$endpoint" . ($execution ? '?id=' . $execution->getId() : '');
+    }
 
     /**
      * @param Execution $execution
+     *
      * @return string
      */
     public static function getExecutionDataFolder(Execution $execution): string
@@ -41,12 +40,13 @@ class ExecUtility extends AbstractUtility
         if (!is_dir($folder) && !mkdir($folder, 0777, true) && !is_dir($folder)) {
             throw new RuntimeException(sprintf('Directory "%s" was not created', $folder));
         }
+
         return $folder;
     }
 
-
     /**
      * @param Job $job
+     *
      * @return string
      */
     public static function getJobDataFolder(Job $job): string
@@ -55,13 +55,14 @@ class ExecUtility extends AbstractUtility
         if (!is_dir($folder) && !mkdir($folder, 0777, true) && !is_dir($folder)) {
             throw new RuntimeException(sprintf('Directory "%s" was not created', $folder));
         }
+
         return $folder;
     }
 
-
     /**
-     * @param string $file
+     * @param string            $file
      * @param ResponseInterface $response
+     *
      * @return ResponseInterface
      */
     public static function downloadFile(string $file, ResponseInterface $response): ResponseInterface

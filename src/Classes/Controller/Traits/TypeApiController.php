@@ -2,7 +2,6 @@
 
 namespace Helio\Panel\Controller\Traits;
 
-
 trait TypeApiController
 {
     protected function getReturnType(): ?string

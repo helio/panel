@@ -2,11 +2,11 @@
 
 namespace Helio\Panel\Utility;
 
-use \Exception;
-use \RuntimeException;
-use \InvalidArgumentException;
-use \DateTime;
-use \DateTimeZone;
+use Exception;
+use RuntimeException;
+use InvalidArgumentException;
+use DateTime;
+use DateTimeZone;
 use Helio\Panel\App;
 use Helio\Panel\Helper\LogHelper;
 use Slim\Http\Request;
@@ -14,7 +14,6 @@ use Tuupola\Base62;
 
 class ServerUtility extends AbstractUtility
 {
-
     /**
      * THE ONLY place where a timezone is mentioned. This shall be read from database (in each entity) or ENV in the future.
      *
@@ -29,23 +28,20 @@ class ServerUtility extends AbstractUtility
 
     /**
      * NOTE: This is filled in test mode only!
+     *
      * @var array
      */
     protected static $lastExecutedShellCommand = [];
 
-
     /**
-     *
      * @return string
      */
     public static function getBaseUrl(): string
     {
-
         $protocol = 'http' . (self::isSecure() ? 's' : '');
 
         return $protocol . '://' . self::get('HTTP_HOST') . '/';
     }
-
 
     /**
      * @return DateTimeZone
@@ -55,28 +51,27 @@ class ServerUtility extends AbstractUtility
         return new DateTimeZone(self::$timeZone);
     }
 
-
     /**
      * @return bool
      */
     public static function isSecure(): bool
     {
-        if (strtolower(self::get('HTTPS', 'off')) !== 'off') {
+        if ('off' !== strtolower(self::get('HTTPS', 'off'))) {
             return true;
         }
         if (self::isBehindReverseProxy()) {
-            return self::get('HTTTP_X_FORWARDED_PROTO', false) === 'https';
+            return 'https' === self::get('HTTTP_X_FORWARDED_PROTO', false);
         }
+
         return false;
     }
-
 
     /**
      * @return bool
      */
     public static function isProd(): bool
     {
-        return self::get('SITE_ENV') === 'PROD';
+        return 'PROD' === self::get('SITE_ENV');
     }
 
     public static function isLocalDevEnv(): bool
@@ -85,7 +80,7 @@ class ServerUtility extends AbstractUtility
     }
 
     /**
-     * @param string $name
+     * @param string     $name
      * @param mixed|null $default
      *
      * @return string
@@ -102,7 +97,6 @@ class ServerUtility extends AbstractUtility
                     if (array_key_exists($name, $reqParams) && $reqParams[$name]) {
                         return $reqParams[$name];
                     }
-
                 }
                 // local development server has the stuff in _ENV
                 if (self::isLocalDevEnv() && array_key_exists($name, $_ENV)) {
@@ -114,22 +108,19 @@ class ServerUtility extends AbstractUtility
         } catch (Exception $e) {
             // fallback to default.
         }
-        if ($default !== null) {
+        if (null !== $default) {
             return $default;
         }
         throw new RuntimeException('please set the ENV Variable ' . $name, 1530357047);
     }
 
-
     /**
-     *
      * @return string
      */
     public static function getClientIp(): string
     {
         return self::isBehindReverseProxy() ? self::get('HTTP_X_FORWARDED_FOR') : self::get('REMOTE_ADDR');
     }
-
 
     /**
      * @return bool
@@ -139,10 +130,11 @@ class ServerUtility extends AbstractUtility
         return self::get('REMOTE_ADDR') === self::get('REVERSE_PROXY_IP', 'impossible') && self::get('HTTP_X_FORWARDED_FOR', false);
     }
 
-
     /**
      * @noinspection PhpDocMissingThrowsInspection some kind of IntelliJ Bug here...?
+     *
      * @param string $command
+     *
      * @return string|null
      */
     public static function executeShellCommand(string $command): ?string
@@ -163,9 +155,9 @@ class ServerUtility extends AbstractUtility
         }
 
         LogHelper::debug('result of shell command (' . $trace . '):' . "\n" . print_r($result, true));
+
         return $result;
     }
-
 
     /**
      * @param array $params
@@ -174,15 +166,15 @@ class ServerUtility extends AbstractUtility
     {
         foreach ($params as $item) {
             $res = preg_match('/[^0-9a-zA-Z\.\-_\/:\?=&",]/', $item);
-            if ($res !== 0) {
+            if (0 !== $res) {
                 throw new InvalidArgumentException('suspicious shell command submitted: ' . $item, 1544664506);
             }
         }
     }
 
-
     /**
      * @param array $subpath
+     *
      * @return string
      */
     public static function getApplicationRootPath(array $subpath = []): string
@@ -194,6 +186,7 @@ class ServerUtility extends AbstractUtility
 
     /**
      * @param array $subpath
+     *
      * @return string
      */
     public static function getTmpPath(array $subpath = []): string
@@ -201,9 +194,9 @@ class ServerUtility extends AbstractUtility
         return self::getApplicationRootPath(array_merge(['tmp'], $subpath));
     }
 
-
     /**
      * @param array $subpath
+     *
      * @return string
      */
     public static function getTemplatesPath(array $subpath = []): string
@@ -211,9 +204,9 @@ class ServerUtility extends AbstractUtility
         return self::getApplicationRootPath(array_merge(['src', 'templates'], $subpath));
     }
 
-
     /**
      * @param array $subpath
+     *
      * @return string
      */
     public static function getClassesPath(array $subpath = []): string
@@ -221,9 +214,9 @@ class ServerUtility extends AbstractUtility
         return self::getApplicationRootPath(array_merge(['src', 'Classes'], $subpath));
     }
 
-
     /**
      * @param string $path
+     *
      * @return string
      */
     public static function getHashOfFile(string $path): string
@@ -231,9 +224,9 @@ class ServerUtility extends AbstractUtility
         return sha1_file($path);
     }
 
-
     /**
      * @param string $string
+     *
      * @return string
      */
     public static function getHashOfString(string $string): string
@@ -241,10 +234,10 @@ class ServerUtility extends AbstractUtility
         return sha1($string);
     }
 
-
     /**
      * @param string $string
-     * @param int $length
+     * @param int    $length
+     *
      * @return string
      */
     public static function getShortHashOfString(string $string, int $length = 8): string
@@ -252,9 +245,6 @@ class ServerUtility extends AbstractUtility
         return substr(sha1($string), 0, $length);
     }
 
-    /**
-     *
-     */
     public static function setTesting(): void
     {
         self::$testMode = true;
@@ -262,17 +252,20 @@ class ServerUtility extends AbstractUtility
 
     /**
      * @param int $offset
+     *
      * @return string
      */
     public static function getLastExecutedShellCommand(int $offset = 0): string
     {
         $index = count(self::$lastExecutedShellCommand) - $offset - 1;
+
         return $index >= 0 ? self::$lastExecutedShellCommand[$index] : '';
     }
 
     /**
      * @param string $folder
      * @param string $fileEnding
+     *
      * @return array
      *
      * TODO: test this, it's quite pecular and only used for apidoc so far
@@ -281,13 +274,13 @@ class ServerUtility extends AbstractUtility
     {
         $result = [];
         foreach (scandir($folder, true) as $node) {
-            if (strpos($node, '.') === 0) {
+            if (0 === strpos($node, '.')) {
                 continue;
             }
             if (is_dir($folder . DIRECTORY_SEPARATOR . $node)) {
                 /** @noinspection SlowArrayOperationsInLoopInspection */
                 $result = array_merge($result, self::getAllFilesInFolder($folder . DIRECTORY_SEPARATOR . $node, $fileEnding));
-            } else if ($fileEnding) {
+            } elseif ($fileEnding) {
                 if (strpos($node, $fileEnding) === (strlen($node) - strlen($fileEnding))) {
                     $result[] = $folder . DIRECTORY_SEPARATOR . $node;
                 }
@@ -295,6 +288,7 @@ class ServerUtility extends AbstractUtility
                 $result[] = $folder . DIRECTORY_SEPARATOR . $node;
             }
         }
+
         return $result;
     }
 }

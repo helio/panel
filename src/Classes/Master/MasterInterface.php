@@ -3,7 +3,6 @@
 namespace Helio\Panel\Master;
 
 use Helio\Panel\Model\Instance;
-use Helio\Panel\Model\Job;
 
 interface MasterInterface
 {

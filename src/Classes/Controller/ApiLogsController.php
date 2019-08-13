@@ -2,29 +2,21 @@
 
 namespace Helio\Panel\Controller;
 
-use \Exception;
-use Helio\Panel\App;
+use Exception;
 use Helio\Panel\Controller\Traits\ModelUserController;
 use Helio\Panel\Controller\Traits\HelperElasticController;
 use Helio\Panel\Controller\Traits\ModelParametrizedController;
 use Helio\Panel\Controller\Traits\TypeApiController;
-use Helio\Panel\Job\JobStatus;
-use Helio\Panel\Model\Instance;
 use Helio\Panel\Model\Job;
 use Helio\Panel\Model\Execution;
-use Helio\Panel\Execution\ExecutionStatus;
-use Helio\Panel\Utility\ExecUtility;
-use Helio\Panel\Utility\JwtUtility;
 use Psr\Http\Message\ResponseInterface;
 
 /**
- * Class ApiController
+ * Class ApiController.
  *
- * @package    Helio\Panel\Controller
  * @author    Christoph Buchli <team@opencomputing.cloud>
  *
  * @RoutePrefix('/api/logs')
- *
  */
 class ApiLogsController extends AbstractController
 {
@@ -60,6 +52,7 @@ class ApiLogsController extends AbstractController
      * )
      *
      * @return ResponseInterface
+     *
      * @throws Exception
      *
      * @Route("", methods={"GET"}, name="logs")
@@ -68,7 +61,7 @@ class ApiLogsController extends AbstractController
     {
         $this->optionalParameterCheck([
             'size' => FILTER_SANITIZE_NUMBER_INT,
-            'from' => FILTER_SANITIZE_NUMBER_INT
+            'from' => FILTER_SANITIZE_NUMBER_INT,
         ]);
 
         $size = array_key_exists('size', $this->params) ? $this->params['size'] : 10;

@@ -5,12 +5,10 @@ namespace Helio\Panel\Job\Docker;
 use Psr\Http\Message\ResponseInterface;
 
 /**
- * Interface ApiInterface - Here to collect all relevant endpoints in one documentation for the customer
- *
+ * Interface ApiInterface - Here to collect all relevant endpoints in one documentation for the customer.
  */
 interface ApiInterface
 {
-
     /**
      * @OA\Post(
      *     path="/api/job/add",
@@ -144,8 +142,6 @@ interface ApiInterface
      *
      * @return ResponseInterface
      */
-
-
     public function addJob(): ResponseInterface;
 
     /**
@@ -165,11 +161,10 @@ interface ApiInterface
      *         {"authByApitoken": {"any"}}
      *     }
      * )
-     * @return ResponseInterface
      *
+     * @return ResponseInterface
      */
     public function removeJob(): ResponseInterface;
-
 
     /**
      * @OA\Get(
@@ -192,7 +187,6 @@ interface ApiInterface
      * @return ResponseInterface
      */
     public function isJobReady(): ResponseInterface;
-
 
     /**
      * @OA\Post(
@@ -249,7 +243,6 @@ interface ApiInterface
      */
     public function execute(): ResponseInterface;
 
-
     /**
      * @OA\Post(
      *     path="/api/exec/work/submitresult",
@@ -305,7 +298,6 @@ interface ApiInterface
      */
     public function submitresult(): ResponseInterface;
 
-
     /**
      * @OA\Get(
      *     path="/api/job/logs",
@@ -344,7 +336,6 @@ interface ApiInterface
      * @return ResponseInterface
      */
     public function jobLogs(): ResponseInterface;
-
 
     /**
      * @OA\Get(
@@ -394,7 +385,6 @@ interface ApiInterface
      * @return ResponseInterface
      */
     public function executionLogs(): ResponseInterface;
-
 
     /**
      * @OA\Get(

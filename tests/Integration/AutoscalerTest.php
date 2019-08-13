@@ -20,8 +20,6 @@ use Symfony\Component\Yaml\Yaml;
 
 class AutoscalerTest extends TestCase
 {
-
-
     /**
      * @var Job
      */
@@ -37,12 +35,10 @@ class AutoscalerTest extends TestCase
      */
     protected $instance;
 
-
     /**
      * @var array
      */
     protected $data = [];
-
 
     /**
      * @var string
@@ -53,7 +49,6 @@ class AutoscalerTest extends TestCase
      * @var array
      */
     protected $headers = [];
-
 
     /**
      * @throws \Exception
@@ -71,14 +66,13 @@ class AutoscalerTest extends TestCase
         $this->infrastructure->getEntityManager()->persist($this->job);
         $this->infrastructure->getEntityManager()->flush();
 
-
         $this->headers['Authorization'] = 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token'];
         $this->url .= '?jobid=' . $this->job->getId();
-
     }
 
     /**
      * @return ResponseInterface
+     *
      * @throws \Exception
      */
     protected function exec(): ResponseInterface
@@ -88,41 +82,44 @@ class AutoscalerTest extends TestCase
 
     /**
      * @param ResponseInterface $response
-     * @param string $key
+     * @param string            $key
+     *
      * @return mixed|string
      */
     protected function findValueOfKeyInHiera(ResponseInterface $response, string $key)
     {
-        $hiera = Yaml::parse((string)$response->getBody());
+        $hiera = Yaml::parse((string) $response->getBody());
+
         return ArrayUtility::getFirstByDotNotation([$hiera], ['profile::docker::clusters.' . $key]);
     }
 
     /**
      * @param ResponseInterface $response
-     * @param string $key
-     * @param string $name
+     * @param string            $key
+     * @param string            $name
+     *
      * @return mixed|string
      */
     protected function findEnvElementOfArrayInHiera(ResponseInterface $response, string $key, string $name)
     {
-        $hiera = Yaml::parse((string)$response->getBody());
+        $hiera = Yaml::parse((string) $response->getBody());
         foreach (ArrayUtility::getFirstByDotNotation([$hiera], ['profile::docker::clusters.' . $key], []) as $env) {
-            if (strpos($env, $name) !== false) {
+            if (false !== strpos($env, $name)) {
                 $matches = [];
-                preg_match("/$name=\s*([^'$]+)/", (string)$response->getBody(), $matches);
+                preg_match("/$name=\s*([^'$]+)/", (string) $response->getBody(), $matches);
+
                 return $matches[1];
             }
         }
+
         return '';
     }
-
 
     /**
      * @throws \Exception
      */
     public function testNoReplicasOnEmptyJob(): void
     {
-
         $execution = (new Execution())->setJob($this->job)->setStatus(ExecutionStatus::UNKNOWN);
         $this->infrastructure->getEntityManager()->persist($execution);
         $this->infrastructure->getEntityManager()->flush();
@@ -133,7 +130,6 @@ class AutoscalerTest extends TestCase
         $replicas = $this->findValueOfKeyInHiera($result, $this->job->getType() . '-' . $this->job->getId() . '-' . $execution->getId() . '.replicas');
         $this->assertEquals(0, $replicas);
     }
-
 
     /**
      * @throws \Exception
@@ -149,7 +145,6 @@ class AutoscalerTest extends TestCase
         $this->assertEquals(200, $result->getStatusCode());
         $this->assertEquals(1, $this->findValueOfKeyInHiera($result, $this->job->getType() . '-' . $this->job->getId() . '-' . $execution->getId() . '.replicas'));
     }
-
 
     /**
      * @throws \Exception
@@ -172,7 +167,6 @@ class AutoscalerTest extends TestCase
         $this->assertEquals($this->job->getOwner()->getId(), $this->findEnvElementOfArrayInHiera($result, $envPath, 'HELIO_USERID'));
     }
 
-
     /**
      * @throws \Exception
      */
@@ -190,7 +184,6 @@ class AutoscalerTest extends TestCase
         $this->assertStringContainsString('sleep', $this->findValueOfKeyInHiera($result, $this->job->getType() . '-' . $this->job->getId() . '-' . $execution->getId() . '.args'));
     }
 
-
     /**
      * @throws \Exception
      */
@@ -201,7 +194,7 @@ class AutoscalerTest extends TestCase
             $execution = (new Execution())->setJob($this->job)->setStatus(ExecutionStatus::READY);
             $this->infrastructure->getEntityManager()->persist($execution);
             $this->infrastructure->getEntityManager()->flush();
-            $executions--;
+            --$executions;
         }
 
         $result = $this->exec();
@@ -209,7 +202,6 @@ class AutoscalerTest extends TestCase
         $this->assertEquals(200, $result->getStatusCode());
         $this->assertEquals(2, $this->findValueOfKeyInHiera($result, $this->job->getType() . '-' . $this->job->getId() . '-' . $execution->getId() . '.replicas'));
     }
-
 
     /**
      * @throws \Exception
@@ -248,7 +240,6 @@ class AutoscalerTest extends TestCase
         $this->infrastructure->getEntityManager()->persist($execution1);
         $this->infrastructure->getEntityManager()->persist($execution2);
         $this->infrastructure->getEntityManager()->flush();
-
 
         $result = $this->runApp('GET', '/api/admin/getJobHiera?jobid=' . $job->getId(), true, $this->headers);
         $this->assertEquals(200, $result->getStatusCode());

@@ -12,7 +12,6 @@ use Psr\Http\Message\ResponseInterface;
 
 class ServerApiGettokenTest extends TestCase
 {
-
     /**
      * @var User
      */
@@ -47,6 +46,7 @@ class ServerApiGettokenTest extends TestCase
 
     /**
      * @return ResponseInterface
+     *
      * @throws \Exception
      */
     protected function exec(): ResponseInterface
@@ -110,7 +110,7 @@ class ServerApiGettokenTest extends TestCase
         $response = $this->exec();
         $this->assertEquals(200, $response->getStatusCode());
 
-        $body = (string)$response->getBody();
+        $body = (string) $response->getBody();
         $json = json_decode($body, true);
         /** @var Instance $instance */
         $instance = $this->instanceRepository->findOneByFqdn('testserver.example.com');

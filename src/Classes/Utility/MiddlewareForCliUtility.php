@@ -2,21 +2,20 @@
 
 namespace Helio\Panel\Utility;
 
-use \Exception;
+use Exception;
 use Helio\Panel\App;
 use Helio\Panel\Middleware\CliAuthenticate;
 
 /**
- * Class MiddlewareUtility
- * @package Helio\Panel\Utility
+ * Class MiddlewareUtility.
  */
 class MiddlewareForCliUtility extends AbstractUtility
 {
-
     /**
      * @param App $app
      *
      * NOTE: Middlewares are processed as a FILO stack, so beware their order
+     *
      * @throws Exception
      */
     public static function addMiddleware(App $app): void

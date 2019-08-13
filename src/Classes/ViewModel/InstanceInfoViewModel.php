@@ -32,11 +32,11 @@ class InstanceInfoViewModel
      */
     protected $platform;
 
-
     /**
      * Pass in an array of all possible information sources.
      *
      * InstanceInfoViewModel constructor.
+     *
      * @param array $data
      */
     public function __construct(array $data)
@@ -47,12 +47,12 @@ class InstanceInfoViewModel
     public function toArray(): array
     {
         foreach (array_keys(get_object_vars($this)) as $property) {
-            if ($property !== 'rawData') {
-
+            if ('rawData' !== $property) {
                 $name = 'get' . ucfirst($property);
                 $this->$name();
             }
         }
+
         return get_object_vars($this);
     }
 
@@ -66,17 +66,19 @@ class InstanceInfoViewModel
 
     /**
      * @param int $gpus
+     *
      * @return InstanceInfoViewModel
      */
     public function setGpus(int $gpus = null): InstanceInfoViewModel
     {
-        if ($gpus === null) {
-            $gpus = (int)ArrayUtility::getFirstByDotNotation($this->rawData, ['gpus', 'Description.Resources.NanoGPUs'], 0);
+        if (null === $gpus) {
+            $gpus = (int) ArrayUtility::getFirstByDotNotation($this->rawData, ['gpus', 'Description.Resources.NanoGPUs'], 0);
             if ($gpus > 100000000) { // 0.1 CPUs in NanoGPUs
                 $gpus /= 1000000000;
             }
         }
         $this->gpus = $gpus;
+
         return $this;
     }
 
@@ -90,17 +92,19 @@ class InstanceInfoViewModel
 
     /**
      * @param int $cpus
+     *
      * @return InstanceInfoViewModel
      */
     public function setCpus(int $cpus = null): InstanceInfoViewModel
     {
-        if ($cpus === null) {
-            $cpus = (int)ArrayUtility::getFirstByDotNotation($this->rawData, ['processors', 'Description.Resources.NanoCPUs'], 0);
+        if (null === $cpus) {
+            $cpus = (int) ArrayUtility::getFirstByDotNotation($this->rawData, ['processors', 'Description.Resources.NanoCPUs'], 0);
             if ($cpus > 100000000) { // 0.1 CPUs in NanoCPUs
                 $cpus /= 1000000000;
             }
         }
-        $this->cpus = (int)$cpus;
+        $this->cpus = (int) $cpus;
+
         return $this;
     }
 
@@ -114,28 +118,33 @@ class InstanceInfoViewModel
 
     /**
      * @param int $memory
+     *
      * @return InstanceInfoViewModel
      */
     public function setMemory(int $memory = null): InstanceInfoViewModel
     {
-        if ($memory === null) {
+        if (null === $memory) {
             $memoryFrom = ArrayUtility::getFirstByDotNotation($this->rawData, ['memorysize', 'Description.Resources.MemoryBytes'], 0);
             $matches = [];
             if (preg_match('/[0-9\.]+ ?([M|G|K|T|P])i?[bB]/', $memoryFrom, $matches)) {
-                $memoryFrom = (float)$memoryFrom;
+                $memoryFrom = (float) $memoryFrom;
                 switch ($matches[1]) {
-                    /** @noinspection PhpMissingBreakStatementInspection */
+                    /* @noinspection PhpMissingBreakStatementInspection */
                     case 'P':
                         $memoryFrom *= 1024;
-                    /** @noinspection PhpMissingBreakStatementInspection */
+                    /* @noinspection PhpMissingBreakStatementInspection */
+                    // no break
                     case 'T':
                         $memoryFrom *= 1024;
-                    /** @noinspection PhpMissingBreakStatementInspection */
+                    /* @noinspection PhpMissingBreakStatementInspection */
+                    // no break
                     case 'G':
                         $memoryFrom *= 1024;
-                    /** @noinspection PhpMissingBreakStatementInspection */
+                    /* @noinspection PhpMissingBreakStatementInspection */
+                    // no break
                     case 'M':
                         $memoryFrom *= 1024;
+                        // no break
                     case 'K':
                         $memoryFrom *= 1024;
                         break;
@@ -143,9 +152,10 @@ class InstanceInfoViewModel
                         break;
                 }
             }
-            $memory = (int)$memoryFrom;
+            $memory = (int) $memoryFrom;
         }
         $this->memory = $memory;
+
         return $this;
     }
 
@@ -159,54 +169,56 @@ class InstanceInfoViewModel
 
     /**
      * @param int $uptime
+     *
      * @return InstanceInfoViewModel
      */
     public function setUptime(int $uptime = null): InstanceInfoViewModel
     {
-        if ($uptime === null) {
-            $uptime = (int)ArrayUtility::getFirstByDotNotation($this->rawData, ['uptime']);
+        if (null === $uptime) {
+            $uptime = (int) ArrayUtility::getFirstByDotNotation($this->rawData, ['uptime']);
         }
         $this->uptime = $uptime;
+
         return $this;
     }
 
     /**
      * @return string
      */
-    public
-    function getArchitecture(): string
+    public function getArchitecture(): string
     {
         return $this->architecture ?? $this->setArchitecture()->getArchitecture();
     }
 
     /**
      * @param string $architecture
+     *
      * @return InstanceInfoViewModel
      */
-    public
-    function setArchitecture(string $architecture = null): InstanceInfoViewModel
+    public function setArchitecture(string $architecture = null): InstanceInfoViewModel
     {
         $this->architecture = $architecture ?? ArrayUtility::getFirstByDotNotation($this->rawData, ['processor0', 'Description.Platform.Architecture'], '');
+
         return $this;
     }
 
     /**
      * @return string
      */
-    public
-    function getPlatform(): string
+    public function getPlatform(): string
     {
         return $this->platform ?? $this->setPlatform()->getPlatform();
     }
 
     /**
      * @param string $platform
+     *
      * @return InstanceInfoViewModel
      */
-    public
-    function setPlatform(string $platform = null): InstanceInfoViewModel
+    public function setPlatform(string $platform = null): InstanceInfoViewModel
     {
         $this->platform = $platform ?? ArrayUtility::getFirstByDotNotation($this->rawData, ['os', 'Description.Platform.OS'], '');
+
         return $this;
     }
 }

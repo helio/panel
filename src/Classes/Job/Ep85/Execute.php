@@ -2,31 +2,24 @@
 
 namespace Helio\Panel\Job\Ep85;
 
-use \Exception;
-use \DateTime;
-use Doctrine\DBAL\LockMode;
-use Doctrine\ORM\OptimisticLockException;
+use Exception;
 use Helio\Panel\App;
-use Helio\Panel\Helper\DbHelper;
 use Helio\Panel\Job\AbstractExecute;
 use Helio\Panel\Job\DispatchConfig;
-use Helio\Panel\Model\Execution;
 use Helio\Panel\Execution\ExecutionStatus;
 use Helio\Panel\Utility\ExecUtility;
 use Helio\Panel\Utility\JwtUtility;
 use Helio\Panel\Utility\ServerUtility;
-use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response;
-use Slim\Http\StatusCode;
 
 class Execute extends AbstractExecute
 {
-
-
     /**
      * @param array $config
+     *
      * @return bool
+     *
      * @throws Exception
      */
     public function run(array $config): bool
@@ -61,9 +54,9 @@ class Execute extends AbstractExecute
         return true;
     }
 
-
     /**
      * @return DispatchConfig
+     *
      * @throws Exception
      */
     public function getDispatchConfig(): DispatchConfig
@@ -71,22 +64,22 @@ class Execute extends AbstractExecute
         return (new DispatchConfig())->setImage('gitlab.idling.host:4567/helio/runner/ep85:latest')->setEnvVariables([
             'HELIO_JOBID' => $this->job->getId(),
             'HELIO_TOKEN' => JwtUtility::generateToken(null, $this->job->getOwner(), null, $this->job)['token'],
-            'HELIO_URL' => ServerUtility::getBaseUrl()
+            'HELIO_URL' => ServerUtility::getBaseUrl(),
         ]);
     }
-
 
     /**
      * @return int
      */
-    protected function calculateRuntime(): int {
+    protected function calculateRuntime(): int
+    {
         return $this->execution->getConfig('estimated_runtime', 300) + 60;
     }
 
-
     /**
-     * @param array $params
+     * @param array    $params
      * @param Response $response
+     *
      * @return ResponseInterface
      */
     public function getwetherdata(array $params, Response $response): ResponseInterface
@@ -94,10 +87,10 @@ class Execute extends AbstractExecute
         return ExecUtility::downloadFile(__DIR__ . '/example.epw', $response);
     }
 
-
     /**
-     * @param array $params
+     * @param array    $params
      * @param Response $response
+     *
      * @return ResponseInterface
      */
     public function getidfdata(array $params, Response $response): ResponseInterface

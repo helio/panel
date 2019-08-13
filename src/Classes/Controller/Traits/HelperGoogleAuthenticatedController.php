@@ -9,15 +9,16 @@ use Psr\Http\Message\ResponseInterface;
 
 trait HelperGoogleAuthenticatedController
 {
-
     /** @var string $baseUrl */
     protected $baseUrl;
 
     /**
      * @param string $path
      * @param string $method
-     * @param array $options
+     * @param array  $options
+     *
      * @return mixed|ResponseInterface
+     *
      * @throws GuzzleException
      */
     protected function requestIapProtectedResource(string $path, string $method = 'GET', array $options = [])

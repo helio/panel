@@ -2,7 +2,7 @@
 
 namespace Helio\Panel\Helper;
 
-use \Exception;
+use Exception;
 use Helio\Panel\Utility\ServerUtility;
 use Monolog\Handler\ErrorLogHandler;
 use Monolog\Handler\StreamHandler;
@@ -11,7 +11,7 @@ use Monolog\Processor\UidProcessor;
 use Psr\Log\LogLevel;
 
 /**
- * Class LogHelper
+ * Class LogHelper.
  *
  * @method static addDebug($message)
  * @method static addInfo($message)
@@ -36,23 +36,21 @@ use Psr\Log\LogLevel;
  * @method static emergency($message)
  * @method static setTimezone($message)
  *
- * @package    Helio\Panel\Helper
  * @author    Christoph Buchli <support@snowflake.ch>
  */
 class LogHelper implements HelperInterface
 {
-
-
     /**
      * @var array<Logger>
      */
     protected static $logger = [];
 
-
     /**
      * @param $name
      * @param $arguments
+     *
      * @return mixed
+     *
      * @throws Exception
      */
     public static function __callStatic($name, $arguments)
@@ -60,33 +58,28 @@ class LogHelper implements HelperInterface
         return call_user_func_array([self::getInstance(), $name], $arguments);
     }
 
-
     /**
      * send a log message to the STDOUT stream.
      *
      * @param array<int, mixed> $args
-     *
-     * @return void
      */
     public static function logToConsole(...$args): void
     {
-
         foreach ($args as $arg) {
-
             if (is_object($arg) || is_array($arg) || is_resource($arg)) {
                 $output = print_r($arg, true);
             } else {
-                $output = (string)$arg;
+                $output = (string) $arg;
             }
 
             fwrite(fopen('php://stdout', 'wb'), $output . "\n");
         }
-
     }
 
     /**
      * @param LogLevel $level
-     * @param string $message
+     * @param string   $message
+     *
      * @throws Exception
      */
     protected static function write(LogLevel $level, string $message): void
@@ -96,7 +89,9 @@ class LogHelper implements HelperInterface
 
     /**
      * @param string $suffix
+     *
      * @return Logger
+     *
      * @throws Exception
      */
     public static function getInstance(string $suffix = 'app'): Logger
@@ -120,5 +115,4 @@ class LogHelper implements HelperInterface
 
         return self::$logger[$suffix];
     }
-
 }

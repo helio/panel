@@ -2,21 +2,16 @@
 
 namespace Helio\Panel\Job\Busybox;
 
-use \Exception;
-use Helio\Panel\App;
-use Helio\Panel\Execution\ExecutionStatus;
+use Exception;
 use Helio\Panel\Job\AbstractExecute;
 use Helio\Panel\Job\DispatchConfig;
 use Helio\Panel\Utility\JwtUtility;
-use Psr\Http\Message\RequestInterface;
-use Psr\Http\Message\ResponseInterface;
 
 class Execute extends AbstractExecute
 {
-
-
     /**
      * @return DispatchConfig
+     *
      * @throws Exception
      */
     public function getDispatchConfig(): DispatchConfig
@@ -27,14 +22,15 @@ class Execute extends AbstractExecute
             ->setEnvVariables([
                 'HELIO_JOBID' => $this->job->getId(),
                 'HELIO_TOKEN' => JwtUtility::generateToken(null, null, null, $this->job)['token'],
-                'LIMIT' => $this->execution ? $this->execution->getConfig('limit', 100) : 100
+                'LIMIT' => $this->execution ? $this->execution->getConfig('limit', 100) : 100,
             ]);
     }
 
     /**
      * @return int
      */
-    protected function calculateRuntime(): int {
+    protected function calculateRuntime(): int
+    {
         return $this->execution->getConfig('limit', 100) * 10 + 30;
     }
 }

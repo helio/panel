@@ -2,36 +2,30 @@
 
 namespace Helio\Panel\Orchestrator;
 
-use \Exception;
+use Exception;
 use Helio\Panel\Utility\ArrayUtility;
-use \RuntimeException;
+use RuntimeException;
 use Helio\Panel\Helper\LogHelper;
 use Helio\Panel\Model\Instance;
 use Helio\Panel\Model\Job;
-use Helio\Panel\Model\Execution;
 use Helio\Panel\Utility\ServerUtility;
 
 class Choria implements OrchestratorInterface
 {
-
-
     /**
      * @var Instance
      */
     protected $instance;
-
 
     /**
      * @var Job
      */
     protected $job;
 
-
     /**
      * @var string
      */
     private static $username = 'panel';
-
 
     /**
      * @var string
@@ -42,7 +36,6 @@ class Choria implements OrchestratorInterface
      * @var int
      */
     private static $redundancyCount = 0;
-
 
     private static $firstManagerCommand = 'mco playbook run infrastructure::gce::create --input \'{"node":"%s","callback":"$jobCallback","user_id":"%s","id":"$jobId"}\'';
     private static $redundantManagersCommand = 'mco playbook run infrastructure::gce::create --input \'{"node":["%s"],"master_token":"%s","callback":"$jobCallback","user_id":"%s","id":"$jobId"\'';
@@ -59,6 +52,7 @@ class Choria implements OrchestratorInterface
 
     /**
      * Choria constructor.
+     *
      * @param Instance $instance
      * @param Job|null $job
      */
@@ -84,7 +78,6 @@ class Choria implements OrchestratorInterface
         return ServerUtility::executeShellCommand($this->parseCommand(self::$startComputeCommand));
     }
 
-
     /**
      * @return mixed
      */
@@ -93,9 +86,9 @@ class Choria implements OrchestratorInterface
         return ServerUtility::executeShellCommand($this->parseCommand(self::$stopComputeCommand));
     }
 
-
     /**
      * @param Job|null $job
+     *
      * @return bool
      */
     public function dispatchJob(Job $job = null): bool
@@ -109,12 +102,13 @@ class Choria implements OrchestratorInterface
         }
         if (!$this->job->getManagerNodes() || !$this->job->getClusterToken() || !$this->job->getInitManagerIp()) {
             LogHelper::warn('dispatchJob called on job that\'s not ready. Aborting.');
+
             return false;
         }
 
         $resultDispatch = ServerUtility::executeShellCommand($this->parseCommand(self::$dispatchCommand, false, [
             $this->job->getManagerNodes()[0],
-            ArrayUtility::modelsToStringOfIds($this->job->getExecutions()->toArray())
+            ArrayUtility::modelsToStringOfIds($this->job->getExecutions()->toArray()),
         ]));
 
         $resultJoinWorkers = ServerUtility::executeShellCommand($this->parseCommand(self::$joinWorkersCommand, false, [$this->job->getClusterToken(), $this->job->getInitManagerIp(), 1]));
@@ -122,10 +116,11 @@ class Choria implements OrchestratorInterface
         return $resultDispatch && $resultJoinWorkers;
     }
 
-
     /**
      * @param Job|null $job
+     *
      * @return bool
+     *
      * @throws Exception
      */
     public function provisionManager(Job $job = null): bool
@@ -145,13 +140,12 @@ class Choria implements OrchestratorInterface
         }
 
         // we have to provision the init manager
-        if (count($this->job->getManagerNodes()) === 0) {
+        if (0 === count($this->job->getManagerNodes())) {
             $managerHostname = self::$managerPrefix . "-init-${managerHash}";
 
             $command = self::$firstManagerCommand;
             $params[] = $managerHostname;
         } else {
-
             // if no init manager exists, we cannot create redundancy managers
             if (!$this->job->getInitManagerIp()) {
                 return false;
@@ -162,7 +156,7 @@ class Choria implements OrchestratorInterface
             $i = self::$redundancyCount + 1;
             while ($i <= self::$redundancyCount) {
                 $redundancyNodes[] = self::$managerPrefix . "-redundancy-${managerHash}-${i}";
-                $i--;
+                --$i;
             }
 
             $command = self::$redundantManagersCommand;
@@ -173,13 +167,15 @@ class Choria implements OrchestratorInterface
         $params[] = $this->job->getOwner() ? $this->job->getOwner()->getId() : null;
 
         $result = ServerUtility::executeShellCommand($this->parseCommand($command, false, $params));
+
         return $result;
     }
 
-
     /**
      * @param Job|null $job
+     *
      * @return bool
+     *
      * @throws Exception
      */
     public function removeManager(Job $job = null): bool
@@ -197,10 +193,10 @@ class Choria implements OrchestratorInterface
         // remove redundant managers if existing
         if (count($this->job->getManagerNodes()) > 1) {
             foreach ($this->job->getManagerNodes() as $node) {
-                if (strpos($node, self::$managerPrefix . "-redundancy-${managerHash}") === 0) {
+                if (0 === strpos($node, self::$managerPrefix . "-redundancy-${managerHash}")) {
                     $result = $result && ServerUtility::executeShellCommand($this->parseCommand(self::$deleteRedundantManagersCommand, true, [
                             substr($node, 0, strlen(self::$managerPrefix . "-init-${managerHash}-1")),
-                            $this->job->getManagerToken()
+                            $this->job->getManagerToken(),
                         ]));
                 }
             }
@@ -208,11 +204,11 @@ class Choria implements OrchestratorInterface
 
         // lastly, delete redundant manager
         $result = $result && ServerUtility::executeShellCommand($this->parseCommand(self::$deleteInitManagerCommand, false, [
-                self::$managerPrefix . "-init-${managerHash}"
+                self::$managerPrefix . "-init-${managerHash}",
             ]));
+
         return $result;
     }
-
 
     /**
      * @return string|null
@@ -222,20 +218,16 @@ class Choria implements OrchestratorInterface
         return ServerUtility::executeShellCommand($this->parseCommand(self::$inspectCommand, true));
     }
 
-
     /**
      * @return string|null
      */
     public function removeInstance()
     {
         $this->ensureRunnerIdIsSet();
+
         return ServerUtility::executeShellCommand($this->parseCommand(self::$removeNodeCommand, false, [$this->instance->getRunnerId()]));
     }
 
-
-    /**
-     *
-     */
     protected function ensureRunnerIdIsSet(): void
     {
         if (!$this->instance->getRunnerId()) {
@@ -244,17 +236,18 @@ class Choria implements OrchestratorInterface
         }
     }
 
-
     /**
      * @param string $command
-     * @param bool $waitForResult
-     * @param array $parameter
+     * @param bool   $waitForResult
+     * @param array  $parameter
+     *
      * @return string
      */
     protected function parseCommand(string $command, bool $waitForResult = false, array $parameter = []): string
     {
-        $params = array_merge([
-            self::$username, $this->instance->getOrchestratorCoordinator()
+        $params = array_merge(
+            [
+            self::$username, $this->instance->getOrchestratorCoordinator(),
         ],
             $parameter
         );
@@ -267,7 +260,7 @@ class Choria implements OrchestratorInterface
                 '$instanceCallback',
                 '$jobCallback',
                 '$jobId',
-                '$instanceId'
+                '$instanceId',
             ],
             [
                 '\\"',
@@ -275,7 +268,7 @@ class Choria implements OrchestratorInterface
                 ServerUtility::getBaseUrl() . 'api/instance/callback?instanceid=' . $this->instance->getId(),
                 ServerUtility::getBaseUrl() . 'api/job/callback?jobid=' . $this->job->getId(),
                 $this->job->getId(),
-                $this->instance->getId()
+                $this->instance->getId(),
             ],
             $command
         );

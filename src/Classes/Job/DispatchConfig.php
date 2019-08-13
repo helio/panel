@@ -23,11 +23,13 @@ class DispatchConfig
 
     /**
      * @param string $image
+     *
      * @return DispatchConfig
      */
     public function setImage(string $image): DispatchConfig
     {
         $this->image = $image;
+
         return $this;
     }
 
@@ -41,11 +43,13 @@ class DispatchConfig
 
     /**
      * @param array $envVariables
+     *
      * @return DispatchConfig
      */
     public function setEnvVariables(array $envVariables): DispatchConfig
     {
         $this->envVariables = $envVariables;
+
         return $this;
     }
 
@@ -59,11 +63,13 @@ class DispatchConfig
 
     /**
      * @param array $args
+     *
      * @return DispatchConfig
      */
     public function setArgs(array $args): DispatchConfig
     {
         $this->args = $args;
+
         return $this;
     }
 
@@ -77,11 +83,13 @@ class DispatchConfig
 
     /**
      * @param array $config
+     *
      * @return DispatchConfig
      */
     public function setRegistry(array $config): DispatchConfig
     {
         $this->registry = $config;
+
         return $this;
     }
 
@@ -95,11 +103,13 @@ class DispatchConfig
 
     /**
      * @param int $executionPerReplica
+     *
      * @return DispatchConfig
      */
     public function setExecutionPerReplica(int $executionPerReplica): DispatchConfig
     {
         $this->executionPerReplica = $executionPerReplica;
+
         return $this;
     }
 
@@ -113,17 +123,19 @@ class DispatchConfig
 
     /**
      * @param mixed $fixedReplicaCount
+     *
      * @return DispatchConfig
      */
     public function setFixedReplicaCount($fixedReplicaCount): DispatchConfig
     {
         $this->fixedReplicaCount = $fixedReplicaCount;
+
         return $this;
     }
 
-
     /**
      * @param Job $job
+     *
      * @return int
      */
     public function getReplicaCountForJob(Job $job): int
@@ -132,12 +144,10 @@ class DispatchConfig
             return $this->getFixedReplicaCount();
         }
 
-        if ($job->getActiveExecutionCount() === 0) {
+        if (0 === $job->getActiveExecutionCount()) {
             return 0;
         }
 
-
         return 1 + ceil(($job->getActiveExecutionCount() - ($job->getActiveExecutionCount() % $this->getExecutionPerReplica())) / $this->getExecutionPerReplica());
     }
-
 }

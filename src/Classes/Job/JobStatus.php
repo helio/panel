@@ -2,10 +2,10 @@
 
 namespace Helio\Panel\Job;
 
-use \RuntimeException;
+use RuntimeException;
 
 /**
- * Class JobStatus
+ * Class JobStatus.
  *
  * @OA\Schema(
  *     schema="jobstatus",
@@ -15,8 +15,6 @@ use \RuntimeException;
  *     enum = {"Creating", "Ready", "Running", "Done", "Interrupted"},
  *     example="Creating"
  * )
- *
- * @package Helio\Panel\Job
  */
 final class JobStatus
 {
@@ -26,15 +24,13 @@ final class JobStatus
     public const DONE = 3;
     public const DELETED = 9;
 
-
     public const labels = [
         'status-0' => 'Creating',
         'status-1' => 'Ready',
         'status-2' => 'Running',
         'status-3' => 'Done',
-        'status-9' => 'Interrupted'
+        'status-9' => 'Interrupted',
     ];
-
 
     public function __construct()
     {
@@ -43,16 +39,16 @@ final class JobStatus
 
     public static function isValidStatus(int $status): bool
     {
-        return $status === self::UNKNOWN
-            || $status === self::INIT
-            || $status === self::READY
-            || $status === self::DONE
-            || $status === self::DELETED;
+        return self::UNKNOWN === $status
+            || self::INIT === $status
+            || self::READY === $status
+            || self::DONE === $status
+            || self::DELETED === $status;
     }
 
     public static function isValidActiveStatus(int $status): bool
     {
-        return $status === self::READY;
+        return self::READY === $status;
     }
 
     public static function getLabel(int $status): string
@@ -66,7 +62,7 @@ final class JobStatus
             self::UNKNOWN,
             self::INIT,
             self::READY,
-            self::DONE
+            self::DONE,
         ];
     }
 }

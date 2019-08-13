@@ -2,9 +2,9 @@
 
 namespace Helio\Panel\Model\QueryFunction;
 
-use \Doctrine\ORM\Query\Parser;
-use \Doctrine\ORM\Query\QueryException;
-use \Doctrine\ORM\Query\SqlWalker;
+use Doctrine\ORM\Query\Parser;
+use Doctrine\ORM\Query\QueryException;
+use Doctrine\ORM\Query\SqlWalker;
 use Doctrine\ORM\Query\AST\Functions\FunctionNode;
 use Doctrine\ORM\Query\Lexer;
 
@@ -30,6 +30,7 @@ class TimestampDiff extends FunctionNode
 
     /**
      * @param Parser $parser
+     *
      * @throws QueryException
      */
     public function parse(Parser $parser): void
@@ -48,6 +49,7 @@ class TimestampDiff extends FunctionNode
 
     /**
      * @param SqlWalker $sql_walker
+     *
      * @return string
      */
     public function getSql(SqlWalker $sql_walker): string

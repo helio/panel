@@ -37,17 +37,12 @@ class DbHelper extends \Helio\Panel\Helper\DbHelper
             'driver' => self::$infarastructure->getEntityManager()->getConnection()->getDriver()->getName(),
             'user' => self::$infarastructure->getEntityManager()->getConnection()->getUsername(),
             'password' => self::$infarastructure->getEntityManager()->getConnection()->getPassword(),
-            'memory' => true
+            'memory' => true,
         ];
     }
 
-
-    /**
-     *
-     */
     public static function reset(): void
     {
         self::$instances = null;
     }
-
 }

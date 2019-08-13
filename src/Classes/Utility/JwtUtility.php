@@ -2,8 +2,8 @@
 
 namespace Helio\Panel\Utility;
 
-use \Exception;
-use \DateTime;
+use Exception;
+use DateTime;
 use Firebase\JWT\JWT;
 use Helio\Panel\App;
 use Helio\Panel\Model\Instance;
@@ -13,26 +13,25 @@ use Tuupola\Base62;
 
 class JwtUtility extends AbstractUtility
 {
-
-
     /**
-     * @param string|null $duration
-     * @param User|null $user
+     * @param string|null   $duration
+     * @param User|null     $user
      * @param Instance|null $instance
-     * @param Job|null $job
+     * @param Job|null      $job
+     *
      * @return array
+     *
      * @throws Exception
      */
     public static function generateToken(string $duration = null, User $user = null, Instance $instance = null, Job $job = null): array
     {
-
         $now = new DateTime('now', ServerUtility::getTimezoneObject());
         $jti = (new Base62())->encode(random_bytes(16));
         $payload = [
             'iat' => $now->getTimestamp(),
-            'jti' => $jti
+            'jti' => $jti,
         ];
-        if ($duration === 'sticky') {
+        if ('sticky' === $duration) {
             $payload['sticky'] = true;
         } elseif ($duration) {
             $payload['exp'] = (new DateTime($duration, ServerUtility::getTimezoneObject()))->getTimestamp();
@@ -51,13 +50,15 @@ class JwtUtility extends AbstractUtility
 
         return [
             'token' => $token,
-            'expires' => array_key_exists('exp', $payload) ? $payload['exp'] : ''
+            'expires' => array_key_exists('exp', $payload) ? $payload['exp'] : '',
         ];
     }
 
     /**
      * @param string $duration
+     *
      * @return mixed
+     *
      * @throws Exception
      */
     public static function generateNewTokenForCurrentSession(string $duration)

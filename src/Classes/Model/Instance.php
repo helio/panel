@@ -1,26 +1,21 @@
 <?php
+
 /** @noinspection PhpUnusedAliasInspection */
 
 namespace Helio\Panel\Model;
 
 use OpenApi\Annotations as OA;
-use Doctrine\{
-    ORM\Mapping\Entity,
-    ORM\Mapping\Table,
-    ORM\Mapping\Id,
-    ORM\Mapping\Column,
-    ORM\Mapping\GeneratedValue,
-    ORM\Mapping\ManyToOne,
-    ORM\Mapping\OneToMany
-};
+use Doctrine\ORM\Mapping\Entity;
+use Doctrine\ORM\Mapping\Table;
+use Doctrine\ORM\Mapping\Id;
+use Doctrine\ORM\Mapping\Column;
+use Doctrine\ORM\Mapping\ManyToOne;
 use Helio\Panel\Instance\InstanceStatus;
 use Helio\Panel\Instance\InstanceType;
 use Helio\Panel\Master\MasterType;
 use Helio\Panel\Orchestrator\OrchestratorType;
-use Helio\Panel\Master\MasterFactory;
 
 /**
- *
  * @OA\Schema(
  *     type="object",
  *     title="Instance model"
@@ -30,8 +25,6 @@ use Helio\Panel\Master\MasterFactory;
  **/
 class Instance extends AbstractModel
 {
-
-
     /**
      * @OA\Property(ref="#/components/schemas/instancestatus")
      *
@@ -40,7 +33,6 @@ class Instance extends AbstractModel
      * @Column(type="integer")
      */
     protected $status = InstanceStatus::UNKNOWN;
-
 
     /**
      * @OA\Property(
@@ -53,7 +45,6 @@ class Instance extends AbstractModel
      * @Column
      */
     protected $fqdn = '';
-
 
     /**
      * @OA\Property(
@@ -73,7 +64,6 @@ class Instance extends AbstractModel
      * @ManyToOne(targetEntity="User", inversedBy="instances", cascade={"persist"})
      */
     protected $owner;
-
 
     /**
      * @var string
@@ -117,7 +107,6 @@ class Instance extends AbstractModel
      */
     protected $orchestratorCoordinator = 'control.idling.host';
 
-
     /**
      * @OA\Property(
      *     description="Region where the server is phisically located",
@@ -129,7 +118,6 @@ class Instance extends AbstractModel
      * @Column
      */
     protected $region = '';
-
 
     /**
      * @OA\Property(
@@ -143,7 +131,6 @@ class Instance extends AbstractModel
      */
     protected $security = '';
 
-
     /**
      * @OA\Property(
      *     description="Reference used for pay-outs",
@@ -156,14 +143,12 @@ class Instance extends AbstractModel
      */
     protected $billingReference = '';
 
-
     /**
      * @var string
      *
      * @Column
      */
     protected $supervisorApi = '';
-
 
     /**
      * @var string
@@ -172,12 +157,10 @@ class Instance extends AbstractModel
      */
     protected $supervisorToken = '';
 
-
     /**
      * @var string Docker ID
      */
     protected $runnerId = '';
-
 
     /**
      * @OA\Property(
@@ -203,7 +186,6 @@ class Instance extends AbstractModel
      */
     protected $priority = 100;
 
-
     /**
      * @OA\Property(
      *     description="Object with the specs of the instance.",
@@ -216,7 +198,6 @@ class Instance extends AbstractModel
      */
     protected $inventory = '';
 
-
     /**
      * @return string
      */
@@ -225,9 +206,9 @@ class Instance extends AbstractModel
         return $this->fqdn;
     }
 
-
     /**
      * @param string $fqdn
+     *
      * @return Instance
      */
     public function setFqdn(string $fqdn): Instance
@@ -245,9 +226,9 @@ class Instance extends AbstractModel
         return $this->owner;
     }
 
-
     /**
      * @param User $owner
+     *
      * @return Instance
      */
     public function setOwner(User $owner): Instance
@@ -267,7 +248,6 @@ class Instance extends AbstractModel
         return $this;
     }
 
-
     /**
      * @return string
      */
@@ -276,19 +256,21 @@ class Instance extends AbstractModel
         return $this->ip;
     }
 
-
     /**
      * @param string $ip
+     *
      * @return Instance $this
      */
     public function setIp(string $ip): Instance
     {
         $this->ip = $ip;
+
         return $this;
     }
 
     /**
      * @param int $status
+     *
      * @return Instance $this
      */
     public function setStatus(int $status): Instance
@@ -296,6 +278,7 @@ class Instance extends AbstractModel
         if (InstanceStatus::isValidStatus($status)) {
             $this->status = $status;
         }
+
         return $this;
     }
 
@@ -309,6 +292,7 @@ class Instance extends AbstractModel
 
     /**
      * @param string $instanceType
+     *
      * @return Instance
      */
     public function setInstanceType(string $instanceType): Instance
@@ -316,6 +300,7 @@ class Instance extends AbstractModel
         if (InstanceType::isValidType($instanceType)) {
             $this->instanceType = $instanceType;
         }
+
         return $this;
     }
 
@@ -329,6 +314,7 @@ class Instance extends AbstractModel
 
     /**
      * @param string $masterType
+     *
      * @return Instance $this
      */
     public function setMasterType(string $masterType): Instance
@@ -350,6 +336,7 @@ class Instance extends AbstractModel
 
     /**
      * @param string $masterCoordinator
+     *
      * @return Instance $this
      */
     public function setMasterCoordinator(string $masterCoordinator): Instance
@@ -369,11 +356,13 @@ class Instance extends AbstractModel
 
     /**
      * @param string $orchestratorType
+     *
      * @return Instance
      */
     public function setOrchestratorType(string $orchestratorType): Instance
     {
         $this->orchestratorType = $orchestratorType;
+
         return $this;
     }
 
@@ -395,22 +384,25 @@ class Instance extends AbstractModel
 
     /**
      * @param string $snapshotConfig
+     *
      * @return Instance
      */
     public function setSnapshotConfig(string $snapshotConfig): Instance
     {
         $this->snapshotConfig = $snapshotConfig;
+
         return $this;
     }
 
-
     /**
      * @param string $orchestratorCoordinator
+     *
      * @return Instance
      */
     public function setOrchestratorCoordinator(string $orchestratorCoordinator): Instance
     {
         $this->orchestratorCoordinator = $orchestratorCoordinator;
+
         return $this;
     }
 
@@ -432,11 +424,13 @@ class Instance extends AbstractModel
 
     /**
      * @param bool $allowFreeComputing
+     *
      * @return Instance
      */
     public function setAllowFreeComputing(bool $allowFreeComputing): Instance
     {
         $this->allowFreeComputing = $allowFreeComputing;
+
         return $this;
     }
 
@@ -450,11 +444,13 @@ class Instance extends AbstractModel
 
     /**
      * @param string $region
+     *
      * @return Instance
      */
     public function setRegion(string $region): Instance
     {
         $this->region = $region;
+
         return $this;
     }
 
@@ -468,11 +464,13 @@ class Instance extends AbstractModel
 
     /**
      * @param string $security
+     *
      * @return Instance
      */
     public function setSecurity(string $security): Instance
     {
         $this->security = $security;
+
         return $this;
     }
 
@@ -486,11 +484,13 @@ class Instance extends AbstractModel
 
     /**
      * @param string $billingReference
+     *
      * @return Instance
      */
     public function setBillingReference(string $billingReference): Instance
     {
         $this->billingReference = $billingReference;
+
         return $this;
     }
 
@@ -504,11 +504,13 @@ class Instance extends AbstractModel
 
     /**
      * @param string $supervisorApi
+     *
      * @return Instance
      */
     public function setSupervisorApi(string $supervisorApi): Instance
     {
         $this->supervisorApi = $supervisorApi;
+
         return $this;
     }
 
@@ -522,11 +524,13 @@ class Instance extends AbstractModel
 
     /**
      * @param string $supervisorToken
+     *
      * @return Instance
      */
     public function setSupervisorToken(string $supervisorToken): Instance
     {
         $this->supervisorToken = $supervisorToken;
+
         return $this;
     }
 
@@ -540,11 +544,13 @@ class Instance extends AbstractModel
 
     /**
      * @param string $runnerId
+     *
      * @return Instance
      */
     public function setRunnerId(string $runnerId): Instance
     {
         $this->runnerId = $runnerId;
+
         return $this;
     }
 
@@ -558,11 +564,13 @@ class Instance extends AbstractModel
 
     /**
      * @param int $priority
+     *
      * @return Instance
      */
     public function setPriority(int $priority): Instance
     {
         $this->priority = $priority;
+
         return $this;
     }
 
@@ -576,12 +584,13 @@ class Instance extends AbstractModel
 
     /**
      * @param string $inventory
+     *
      * @return Instance
      */
     public function setInventory(string $inventory): Instance
     {
         $this->inventory = $inventory;
+
         return $this;
     }
-
 }

@@ -3,9 +3,9 @@
 namespace Helio\Panel;
 
 use Ergy\Slim\Annotations\Router;
-use \Exception;
+use Exception;
 use Helio\Panel\Helper\SlackHelper;
-use \RuntimeException;
+use RuntimeException;
 use Helio\Panel\Helper\DbHelper;
 use Helio\Panel\Helper\ElasticHelper;
 use Helio\Panel\Helper\LogHelper;
@@ -16,8 +16,7 @@ use Monolog\Logger;
 use Slim\Views\PhpRenderer;
 
 /**
- * Class App
- * @package Helio\Panel
+ * Class App.
  *
  *
  * @OA\Info(title="Helio API", version="0.1.0")
@@ -26,12 +25,9 @@ use Slim\Views\PhpRenderer;
  * @OA\Server(url="http://localhost:8099/api", description="DEV API")
  * @OA\Server(url="https://panelprev.idling.host/api", description="STAGE API")
  * @OA\Server(url="https://panel.idling.host/api", description="PROD API")
- *
  */
 class App extends \Slim\App
 {
-
-
     /**
      * @var App
      */
@@ -57,26 +53,24 @@ class App extends \Slim\App
     /** @var SlackHelper */
     protected static $slackHelperClassName = SlackHelper::class;
 
-
     /**
-     * @param null|string $appName
-     * @param array $middleWaresToApply
+     * @param string|null $appName
+     * @param array       $middleWaresToApply
      *
      * @return App
+     *
      * @throws Exception
      */
     public static function getApp(
         ?string $appName = null,
         array $middleWaresToApply = [MiddlewareForHttpUtility::class]
-    ): App
-    {
-
+    ): App {
         if (!self::$instance) {
             // this is a kind of DI-hack to make the app testable
             self::$className = static::class;
 
             // abort if $instance should exist, but doesn't (e.g. if we call getApp from inside the application)
-            if ($appName === null) {
+            if (null === $appName) {
                 throw new RuntimeException('App instance cannot be created from here.', 1548056859);
             }
 
@@ -86,7 +80,8 @@ class App extends \Slim\App
 
             self::$instance->getContainer()['renderer'] = new PhpRenderer(APPLICATION_ROOT . '/src/templates');
 
-            self::$instance->getContainer()['router'] = new Router(self::$instance,
+            self::$instance->getContainer()['router'] = new Router(
+                self::$instance,
                 [APPLICATION_ROOT . '/src/Classes/Controller/'],
                 APPLICATION_ROOT . '/tmp/cache/' . $appName
             );
@@ -99,81 +94,89 @@ class App extends \Slim\App
         return self::$instance;
     }
 
-
     /**
-     * @param null|string $appName
-     * @param array $middleWaresToApply
+     * @param string|null $appName
+     * @param array       $middleWaresToApply
      *
      * @return App
+     *
      * @throws Exception
      */
     public static function getNewApp(
         ?string $appName = null,
         array $middleWaresToApply = [MiddlewareForHttpUtility::class]
-    ): App
-    {
+    ): App {
         self::$instance = null;
         self::$className = '';
 
         return self::getApp($appName, $middleWaresToApply);
     }
 
-
     /**
      * @return bool
      */
     public static function isReady(): bool
     {
-        return (bool)self::$instance;
+        return (bool) self::$instance;
     }
 
     /**
      * @return DbHelper
+     *
      * @throws Exception
      */
     public static function getDbHelper(): DbHelper
     {
         $class = self::$className;
+
         return ($class::$dbHelperClassName)::getInstance();
     }
 
     /**
      * @return Logger
+     *
      * @throws Exception
      */
     public static function getLogger(): Logger
     {
         $class = self::$className;
+
         return ($class::$logHelperClassName)::getInstance();
     }
 
     /**
      * @return ZapierHelper
+     *
      * @throws Exception
      */
     public static function getZapierHelper(): ZapierHelper
     {
         $class = self::$className;
+
         return ($class::$zapierHelperClassName)::getInstance();
     }
 
     /**
      * @return ElasticHelper
+     *
      * @throws Exception
      */
     public static function getElasticHelper(): ElasticHelper
     {
         $class = self::$className;
+
         return ($class::$elasticHelperClassName)::getInstance();
     }
 
     /**
      * @return SlackHelper
+     *
      * @throws Exception
      */
     public static function getSlackHelper(): SlackHelper
     {
         $class = self::$className;
+
         return ($class::$slackHelperClassName)::getInstance();
     }
 }

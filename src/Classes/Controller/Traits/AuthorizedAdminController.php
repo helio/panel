@@ -3,8 +3,7 @@
 namespace Helio\Panel\Controller\Traits;
 
 /**
- * Trait AuthorizedAdminController
- * @package Helio\Panel\Controller\Traits
+ * Trait AuthorizedAdminController.
  */
 trait AuthorizedAdminController
 {

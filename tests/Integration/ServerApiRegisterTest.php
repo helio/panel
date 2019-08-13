@@ -11,14 +11,10 @@ use Psr\Http\Message\ResponseInterface;
 use Slim\Http\StatusCode;
 
 /**
- * Class ServerApiRegisterTest
- * @package Helio\Test\Integration
- *
- * TODO: Add some tests
+ * Class ServerApiRegisterTest.
  */
 class ServerApiRegisterTest extends TestCase
 {
-
     /**
      * @var User
      */
@@ -43,7 +39,6 @@ class ServerApiRegisterTest extends TestCase
      * @var bool
      */
     protected $imported = false;
-
 
     /**
      * @throws \Exception
@@ -70,8 +65,10 @@ class ServerApiRegisterTest extends TestCase
 
     /**
      * @param array $data
-     * @param bool $withData
+     * @param bool  $withData
+     *
      * @return ResponseInterface
+     *
      * @throws \Doctrine\ORM\ORMException
      * @throws \Doctrine\ORM\OptimisticLockException
      * @throws \Exception
@@ -83,7 +80,8 @@ class ServerApiRegisterTest extends TestCase
         } else {
             $this->assertFalse($this->imported, 'Data already imported, cannot exec test. Please reset data again.');
         }
-        return $this->runApp('POST', '/api/instance/register', true, $this->header, $data !== null ? $data : $this->data);
+
+        return $this->runApp('POST', '/api/instance/register', true, $this->header, null !== $data ? $data : $this->data);
     }
 
     /**
@@ -122,11 +120,10 @@ class ServerApiRegisterTest extends TestCase
         $backupheaders = $this->header;
         $this->header['Authorization'] = 'Bearer i-dbei45:nonsense';
         $result = $this->exec();
-        $debug = (string)$result->getBody();
+        $debug = (string) $result->getBody();
         $this->assertEquals(StatusCode::HTTP_UNAUTHORIZED, $result->getStatusCode());
         $this->header = $backupheaders;
     }
-
 
     /**
      * @throws \Exception
@@ -140,7 +137,6 @@ class ServerApiRegisterTest extends TestCase
         $instance = $this->instanceRepository->findOneByName('testinstance');
         $this->assertEquals('new.fqdn.example.com', $instance->getFqdn());
     }
-
 
     /**
      * @throws \Exception
@@ -157,7 +153,6 @@ class ServerApiRegisterTest extends TestCase
         $this->assertEquals('new.fqdn.example.com', $instance->getFqdn());
     }
 
-
     /**
      * @throws \Exception
      */
@@ -169,14 +164,11 @@ class ServerApiRegisterTest extends TestCase
         $result = $this->exec();
         $this->data = $backupdata;
 
-
         $this->assertEquals(406, $result->getStatusCode());
     }
 
-
     /**
      * @throws \Exception
-     *
      */
     public function testEverythingOk(): void
     {
@@ -187,7 +179,7 @@ class ServerApiRegisterTest extends TestCase
 
         $response = $this->exec();
 
-        $body = (string)$response->getBody();
+        $body = (string) $response->getBody();
 
         $this->assertEquals(200, $response->getStatusCode());
 

@@ -3,7 +3,7 @@
 namespace Helio\Panel\Controller;
 
 use Ergy\Slim\Annotations\RouteInfo;
-use \RuntimeException;
+use RuntimeException;
 use Ergy\Slim\Annotations\Controller;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Request;
@@ -17,11 +17,10 @@ use Slim\Views\PhpRenderer;
 use Symfony\Component\Yaml\Yaml;
 use Helio\Panel\Helper\LogHelper;
 use Helio\Panel\Utility\ServerUtility;
-
 use function OpenApi\scan;
 
 /**
- * Abstract Controller
+ * Abstract Controller.
  *
  *
  * @OA\SecurityScheme(
@@ -165,69 +164,59 @@ use function OpenApi\scan;
  *     @OA\JsonContent(ref="#/components/schemas/logs")
  * )
  *
+ * @property PhpRenderer renderer
+ * @property array settings
+ * @property EnvironmentInterface environment
+ * @property Request request
+ * @property Response response
+ * @property RouterInterface router
+ * @property InvocationStrategyInterface foundHandler
+ * @property callable errorHandler
+ * @property callable notFoundHandler
+ * @property callable notAllowedHandler
+ * @property CallableResolverInterface callableResolver
  *
- *
- * @property-read PhpRenderer renderer
- * @property-read array settings
- * @property-read EnvironmentInterface environment
- * @property-read Request request
- * @property-read Response response
- * @property-read RouterInterface router
- * @property-read InvocationStrategyInterface foundHandler
- * @property-read callable errorHandler
- * @property-read callable notFoundHandler
- * @property-read callable notAllowedHandler
- * @property-read CallableResolverInterface callableResolver
- *
- * @package    Helio\Panel\Controller
  * @author    Christoph Buchli <team@opencomputing.cloud>
- *
  */
 abstract class AbstractController extends Controller
 {
-
-
     /**
-     * The return type is used to determine what language the client understands (e.g. json, html, ...)
+     * The return type is used to determine what language the client understands (e.g. json, html, ...).
      *
      * @return string
      */
     abstract protected function getReturnType(): ?string;
 
-
     /**
-     * The mode is used to deremine where to look for templates
+     * The mode is used to deremine where to look for templates.
      *
      * @return string
      */
     abstract protected function getMode(): ?string;
-
 
     /**
      * The Context is used to determine where to look for templates of PARTIARLS!
      * This is usually just the same as the mode, but can be different if an API endpoint that renders partials is used from different places.
      * In that case, overwrite this method in such controllers.
      *
-     * @return null|string
+     * @return string|null
      */
     protected function getContext(): ?string
     {
         return $this->getMode();
     }
 
-
     /**
      * @return string $idAlias if a param named 'id' is set, what does it stand for?
      */
-    protected function getIdAlias(): string {
+    protected function getIdAlias(): string
+    {
         return '';
     }
 
-
-
     /**
      * magic method to prepare your controllers (e.g. use it with traits)
-     * Warning: carefully name your methods
+     * Warning: carefully name your methods.
      *
      * @param RouteInfo $route
      */
@@ -235,7 +224,7 @@ abstract class AbstractController extends Controller
     {
         // first: setup everything
         foreach (get_class_methods($this) as $method) {
-            if (strpos($method, 'setup') === 0) {
+            if (0 === strpos($method, 'setup')) {
                 if (!$this->$method($route)) {
                     throw new RuntimeException('Controller Setup failed: ' . $method, 1551432903);
                 }
@@ -244,7 +233,7 @@ abstract class AbstractController extends Controller
 
         // then: validate everything
         foreach (get_class_methods($this) as $method) {
-            if (strpos($method, 'validate') === 0) {
+            if (0 === strpos($method, 'validate')) {
                 if (!$this->$method()) {
                     throw new RuntimeException('Controller Validation failed: ' . $method, 1551432915);
                 }
@@ -252,10 +241,10 @@ abstract class AbstractController extends Controller
         }
     }
 
-
     /**
      * @param string $partial
-     * @param array $param
+     * @param array  $param
+     *
      * @return string
      */
     protected function fetchPartial(string $partial, array $param = []): string
@@ -263,22 +252,23 @@ abstract class AbstractController extends Controller
         return $this->renderer->fetch($this->getContext() . "/partial/${partial}.phtml", $param);
     }
 
-
     /**
      * @param array $params
-     * @param int $status
+     * @param int   $status
      *
      * @return ResponseInterface
      */
     protected function render(array $params = [], int $status = StatusCode::HTTP_OK): ResponseInterface
     {
         $method = $this->getReturnType();
+
         return $this->$method($params, $status);
     }
 
     /**
      * @param $data
      * @param int $status
+     *
      * @return ResponseInterface
      */
     protected function html($data, int $status = StatusCode::HTTP_OK): ResponseInterface
@@ -287,12 +277,12 @@ abstract class AbstractController extends Controller
             $data['impersonating'] = true;
         }
 
-        return $this->renderer->render($this->response,
+        return $this->renderer->render(
+            $this->response,
             $this->getMode() . '/index.phtml',
             $data
         )->withStatus($status);
     }
-
 
     /**
      * @param $data
@@ -303,78 +293,80 @@ abstract class AbstractController extends Controller
     protected function json($data, int $status = StatusCode::HTTP_OK): ResponseInterface
     {
         if ($status > 299) {
-            LogHelper::warn('API error on ' . $this->request->getUri() . ' with code ' . $status . "\nResponse Data:\n" . print_r($data, true) . "\nRequest:\n" . print_r((string)$this->request->getBody(), true));
+            LogHelper::warn('API error on ' . $this->request->getUri() . ' with code ' . $status . "\nResponse Data:\n" . print_r($data, true) . "\nRequest:\n" . print_r((string) $this->request->getBody(), true));
         }
         if (array_key_exists('message', $data)) {
             $data['notification'] = $this->fetchPartial('message', [
                 'message' => $data['message'],
                 'status' => $data['status'] ?? 'ok',
-                'success' => $data['success'] ?? 'success'
+                'success' => $data['success'] ?? 'success',
             ]);
         }
+
         return $this->response->withJson($data)->withStatus($status);
     }
 
     /**
      * @param string $data
-     * @param int $status
+     * @param int    $status
+     *
      * @return ResponseInterface
      */
     protected function rawJson(string $data, int $status = StatusCode::HTTP_OK): ResponseInterface
     {
-        {
-            if ($status > 299) {
-                LogHelper::warn('API error on ' . $this->request->getUri() . ' with code ' . $status . "\nResponse Data:\n" . print_r($data, true) . "\nRequest:\n" . print_r((string)$this->request->getBody(), true));
-            }
+        if ($status > 299) {
+            LogHelper::warn('API error on ' . $this->request->getUri() . ' with code ' . $status . "\nResponse Data:\n" . print_r($data, true) . "\nRequest:\n" . print_r((string) $this->request->getBody(), true));
+        }
 
-            $this->response->getBody()->write($data);
-            return $this->response
+        $this->response->getBody()->write($data);
+
+        return $this->response
                 ->withHeader('Content-Type', 'application/json')
                 ->withStatus($status);
-        }
     }
-
 
     /**
      * @param $data
      * @param int $status
+     *
      * @return ResponseInterface
      */
     protected function yaml($data, int $status = StatusCode::HTTP_OK): ResponseInterface
     {
         if ($status > 299) {
-            LogHelper::warn('API error on ' . $this->request->getUri() . ' with code ' . $status . "\nResponse Data:\n" . print_r($data, true) . "\nRequest:\n" . print_r((string)$this->request->getBody(), true));
+            LogHelper::warn('API error on ' . $this->request->getUri() . ' with code ' . $status . "\nResponse Data:\n" . print_r($data, true) . "\nRequest:\n" . print_r((string) $this->request->getBody(), true));
         }
 
         if (is_array($data)) {
             $data = Yaml::dump($data, 4, 2);
         }
+
         return $this->rawYaml($data, $status);
     }
 
-
     /**
      * @param string $data
-     * @param int $status
+     * @param int    $status
+     *
      * @return ResponseInterface
      */
     protected function rawYaml(string $data, int $status = StatusCode::HTTP_OK): ResponseInterface
     {
         if ($status > 299) {
-            LogHelper::warn('API error on ' . $this->request->getUri() . ' with code ' . $status . "\nResponse Data:\n" . print_r($data, true) . "\nRequest:\n" . print_r((string)$this->request->getBody(), true));
+            LogHelper::warn('API error on ' . $this->request->getUri() . ' with code ' . $status . "\nResponse Data:\n" . print_r($data, true) . "\nRequest:\n" . print_r((string) $this->request->getBody(), true));
         }
 
         $this->response->getBody()->write($data);
+
         return $this->response
             ->withHeader('Content-Type', 'application/x-yaml')
             ->withStatus($status);
     }
 
-
     /**
      * @param array|string $include array of filenames or regex of filenames to include
-     * @return ResponseInterface
      *
+     * @return ResponseInterface
      */
     protected function renderApiDocumentation($include = []): ResponseInterface
     {
@@ -383,7 +375,7 @@ abstract class AbstractController extends Controller
 
         // unfourtunately, OpenApi::scan() only has an exclude functionality, so we need to "invert"  $include
         if ($include) {
-            if (is_array($include) && count($include) === 1) {
+            if (is_array($include) && 1 === count($include)) {
                 $path .= DIRECTORY_SEPARATOR . $include[0];
             } else {
                 $exclude = array_filter(ServerUtility::getAllFilesInFolder($path, '.php'), function ($object) use ($include, $path) {
@@ -392,14 +384,14 @@ abstract class AbstractController extends Controller
                     return
                         (is_array($include) && !in_array($filenameInsidePath, $include, true))
                         ||
-                        (is_string($include) && preg_match($include, $object) === 0);
+                        (is_string($include) && 0 === preg_match($include, $object));
                 });
             }
         }
         $openapi = scan($path, ['exclude' => $exclude]);
 
-        if (($this->request->getParam('format', 'yaml') === 'json')
-            || $this->request->getHeader('Content-Type') === 'application/json') {
+        if (('json' === $this->request->getParam('format', 'yaml'))
+            || 'application/json' === $this->request->getHeader('Content-Type')) {
             return $this->rawJson($openapi->toJson());
         }
 

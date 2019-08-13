@@ -9,10 +9,7 @@ use Slim\Http\Response;
 
 class CookieUtilityTest extends TestCase
 {
-
-
     /**
-     *
      * @throws \Exception
      */
     public function testAddCookie(): void
@@ -23,9 +20,7 @@ class CookieUtilityTest extends TestCase
         $this->assertStringContainsString('test=value', $response->getHeader('set-cookie')[0]);
     }
 
-
     /**
-     *
      * @throws \Exception
      */
     public function testDeleteCookie(): void
@@ -43,9 +38,7 @@ class CookieUtilityTest extends TestCase
         $this->assertEquals(1, $this->getExpires($response[1])->getTimestamp());
     }
 
-
     /**
-     *
      * @throws \Exception
      */
     public function testExpiresInAddCookie(): void
@@ -54,31 +47,31 @@ class CookieUtilityTest extends TestCase
         $now = new \DateTimeImmutable('now', ServerUtility::getTimezoneObject());
         $future = new \DateTimeImmutable('now +2 weeks', ServerUtility::getTimezoneObject());
 
-        $responseCookies = CookieUtility::addCookie($emptyResponse, 'test', 'value',
-            $future->getTimestamp())->getHeader('set-cookie');
+        $responseCookies = CookieUtility::addCookie(
+            $emptyResponse,
+            'test',
+            'value',
+            $future->getTimestamp()
+        )->getHeader('set-cookie');
         $this->assertIsArray($responseCookies);
         $this->assertCount(1, $responseCookies);
         $this->assertCloseDateTime($future, $this->getExpires($responseCookies[0]));
         $this->assertCloseInt($future->getTimestamp() - $now->getTimestamp(), $this->getMaxAge($responseCookies[0]), 1);
     }
 
-
     /**
      * @param \DateTimeInterface $expected
      * @param \DateTimeInterface $actual
-     *
      */
     protected function assertCloseDateTime(\DateTimeInterface $expected, \DateTimeInterface $actual): void
     {
         $this->assertCloseInt($expected->getTimestamp(), $actual->getTimestamp(), 1);
     }
 
-
     /**
      * @param int $expected
      * @param int $actual
      * @param int $maxDistance
-     *
      */
     protected function assertCloseInt(int $expected, int $actual, int $maxDistance): void
     {
@@ -86,11 +79,11 @@ class CookieUtilityTest extends TestCase
         $this->assertGreaterThanOrEqual($expected - $maxDistance, $actual);
     }
 
-
     /**
      * @param string $cookieValue
      *
      * @return \DateTimeInterface
+     *
      * @throws \Exception
      */
     protected function getExpires(string $cookieValue): \DateTimeInterface
@@ -100,18 +93,17 @@ class CookieUtilityTest extends TestCase
         return new \DateTimeImmutable($match[1], ServerUtility::getTimezoneObject());
     }
 
-
     /**
      * @param string $cookieValue
      *
      * @return int
+     *
      * @throws \Exception
      */
     protected function getMaxAge(string $cookieValue): int
     {
         preg_match('/Max-Age=([^;]+);/', $cookieValue, $match);
 
-        return (int)$match[1];
+        return (int) $match[1];
     }
 }
-

@@ -2,26 +2,22 @@
 
 namespace Helio\Test\Functional;
 
-use \Exception;
+use Exception;
 use GuzzleHttp\Psr7\Response;
 use Helio\Panel\Model\User;
 use Helio\Test\Infrastructure\Helper\ZapierHelper;
 use Helio\Test\TestCase;
 use Slim\Http\StatusCode;
 
-
 /**
- * Class HomepageTest
+ * Class HomepageTest.
  *
- * @package    Helio\Test\Functional
  * @author    Christoph Buchli <team@opencomputing.cloud>
  */
 class PanelTest extends TestCase
 {
-
-
     /**
-     * Test that the index route returns a rendered response
+     * Test that the index route returns a rendered response.
      *
      * @throws Exception
      */
@@ -30,13 +26,12 @@ class PanelTest extends TestCase
         $response = $this->runApp('GET', '/');
 
         $this->assertEquals(200, $response->getStatusCode());
-        $this->assertStringContainsString('Log In', (string)$response->getBody());
-        $this->assertStringContainsString('<form', (string)$response->getBody());
+        $this->assertStringContainsString('Log In', (string) $response->getBody());
+        $this->assertStringContainsString('<form', (string) $response->getBody());
     }
 
-
     /**
-     * Test that the index route returns a rendered response
+     * Test that the index route returns a rendered response.
      *
      * @throws \Exception
      */
@@ -50,9 +45,7 @@ class PanelTest extends TestCase
         $this->assertStringContainsString('confirm?signature', $response->getHeader('Location')[0]);
     }
 
-
     /**
-     *
      * @throws \Exception
      */
     public function testActivationLinkActivatesUser(): void
@@ -76,7 +69,6 @@ class PanelTest extends TestCase
     }
 
     /**
-     *
      * @throws \Exception
      */
     public function testLoggedOutInvalidatesToken(): void
@@ -94,7 +86,6 @@ class PanelTest extends TestCase
         $this->assertStringContainsString('/panel', $response->getHeaderLine('location'));
         $this->runApp('GET', $response->getHeaderLine('location'), true, null, null, $response->getHeaderLine('set-cookie'));
 
-
         /** @var User $user */
         $user = $this->userRepository->findOneByEmail('email@example.com');
 
@@ -111,7 +102,6 @@ class PanelTest extends TestCase
         $user = $this->userRepository->findOneByEmail('email@example.com');
 
         $this->assertGreaterThanOrEqual($now, $user->getLoggedOut());
-
 
         $response = $this->runApp('GET', $confirmationUrl, true);
         $this->assertEquals(302, $response->getStatusCode());

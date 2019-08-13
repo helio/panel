@@ -2,12 +2,10 @@
 
 namespace Helio\Panel\Controller\Traits;
 
-
-use \Slim\Http\Request;
+use Slim\Http\Request;
 
 /**
- * Trait TypeAutoController
- * @package Helio\Panel\Controller\Traits
+ * Trait TypeAutoController.
  *
  * @property Request $request
  */
@@ -15,9 +13,10 @@ trait TypeAutoController
 {
     protected function getReturnType(): ?string
     {
-        if (stripos($this->request->getContentType(), 'json') !== false) {
+        if (false !== stripos($this->request->getContentType(), 'json')) {
             return 'json';
         }
+
         return 'html';
     }
 

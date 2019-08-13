@@ -7,7 +7,6 @@ use Helio\Test\TestCase;
 
 class JobTest extends TestCase
 {
-
     public function testManagerNodeRemoval(): void
     {
         $job = new Job();

@@ -2,14 +2,13 @@
 
 namespace Helio\Panel\Helper;
 
-use \Exception;
+use Exception;
 use Elasticsearch\Client;
 use Elasticsearch\ClientBuilder;
 use Helio\Panel\Utility\ServerUtility;
 
 /**
- * Class ElasticHelper
- * @package Helio\Panel\Helper
+ * Class ElasticHelper.
  */
 class ElasticHelper implements HelperInterface
 {
@@ -23,7 +22,6 @@ class ElasticHelper implements HelperInterface
      */
     protected static $instances;
 
-
     /**
      * @var string
      */
@@ -33,9 +31,9 @@ class ElasticHelper implements HelperInterface
     protected static $logEntryFieldName = 'log';
     protected static $timestampFieldName = '@timestamp';
 
-
     /**
      * ElasticHelper constructor.
+     *
      * @param array $hosts
      */
     public function __construct(array $hosts = [])
@@ -47,7 +45,6 @@ class ElasticHelper implements HelperInterface
     }
 
     /**
-     *
      * @return $this
      */
     public static function getInstance(): self
@@ -62,14 +59,16 @@ class ElasticHelper implements HelperInterface
             }
             self::$instances[$class] = new static($host);
         }
+
         return self::$instances[$class];
     }
 
     /**
-     * @param int $userId
-     * @param int|null $jobId negative value means the field must not exist
+     * @param int      $userId
+     * @param int|null $jobId       negative value means the field must not exist
      * @param int|null $executionId negative value means the field must not exist
-     * @param bool $cleanSource wether or not to only display clean fields
+     * @param bool     $cleanSource wether or not to only display clean fields
+     *
      * @return array
      */
     public function getLogEntries(int $userId, int $jobId = null, int $executionId = null, bool $cleanSource = true): array
@@ -80,18 +79,18 @@ class ElasticHelper implements HelperInterface
                 'from' => $this->getFrom(),
                 'size' => $this->getSize(),
                 'sort' => [
-                    self::$timestampFieldName => 'desc'
+                    self::$timestampFieldName => 'desc',
                 ],
                 'query' => [
                     'bool' => [
                         'must' => [
                             'exists' => [
-                                'field' => self::$logEntryFieldName
-                            ]
-                        ]
-                    ]
-                ]
-            ]
+                                'field' => self::$logEntryFieldName,
+                            ],
+                        ],
+                    ],
+                ],
+            ],
         ];
 
         if ($cleanSource) {
@@ -111,7 +110,7 @@ class ElasticHelper implements HelperInterface
             if ($executionId < 0) {
                 $mustNot[] = ['exists' => ['field' => self::$executionIdFieldName]];
             } else {
-                $filter[] = ['term' => [self::$executionIdFieldName => (string)$executionId]];
+                $filter[] = ['term' => [self::$executionIdFieldName => (string) $executionId]];
             }
         }
 
@@ -127,20 +126,20 @@ class ElasticHelper implements HelperInterface
             return $this->client->search($params)['hits'];
         } catch (Exception $e) {
             LogHelper::warn('Error in Elastic Query: ' . $e->getMessage());
+
             return [];
         }
     }
 
-
     /**
      * @param int $userId
+     *
      * @return array
      */
     public function getWeirdLogEntries(int $userId): array
     {
         return $this->getLogEntries($userId, -1, -1, false);
     }
-
 
     /**
      * @return int
@@ -152,11 +151,13 @@ class ElasticHelper implements HelperInterface
 
     /**
      * @param int $from
+     *
      * @return ElasticHelper
      */
     public function setFrom(int $from): ElasticHelper
     {
         $this->from = $from;
+
         return $this;
     }
 
@@ -170,11 +171,13 @@ class ElasticHelper implements HelperInterface
 
     /**
      * @param int $size
+     *
      * @return ElasticHelper
      */
     public function setSize(int $size): ElasticHelper
     {
         $this->size = $size;
+
         return $this;
     }
 }

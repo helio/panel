@@ -9,11 +9,6 @@ use Helio\Test\TestCase;
 
 class ServerUtilityTest extends TestCase
 {
-
-
-    /**
-     *
-     */
     public function testGetBaseUrl(): void
     {
         $_SERVER['HTTP_HOST'] = 'test.com';
@@ -25,14 +20,10 @@ class ServerUtilityTest extends TestCase
         $this->assertEquals('https://test.com/', ServerUtility::getBaseUrl());
     }
 
-
-    /**
-     *
-     */
     public function testSanitizerOfAutosignThrowsWhenInvalidCharacterInFqdn(): void
     {
         $catch = false;
-            $server = (new Instance())
+        $server = (new Instance())
                 ->setId(424234234)
                 ->setFqdn('";sudo init 0')
                 ->setMasterCoordinator('master.domain.tld')
@@ -46,10 +37,6 @@ class ServerUtilityTest extends TestCase
         $this->assertTrue($catch);
     }
 
-
-    /**
-     *
-     */
     public function testAutosignCallContainsPassedFqdn(): void
     {
         $server = (new Instance())
@@ -63,17 +50,13 @@ class ServerUtilityTest extends TestCase
         $this->assertStringContainsString($server->getFqdn(), ServerUtility::getLastExecutedShellCommand());
     }
 
-    /**
-     *
-     */
-    public function testTimezoneObject(): void {
+    public function testTimezoneObject(): void
+    {
         $this->assertEquals('Europe/Berlin', ServerUtility::getTimezoneObject()->getName());
     }
 
-    /**
-     *
-     */
-    public function testReverseProxy(): void {
+    public function testReverseProxy(): void
+    {
         $clientIp = '8.4.5.6';
         $reverseProxyIp = '5.2.5.55';
         $_SERVER['HTTP_X_FORWARDED_FOR'] = $clientIp;

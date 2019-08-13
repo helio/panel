@@ -2,8 +2,7 @@
 
 namespace Helio\Panel\Controller;
 
-
-use \Exception;
+use Exception;
 use Helio\Panel\App;
 use Helio\Panel\Controller\Traits\HelperElasticController;
 use Helio\Panel\Controller\Traits\ModelInstanceController;
@@ -22,16 +21,12 @@ use Helio\Panel\Utility\ServerUtility;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Http\StatusCode;
 
-
 /**
- * Class ApiController
+ * Class ApiController.
  *
- * @package    Helio\Panel\Controller
  * @author    Christoph Buchli <team@opencomputing.cloud>
  *
  * @RoutePrefix('/api/job')
- *
- *
  */
 class ApiJobController extends AbstractController
 {
@@ -49,7 +44,6 @@ class ApiJobController extends AbstractController
 
     use TypeDynamicController;
 
-
     /**
      * @return string
      */
@@ -58,11 +52,7 @@ class ApiJobController extends AbstractController
         return 'jobid';
     }
 
-
     /**
-     *
-     *
-     *
      * @OA\Post(
      *     path="/job",
      *     security={
@@ -105,7 +95,6 @@ class ApiJobController extends AbstractController
      *     )
      * )
      *
-     *
      * @return ResponseInterface
      *
      * @Route("", methods={"POST"}, name="job.add")
@@ -116,7 +105,7 @@ class ApiJobController extends AbstractController
     {
         try {
             $this->requiredParameterCheck([
-                'type' => FILTER_SANITIZE_STRING
+                'type' => FILTER_SANITIZE_STRING,
             ]);
 
             if (!JobType::isValidType($this->params['type'])) {
@@ -126,7 +115,7 @@ class ApiJobController extends AbstractController
             $this->job->setType($this->params['type']);
         } catch (Exception $e) {
             // If we have created a new job but haven't passed the jobtype (e.g. during wizard loading), we cannot continue.
-            if ($this->job->getName() === '___NEW' && $this->job->getStatus() === JobStatus::UNKNOWN) {
+            if ('___NEW' === $this->job->getName() && JobStatus::UNKNOWN === $this->job->getStatus()) {
                 return $this->render(['token' => JwtUtility::generateToken(null, $this->user, null, $this->job)['token'], 'id' => $this->job->getId()]);
             }
             // if the existing job hasn't got a proper type, we cannot continue either, but that's a hard fail...
@@ -143,7 +132,7 @@ class ApiJobController extends AbstractController
             'billingReference' => FILTER_SANITIZE_STRING,
             'budget' => FILTER_SANITIZE_STRING,
             'free' => FILTER_SANITIZE_STRING,
-            'config' => FILTER_SANITIZE_STRING
+            'config' => FILTER_SANITIZE_STRING,
         ]);
 
         JobFactory::getInstanceOfJob($this->job)->create($this->params);
@@ -160,7 +149,6 @@ class ApiJobController extends AbstractController
             'message' => 'Job <strong>' . $this->job->getName() . '</strong> added',
         ]);
     }
-
 
     /**
      * @OA\Delete(
@@ -202,6 +190,7 @@ class ApiJobController extends AbstractController
      * )
      *
      * @return ResponseInterface
+     *
      * @throws Exception
      *
      * @Route("", methods={"DELETE"}, name="job.remove")
@@ -213,7 +202,7 @@ class ApiJobController extends AbstractController
             $this->job->setHidden(true);
             $removed = true;
         } else {
-            /** @var Execution $execution */
+            /* @var Execution $execution */
             JobFactory::getInstanceOfJob($this->job)->stop($this->params, $this->request, $this->response);
 
             // first: set all services to absent. then, remove the managers
@@ -231,7 +220,6 @@ class ApiJobController extends AbstractController
 
         return $this->render(['success' => true, 'message' => 'Job scheduled for removal.', 'removed' => $removed]);
     }
-
 
     /**
      * @OA\Get(
@@ -255,6 +243,7 @@ class ApiJobController extends AbstractController
      * @return ResponseInterface
      *
      * @Route("", methods={"GET"}, name="exec.job.status")
+     *
      * @throws Exception
      */
     public function jobStatusAction(): ResponseInterface
@@ -278,11 +267,10 @@ class ApiJobController extends AbstractController
                 'total' => App::getDbHelper()->getRepository(Execution::class)->count(['job' => $this->job]),
                 'pending' => App::getDbHelper()->getRepository(Execution::class)->count(['job' => $this->job, 'status' => ExecutionStatus::READY]),
                 'running' => App::getDbHelper()->getRepository(Execution::class)->count(['job' => $this->job, 'status' => ExecutionStatus::RUNNING]),
-                'done' => App::getDbHelper()->getRepository(Execution::class)->count(['job' => $this->job, 'status' => ExecutionStatus::DONE])
-            ]
+                'done' => App::getDbHelper()->getRepository(Execution::class)->count(['job' => $this->job, 'status' => ExecutionStatus::DONE]),
+            ],
         ]);
     }
-
 
     /**
      * @OA\Get(
@@ -321,13 +309,12 @@ class ApiJobController extends AbstractController
      */
     public function jobIsReadyAction(): ResponseInterface
     {
-        $ready = $this->job->getStatus() === JobStatus::READY;
+        $ready = JobStatus::READY === $this->job->getStatus();
         $status = $ready ? StatusCode::HTTP_OK : StatusCode::HTTP_FAILED_DEPENDENCY;
         $message = $ready ? 'Job is ready' : 'Execution environment for job is being prepared...';
 
         return $this->render(['success' => true, 'message' => $message], $status);
     }
-
 
     /**
      * @OA\Get(
@@ -361,6 +348,7 @@ class ApiJobController extends AbstractController
      * )
      *
      * @return ResponseInterface
+     *
      * @throws Exception
      *
      * @Route("/isdone", methods={"GET"}, name="exec.job.status")
@@ -369,9 +357,9 @@ class ApiJobController extends AbstractController
     {
         $executionsTotal = App::getDbHelper()->getRepository(Execution::class)->count(['job' => $this->job]);
         $executionsPending = App::getDbHelper()->getRepository(Execution::class)->count(['job' => $this->job, 'status' => ExecutionStatus::READY]);
-        return $this->render([], $executionsTotal > 0 && $executionsPending === 0 ? StatusCode::HTTP_OK : StatusCode::HTTP_FAILED_DEPENDENCY);
-    }
 
+        return $this->render([], $executionsTotal > 0 && 0 === $executionsPending ? StatusCode::HTTP_OK : StatusCode::HTTP_FAILED_DEPENDENCY);
+    }
 
     /**
      * @OA\Get(
@@ -410,6 +398,7 @@ class ApiJobController extends AbstractController
      * )
      *
      * @return ResponseInterface
+     *
      * @throws Exception
      *
      * @Route("/logs", methods={"GET"}, name="job.logs")
@@ -419,9 +408,9 @@ class ApiJobController extends AbstractController
         return $this->render($this->setWindow()->getLogEntries($this->job->getOwner()->getId(), $this->job->getId()));
     }
 
-
     /**
      * @return ResponseInterface
+     *
      * @throws Exception
      *
      * @Route("/callback", methods={"POST", "GET"}, "name="job.callback")
@@ -433,7 +422,7 @@ class ApiJobController extends AbstractController
 
         // remember manager nodes.
         if (array_key_exists('nodes', $body)) {
-            $nodes = is_array($body['nodes']) ? $body['nodes'] : array($body['nodes']);
+            $nodes = is_array($body['nodes']) ? $body['nodes'] : [$body['nodes']];
             foreach ($nodes as $node) {
                 if (array_key_exists('deleted', $body)) {
                     $this->job->removeManagerNode($node);
@@ -469,16 +458,15 @@ class ApiJobController extends AbstractController
             $this->job->setStatus(JobStatus::READY);
             NotificationUtility::notifyAdmin('Job is now read. By: ' . $this->user->getEmail() . ', type: ' . $this->job->getType() . ', id: ' . $this->job->getId());
         }
-        if (array_key_exists('deleted', $body) && count($this->job->getManagerNodes()) === 0) {
+        if (array_key_exists('deleted', $body) && 0 === count($this->job->getManagerNodes())) {
             $this->job->setStatus(JobStatus::DELETED);
             NotificationUtility::notifyAdmin('Job was deleted by ' . $this->user->getEmail() . ', type: ' . $this->job->getType() . ', id: ' . $this->job->getId());
         }
 
         $this->persistJob();
+
         return $this->render(['message' => 'ok']);
-
     }
-
 
     /**
      * @return ResponseInterface
@@ -490,13 +478,13 @@ class ApiJobController extends AbstractController
         $config = [
             'classes' => ['role::base', 'profile::docker'],
             'profile::docker::manager' => true,
-            'profile::docker::manager_init' => true
+            'profile::docker::manager_init' => true,
         ];
+
         return $this
             ->setReturnType('yaml')
             ->render($config);
     }
-
 
     /**
      * @return ResponseInterface
@@ -510,13 +498,13 @@ class ApiJobController extends AbstractController
             'profile::docker::manager' => true,
             'profile::docker::manager_init' => true,
             'profile::docker::manager_ip' => $this->job->getInitManagerIp(),
-            'profile::docker::token' => $this->job->getClusterToken()
+            'profile::docker::token' => $this->job->getClusterToken(),
         ];
+
         return $this
             ->setReturnType('yaml')
             ->render($config);
     }
-
 
     /**
      * This action is only used in the UI upon an "abort" click in the "add Job" wizard.
@@ -525,17 +513,20 @@ class ApiJobController extends AbstractController
      * @return ResponseInterface
      *
      * @Route("/add/abort", methods={"POST"}, name="job.abort")
+     *
      * @throws Exception
      */
     public function abortAddJobAction(): ResponseInterface
     {
-        if ($this->job && $this->job->getStatus() === JobStatus::UNKNOWN && $this->job->getOwner() && $this->job->getOwner()->getId() === $this->user->getId()) {
+        if ($this->job && JobStatus::UNKNOWN === $this->job->getStatus() && $this->job->getOwner() && $this->job->getOwner()->getId() === $this->user->getId()) {
             $this->user->removeJob($this->job);
             App::getDbHelper()->remove($this->job);
             App::getDbHelper()->flush();
             $this->persistUser();
+
             return $this->render();
         }
+
         return $this->render(['message' => 'no access to job'], StatusCode::HTTP_UNAUTHORIZED);
     }
 }

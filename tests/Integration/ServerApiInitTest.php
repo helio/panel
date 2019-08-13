@@ -11,7 +11,6 @@ use Psr\Http\Message\ResponseInterface;
 
 class ServerApiInitTest extends TestCase
 {
-
     /**
      * @var User
      */
@@ -40,6 +39,7 @@ class ServerApiInitTest extends TestCase
 
     /**
      * @return ResponseInterface
+     *
      * @throws \Exception
      */
     protected function exec(): ResponseInterface
@@ -52,7 +52,6 @@ class ServerApiInitTest extends TestCase
      */
     public function testUserInactive(): void
     {
-
         $this->infrastructure->import($this->user);
         $this->assertEquals(406, $this->exec()->getStatusCode());
     }
@@ -102,14 +101,13 @@ class ServerApiInitTest extends TestCase
     }
 
     /**
-     *
      * @throws \Exception
      */
     public function testServerInit(): void
     {
         $response = $this->exec();
         $this->assertEquals(200, $response->getStatusCode());
-        $body = (string)$response->getBody();
+        $body = (string) $response->getBody();
         $this->assertStringContainsString('server_id', $body);
         $this->assertStringContainsString('user_id', $body);
 

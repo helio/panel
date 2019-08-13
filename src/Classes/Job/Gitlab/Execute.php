@@ -2,7 +2,7 @@
 
 namespace Helio\Panel\Job\Gitlab;
 
-use \Exception;
+use Exception;
 use Helio\Panel\App;
 use Helio\Panel\Job\AbstractExecute;
 use Helio\Panel\Job\DispatchConfig;
@@ -10,9 +10,9 @@ use Helio\Panel\Utility\JwtUtility;
 
 class Execute extends AbstractExecute
 {
-
     /**
      * @return DispatchConfig
+     *
      * @throws Exception
      */
     public function getDispatchConfig(): DispatchConfig
@@ -22,14 +22,15 @@ class Execute extends AbstractExecute
             ->setEnvVariables([
                 'HELIO_JOBID' => $this->job->getId(),
                 'HELIO_TOKEN' => JwtUtility::generateToken(null, null, null, $this->job),
-                'GITLAB_TAGS' => $this->job->getConfig('gitlabTags')
+                'GITLAB_TAGS' => $this->job->getConfig('gitlabTags'),
             ]);
     }
 
-
     /**
      * @param array $jobObject
+     *
      * @return bool
+     *
      * @throws Exception
      */
     public function create(array $jobObject): bool
@@ -38,7 +39,7 @@ class Execute extends AbstractExecute
         $options = [
             'gitlabEndpoint' => FILTER_SANITIZE_URL,
             'gitlabToken' => FILTER_SANITIZE_STRING,
-            'gitlabTags' => FILTER_SANITIZE_STRING
+            'gitlabTags' => FILTER_SANITIZE_STRING,
         ];
 
         $cleanConfig = [];
@@ -51,9 +52,9 @@ class Execute extends AbstractExecute
 
         App::getDbHelper()->persist($this->job);
         App::getDbHelper()->flush();
+
         return true;
     }
-
 
     /**
      * @return int

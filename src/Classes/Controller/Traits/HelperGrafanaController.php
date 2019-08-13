@@ -2,17 +2,16 @@
 
 namespace Helio\Panel\Controller\Traits;
 
-use \Exception;
-use \DateTime;
-use \DateInterval;
+use Exception;
+use DateTime;
+use DateInterval;
 use GuzzleHttp\Exception\GuzzleException;
 use Helio\Panel\Model\Instance;
 use Helio\Panel\Utility\ServerUtility;
 use Slim\Http\StatusCode;
 
 /**
- * Trait HelperGrafanaController
- * @package Helio\Panel\Controller\Traits
+ * Trait HelperGrafanaController.
  *
  * @property Instance $instance
  */
@@ -42,12 +41,13 @@ trait HelperGrafanaController
         } catch (Exception $e) {
             return false;
         }
+
         return true;
     }
 
-
     /**
      * @return array
+     *
      * @throws GuzzleException
      */
     public function createSnapshot(): array
@@ -57,21 +57,22 @@ trait HelperGrafanaController
             'body' => json_encode([
                 'dashboard' => $this->getDashboardSnapshotConfig(),
                 'name' => $this->instance->getFqdn(),
-                'expires' => 0
+                'expires' => 0,
             ], JSON_NUMERIC_CHECK | JSON_PRESERVE_ZERO_FRACTION),
-            'headers' => $this->getGrafanaRequestHeaders()
+            'headers' => $this->getGrafanaRequestHeaders(),
         ]);
 
         // report success
-        if ($result->getStatusCode() === StatusCode::HTTP_OK) {
+        if (StatusCode::HTTP_OK === $result->getStatusCode()) {
             return json_decode($result->getBody()->getContents(), true);
         }
+
         return [];
     }
 
-
     /**
      * @return array
+     *
      * @throws GuzzleException
      * @throws Exception
      */
@@ -87,7 +88,8 @@ trait HelperGrafanaController
                         $dashboard['panels'][$pkey]['snapshotData'][$skey]['datapoints'] = $this->parseQueryDataIntoSnapshotData($this->requestIapProtectedResource(
                             $this->getEndpointForQuery($snapshotDatum['query']),
                             'GET',
-                            ['headers' => $this->getGrafanaRequestHeaders()])->getBody()->getContents());
+                            ['headers' => $this->getGrafanaRequestHeaders()]
+                        )->getBody()->getContents());
                     }
                 }
             }
@@ -96,13 +98,11 @@ trait HelperGrafanaController
         return $dashboard;
     }
 
-
     /**
      * @return array
      */
     protected function getBasicDashboardConfig(): array
     {
-
         // load default snapshot config
         $dashboard = json_decode(file_get_contents(ServerUtility::get('DASHBOARD_CONFIG_JSON', ServerUtility::getClassesPath(['Instance', 'dashboard.json']))), true);
 
@@ -120,32 +120,33 @@ trait HelperGrafanaController
             'to' => $this->end->format(DATE_RFC3339_EXTENDED),
             'raw' => [
                 'from' => 'now-7d',
-                'to' => 'now'
-            ]
+                'to' => 'now',
+            ],
         ];
+
         return $dashboard;
     }
 
-
     /**
      * @param string $query
+     *
      * @return string
      */
     public function getEndpointForQuery(string $query): string
     {
         // TODO: parse and replace instanceId into the query here!
         $query = urlencode($query);
+
         return '/api/datasources/proxy/2/api/v1/query_range?start=' . $this->start->getTimestamp() . '&end=' . $this->end->getTimestamp() . '&step=' . $this->step . '&query=' . $query;
     }
 
-
     /**
      * @param string $raw
+     *
      * @return array
      */
     protected function parseQueryDataIntoSnapshotData(string $raw): array
     {
-
         $dps = json_decode($raw, true)['data']['result'][0]['values'] ?? [];
 
         // grafana expects millisecond timestamps and for whatever reason expects the timestamp / value pair to switched in the dataset.
@@ -153,9 +154,9 @@ trait HelperGrafanaController
             $dps[$dkey][1] = 1000 * $dp[0];
             $dps[$dkey][0] = $dp[1];
         }
+
         return $dps;
     }
-
 
     /**
      * @return array
@@ -166,7 +167,7 @@ trait HelperGrafanaController
             'Accept' => 'application/json',
             'Content-Type' => 'application/json',
             'Authorization' => 'Bearer ' . ServerUtility::get('GRAFANA_API_KEY'),
-            'X-Grafana-Authorization' => 'Bearer ' . ServerUtility::get('GRAFANA_API_KEY')
+            'X-Grafana-Authorization' => 'Bearer ' . ServerUtility::get('GRAFANA_API_KEY'),
         ];
     }
 }

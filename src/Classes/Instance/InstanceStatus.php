@@ -2,10 +2,10 @@
 
 namespace Helio\Panel\Instance;
 
-use \RuntimeException;
+use RuntimeException;
 
 /**
- * Class InstanceStatus
+ * Class InstanceStatus.
  *
  * @OA\Schema(
  *     schema="instancestatus",
@@ -14,9 +14,6 @@ use \RuntimeException;
  *     description="The Status of the job",
  *     enum = {"Creating", "Initiating", "Created", "Ready", "Running"}
  * )
- *
- *
- * @package Helio\Panel\Instance
  */
 final class InstanceStatus
 {
@@ -26,7 +23,6 @@ final class InstanceStatus
     public const READY = 3;
     public const RUNNING = 4;
 
-
     public function __construct()
     {
         throw new RuntimeException('Cannot instanciate ' . __CLASS__);
@@ -34,10 +30,10 @@ final class InstanceStatus
 
     public static function isValidStatus(int $status): bool
     {
-        return $status === self::UNKNOWN
-            || $status === self::INIT
-            || $status === self::CREATED
-            || $status === self::READY
-            || $status === self::RUNNING;
+        return self::UNKNOWN === $status
+            || self::INIT === $status
+            || self::CREATED === $status
+            || self::READY === $status
+            || self::RUNNING === $status;
     }
 }

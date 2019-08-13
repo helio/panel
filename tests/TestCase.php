@@ -23,9 +23,8 @@ use Doctrine\Common\Persistence\ObjectRepository;
 use Webfactory\Doctrine\ORMTestInfrastructure\ORMInfrastructure;
 
 /**
- * Class TestCase serves as root for all cases
+ * Class TestCase serves as root for all cases.
  *
- * @package    Helio\Test\Functional
  * @author    Christoph Buchli <team@opencomputing.cloud>
  */
 class TestCase extends \PHPUnit\Framework\TestCase
@@ -35,30 +34,25 @@ class TestCase extends \PHPUnit\Framework\TestCase
      */
     protected $infrastructure;
 
-
     /**
      * @var ObjectRepository
      */
     protected $userRepository;
-
 
     /**
      * @var ObjectRepository
      */
     protected $instanceRepository;
 
-
     /**
      * @var ObjectRepository
      */
     protected $jobRepository;
 
-
     /**
      * @var ObjectRepository
      */
     protected $executionRepository;
-
 
     /** @throws \Exception
      * @see \PHPUnit_Framework_TestCase::setUp()
@@ -72,16 +66,13 @@ class TestCase extends \PHPUnit\Framework\TestCase
         $_SERVER['SITE_ENV'] = 'TEST';
         $_SERVER['ELASTIC_HOST'] = 'elastic.neverland.global';
 
-
         // re-init Zapier helper to make sure no Responses are left in the stack etc.
         ZapierHelper::reset();
-
 
         // re-init DBHelper
         DbHelper::reset();
         Type::overrideType('datetime', UTCDateTimeType::class);
         Type::overrideType('datetimetz', UTCDateTimeType::class);
-
 
         $this->infrastructure = ORMInfrastructure::createWithDependenciesFor([User::class, Instance::class, Job::class, Execution::class]);
         $this->infrastructure->getEntityManager()->getConfiguration()->addFilter('deleted', DeletedFilter::class);
@@ -89,16 +80,12 @@ class TestCase extends \PHPUnit\Framework\TestCase
 
         DbHelper::setInfrastructure($this->infrastructure);
 
-
         $this->userRepository = $this->infrastructure->getRepository(User::class);
         $this->instanceRepository = $this->infrastructure->getRepository(Instance::class);
         $this->jobRepository = $this->infrastructure->getRepository(Job::class);
         $this->executionRepository = $this->infrastructure->getRepository(Execution::class);
     }
 
-    /**
-     *
-     */
     public static function setUpBeforeClass(): void
     {
         if (!\defined('APPLICATION_ROOT')) {
@@ -111,17 +98,15 @@ class TestCase extends \PHPUnit\Framework\TestCase
         ServerUtility::setTesting();
     }
 
-
     /**
      * @param $dir
-     *
      */
     public static function tearDownAfterClass($dir = APPLICATION_ROOT . '/tmp/cache/test'): void
     {
         if (!is_dir($dir)) {
             return;
         }
-        $files = array_diff(scandir($dir, 0), array('.', '..'));
+        $files = array_diff(scandir($dir, 0), ['.', '..']);
         foreach ($files as $file) {
             is_dir("$dir/$file") ? self::tearDownAfterClass("$dir/$file") : unlink("$dir/$file");
         }
@@ -129,29 +114,34 @@ class TestCase extends \PHPUnit\Framework\TestCase
         rmdir($dir);
     }
 
-
     /**
-     * Process the application given a request method and URI
+     * Process the application given a request method and URI.
      *
-     * @param string $requestMethod the request method (e.g. GET, POST, etc.)
-     * @param string $requestUri the request URI
-     * @param bool $withMiddleware whether the app should include the middlewares (mainly JWT).
-     * @param null $headerData
-     * @param mixed $requestData the request data
-     * @param array $cookieData the cookies
-     * @param array $attributes
-     * @param bool|\Helio\Panel\App|App|null $app if set, this variable will contain the app for further analysis of
-     *     results and processings
-     *     (memory heavy!)
+     * @param string                         $requestMethod  the request method (e.g. GET, POST, etc.)
+     * @param string                         $requestUri     the request URI
+     * @param bool                           $withMiddleware whether the app should include the middlewares (mainly JWT)
+     * @param null                           $headerData
+     * @param mixed                          $requestData    the request data
+     * @param array                          $cookieData     the cookies
+     * @param array                          $attributes
+     * @param bool|\Helio\Panel\App|App|null $app            if set, this variable will contain the app for further analysis of
+     *                                                       results and processings
+     *                                                       (memory heavy!)
      *
      * @return ResponseInterface
      *
      * @throws \Exception
      */
     protected function runApp(
-        $requestMethod, $requestUri, $withMiddleware = false, $headerData = null, $requestData = null, $cookieData = null, array $attributes = [], &$app = null
-    ): ResponseInterface
-    {
+        $requestMethod,
+        $requestUri,
+        $withMiddleware = false,
+        $headerData = null,
+        $requestData = null,
+        $cookieData = null,
+        array $attributes = [],
+        &$app = null
+    ): ResponseInterface {
         $requestUri = preg_replace(';^https?://localhost(:[0-9]+)?/;', '/', $requestUri);
 
         // Create a mock environment for testing with
@@ -159,7 +149,7 @@ class TestCase extends \PHPUnit\Framework\TestCase
             [
                 'REQUEST_METHOD' => $requestMethod,
                 'REQUEST_URI' => $requestUri,
-                'QUERY_STRING' => $requestParts[1] ?? ''
+                'QUERY_STRING' => $requestParts[1] ?? '',
             ]
         );
 
@@ -183,7 +173,7 @@ class TestCase extends \PHPUnit\Framework\TestCase
         }
 
         // Add request data, if it exists
-        if ($requestData !== null) {
+        if (null !== $requestData) {
             $request = $request->withParsedBody($requestData);
         }
 

@@ -11,19 +11,15 @@ use Helio\Test\TestCase;
 
 class ZapierTest extends TestCase
 {
-
-
     /**
-     *
      * @throws \GuzzleHttp\Exception\GuzzleException
      */
     public function testBasicZapierFunctionality(): void
     {
-
         ZapierHelper::getInstance()->setResponseStack([
             new Response(200, [], '{"success" => "true"}'),
             new Response(404, [], '{"success" => "true"}'),
-            new RequestException('Error Communicating with Server', new Request('GET', 'test'))
+            new RequestException('Error Communicating with Server', new Request('GET', 'test')),
         ]);
 
         $user = (new User())->setId(4343)->setEmail('test@local.com');

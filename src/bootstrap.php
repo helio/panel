@@ -4,7 +4,6 @@ define('APPLICATION_ROOT', dirname(__DIR__));
 
 // make ENV work on local developemnt server
 if (PHP_SAPI === 'cli-server') {
-
     // allow internal server to serve static files
     $url = parse_url($_SERVER['REQUEST_URI']);
     $file = __DIR__ . $url['path'];

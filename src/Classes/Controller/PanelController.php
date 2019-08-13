@@ -2,7 +2,7 @@
 
 namespace Helio\Panel\Controller;
 
-use \Exception;
+use Exception;
 use Helio\Panel\App;
 use Helio\Panel\Controller\Traits\ModelUserController;
 use Helio\Panel\Controller\Traits\TypeBrowserController;
@@ -16,15 +16,12 @@ use Slim\Http\StatusCode;
  * Class PanelController
  * Controller taking care of the actions serving the Panel HTML. This controller requiers an authenticated user.
  *
- * @package    Helio\Panel\Controller
  * @author    Christoph Buchli <team@opencomputing.cloud>
  *
  * @RoutePrefix('/panel')
- *
  */
 class PanelController extends AbstractController
 {
-
     use ModelUserController;
     use TypeBrowserController;
 
@@ -34,7 +31,6 @@ class PanelController extends AbstractController
     }
 
     /**
-     *
      * @return ResponseInterface
      *
      * @throws Exception
@@ -43,7 +39,6 @@ class PanelController extends AbstractController
      */
     public function indexAction(): ResponseInterface
     {
-
         $query = App::getDbHelper()->getRepository(Instance::class)->createQueryBuilder('c');
         $statServerByRegion = $query
             ->select('c.region, COUNT(c.id) as cnt')
@@ -56,9 +51,8 @@ class PanelController extends AbstractController
             'user' => $this->user,
             'title' => 'Dashboard - Helio Panel',
             'dashboardActive' => 'active',
-            'partialJs' => ['donutChart']
+            'partialJs' => ['donutChart'],
         ]);
-
     }
 
     /**
@@ -74,9 +68,8 @@ class PanelController extends AbstractController
             'buyActive' => 'active',
             'module' => 'buy',
             'partialJs' => ['jobList'],
-            'modalTemplates' => ['addJob']
+            'modalTemplates' => ['addJob'],
         ]);
-
     }
 
     /**
@@ -92,10 +85,9 @@ class PanelController extends AbstractController
             'sellActive' => 'active',
             'module' => 'sell',
             'partialJs' => ['instanceList'],
-            'modalTemplates' => ['addInstance']
+            'modalTemplates' => ['addInstance'],
         ]);
     }
-
 
     /**
      * @return ResponseInterface
@@ -109,13 +101,13 @@ class PanelController extends AbstractController
             'title' => 'Your Profile Page - Helio Panel',
             'module' => 'profile',
             'profileActive' => 'active',
-            'partialJs' => ['profile']
+            'partialJs' => ['profile'],
         ]);
     }
 
-
     /**
      * @return ResponseInterface
+     *
      * @throws Exception
      *
      * @Route("/admin", methods={"GET"}, name="user.admin")
@@ -125,13 +117,14 @@ class PanelController extends AbstractController
         if (!$this->user->isAdmin()) {
             return $this->response->withRedirect('/panel', StatusCode::HTTP_FOUND);
         }
+
         return $this->render([
             'users' => App::getDbHelper()->getRepository(User::class)->findAll(),
             'user' => $this->user,
             'title' => 'Admin - Helio Panel',
             'module' => 'admin',
             'adminActive' => 'active',
-            'partialJs' => ['admin']
+            'partialJs' => ['admin'],
         ]);
     }
 

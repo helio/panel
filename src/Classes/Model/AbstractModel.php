@@ -2,31 +2,21 @@
 
 namespace Helio\Panel\Model;
 
-use \Exception;
-use \RuntimeException;
-use \DateTime;
-use \DateTimeZone;
+use Exception;
+use RuntimeException;
+use DateTime;
+use DateTimeZone;
 use OpenApi\Annotations as OA;
-use Doctrine\{
-    Common\Collections\Collection,
-    ORM\Mapping\Entity,
-    ORM\Mapping\Table,
-    ORM\Mapping\Id,
-    ORM\Mapping\Column,
-    ORM\Mapping\GeneratedValue,
-    ORM\Mapping\ManyToOne,
-    ORM\Mapping\OneToMany
-};
+use Doctrine\ORM\Mapping\Id;
+use Doctrine\ORM\Mapping\Column;
+use Doctrine\ORM\Mapping\GeneratedValue;
 use Helio\Panel\Helper\LogHelper;
 use Helio\Panel\Utility\ArrayUtility;
 use Helio\Panel\Utility\ServerUtility;
 
 abstract class AbstractModel
 {
-
-
     /**
-     *
      * @OA\Property(
      *     format="integer",
      *     description="Id of the item to manipulate. If empty, a new one will be created"
@@ -38,7 +28,6 @@ abstract class AbstractModel
      */
     protected $id;
 
-
     /**
      * @var string
      *
@@ -46,14 +35,12 @@ abstract class AbstractModel
      */
     protected $name = '';
 
-
     /**
      * @var DateTime
      *
      * @Column(type="datetimetz", nullable=TRUE)
      */
     protected $created;
-
 
     /**
      * @var DateTime
@@ -83,7 +70,6 @@ abstract class AbstractModel
      */
     protected $status = 0;
 
-
     /**
      * @var string
      *
@@ -91,9 +77,9 @@ abstract class AbstractModel
      */
     protected $config = '';
 
-
     /**
      * AbstractModel constructor.
+     *
      * @throws Exception
      */
     public function __construct()
@@ -120,14 +106,15 @@ abstract class AbstractModel
 
     /**
      * @param string $name
+     *
      * @return $this
      */
     public function setName(string $name): self
     {
         $this->name = $name;
+
         return $this;
     }
-
 
     /**
      * @return DateTime
@@ -137,12 +124,15 @@ abstract class AbstractModel
         if ($this->created->getTimezone()->getName() !== $this->getTimezone()) {
             $this->created->setTimezone(new DateTimeZone($this->getTimezone()));
         }
+
         return $this->created;
     }
 
     /**
      * @param DateTime|null $created
+     *
      * @return AbstractModel
+     *
      * @throws Exception
      */
     public function setCreated(DateTime $created = null): self
@@ -154,22 +144,26 @@ abstract class AbstractModel
 
         // Fix Timezone because Doctrine assumes persistend DateTime Objects are always UTC
         $this->created = $created;
+
         return $this;
     }
 
-
     /**
      * @param int $timestamp
+     *
      * @return AbstractModel
+     *
      * @throws Exception
      *
      * NOTE: Don't use ths method! It's for testing purposes only!
+     *
      * @internal
      */
     public function setCreatedByTimestamp(int $timestamp): self
     {
         LogHelper::warn('SetCreatedByTimestamp called');
         $this->created = (new DateTime('now', ServerUtility::getTimezoneObject()))->setTimestamp($timestamp);
+
         return $this;
     }
 
@@ -181,17 +175,20 @@ abstract class AbstractModel
         if ($this->created->getTimezone()->getName() !== $this->getTimezone()) {
             $this->created->setTimezone(new DateTimeZone($this->getTimezone()));
         }
+
         return $this->latestAction;
     }
 
     /**
      * @param DateTime|null $latestAction
+     *
      * @return AbstractModel
+     *
      * @throws Exception
      */
     public function setLatestAction(DateTime $latestAction = null): self
     {
-        if ($latestAction === null) {
+        if (null === $latestAction) {
             $latestAction = new DateTime('now', new DateTimeZone($this->getTimezone()));
         }
 
@@ -199,6 +196,7 @@ abstract class AbstractModel
         $latestAction->setTimezone(new DateTimeZone('UTC'));
 
         $this->latestAction = $latestAction;
+
         return $this;
     }
 
@@ -212,11 +210,13 @@ abstract class AbstractModel
 
     /**
      * @param bool $hidden
+     *
      * @return $this
      */
     public function setHidden(bool $hidden): self
     {
         $this->hidden = $hidden;
+
         return $this;
     }
 
@@ -236,22 +236,26 @@ abstract class AbstractModel
         if (!$this->timezone) {
             $this->setTimezone(ServerUtility::getTimezoneObject()->getName());
         }
+
         return $this->timezone;
     }
 
     /**
      * @param string
+     *
      * @return $this
      */
     public function setTimezone(string $timezone): self
     {
         $this->timezone = $timezone;
+
         return $this;
     }
 
     /**
      * @param string $option
-     * @param mixed $default
+     * @param mixed  $default
+     *
      * @return mixed|string
      */
     public function getConfig(string $option = '', $default = '')
@@ -261,11 +265,13 @@ abstract class AbstractModel
         if ($option) {
             return ArrayUtility::getFirstByDotNotation([$decodedConfig], [$option]) ?? $default;
         }
+
         return $this->config;
     }
 
     /**
      * @param string|array $config
+     *
      * @return $this
      */
     public function setConfig($config): self
@@ -274,29 +280,32 @@ abstract class AbstractModel
             $config = json_encode($config);
         }
         $this->config = $config;
+
         return $this;
     }
-
 
     /**
      * @param int $id
+     *
      * @return $this $this
-     * Allow setting the id
+     *               Allow setting the id
      */
     public function setId(int $id): self
     {
-        if ($id !== 0 && ServerUtility::isProd()) {
+        if (0 !== $id && ServerUtility::isProd()) {
             throw new RuntimeException('You cannot force IDs, they are auto-incremented on DB-level.', 1548053101);
         }
         $this->id = $id;
+
         return $this;
     }
 
-
     /**
      * @param int $status
+     *
      * @return $this
      */
+
     /** @noinspection ReturnTypeCanBeDeclaredInspection */
     abstract public function setStatus(int $status);
 }

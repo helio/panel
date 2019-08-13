@@ -11,7 +11,6 @@ final class InstanceType
 
     public const __DEFAULT = self::VM;
 
-
     public function __construct()
     {
         throw new \RuntimeException('Cannot instanciate ' . __CLASS__);
@@ -19,15 +18,15 @@ final class InstanceType
 
     public static function isValidType(string $type): bool
     {
-        return $type === self::BAREMETAL
-            || $type === self::VM
-            || $type === self::OPENSTACK
-            || $type === self::BEARCLOUD;
+        return self::BAREMETAL === $type
+            || self::VM === $type
+            || self::OPENSTACK === $type
+            || self::BEARCLOUD === $type;
     }
-
 
     /**
      * @param string $selected
+     *
      * @return string
      */
     public static function getOptionList(string $selected = ''): string
@@ -36,7 +35,7 @@ final class InstanceType
             self::VM => 'Virtual Machine',
             self::BAREMETAL => 'Physical Machine',
             self::OPENSTACK => 'OpenStack',
-            self::BEARCLOUD => 'Bear Cloud'
+            self::BEARCLOUD => 'Bear Cloud',
         ];
 
         $return = '';
@@ -44,12 +43,13 @@ final class InstanceType
             $selPart = $selected === $key ? 'selected' : '';
             $return .= "<option value=\"$key\" $selPart>$label</option>";
         }
+
         return $return;
     }
 
-
     /**
      * @param string $type
+     *
      * @return string
      */
     public static function getIcon(string $type = ''): string
@@ -58,7 +58,7 @@ final class InstanceType
             self::VM => 'pficon pficon-container-node',
             self::BAREMETAL => 'pficon pficon-container-node',
             self::OPENSTACK => 'pficon pficon-container-node',
-            self::BEARCLOUD => 'pficon pficon-container-node'
+            self::BEARCLOUD => 'pficon pficon-container-node',
         ];
 
         return $map[$type] ?? 'pficon pficon-container-node';

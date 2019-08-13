@@ -2,27 +2,19 @@
 
 namespace Helio\Test\Integration;
 
-use Helio\Panel\Instance\InstanceStatus;
 use Helio\Panel\Job\JobFactory;
 use Helio\Panel\Job\JobStatus;
 use Helio\Panel\Job\JobType;
-use Helio\Panel\Model\Instance;
 use Helio\Panel\Model\Job;
 use Helio\Panel\Model\Execution;
 use Helio\Panel\Model\User;
-use Helio\Panel\Execution\ExecutionStatus;
 use Helio\Panel\Utility\JwtUtility;
 use Helio\Test\Infrastructure\Utility\ServerUtility;
 use Helio\Test\TestCase;
-use Helio\Test\Unit\JobTest;
-use OpenApi\Annotations\Server;
-use Psr\Http\Message\ResponseInterface;
 use Slim\Http\StatusCode;
 
 class ManagerNodesTest extends TestCase
 {
-
-
     /**
      * @var Job
      */
@@ -32,7 +24,6 @@ class ManagerNodesTest extends TestCase
      * @var User
      */
     protected $user;
-
 
     /**
      * @var array
@@ -54,7 +45,6 @@ class ManagerNodesTest extends TestCase
      */
     protected $callbackDataRedundancy;
 
-
     /**
      * @throws \Exception
      */
@@ -70,7 +60,7 @@ class ManagerNodesTest extends TestCase
 
         $this->assertEquals(StatusCode::HTTP_OK, $response->getStatusCode());
 
-        $body = (string)$response->getBody();
+        $body = (string) $response->getBody();
         $jobid = json_decode($body, true)['id'];
         $rawcommand = ServerUtility::getLastExecutedShellCommand();
         $command = str_replace('\\"', '"', ServerUtility::getLastExecutedShellCommand());
@@ -84,9 +74,8 @@ class ManagerNodesTest extends TestCase
         $this->callbackDataManagerIp = ['manager_ip' => '1.2.3.4:2345'];
         $this->callbackDataRedundancy = ['nodes' => [
             'manager-redundancy-' . ServerUtility::getShortHashOfString($jobid) . '-1.example.com',
-            'manager-redundancy-' . ServerUtility::getShortHashOfString($jobid) . '-2.example.com'
+            'manager-redundancy-' . ServerUtility::getShortHashOfString($jobid) . '-2.example.com',
         ], 'docker_token' => 'blah'];
-
 
         // simulate provisioning call backs
         $response = $this->runApp('POST', $url, true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']], $this->callbackDataInit);
@@ -104,32 +93,28 @@ class ManagerNodesTest extends TestCase
         $response = $this->runApp('POST', $url, true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']], $this->callbackDataRedundancy);
         $this->assertEquals(StatusCode::HTTP_OK, $response->getStatusCode());
 
-
         ServerUtility::resetLastExecutedCommand();
 
         $this->job = $this->jobRepository->find($jobid);
-
     }
-
 
     /**
      * @throws \Exception
      */
     public function testOnlyOneManagerNodesGetInitializedOnNewJob(): void
     {
-        $result = json_decode((string)$this->runApp('POST', '/api/job?type=' . JobType::GITLAB_RUNNER, true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']], null)->getBody(), true);
+        $result = json_decode((string) $this->runApp('POST', '/api/job?type=' . JobType::GITLAB_RUNNER, true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']], null)->getBody(), true);
         $this->assertArrayHasKey('id', $result, 'no ID of new job returned');
         $this->runApp('POST', '/api/job', true, ['Authorization' => 'Bearer ' . $result['token']], ['jobid' => $result['id'], 'name' => 'testing 1551430509']);
         $this->assertNotNull($this->jobRepository->findOneBy(['name' => 'testing 1551430509'])->getManagerNodes(), 'init node not ready, must not call to create redundant manager nodes yet');
     }
-
 
     /**
      * @throws \Exception
      */
     public function testRedundantManagersGetSetupOnCallbackCall(): void
     {
-        $jobid = json_decode((string)$this->runApp('POST', '/api/job?type=' . JobType::GITLAB_RUNNER, true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']])->getBody(), true)['id'];
+        $jobid = json_decode((string) $this->runApp('POST', '/api/job?type=' . JobType::GITLAB_RUNNER, true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']])->getBody(), true)['id'];
         /** @var Job $job */
         $job = $this->jobRepository->find($jobid);
         $this->assertCount(0, $job->getManagerNodes());
@@ -165,7 +150,6 @@ class ManagerNodesTest extends TestCase
         $this->assertCount(1, $job->getManagerNodes());
     }
 
-
     /**
      * @throws \Exception
      */
@@ -182,7 +166,6 @@ class ManagerNodesTest extends TestCase
         $this->assertStringContainsString('[' . $executions[0]->getId() . ']', ServerUtility::getLastExecutedShellCommand(1));
         $this->assertStringContainsString('manager-init-' . ServerUtility::getShortHashOfString($this->job->getId()) . '.example.com', ServerUtility::getLastExecutedShellCommand(1));
     }
-
 
     /**
      * @throws \Exception
@@ -223,7 +206,7 @@ class ManagerNodesTest extends TestCase
         $executions = $this->executionRepository->findBy(['job' => $this->job]);
         $ids = '';
         foreach ($executions as $execution) {
-            /** @var Execution $execution */
+            /* @var Execution $execution */
             $ids .= $execution->getId() . ',';
         }
         $ids = rtrim($ids, ',');
@@ -243,10 +226,7 @@ class ManagerNodesTest extends TestCase
 
         $this->runApp('POST', '/api/job/' . $this->job->getId() . '/execute', true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']]);
         $this->runApp('POST', '/api/job/' . $this->job->getId() . '/execute/submitresult', true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']], ['result' => 42]);
-
-
     }
-
 
     /**
      * @throws \Exception
@@ -263,17 +243,14 @@ class ManagerNodesTest extends TestCase
         $this->assertStringContainsString('helio::task', ServerUtility::getLastExecutedShellCommand(1));
     }
 
-
     /**
      * @throws \Exception
      */
     public function testJobStatusEndpointReflectsStatus(): void
     {
-
-
         $result = $this->runApp('POST', '/api/job?type=' . JobType::GITLAB_RUNNER, true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']]);
         $this->assertEquals(StatusCode::HTTP_OK, $result->getStatusCode());
-        $body = json_decode((string)$result->getBody(), true);
+        $body = json_decode((string) $result->getBody(), true);
         $this->assertNotNull($body);
         $jobid = $body['id'];
         $jobtoken = $body['token'];
@@ -287,7 +264,6 @@ class ManagerNodesTest extends TestCase
 
         $statusResult = $this->runApp('GET', "/api/job/isready?jobid=${jobid}", true, ['Authorization' => 'Bearer ' . $jobtoken]);
         $this->assertEquals($statusResult->getStatusCode(), StatusCode::HTTP_FAILED_DEPENDENCY);
-
 
         $this->runApp('POST', $callbackUrl, true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']], $this->callbackDataInit, null);
         $this->assertEquals(StatusCode::HTTP_FAILED_DEPENDENCY, $statusResult->getStatusCode());

@@ -20,6 +20,14 @@ $ ./scripts/docker/init.sh
 
 If the `Dockerfile` got changed, rebuild it using `./scripts/docker/build.sh`.
 
+## Code style
+
+This project's code style is formatted using [php-cs-fixer](https://cs.symfony.com/). Invoke it using:
+
+```bash
+$ ./scripts/docker/shell.sh vendor/bin/php-cs-fixer fix
+```
+
 ## Configuration
 You can configure a lot of stuff using environment variables. Available env variables are listed in `.panel.env.dist`.
 

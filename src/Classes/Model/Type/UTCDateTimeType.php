@@ -2,20 +2,22 @@
 
 namespace Helio\Panel\Model\Type;
 
-use \DateTime;
-use \DateTimeZone;
+use DateTime;
+use DateTimeZone;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Doctrine\DBAL\Types\ConversionException;
 use Doctrine\DBAL\Types\DateTimeType;
 
 class UTCDateTimeType extends DateTimeType
 {
-    static private $utc;
+    private static $utc;
 
     /**
      * @param $value
      * @param AbstractPlatform $platform
+     *
      * @return mixed|string
+     *
      * @throws ConversionException
      */
     public function convertToDatabaseValue($value, AbstractPlatform $platform)
@@ -30,7 +32,9 @@ class UTCDateTimeType extends DateTimeType
     /**
      * @param $value
      * @param AbstractPlatform $platform
+     *
      * @return bool|DateTime|false|mixed
+     *
      * @throws ConversionException
      */
     public function convertToPHPValue($value, AbstractPlatform $platform)

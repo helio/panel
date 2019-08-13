@@ -2,15 +2,14 @@
 
 namespace Helio\Panel\Utility;
 
-use \RuntimeException;
+use RuntimeException;
 
 /**
- * Class AbstractUtility
- * @package Helio\Panel\Utility
+ * Class AbstractUtility.
  */
 class AbstractUtility
 {
-    public final function __construct()
+    final public function __construct()
     {
         throw new RuntimeException('Utilities cannot be instantiated.', 1564068999);
     }

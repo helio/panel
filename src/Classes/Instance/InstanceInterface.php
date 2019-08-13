@@ -3,8 +3,7 @@
 namespace Helio\Panel\Instance;
 
 /**
- * Interface InstanceInterface
- * @package Helio\Panel\Instance
+ * Interface InstanceInterface.
  */
 interface InstanceInterface
 {

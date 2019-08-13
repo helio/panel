@@ -13,10 +13,10 @@ class ElasticHelper extends \Helio\Panel\Helper\ElasticHelper
         $handler = new MockHandler([
             'status' => 200,
             'transfer_stats' => [
-                'total_time' => 100
+                'total_time' => 100,
             ],
             'body' => fopen('data://text/json,{"hits":0}', 'rb'),
-            'effective_url' => 'localhost'
+            'effective_url' => 'localhost',
         ]);
         $builder = ClientBuilder::create();
         $builder->setHosts(['test.elastic.host.example.com']);

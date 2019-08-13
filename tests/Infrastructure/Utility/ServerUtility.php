@@ -10,14 +10,15 @@ class ServerUtility extends \Helio\Panel\Utility\ServerUtility
     }
 
     /**
-     * Mock command results
+     * Mock command results.
      *
      * @param string $command
+     *
      * @return string
      */
-    public static function getMockResultForShellCommand(string $command) : string {
-
-        if (strpos($command, 'RemoteManagers') && strpos($command, 'Addr') !== false) {
+    public static function getMockResultForShellCommand(string $command): string
+    {
+        if (strpos($command, 'RemoteManagers') && false !== strpos($command, 'Addr')) {
             return '5.1.2.3';
         }
         if (strpos($command, 'docker::swarm_token')) {

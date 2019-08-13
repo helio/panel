@@ -8,8 +8,6 @@ use Helio\Panel\Utility\ServerUtility;
 
 class Puppet implements MasterInterface
 {
-
-
     /**
      * @var Instance
      */
@@ -30,9 +28,9 @@ class Puppet implements MasterInterface
      */
     protected static $statusCommand = 'ssh %s@%s "curl -s -X GET https://puppetdb.idling.host/pdb/query/v4/nodes/%s -k"';
 
-
     /**
      * Puppet constructor.
+     *
      * @param Instance $instance
      */
     public function __construct(Instance $instance)
@@ -47,9 +45,10 @@ class Puppet implements MasterInterface
     {
         $result = ServerUtility::executeShellCommand($this->parseCommand('status'));
         LogHelper::debug('response from puppet at getStatus:' . print_r($result, true));
-        if (\is_string($result) && strpos(trim($result), '{') === 0) {
+        if (\is_string($result) && 0 === strpos(trim($result), '{')) {
             return json_decode($result, true);
         }
+
         return trim($result);
     }
 
@@ -60,16 +59,16 @@ class Puppet implements MasterInterface
     {
         $result = ServerUtility::executeShellCommand($this->parseCommand('autosign'));
         LogHelper::debug('response from puppet at doSign:' . print_r($result, true));
-        if (\is_string($result) && strpos(trim($result), '{') === 0) {
+        if (\is_string($result) && 0 === strpos(trim($result), '{')) {
             return json_decode($result, true);
         }
+
         return trim($result);
-
     }
-
 
     /**
      * @param string $commandName
+     *
      * @return string
      */
     protected function parseCommand(string $commandName): string
@@ -77,6 +76,7 @@ class Puppet implements MasterInterface
         ServerUtility::validateParams([self::$username, $this->instance->getMasterCoordinator(), $this->instance->getFqdn()]);
 
         $commandName .= 'Command';
+
         return sprintf(self::$$commandName, self::$username, $this->instance->getMasterCoordinator(), $this->instance->getFqdn());
     }
 }

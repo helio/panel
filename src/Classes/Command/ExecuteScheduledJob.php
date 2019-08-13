@@ -5,7 +5,7 @@ namespace Helio\Panel\Command;
 use Ahc\Cron\Expression;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\Common\Collections\ExpressionBuilder;
-use \Exception;
+use Exception;
 use Helio\Panel\App;
 use Helio\Panel\Execution\ExecutionStatus;
 use Helio\Panel\Job\JobFactory;
@@ -15,27 +15,21 @@ use Helio\Panel\Model\Instance;
 use Helio\Panel\Model\Job;
 use Helio\Panel\Orchestrator\OrchestratorFactory;
 use Helio\Panel\Utility\MiddlewareForCliUtility;
-use Helio\Panel\Utility\ServerUtility;
-use RuntimeException;
 use Slim\Http\Environment;
 use Slim\Http\Request;
-use Slim\Http\Response;
-use Slim\Http\StatusCode;
-use Slim\Http\Uri;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
 /**
- * Symfony console command
+ * Symfony console command.
  *
  * Class ExecuteScheduledJob
- * @package Helio\Panel\Command
  */
 class ExecuteScheduledJob extends Command
 {
     /**
-     * Configure Command
+     * Configure Command.
      */
     protected function configure(): void
     {
@@ -45,8 +39,9 @@ class ExecuteScheduledJob extends Command
     }
 
     /**
-     * @param InputInterface $input
+     * @param InputInterface  $input
      * @param OutputInterface $output
+     *
      * @return int|null
      *
      * @throws Exception
@@ -56,12 +51,11 @@ class ExecuteScheduledJob extends Command
         $expression = (new ExpressionBuilder())->neq('autoExecSchedule', '');
         $request = Request::createFromEnvironment(Environment::mock([
             'REQUEST_METHOD' => 'POST',
-            'REQUEST_URI' => '/'
+            'REQUEST_URI' => '/',
         ]));
 
         $app = App::getApp('cli', [MiddlewareForCliUtility::class]);
         $app->getContainer()['request'] = $request;
-
 
         $jobs = App::getDbHelper()->getRepository(Job::class)->matching(new Criteria($expression));
         /** @var Job $job */
@@ -86,10 +80,12 @@ class ExecuteScheduledJob extends Command
                     }
                 } catch (Exception $e) {
                     $output->writeln('Error ' . $e->getCode() . ' during init: ' . $e->getMessage());
+
                     return $e->getCode();
                 }
             }
         }
+
         return 0;
     }
 }

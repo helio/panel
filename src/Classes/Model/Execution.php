@@ -1,29 +1,21 @@
 <?php
+
 /** @noinspection PhpUnusedAliasInspection */
 
 namespace Helio\Panel\Model;
 
-use \Exception;
-use \DateTime;
-use \DateTimeZone;
-
+use Exception;
+use DateTime;
+use DateTimeZone;
 use OpenApi\Annotations as OA;
-use Doctrine\{Common\Collections\Collection,
-    ORM\Mapping\Entity,
-    ORM\Mapping\Table,
-    ORM\Mapping\Id,
-    ORM\Mapping\Column,
-    ORM\Mapping\GeneratedValue,
-    ORM\Mapping\ManyToOne,
-    ORM\Mapping\OneToMany,
-    ORM\Mapping\Version
-};
-
-use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\ORM\Mapping\Entity;
+use Doctrine\ORM\Mapping\Table;
+use Doctrine\ORM\Mapping\Column;
+use Doctrine\ORM\Mapping\ManyToOne;
+use Doctrine\ORM\Mapping\Version;
 use Helio\Panel\Execution\ExecutionStatus;
 
 /**
- *
  * @OA\Schema(
  *     type="object",
  *     title="Execution model"
@@ -33,7 +25,6 @@ use Helio\Panel\Execution\ExecutionStatus;
  **/
 class Execution extends AbstractModel
 {
-
     /**
      * @OA\Property(ref="#/components/schemas/executionstatus")
      *
@@ -50,14 +41,12 @@ class Execution extends AbstractModel
      */
     private $version;
 
-
     /**
      * @var Job
      *
      * @ManyToOne(targetEntity="Job", inversedBy="executions", cascade={"persist"})
      */
     protected $job;
-
 
     /**
      * @OA\Property(
@@ -71,7 +60,6 @@ class Execution extends AbstractModel
      */
     protected $priority = 100;
 
-
     /**
      * @OA\Property(
      *     description="Estimated Runtime on ideal Hardware in Seconds; 0 means the execution won't terminate itself.",
@@ -84,9 +72,7 @@ class Execution extends AbstractModel
      */
     protected $estimatedRuntime = 0;
 
-
     /**
-     *
      * @OA\Property(
      *     description="Execution statistics. The content depends on the JobType.",
      *     format="string"
@@ -97,7 +83,6 @@ class Execution extends AbstractModel
      * @Column(type="text")
      */
     protected $stats = '';
-
 
     /**
      * @OA\Property(
@@ -111,7 +96,6 @@ class Execution extends AbstractModel
      */
     protected $latestHeartbeat;
 
-
     /**
      * @return Job
      */
@@ -122,6 +106,7 @@ class Execution extends AbstractModel
 
     /**
      * @param Job $job
+     *
      * @return Execution
      */
     public function setJob(Job $job): Execution
@@ -137,11 +122,13 @@ class Execution extends AbstractModel
             $job->addExecution($this);
         }
         $this->job = $job;
+
         return $this;
     }
 
     /**
      * @param int $status
+     *
      * @return $this|AbstractModel
      */
     public function setStatus(int $status)
@@ -149,6 +136,7 @@ class Execution extends AbstractModel
         if (ExecutionStatus::isValidStatus($status)) {
             $this->status = $status;
         }
+
         return $this;
     }
 
@@ -162,11 +150,13 @@ class Execution extends AbstractModel
 
     /**
      * @param int $priority
+     *
      * @return Execution
      */
     public function setPriority(int $priority): Execution
     {
         $this->priority = $priority;
+
         return $this;
     }
 
@@ -180,14 +170,15 @@ class Execution extends AbstractModel
 
     /**
      * @param int $estimatedRuntime
+     *
      * @return Execution
      */
     public function setEstimatedRuntime(int $estimatedRuntime): Execution
     {
         $this->estimatedRuntime = $estimatedRuntime;
+
         return $this;
     }
-
 
     /**
      * @return int
@@ -207,14 +198,15 @@ class Execution extends AbstractModel
 
     /**
      * @param string $stats
+     *
      * @return Execution
      */
     public function setStats(string $stats): Execution
     {
         $this->stats = $stats;
+
         return $this;
     }
-
 
     /**
      * @return DateTime
@@ -224,17 +216,20 @@ class Execution extends AbstractModel
         if ($this->created->getTimezone()->getName() !== $this->getTimezone()) {
             $this->created->setTimezone(new DateTimeZone($this->getTimezone()));
         }
+
         return $this->latestHeartbeat;
     }
 
     /**
      * @param DateTime|null $latestHeartbeat
+     *
      * @return Execution
+     *
      * @throws Exception
      */
     public function setLatestHeartbeat(DateTime $latestHeartbeat = null): self
     {
-        if ($latestHeartbeat === null) {
+        if (null === $latestHeartbeat) {
             $latestHeartbeat = new DateTime('now', new DateTimeZone($this->getTimezone()));
         }
 
@@ -242,6 +237,7 @@ class Execution extends AbstractModel
         $latestHeartbeat->setTimezone(new DateTimeZone('UTC'));
 
         $this->latestHeartbeat = $latestHeartbeat;
+
         return $this;
     }
 }

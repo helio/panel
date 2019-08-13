@@ -1,27 +1,23 @@
 <?php
+
 /** @noinspection PhpUnusedAliasInspection */
 
 namespace Helio\Panel\Model;
 
-use \Exception;
+use Exception;
 use OpenApi\Annotations as OA;
-use Doctrine\{
-    Common\Collections\Collection,
-    Common\Collections\ArrayCollection,
-    ORM\Mapping\Entity,
-    ORM\Mapping\Table,
-    ORM\Mapping\Id,
-    ORM\Mapping\Column,
-    ORM\Mapping\GeneratedValue,
-    ORM\Mapping\ManyToOne,
-    ORM\Mapping\OneToMany
-};
+use Doctrine\Common\Collections\Collection;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\ORM\Mapping\Entity;
+use Doctrine\ORM\Mapping\Table;
+use Doctrine\ORM\Mapping\Column;
+use Doctrine\ORM\Mapping\ManyToOne;
+use Doctrine\ORM\Mapping\OneToMany;
 use Helio\Panel\Job\JobStatus;
 use Helio\Panel\Job\JobType;
 use Helio\Panel\Execution\ExecutionStatus;
 
 /**
- *
  * @OA\Schema(
  *     type="object",
  *     title="Job model"
@@ -31,40 +27,17 @@ use Helio\Panel\Execution\ExecutionStatus;
  **/
 class Job extends AbstractModel
 {
-
-
     /**
      * @OA\Property(
      *         format="object",
      *         description=">- Your Job specific JSON config looking like this:
 
-            {
-                ""image"": ""nginx:1.8"",
-                ""env"": [
-                    {""SOURCE_PATH"":""https://account-name.zone-name.web.core.windows.net""},
-                    {""TARGET_PATH"":""https://bucket.s3.aws-region.amazonaws.com""}
-                ],
-                ""registry"": {
-                    ""server"": ""example.azurecr.io"",
-                    ""username"": ""$DOCKER_USER"",
-                    ""password"": ""$DOCKER_PASSWORD"",
-                    ""email"": ""docker@example.com""
-                },
-               ""cliparams"": {
-                   ""env"": [
-                       {""SECRET_SOURCE"":""https://my.vautl:42/""}
-                   ]
-                }
-           }",
-     *         example="{""image"":""nginx:1.8"",""env"":[{""SOURCE_PATH"":""https://account-name.zone-name.web.core.windows.net""},{""TARGET_PATH"":""https://bucket.s3.aws-region.amazonaws.com""}],""registry"":{""server"":""example.azurecr.io"",""username"":""$DOCKER_USER"",""password"":""$DOCKER_PASSWORD"",""email"":""docker@example.com""},""cliparams"":{""env"":[{""SECRET_SOURCE"":""https://my.vautl:42/""}]}}"
-     * )
      *
      * @var string
      *
      * @Column(type="text")
      */
     protected $config = '';
-
 
     /**
      * @OA\Property(ref="#/components/schemas/jobstatus")
@@ -75,7 +48,6 @@ class Job extends AbstractModel
      */
     protected $status = JobStatus::UNKNOWN;
 
-
     /**
      * @OA\Property(ref="#/components/schemas/jobtype")
      *
@@ -84,7 +56,6 @@ class Job extends AbstractModel
      * @Column
      */
     protected $type = JobType::UNKNOWN;
-
 
     /**
      * @OA\Property(
@@ -98,7 +69,6 @@ class Job extends AbstractModel
      */
     protected $isCharity = false;
 
-
     /**
      * @OA\Property(
      *     description="Specify how much CPUs this job ideally gets",
@@ -110,7 +80,6 @@ class Job extends AbstractModel
      * @Column
      */
     protected $cpus = 0;
-
 
     /**
      * @OA\Property(
@@ -124,7 +93,6 @@ class Job extends AbstractModel
      */
     protected $gpus = 0;
 
-
     /**
      * @OA\Property(
      *     description="Specify in which location this job should run",
@@ -137,7 +105,6 @@ class Job extends AbstractModel
      */
     protected $location = '';
 
-
     /**
      * @OA\Property(
      *     description="A billing reference (e.g. your customer's order number)"
@@ -148,7 +115,6 @@ class Job extends AbstractModel
      * @Column
      */
     protected $billingReference = '';
-
 
     /**
      * @OA\Property(
@@ -162,7 +128,6 @@ class Job extends AbstractModel
      */
     protected $budget = 0;
 
-
     /**
      * @OA\Property(
      *     description="Cron Schedule to automatically execute the Job",
@@ -174,7 +139,6 @@ class Job extends AbstractModel
      * @Column
      */
     protected $autoExecSchedule = '';
-
 
     /**
      * @OA\Property(
@@ -188,14 +152,12 @@ class Job extends AbstractModel
      */
     protected $priority = 100;
 
-
     /**
      * @var User
      *
      * @ManyToOne(targetEntity="User", inversedBy="jobs", cascade={"persist"})
      */
     protected $owner;
-
 
     /**
      * @var array<Execution>
@@ -204,14 +166,12 @@ class Job extends AbstractModel
      */
     protected $executions = [];
 
-
     /**
      * @var string
      *
      * @Column
      */
     protected $initManagerIp = '';
-
 
     /**
      * @var string
@@ -220,14 +180,12 @@ class Job extends AbstractModel
      */
     protected $clusterToken = '';
 
-
     /**
      * @var string
      *
      * @Column
      */
     protected $managerToken = '';
-
 
     /**
      * @var array<string>
@@ -236,16 +194,16 @@ class Job extends AbstractModel
      */
     protected $managerNodes = [];
 
-
     /**
      * @var int
+     *
      * @internal
      */
     private $numberOfActiveExecutions;
 
-
     /**
      * Job constructor.
+     *
      * @throws Exception
      */
     public function __construct()
@@ -253,7 +211,6 @@ class Job extends AbstractModel
         parent::__construct();
         $this->executions = new ArrayCollection();
     }
-
 
     /**
      * @return User
@@ -265,6 +222,7 @@ class Job extends AbstractModel
 
     /**
      * @param User $owner
+     *
      * @return Job
      */
     public function setOwner(User $owner): Job
@@ -280,6 +238,7 @@ class Job extends AbstractModel
             $owner->addJob($this);
         }
         $this->owner = $owner;
+
         return $this;
     }
 
@@ -293,6 +252,7 @@ class Job extends AbstractModel
 
     /**
      * @param string $type
+     *
      * @return Job
      */
     public function setType(string $type): Job
@@ -300,6 +260,7 @@ class Job extends AbstractModel
         if (JobType::isValidType($type)) {
             $this->type = $type;
         }
+
         return $this;
     }
 
@@ -313,16 +274,19 @@ class Job extends AbstractModel
 
     /**
      * @param bool $isCharity
+     *
      * @return Job
      */
     public function setIsCharity(bool $isCharity): Job
     {
         $this->isCharity = $isCharity;
+
         return $this;
     }
 
     /**
      * @param int $status
+     *
      * @return Job
      */
     public function setStatus(int $status): Job
@@ -330,6 +294,7 @@ class Job extends AbstractModel
         if (JobStatus::isValidStatus($status)) {
             $this->status = $status;
         }
+
         return $this;
     }
 
@@ -343,11 +308,13 @@ class Job extends AbstractModel
 
     /**
      * @param int $cpus
+     *
      * @return Job
      */
     public function setCpus(int $cpus): Job
     {
         $this->cpus = $cpus;
+
         return $this;
     }
 
@@ -361,11 +328,13 @@ class Job extends AbstractModel
 
     /**
      * @param int $gpus
+     *
      * @return Job
      */
     public function setGpus(int $gpus): Job
     {
         $this->gpus = $gpus;
+
         return $this;
     }
 
@@ -379,11 +348,13 @@ class Job extends AbstractModel
 
     /**
      * @param string $location
+     *
      * @return Job
      */
     public function setLocation(string $location): Job
     {
         $this->location = $location;
+
         return $this;
     }
 
@@ -397,11 +368,13 @@ class Job extends AbstractModel
 
     /**
      * @param string $billingReference
+     *
      * @return Job
      */
     public function setBillingReference(string $billingReference): Job
     {
         $this->billingReference = $billingReference;
+
         return $this;
     }
 
@@ -415,11 +388,13 @@ class Job extends AbstractModel
 
     /**
      * @param int $budget
+     *
      * @return Job
      */
     public function setBudget(int $budget): Job
     {
         $this->budget = $budget;
+
         return $this;
     }
 
@@ -433,11 +408,13 @@ class Job extends AbstractModel
 
     /**
      * @param string $autoExecSchedule
+     *
      * @return Job
      */
     public function setAutoExecSchedule(string $autoExecSchedule): Job
     {
         $this->autoExecSchedule = $autoExecSchedule;
+
         return $this;
     }
 
@@ -451,11 +428,13 @@ class Job extends AbstractModel
 
     /**
      * @param int $priority
+     *
      * @return Job
      */
     public function setPriority(int $priority): Job
     {
         $this->priority = $priority;
+
         return $this;
     }
 
@@ -484,7 +463,7 @@ class Job extends AbstractModel
     public function removeExecution(Execution $executionToRemove): Job
     {
         $this->setExecutions(array_filter($this->getExecutions()->toArray(), function ($execution) use ($executionToRemove) {
-            /** @var Execution $execution */
+            /* @var Execution $execution */
             return $execution->getId() !== $executionToRemove->getId();
         }));
         $this->numberOfActiveExecutions = null;
@@ -502,17 +481,20 @@ class Job extends AbstractModel
 
     /**
      * @param array $executions
+     *
      * @return Job
      */
     public function setExecutions(array $executions): Job
     {
         $this->executions = $executions;
         $this->numberOfActiveExecutions = null;
+
         return $this;
     }
 
     /**
      * @param string $managerNode
+     *
      * @return Job
      */
     public function addManagerNode(string $managerNode): Job
@@ -520,11 +502,13 @@ class Job extends AbstractModel
         if (!in_array($managerNode, $this->managerNodes, true)) {
             $this->managerNodes[] = $managerNode;
         }
+
         return $this;
     }
 
     /**
      * @param string $nodeToRemove
+     *
      * @return Job
      */
     public function removeManagerNode(string $nodeToRemove): Job
@@ -533,9 +517,10 @@ class Job extends AbstractModel
             if (trim($node) === trim($nodeToRemove)) {
                 return false;
             }
-            if (strpos(trim($node), trim($nodeToRemove . '.')) === 0) {
+            if (0 === strpos(trim($node), trim($nodeToRemove . '.'))) {
                 return false;
             }
+
             return true;
         }));
 
@@ -552,11 +537,13 @@ class Job extends AbstractModel
 
     /**
      * @param array $managerNodes
+     *
      * @return Job
      */
     public function setManagerNodes(array $managerNodes): Job
     {
         $this->managerNodes = $managerNodes;
+
         return $this;
     }
 
@@ -570,11 +557,13 @@ class Job extends AbstractModel
 
     /**
      * @param string $initManagerIp
+     *
      * @return Job
      */
     public function setInitManagerIp(string $initManagerIp): Job
     {
         $this->initManagerIp = $initManagerIp;
+
         return $this;
     }
 
@@ -588,11 +577,13 @@ class Job extends AbstractModel
 
     /**
      * @param string $clusterToken
+     *
      * @return Job
      */
     public function setClusterToken(string $clusterToken): Job
     {
         $this->clusterToken = $clusterToken;
+
         return $this;
     }
 
@@ -606,14 +597,15 @@ class Job extends AbstractModel
 
     /**
      * @param string $managerToken
+     *
      * @return Job
      */
     public function setManagerToken(string $managerToken): Job
     {
         $this->managerToken = $managerToken;
+
         return $this;
     }
-
 
     /**
      * @return int

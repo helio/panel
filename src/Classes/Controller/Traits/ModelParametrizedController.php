@@ -3,27 +3,25 @@
 namespace Helio\Panel\Controller\Traits;
 
 use Ergy\Slim\Annotations\RouteInfo;
-use \RuntimeException;
+use RuntimeException;
 use Slim\Http\Request;
 
 /**
- * Trait ModelParametrizedController
- * @package Helio\Panel\Controller\Traits
+ * Trait ModelParametrizedController.
  *
  * @property array params
  * @property Request $request
  */
 trait ModelParametrizedController
 {
-
     /**
      * @var array
      */
     protected $params;
 
-
     /**
      * @param RouteInfo $route
+     *
      * @return bool
      */
     public function setupParams(RouteInfo $route): bool
@@ -31,13 +29,14 @@ trait ModelParametrizedController
         if (!$this->params) {
             $this->params = array_merge(json_decode($this->request->getBody(), true) ?? [], $this->request->getParams() ?? [], $route->params ?? []);
         }
+
         return true;
     }
 
     /**
-     * @param array $params Array formated like <parameter name> => <type>
+     * @param array $params array formated like <parameter name> => <type>
      *
-     * NOTE: Only call this with SANITIZE Filters, VALIDATE will fail.
+     * NOTE: Only call this with SANITIZE Filters, VALIDATE will fail
      *
      * @throws RuntimeException
      */
@@ -52,9 +51,9 @@ trait ModelParametrizedController
     }
 
     /**
-     * @param array $params Array formated like <parameter name> => <type>
+     * @param array $params array formated like <parameter name> => <type>
      *
-     * NOTE: Only call this with SANITIZE Filters, VALIDATE will fail.
+     * NOTE: Only call this with SANITIZE Filters, VALIDATE will fail
      *
      * @throws RuntimeException
      *
@@ -72,7 +71,7 @@ trait ModelParametrizedController
             }
             foreach ($type as $currentType) {
                 $test = filter_var($this->params[$key], $currentType);
-                if ($test === false) {
+                if (false === $test) {
                     throw new RuntimeException("Param ${key} resulted in filter error", 1545654117);
                 }
                 if ($test !== $this->params[$key]) {

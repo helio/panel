@@ -46,14 +46,13 @@ class ApiAdminTest extends TestCase
         $this->job = $job;
     }
 
-
     /**
      * @throws \Exception
      */
     public function testGetJobHiera(): void
     {
         $result = $this->runApp('GET', '/api/admin/getJobHiera?jobid=' . $this->job->getId(), true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']]);
-        $hiera = (string)$result->getBody();
+        $hiera = (string) $result->getBody();
 
         $this->assertEquals(StatusCode::HTTP_OK, $result->getStatusCode());
         $this->assertStringContainsString('  service_name: docker-', $hiera);

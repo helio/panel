@@ -12,3 +12,6 @@
 
 /cnf/google-auth.json
 /.panel.env
+
+/.php_cs.cache
+/.php_cs

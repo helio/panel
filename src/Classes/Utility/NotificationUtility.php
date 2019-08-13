@@ -2,21 +2,17 @@
 
 namespace Helio\Panel\Utility;
 
-use \Exception;
+use Exception;
 use GuzzleHttp\Exception\GuzzleException;
 use Helio\Panel\App;
 use Helio\Panel\Helper\LogHelper;
 use Helio\Panel\Model\User;
-use OpenApi\Annotations\Server;
 
 /**
- * Class MailUtility
- * @package Helio\Panel\Utility
+ * Class MailUtility.
  */
 class NotificationUtility extends AbstractUtility
 {
-
-
     /**
      * @var string
      */
@@ -26,12 +22,12 @@ class NotificationUtility extends AbstractUtility
     %s
 EOM;
 
-
     /**
-     * @param User $user
+     * @param User   $user
      * @param string $linkLifetime
      *
      * @return bool
+     *
      * @throws Exception
      */
     public static function sendConfirmationMail(User $user, string $linkLifetime = '+1 week'): bool
@@ -39,7 +35,7 @@ EOM;
         $content = vsprintf(self::$confirmationMailContent, [
             $user->getName(),
             ServerUtility::getBaseUrl() . 'confirm?signature=' .
-            JwtUtility::generateToken($linkLifetime, $user)['token']
+            JwtUtility::generateToken($linkLifetime, $user)['token'],
         ]);
 
         $return = ServerUtility::isProd() ? @mail($user->getEmail(), 'Welcome to Helio', $content, 'From: hello@idling.host', '-f hello@idling.host') : true;
@@ -50,16 +46,16 @@ EOM;
         }
 
         // write mail to PHPStorm Console
-        if (PHP_SAPI === 'cli-server' && ServerUtility::get('SITE_ENV') !== 'PROD') {
+        if (PHP_SAPI === 'cli-server' && 'PROD' !== ServerUtility::get('SITE_ENV')) {
             LogHelper::logToConsole($content);
         }
 
         return $return;
     }
 
-
     /**
      * @param string $content
+     *
      * @return bool
      */
     public static function notifyAdmin(string $content = ''): bool

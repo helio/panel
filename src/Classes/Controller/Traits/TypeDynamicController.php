@@ -3,8 +3,7 @@
 namespace Helio\Panel\Controller\Traits;
 
 /**
- * Trait TypeDynamicController
- * @package Helio\Panel\Controller\Traits
+ * Trait TypeDynamicController.
  */
 trait TypeDynamicController
 {
@@ -30,18 +29,21 @@ trait TypeDynamicController
     protected function setContext(string $context): self
     {
         $this->renderingContext = $context;
+
         return $this;
     }
 
     protected function setReturnType(string $returnType): self
     {
         $this->returnType = $returnType;
+
         return $this;
     }
 
     protected function setMode(string $mode): self
     {
         $this->mode = $mode;
+
         return $this;
     }
 }

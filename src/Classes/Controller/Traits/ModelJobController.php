@@ -3,13 +3,12 @@
 namespace Helio\Panel\Controller\Traits;
 
 use Ergy\Slim\Annotations\RouteInfo;
-use \Exception;
+use Exception;
 use Helio\Panel\App;
 use Helio\Panel\Model\Job;
 
 /**
- * Trait JobController
- * @package Helio\Panel\Controller\Traits
+ * Trait JobController.
  */
 trait ModelJobController
 {
@@ -21,10 +20,11 @@ trait ModelJobController
      */
     protected $job;
 
-
     /**
      * @param RouteInfo $route
+     *
      * @return bool
+     *
      * @throws Exception
      */
     public function setupJob(RouteInfo $route): bool
@@ -34,14 +34,16 @@ trait ModelJobController
         // if we are properly autorized for the job, everything's fine anyways
         if (App::getApp()->getContainer()->has('job')) {
             $this->job = App::getApp()->getContainer()->get('job');
+
             return true;
         }
 
         // otherwise, setup job from param
         $this->setupParams($route);
-        $jobId = filter_var($this->params['jobid'] ?? ($this->getIdAlias() === 'jobid' ? (array_key_exists('id', $this->params) ? $this->params['id'] : 0) : 0), FILTER_SANITIZE_NUMBER_INT);
+        $jobId = filter_var($this->params['jobid'] ?? ('jobid' === $this->getIdAlias() ? (array_key_exists('id', $this->params) ? $this->params['id'] : 0) : 0), FILTER_SANITIZE_NUMBER_INT);
         if ($jobId > 0) {
             $this->job = App::getDbHelper()->getRepository(Job::class)->find($jobId);
+
             return true;
         }
 
@@ -50,26 +52,31 @@ trait ModelJobController
             ->setName('___NEW')
             ->setOwner($this->user)
             ->setCreated();
+
         return true;
     }
 
     /**
      * @return bool
+     *
      * @throws Exception
      */
     public function validateJobIsSet(): bool
     {
         if ($this->job) {
-            if ($this->job->getName() !== '___NEW') {
+            if ('___NEW' !== $this->job->getName()) {
                 $this->persistJob();
             }
+
             return true;
         }
+
         return false;
     }
 
     /**
-     * Persist
+     * Persist.
+     *
      * @throws Exception
      */
     protected function persistJob(): void

@@ -1,26 +1,18 @@
 <?php
+
 /** @noinspection PhpUnusedAliasInspection */
 
 namespace Helio\Panel\Model;
 
-use \Exception;
-use \DateTime;
-use \DateTimeZone;
-use OpenApi\Annotations as OA;
-use Doctrine\{
-    Common\Collections\Collection,
-    ORM\Mapping\Entity,
-    ORM\Mapping\Table,
-    ORM\Mapping\Id,
-    ORM\Mapping\Column,
-    ORM\Mapping\GeneratedValue,
-    ORM\Mapping\ManyToOne,
-    ORM\Mapping\OneToMany
-};
-
+use Exception;
+use DateTime;
+use DateTimeZone;
+use Doctrine\Common\Collections\Collection;
+use Doctrine\ORM\Mapping\Entity;
+use Doctrine\ORM\Mapping\Table;
+use Doctrine\ORM\Mapping\Column;
+use Doctrine\ORM\Mapping\OneToMany;
 use Doctrine\Common\Collections\ArrayCollection;
-use Helio\Panel\Utility\ArrayUtility;
-use Helio\Panel\Utility\JwtUtility;
 use Helio\Panel\Utility\ServerUtility;
 
 /**
@@ -28,15 +20,12 @@ use Helio\Panel\Utility\ServerUtility;
  **/
 class User extends AbstractModel
 {
-
-
     /**
      * @var string
      *
      * @Column
      */
     protected $email = '';
-
 
     /**
      * @var string
@@ -45,22 +34,19 @@ class User extends AbstractModel
      */
     protected $role = '';
 
-
     /**
-     * @var boolean
+     * @var bool
      *
      * @Column(type="boolean")
      */
     protected $active = false;
 
-
     /**
-     * @var boolean
+     * @var bool
      *
      * @Column(type="boolean")
      */
     protected $admin = false;
-
 
     /**
      * @var DateTime $loggedOut
@@ -69,14 +55,12 @@ class User extends AbstractModel
      */
     protected $loggedOut;
 
-
     /**
      * @var array<Instance>
      *
      * @OneToMany(targetEntity="Instance", mappedBy="owner", cascade={"persist"})
      */
     protected $instances = [];
-
 
     /**
      * @var array<Job>
@@ -85,9 +69,9 @@ class User extends AbstractModel
      */
     protected $jobs = [];
 
-
     /**
      * User constructor.
+     *
      * @throws Exception
      */
     public function __construct()
@@ -97,7 +81,6 @@ class User extends AbstractModel
         $this->jobs = new ArrayCollection();
     }
 
-
     /**
      * @return string
      */
@@ -106,9 +89,9 @@ class User extends AbstractModel
         return $this->email;
     }
 
-
     /**
      * @param string $email
+     *
      * @return User
      */
     public function setEmail(string $email): User
@@ -118,7 +101,6 @@ class User extends AbstractModel
         return $this;
     }
 
-
     /**
      * @return string
      */
@@ -127,9 +109,9 @@ class User extends AbstractModel
         return $this->role;
     }
 
-
     /**
      * @param string $role
+     *
      * @return User
      */
     public function setRole(string $role): User
@@ -139,7 +121,6 @@ class User extends AbstractModel
         return $this;
     }
 
-
     /**
      * @return bool
      */
@@ -148,9 +129,9 @@ class User extends AbstractModel
         return $this->active;
     }
 
-
     /**
      * @param bool $active
+     *
      * @return User
      */
     public function setActive(bool $active): User
@@ -160,7 +141,6 @@ class User extends AbstractModel
         return $this;
     }
 
-
     /**
      * @return bool
      */
@@ -169,9 +149,9 @@ class User extends AbstractModel
         return $this->admin;
     }
 
-
     /**
      * @param bool $admin
+     *
      * @return User
      */
     public function setAdmin(bool $admin): User
@@ -181,7 +161,6 @@ class User extends AbstractModel
         return $this;
     }
 
-
     /**
      * @return Collection
      */
@@ -190,17 +169,17 @@ class User extends AbstractModel
         return $this->instances;
     }
 
-
     /**
      * @param array<Instance> $instances
+     *
      * @return User
      */
     public function setInstances(array $instances): User
     {
         $this->instances = $instances;
+
         return $this;
     }
-
 
     /**
      * @param Instance $instance
@@ -217,7 +196,6 @@ class User extends AbstractModel
         return $this;
     }
 
-
     /**
      * @param Instance $instanceToRemove
      *
@@ -226,7 +204,7 @@ class User extends AbstractModel
     public function removeInstance(Instance $instanceToRemove): User
     {
         $this->setInstances(array_filter($this->getInstances()->toArray(), function ($instance) use ($instanceToRemove) {
-            /** @var Instance $instance */
+            /* @var Instance $instance */
             return $instance->getId() !== $instanceToRemove->getId();
         }));
 
@@ -243,6 +221,7 @@ class User extends AbstractModel
 
     /**
      * @param DateTime|null $loggedOut
+     *
      * @throws Exception
      */
     public function setLoggedOut(DateTime $loggedOut = null): void
@@ -256,7 +235,6 @@ class User extends AbstractModel
         $this->loggedOut = $loggedOut;
     }
 
-
     /**
      * @return Collection
      */
@@ -267,14 +245,15 @@ class User extends AbstractModel
 
     /**
      * @param array $jobs
+     *
      * @return User
      */
     public function setJobs(array $jobs): User
     {
         $this->jobs = $jobs;
+
         return $this;
     }
-
 
     /**
      * @param Job $job
@@ -291,7 +270,6 @@ class User extends AbstractModel
         return $this;
     }
 
-
     /**
      * @param Job $jobToRemove
      *
@@ -300,7 +278,7 @@ class User extends AbstractModel
     public function removeJob(Job $jobToRemove): User
     {
         $this->setJobs(array_filter($this->getJobs()->toArray(), function ($job) use ($jobToRemove) {
-            /** @var Job $job */
+            /* @var Job $job */
             return $job->getId() !== $jobToRemove->getId();
         }));
 
@@ -309,12 +287,13 @@ class User extends AbstractModel
 
     /**
      * @param int $status
+     *
      * @return User
      */
     public function setStatus(int $status): User
     {
-
         $this->status = $status;
+
         return $this;
     }
 }

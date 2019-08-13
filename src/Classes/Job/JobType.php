@@ -2,10 +2,10 @@
 
 namespace Helio\Panel\Job;
 
-use \RuntimeException;
+use RuntimeException;
 
 /**
- * Class JobType
+ * Class JobType.
  *
  * @OA\Schema(
  *     schema="jobtype",
@@ -14,8 +14,6 @@ use \RuntimeException;
  *     description="The type of the job",
  *     enum = {"docker", "ep85", "busybox", "gitlab"}
  * )
- *
- * @package Helio\Panel\Job
  */
 final class JobType
 {
@@ -29,7 +27,7 @@ final class JobType
     /**
      * @var array
      */
-    protected static $iconMap;
+    private static $iconMap;
 
     public function __construct()
     {
@@ -38,15 +36,16 @@ final class JobType
 
     public static function isValidType(string $type): bool
     {
-        return $type === self::GITLAB_RUNNER
-            || $type === self::ENERGY_PLUS_85
-            || $type === self::DOCKER
-            || $type === self::BUSYBOX
-            || $type === self::INFINITEBOX;
+        return self::GITLAB_RUNNER === $type
+            || self::ENERGY_PLUS_85 === $type
+            || self::DOCKER === $type
+            || self::BUSYBOX === $type
+            || self::INFINITEBOX === $type;
     }
 
     /**
      * @param string $type
+     *
      * @return string
      */
     public static function getIconClassesForType(string $type): string
@@ -56,11 +55,12 @@ final class JobType
                 self::ENERGY_PLUS_85 => 'fa fa-plus',
                 self::DOCKER => 'fa fa-bolt',
                 self::BUSYBOX => 'fa fa-clock-o',
-                self::INFINITEBOX => 'fa fa-clock-o'
+                self::INFINITEBOX => 'fa fa-clock-o',
             ];
 
             return $map[$type] ?? "fa fa-$type";
         }
+
         return 'fa fa-question';
     }
 }

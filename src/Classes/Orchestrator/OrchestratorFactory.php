@@ -7,13 +7,13 @@ use Helio\Panel\Model\Job;
 
 class OrchestratorFactory
 {
-
     /** @var array<OrchestratorInterface> */
     protected static $instances = [];
 
     /**
      * @param Instance $instance
      * @param Job|null $job
+     *
      * @return OrchestratorInterface
      */
     public static function getOrchestratorForInstance(Instance $instance, Job $job = null): OrchestratorInterface
@@ -24,7 +24,6 @@ class OrchestratorFactory
         if (!array_key_exists($identifier, self::$instances)) {
             $className = "\\Helio\\Panel\\Orchestrator\\$type";
             self::$instances[$identifier] = new $className($instance, $job);
-
         }
 
         return self::$instances[$identifier];

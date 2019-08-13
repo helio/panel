@@ -2,8 +2,8 @@
 
 namespace Helio\Panel\Utility;
 
-use \Exception;
-use \DateTime;
+use Exception;
+use DateTime;
 use Helio\Panel\App;
 use Helio\Panel\Helper\LogHelper;
 use Helio\Panel\Middleware\ReAuthenticate;
@@ -20,21 +20,19 @@ use Tuupola\Middleware\JwtAuthentication\RequestMethodRule;
 use Tuupola\Middleware\JwtAuthentication\RequestPathRule;
 
 /**
- * Class MiddlewareUtility
- * @package Helio\Panel\Utility
+ * Class MiddlewareUtility.
  */
 class MiddlewareForHttpUtility extends AbstractUtility
 {
-
     /**
      * @param App $app
      *
      * NOTE: Middlewares are processed as a FILO stack, so beware their order
+     *
      * @throws Exception
      */
     public static function addMiddleware(App $app): void
     {
-
         $app->add(new ReAuthenticate());
 
         $app->add(new JwtAuthentication([
@@ -42,7 +40,7 @@ class MiddlewareForHttpUtility extends AbstractUtility
             'secret' => ServerUtility::get('JWT_SECRET'),
             'rules' => [
                 new RequestPathRule([
-                    'path' => '/(api|panel)'
+                    'path' => '/(api|panel)',
                 ]),
                 new RequestMethodRule(['passthrough' => ['OPTIONS']]),
             ],
@@ -61,9 +59,9 @@ class MiddlewareForHttpUtility extends AbstractUtility
                     }
 
                     // impersonation feature for admin users completely mocks another user
-                    if (array_key_exists('impersonate', $request->getCookieParams()) && $user->isAdmin() && (string)(int)$request->getCookieParams()['impersonate'] === (string)$request->getCookieParams()['impersonate']) {
+                    if (array_key_exists('impersonate', $request->getCookieParams()) && $user->isAdmin() && (string) (int) $request->getCookieParams()['impersonate'] === (string) $request->getCookieParams()['impersonate']) {
                         App::getApp()->getContainer()['impersonatinguser'] = clone $user;
-                        $user = App::getDbHelper()->getRepository(User::class)->find((int)$request->getCookieParams()['impersonate']) ?? $user;
+                        $user = App::getDbHelper()->getRepository(User::class)->find((int) $request->getCookieParams()['impersonate']) ?? $user;
                     }
 
                     App::getApp()->getContainer()['user'] = $user;
@@ -95,8 +93,7 @@ class MiddlewareForHttpUtility extends AbstractUtility
 
                 /** @var RequestInterface $request */
                 $request = App::getApp()->getContainer()['request'];
-                if (strpos($request->getUri()->getPath(), '/api') === 0) {
-
+                if (0 === strpos($request->getUri()->getPath(), '/api')) {
                     return CookieUtility::deleteCookie($response
                         ->withHeader('Content-Type', 'application/json')
                         ->write(json_encode($data, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT)), 'token');
@@ -105,7 +102,7 @@ class MiddlewareForHttpUtility extends AbstractUtility
                 return CookieUtility::deleteCookie($response
                     ->withHeader('Location', '/')
                     ->withStatus(StatusCode::HTTP_SEE_OTHER), 'token');
-            }
+            },
         ]));
 
         $app->add(new CorsMiddleware([
@@ -116,12 +113,12 @@ class MiddlewareForHttpUtility extends AbstractUtility
             'credentials' => true,
             'cache' => 60,
             'error' => function (Request $request, Response $response) {
-                if (mb_strtolower($request->getContentType()) === 'application/json') {
+                if ('application/json' === mb_strtolower($request->getContentType())) {
                     return $response->withJson(['status' => 'cors  error'], StatusCode::HTTP_UNAUTHORIZED);
                 }
-                return $response->write('<html lang="en"><head><title>Error</title></head><body><p><strong>Status:</strong>cors  error</p></body>')->withStatus(StatusCode::HTTP_UNAUTHORIZED);
-            }
-        ]));
 
+                return $response->write('<html lang="en"><head><title>Error</title></head><body><p><strong>Status:</strong>cors  error</p></body>')->withStatus(StatusCode::HTTP_UNAUTHORIZED);
+            },
+        ]));
     }
 }

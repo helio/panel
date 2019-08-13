@@ -2,14 +2,13 @@
 
 namespace Helio\Panel\Controller;
 
-
-use \Exception;
+use Exception;
 use Helio\Panel\Controller\Traits\ModelInstanceController;
 use Helio\Panel\Controller\Traits\ModelJobController;
 use Helio\Panel\Utility\JwtUtility;
-use \RuntimeException;
-use \DateTime;
-use \DateInterval;
+use RuntimeException;
+use DateTime;
+use DateInterval;
 use Helio\Panel\App;
 use Helio\Panel\Controller\Traits\AuthorizedAdminController;
 use Helio\Panel\Controller\Traits\TypeDynamicController;
@@ -26,18 +25,15 @@ use Psr\Http\Message\ResponseInterface;
 use Slim\Http\StatusCode;
 
 /**
- * Class ApiController
+ * Class ApiController.
  *
- * @package    Helio\Panel\Controller
  * @author    Christoph Buchli <team@opencomputing.cloud>
  *
  *
  * @RoutePrefix('/api/admin')
- *
  */
 class ApiAdminController extends AbstractController
 {
-
     use AuthorizedAdminController, ModelInstanceController, ModelJobController {
         AuthorizedAdminController::setupUser insteadof ModelInstanceController, ModelJobController;
         AuthorizedAdminController::validateUserIsSet insteadof ModelInstanceController, ModelJobController;
@@ -49,7 +45,6 @@ class ApiAdminController extends AbstractController
     }
     use TypeDynamicController;
 
-
     /**
      * ApiAdminController constructor.
      */
@@ -58,17 +53,17 @@ class ApiAdminController extends AbstractController
         $this->setMode('api');
     }
 
-
     /**
      * @return ResponseInterface
      *
      * @Route("/instancelist", methods={"GET"}, name="user.serverlist")
+     *
      * @throws Exception
      */
     public function serverListAction(): ResponseInterface
     {
-        $limit = (int)($this->params['limit'] ?? 10);
-        $offset = (int)($this->params['offset'] ?? 0);
+        $limit = (int) ($this->params['limit'] ?? 10);
+        $offset = (int) ($this->params['offset'] ?? 0);
         $order = explode(',', filter_var($this->params['orderby'] ?? 'status DESC, priority ASC', FILTER_SANITIZE_STRING));
         $orderBy = [];
         foreach ($order as $field) {
@@ -78,23 +73,24 @@ class ApiAdminController extends AbstractController
 
         $servers = [];
         foreach (App::getDbHelper()->getRepository(Instance::class)->findBy([], $orderBy, $limit, $offset) as $instance) {
-            /** @var Instance $instance */
+            /* @var Instance $instance */
             $servers[] = ['id' => $instance->getId(), 'html' => $this->fetchPartial('listItemInstance', ['instance' => $instance, 'user' => $this->user, 'admin' => true])];
         }
+
         return $this->render(['items' => $servers, 'user' => $this->user]);
     }
-
 
     /**
      * @return ResponseInterface
      *
      * @Route("/joblist", methods={"GET"}, name="admin.joblist")
+     *
      * @throws Exception
      */
     public function jobListAction(): ResponseInterface
     {
-        $limit = (int)($this->params['limit'] ?? 10);
-        $offset = (int)($this->params['offset'] ?? 0);
+        $limit = (int) ($this->params['limit'] ?? 10);
+        $offset = (int) ($this->params['offset'] ?? 0);
         $order = explode(',', filter_var($this->params['orderby'] ?? 'created DESC', FILTER_SANITIZE_STRING));
         $orderBy = [];
         foreach ($order as $field) {
@@ -104,26 +100,26 @@ class ApiAdminController extends AbstractController
 
         $jobs = [];
         foreach (App::getDbHelper()->getRepository(Job::class)->findBy([], $orderBy, $limit, $offset) as $job) {
-            /**@var Job $job */
+            /** @var Job $job */
             $jobs[] = ['id' => $job->getId(), 'html' => $this->fetchPartial('listItemJob', ['job' => $job, 'user' => $this->user, 'admin' => true])];
         }
+
         return $this->render(['items' => $jobs, 'user' => $this->user]);
     }
 
-
     /**
      * @return ResponseInterface
+     *
      * @throws Exception
      *
      * @Route("/update", methods={"POST"}, name="user.update")
      */
     public function updateProfileAction(): ResponseInterface
     {
-
         $this->optionalParameterCheck([
             'username' => FILTER_SANITIZE_STRING,
             'role' => FILTER_SANITIZE_STRING,
-            'email' => FILTER_SANITIZE_EMAIL
+            'email' => FILTER_SANITIZE_EMAIL,
         ]);
 
         if (array_key_exists('username', $this->params)) {
@@ -140,11 +136,11 @@ class ApiAdminController extends AbstractController
         return $this->render();
     }
 
-
     /**
      * @return ResponseInterface
      *
      * @Route("/stat", methods={"GET"}, name="exec.stats")
+     *
      * @throws Exception
      */
     public function statsAction(): ResponseInterface
@@ -163,10 +159,9 @@ class ApiAdminController extends AbstractController
             'waiting_executions' => App::getDbHelper()->getRepository(Execution::class)->count(['status' => ExecutionStatus::READY]),
             'done_executions' => App::getDbHelper()->getRepository(Execution::class)->count(['status' => ExecutionStatus::DONE]),
             'execution_avg_wait' => $avgWaitQuery->getQuery()->getArrayResult()[0]['avg'],
-            'stale_executions' => $staleQuery->getQuery()->getArrayResult()[0]['count']
+            'stale_executions' => $staleQuery->getQuery()->getArrayResult()[0]['count'],
         ]);
     }
-
 
     /**
      * @return ResponseInterface
@@ -181,15 +176,16 @@ class ApiAdminController extends AbstractController
             }
             OrchestratorFactory::getOrchestratorForInstance($this->instance, $this->job)->dispatchJob();
             $this->persistJob();
+
             return $this->render(['status' => 'success']);
         } catch (Exception $e) {
             return $this->render(['status' => 'error', 'reason' => $e->getMessage()], StatusCode::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
-
     /**
      * @return ResponseInterface
+     *
      * @throws Exception
      *
      * @Route("/getjobtoken", methods={"GET"}, name="admin.getjobtoken")
@@ -200,12 +196,13 @@ class ApiAdminController extends AbstractController
             return $this->render(['success' => false, 'message' => 'job not found'], StatusCode::HTTP_NOT_FOUND);
         }
         $token = JwtUtility::generateToken(null, null, null, $this->job)['token'];
+
         return $this->render(['message' => "<strong>Your Token is $token</strong> Safe it in your Password manager, it cannot be displayed ever again."]);
     }
 
-
     /**
      * @return ResponseInterface
+     *
      * @throws Exception
      *
      * @Route("/getinstancetoken", methods={"GET"}, name="admin.getinstancetoken")
@@ -216,12 +213,13 @@ class ApiAdminController extends AbstractController
             return $this->render(['success' => false, 'message' => 'instance not found'], StatusCode::HTTP_NOT_FOUND);
         }
         $token = JwtUtility::generateToken(null, null, $this->instance)['token'];
+
         return $this->render(['message' => "<strong>Your Token is $token</strong> Safe it in your Password manager, it cannot be displayed ever again."]);
     }
 
-
     /**
      * @return ResponseInterface
+     *
      * @throws Exception
      *
      * @Route("/getRunnersHiera", methods={"GET"}, name="admin.getJobHiera")
@@ -238,8 +236,8 @@ class ApiAdminController extends AbstractController
                 'job_number' => ++$counter,
                 'job_specs' => [
                     'job_id' => $job->getId(),
-                    'service_name' => $job->getType() . '-' . $job->getId()
-                ]
+                    'service_name' => $job->getType() . '-' . $job->getId(),
+                ],
             ];
         }
 
@@ -247,7 +245,6 @@ class ApiAdminController extends AbstractController
             ->setReturnType('yaml')
             ->render(['name' => 'profile::docker::backlog', 'jobs' => $jobList]);
     }
-
 
     /**
      * @return ResponseInterface
@@ -334,11 +331,11 @@ class ApiAdminController extends AbstractController
         $result = [];
 
         $dcfj = JobFactory::getDispatchConfigOfJob($this->job)->getDispatchConfig();
-        {
-            if ($dcfj->getRegistry()) {
-                $result['profile::docker::private_registry'] = $dcfj->getRegistry();
-            }
+
+        if ($dcfj->getRegistry()) {
+            $result['profile::docker::private_registry'] = $dcfj->getRegistry();
         }
+
         $result['profile::docker::clusters'] = $services;
 
         return $this

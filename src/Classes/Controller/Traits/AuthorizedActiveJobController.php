@@ -6,8 +6,7 @@ use Helio\Panel\Job\JobStatus;
 use Helio\Panel\Job\JobType;
 
 /**
- * Trait ValidatedJobController
- * @package Helio\Panel\Controller\Traits
+ * Trait ValidatedJobController.
  */
 trait AuthorizedActiveJobController
 {

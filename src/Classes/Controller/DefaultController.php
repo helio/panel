@@ -2,10 +2,10 @@
 
 namespace Helio\Panel\Controller;
 
-use \Exception;
-use \InvalidArgumentException;
-use \RuntimeException;
-use \DateTime;
+use Exception;
+use InvalidArgumentException;
+use RuntimeException;
+use DateTime;
 use GuzzleHttp\Exception\GuzzleException;
 use Helio\Panel\App;
 use Helio\Panel\Controller\Traits\ModelParametrizedController;
@@ -21,11 +21,9 @@ use Helio\Panel\Utility\ServerUtility;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Http\StatusCode;
 
-
 /**
- * Everything that requires no authentication goes here
+ * Everything that requires no authentication goes here.
  *
- * @package    Helio\Panel\Controller
  * @author    Christoph Buchli <team@opencomputing.cloud>
  *
  * @RoutePrefix('/')
@@ -35,14 +33,12 @@ class DefaultController extends AbstractController
     use ModelParametrizedController;
     use TypeBrowserController;
 
-
     protected function getMode(): ?string
     {
         return 'default';
     }
 
     /**
-     *
      * @return ResponseInterface
      * @Route("", methods={"GET"})
      */
@@ -52,11 +48,13 @@ class DefaultController extends AbstractController
         if ($token) {
             return $this->response->withRedirect('/panel', StatusCode::HTTP_FOUND);
         }
+
         return $this->render(['title' => 'Welcome!']);
     }
 
     /**
      * @return ResponseInterface
+     *
      * @throws Exception
      *
      * @Route("confirm", methods={"GET"})
@@ -69,7 +67,6 @@ class DefaultController extends AbstractController
     }
 
     /**
-     *
      * @return ResponseInterface
      * @Route("loggedout", methods={"GET"})
      */
@@ -78,10 +75,9 @@ class DefaultController extends AbstractController
         return CookieUtility::deleteCookie($this->render(['title' => 'Good Bye', 'loggedOut' => true]), 'token');
     }
 
-
     /**
-     *
      * @return ResponseInterface
+     *
      * @throws GuzzleException
      * @throws Exception
      *
@@ -108,21 +104,20 @@ class DefaultController extends AbstractController
         }
 
         // catch Demo User
-        if ($user->getEmail() === 'email@example.com') {
+        if ('email@example.com' === $user->getEmail()) {
             return $this->response->withRedirect(ServerUtility::getBaseUrl() . 'confirm?signature=' . JwtUtility::generateToken('+5 minutes', $user)['token']);
         }
 
         return $this->render(
             [
                 'user' => $user,
-                'title' => 'Login link sent'
+                'title' => 'Login link sent',
             ]
         );
     }
 
-
     /**
-     * (wenn's den User noch nicht gibt)
+     * (wenn's den User noch nicht gibt).
      *
      * @return ResponseInterface
      *
@@ -150,8 +145,10 @@ class DefaultController extends AbstractController
             $user = App::getDbHelper()->getRepository(User::class)->findOneBy(['email' => $this->params['email']]);
             if ($user) {
                 if (!$user->isActive()) {
-                    throw new InvalidArgumentException('User already exists. Please confirm by clicking the link you received via email.',
-                        1531251350);
+                    throw new InvalidArgumentException(
+                        'User already exists. Please confirm by clicking the link you received via email.',
+                        1531251350
+                    );
                 }
 
                 $server->setOwner($user);
@@ -176,6 +173,7 @@ class DefaultController extends AbstractController
             }
         } catch (Exception $e) {
             LogHelper::err('Error during Server init: ' . $e->getMessage());
+
             return $this->json(['success' => false, 'reason' => $e->getMessage()], StatusCode::HTTP_NOT_ACCEPTABLE);
         }
 
@@ -183,19 +181,18 @@ class DefaultController extends AbstractController
             'success' => true,
             'user_id' => $user->getId(),
             'server_id' => $server->getId(),
-            'reason' => 'User and Server created. Please confirm by klicking the link you just received by email.'
+            'reason' => 'User and Server created. Please confirm by klicking the link you just received by email.',
         ], StatusCode::HTTP_OK);
     }
 
-
     /**
-     * (wenn's den User schon gibt)
+     * (wenn's den User schon gibt).
      *
      * @return ResponseInterface
+     *
      * @throws Exception
      *
      * @Route("server/gettoken", methods={"POST"}, name="server.gettoken")
-     *
      */
     public function getTokenAction(): ResponseInterface
     {
@@ -231,9 +228,12 @@ class DefaultController extends AbstractController
                 throw new InvalidArgumentException('Instance not found or not permitted', StatusCode::HTTP_NOT_FOUND);
             }
         } catch (Exception $e) {
-            LogHelper::warn('Error at gettoken: ' . $e->getMessage() . "\nsupplied body has been:" . print_r((string)$this->request->getBody(), true));
-            return $this->json(['success' => false, 'reason' => $e->getMessage()],
-                $e->getCode() < 1000 ? $e->getCode() : StatusCode::HTTP_NOT_ACCEPTABLE);
+            LogHelper::warn('Error at gettoken: ' . $e->getMessage() . "\nsupplied body has been:" . print_r((string) $this->request->getBody(), true));
+
+            return $this->json(
+                ['success' => false, 'reason' => $e->getMessage()],
+                $e->getCode() < 1000 ? $e->getCode() : StatusCode::HTTP_NOT_ACCEPTABLE
+            );
         }
 
         return $this->json(['success' => true, 'token' => JwtUtility::generateToken(null, $user, $server)['token']], StatusCode::HTTP_OK);
@@ -252,6 +252,7 @@ class DefaultController extends AbstractController
 
     /**
      * @param string jobtype
+     *
      * @return ResponseInterface
      *
      * @Route("apidoc/job/{jobtype:[\w]+}", methods={"GET"}, name="api.doc")

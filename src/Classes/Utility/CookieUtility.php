@@ -2,18 +2,17 @@
 
 namespace Helio\Panel\Utility;
 
-use \Exception;
-use \DateTime;
-use \DateTimeImmutable;
+use Exception;
+use DateTime;
+use DateTimeImmutable;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 class CookieUtility extends AbstractUtility
 {
-
     /**
      * @param ResponseInterface $response
-     * @param string $key
+     * @param string            $key
      *
      * @return ResponseInterface
      */
@@ -27,14 +26,14 @@ class CookieUtility extends AbstractUtility
         return $response;
     }
 
-
     /**
      * @param ResponseInterface $response
-     * @param string $cookieName
-     * @param string $cookieValue
-     * @param int $expires
+     * @param string            $cookieName
+     * @param string            $cookieValue
+     * @param int               $expires
      *
      * @return ResponseInterface
+     *
      * @throws Exception
      */
     public static function addCookie(ResponseInterface $response, string $cookieName, string $cookieValue, int $expires = 0): ResponseInterface
@@ -55,10 +54,10 @@ class CookieUtility extends AbstractUtility
         return $response;
     }
 
-
     /**
      * @param ServerRequestInterface $request
-     * @param string $cookieName
+     * @param string                 $cookieName
+     *
      * @return string
      */
     public static function getCookieValue(ServerRequestInterface $request, $cookieName): string
@@ -70,5 +69,4 @@ class CookieUtility extends AbstractUtility
 
         return $cookies[$cookieName] ?? '';
     }
-
 }

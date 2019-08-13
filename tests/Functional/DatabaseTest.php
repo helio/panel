@@ -13,7 +13,6 @@ class DatabaseTest extends TestCase
 {
     public function testInfrastructureUserAggregateRoot(): void
     {
-
         // import fixture
         $user = (new User())->setName('testuser')->setCreated(new \DateTime('now', ServerUtility::getTimezoneObject()));
         $server = (new Instance())->setName('testserver')->setCreated(new \DateTime('now', ServerUtility::getTimezoneObject()));
@@ -23,11 +22,11 @@ class DatabaseTest extends TestCase
 
         $entitiesLoadedFromDatabase = $this->userRepository->findAll();
 
-        /** @var User $foundUser */
+        /* @var User $foundUser */
         $this->assertCount(1, $entitiesLoadedFromDatabase);
         $foundUser = $entitiesLoadedFromDatabase[0];
 
-        /** @var Instance $foundServer */
+        /* @var Instance $foundServer */
         $this->assertCount(1, $foundUser->getInstances());
         $foundServer = $foundUser->getInstances()[0];
 
@@ -38,10 +37,8 @@ class DatabaseTest extends TestCase
         $this->assertEquals($server->getName(), $foundServer->getName());
     }
 
-
     public function testInfrastructureServerAggregateRoot(): void
     {
-
         // import fixture
         $user = (new User())->setName('testuser')->setCreated(new \DateTime('now', ServerUtility::getTimezoneObject()));
         $server = (new Instance())->setName('testserver')->setCreated(new \DateTime('now', ServerUtility::getTimezoneObject()));
@@ -51,11 +48,11 @@ class DatabaseTest extends TestCase
 
         $entitiesLoadedFromDatabase = $this->instanceRepository->findAll();
 
-        /** @var Instance $foundServer */
+        /* @var Instance $foundServer */
         $this->assertCount(1, $entitiesLoadedFromDatabase);
         $foundServer = $entitiesLoadedFromDatabase[0];
 
-        /** @var User $foundUser */
+        /* @var User $foundUser */
         $this->assertInstanceOf(User::class, $foundServer->getOwner());
         $foundUser = $foundServer->getOwner();
 
@@ -94,10 +91,8 @@ class DatabaseTest extends TestCase
         $this->assertCount(1, $foundServer);
     }
 
-
     public function testTimestampIssues(): void
     {
-
         // import fixture
         $user = (new User())->setName('testuser')->setCreated(new \DateTime('now', ServerUtility::getTimezoneObject()));
         $server = (new Instance())->setName('testserver')->setCreated(new \DateTime('now', ServerUtility::getTimezoneObject()));
@@ -113,10 +108,8 @@ class DatabaseTest extends TestCase
         $this->assertEquals($server->getCreated()->getTimezone()->getName(), $foundServer->getCreated()->getTimezone()->getName());
     }
 
-
     public function testTimestampAutoSetter(): void
     {
-
         // import fixture
         $user = (new User())->setName('testuser')->setCreated();
         $server = (new Instance())->setName('testserver')->setCreated();

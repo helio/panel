@@ -2,10 +2,10 @@
 
 namespace Helio\Panel\Execution;
 
-use \RuntimeException;
+use RuntimeException;
 
 /**
- * Class ExecutionStatus
+ * Class ExecutionStatus.
  *
  * @OA\Schema(
  *     schema="executionstatus",
@@ -14,8 +14,6 @@ use \RuntimeException;
  *     description="The Status of the Execution",
  *     enum = {"Creating", "Ready", "Running", "Done", "Interrupted", "Deleted by user"}
  * )
- *
- * @package Helio\Panel\Execution
  */
 final class ExecutionStatus
 {
@@ -32,9 +30,8 @@ final class ExecutionStatus
         'status-2' => 'Running',
         'status-3' => 'Done',
         'status-9' => 'Interrupted',
-        'status-99' => 'Deleted by user'
+        'status-99' => 'Deleted by user',
     ];
-
 
     public function __construct()
     {
@@ -43,29 +40,29 @@ final class ExecutionStatus
 
     public static function isValidStatus(int $status): bool
     {
-        return $status === self::UNKNOWN
-            || $status === self::READY
-            || $status === self::RUNNING
-            || $status === self::DONE
-            || $status === self::TERMINATED
-            || $status === self::STOPPED;
+        return self::UNKNOWN === $status
+            || self::READY === $status
+            || self::RUNNING === $status
+            || self::DONE === $status
+            || self::TERMINATED === $status
+            || self::STOPPED === $status;
     }
 
     public static function isValidPendingStatus(int $status): bool
     {
-        return $status === self::READY
-            || $status === self::STOPPED;
+        return self::READY === $status
+            || self::STOPPED === $status;
     }
 
     public static function isRunning(int $status): bool
     {
-        return $status === self::RUNNING;
+        return self::RUNNING === $status;
     }
 
     public static function isNotRequiredToRunAnymore(int $status): bool
     {
-        return $status === self::TERMINATED
-            || $status === self::DONE;
+        return self::TERMINATED === $status
+            || self::DONE === $status;
     }
 
     public static function getLabel(int $status): string
@@ -79,7 +76,7 @@ final class ExecutionStatus
             self::READY,
             self::RUNNING,
             self::DONE,
-            self::STOPPED
+            self::STOPPED,
         ];
     }
 }

@@ -2,11 +2,10 @@
 
 namespace Helio\Panel\Controller;
 
-use \Exception;
+use Exception;
 use Helio\Panel\Helper\DbHelper;
 use Psr\Http\Message\RequestInterface;
-use \RuntimeException;
-
+use RuntimeException;
 use Helio\Panel\App;
 use Helio\Panel\Controller\Traits\HelperElasticController;
 use Helio\Panel\Controller\Traits\ModelInstanceController;
@@ -26,13 +25,11 @@ use Slim\Http\Response;
 use Slim\Http\StatusCode;
 
 /**
- * Class ApiController
+ * Class ApiController.
  *
- * @package    Helio\Panel\Controller
  * @author    Christoph Buchli <team@opencomputing.cloud>
  *
  * @RoutePrefix('/api/job/{jobid:[\d]+}/execute')
- *
  */
 class ApiJobExecuteController extends AbstractController
 {
@@ -53,7 +50,6 @@ class ApiJobExecuteController extends AbstractController
     use HelperElasticController;
     use TypeApiController;
 
-
     /**
      * @return string
      */
@@ -61,7 +57,6 @@ class ApiJobExecuteController extends AbstractController
     {
         return 'executionid';
     }
-
 
     /**
      * @OA\Post(
@@ -157,7 +152,7 @@ class ApiJobExecuteController extends AbstractController
 
             // run and stop have the same interface, thus we can reuse the code
             $command = 'run';
-            if ($this->request->getMethod() === 'DELETE') {
+            if ('DELETE' === $this->request->getMethod()) {
                 $command = 'stop';
                 $estimates = [];
             } else {
@@ -168,7 +163,7 @@ class ApiJobExecuteController extends AbstractController
 
             // run the job and check if the replicas have changed
             $previousReplicaCount = JobFactory::getDispatchConfigOfJob($this->job, $this->execution)->getDispatchConfig()->getReplicaCountForJob($this->job);
-            JobFactory::getInstanceOfJob($this->job, $this->execution)->$command(array_merge($this->params, json_decode((string)$this->request->getBody(), true) ?? []));
+            JobFactory::getInstanceOfJob($this->job, $this->execution)->$command(array_merge($this->params, json_decode((string) $this->request->getBody(), true) ?? []));
             $newReplicaCount = JobFactory::getDispatchConfigOfJob($this->job, $this->execution)->getDispatchConfig()->getReplicaCountForJob($this->job);
 
             // if replica count has changed OR we have an enforcement (e.g. one replica per execution fixed), dispatch the job
@@ -180,13 +175,12 @@ class ApiJobExecuteController extends AbstractController
 
             return $this->render(array_merge([
                 'status' => 'success',
-                'id' => $this->execution->getId()
+                'id' => $this->execution->getId(),
             ], $estimates));
         } catch (Exception $e) {
             return $this->render(['success' => false, 'message' => $e->getMessage()], StatusCode::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
-
 
     /**
      * @OA\Get(
@@ -234,6 +228,7 @@ class ApiJobExecuteController extends AbstractController
         if (!$this->execution) {
             return $this->render(['error' => 'no execution specified'], StatusCode::HTTP_NOT_FOUND);
         }
+
         return $this->render([
             'success' => true,
             'id' => $this->execution->getId(),
@@ -242,10 +237,9 @@ class ApiJobExecuteController extends AbstractController
             'latestHeartbeat' => $this->execution->getLatestHeartbeat(),
             'message' => 'The Status of your execution is ' . ExecutionStatus::getLabel($this->execution->getStatus()),
             'status' => $this->execution->getStatus(),
-            'estimates' => JobFactory::getDispatchConfigOfJob($this->job, $this->execution)->getExecutionEstimates()
+            'estimates' => JobFactory::getDispatchConfigOfJob($this->job, $this->execution)->getExecutionEstimates(),
         ]);
     }
-
 
     /**
      * @OA\Post(
@@ -291,8 +285,8 @@ class ApiJobExecuteController extends AbstractController
      *     @OA\Response(response="404", ref="#/components/responses/404")
      * )
      *
-     * @param array $params
-     * @param Response $response
+     * @param array            $params
+     * @param Response         $response
      * @param RequestInterface $request
      *
      * @return ResponseInterface
@@ -301,22 +295,24 @@ class ApiJobExecuteController extends AbstractController
      */
     public function submitresult(array $params, Response $response, RequestInterface $request): ResponseInterface
     {
-        if ($this->execution->getName() !== '__NEW') {
-            /** @var Execution $execution */
+        if ('__NEW' !== $this->execution->getName()) {
+            /* @var Execution $execution */
             $this->execution->setStatus(ExecutionStatus::DONE);
-            $this->execution->setStats((string)$request->getBody());
+            $this->execution->setStats((string) $request->getBody());
             DbHelper::getInstance()->persist($this->execution);
             DbHelper::getInstance()->flush();
+
             return $response;
         }
+
         return $response->withStatus(StatusCode::HTTP_NOT_FOUND);
     }
-
 
     /**
      * @param string $method any method of the respective job object
      *
      * @Route("/work/{method:[\w]+}", methods={"GET", "POST", "PUT"}, name="job.exec.work")
+     *
      * @return ResponseInterface
      */
     public function workAction(string $method): ResponseInterface
@@ -325,12 +321,12 @@ class ApiJobExecuteController extends AbstractController
             if (!JobStatus::isValidActiveStatus($this->job->getStatus())) {
                 throw new RuntimeException('job not ready');
             }
+
             return JobFactory::getInstanceOfJob($this->job, $this->execution)->$method($this->params, $this->response, $this->request);
         } catch (Exception $e) {
             return $this->render(['status' => 'error'], StatusCode::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
-
 
     /**
      * @return ResponseInterface
@@ -346,12 +342,12 @@ class ApiJobExecuteController extends AbstractController
             $this->execution->setLatestAction()->setStatus(ExecutionStatus::RUNNING);
             App::getDbHelper()->persist($this->execution);
             App::getDbHelper()->flush();
+
             return $this->render();
         } catch (Exception $e) {
             return $this->render(['status' => 'error'], StatusCode::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
-
 
     /**
      * @OA\Get(
@@ -399,6 +395,7 @@ class ApiJobExecuteController extends AbstractController
      * )
      *
      * @return ResponseInterface
+     *
      * @throws Exception
      *
      * @Route("/logs", methods={"GET"}, name="job.logs")
@@ -414,9 +411,9 @@ class ApiJobExecuteController extends AbstractController
         if (!$job->getOwner()) {
             return $this->render([]);
         }
+
         return $this->render($this->setWindow()->getLogEntries($job->getOwner()->getId(), $job->getId(), $this->execution->getId()));
     }
-
 
     /**
      * @return ResponseInterface
@@ -425,21 +422,22 @@ class ApiJobExecuteController extends AbstractController
      */
     public function uploadAction(): ResponseInterface
     {
-
         /** @var UploadedFileInterface $uploadedFile */
         $uploadedFile = $this->request->getUploadedFiles()['file'];
-        if ($uploadedFile && $uploadedFile->getError() === UPLOAD_ERR_OK) {
+        if ($uploadedFile && UPLOAD_ERR_OK === $uploadedFile->getError()) {
             $uploadedFile->moveTo(ExecUtility::getJobDataFolder($this->job) . $uploadedFile->getClientFilename());
+
             return $this->render();
         }
+
         return $this->render(['error' => $uploadedFile->getError()], StatusCode::HTTP_FAILED_DEPENDENCY);
     }
-
 
     /**
      * @param string $file
      *
      * @Route("/download/{file:[\w\.]+}", methods={"GET"}, name="job.download")
+     *
      * @return ResponseInterface
      */
     public function downloadAction(string $file): ResponseInterface
