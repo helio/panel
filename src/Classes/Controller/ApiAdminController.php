@@ -100,7 +100,7 @@ class ApiAdminController extends AbstractController
 
         $jobs = [];
         foreach (App::getDbHelper()->getRepository(Job::class)->findBy([], $orderBy, $limit, $offset) as $job) {
-            /** @var Job $job */
+            /* @var Job $job */
             $jobs[] = ['id' => $job->getId(), 'html' => $this->fetchPartial('listItemJob', ['job' => $job, 'user' => $this->user, 'admin' => true])];
         }
 

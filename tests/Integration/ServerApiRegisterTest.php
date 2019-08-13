@@ -21,7 +21,7 @@ class ServerApiRegisterTest extends TestCase
     protected $user;
 
     /**
-     * @var Instance $instance
+     * @var Instance
      */
     protected $instance;
 

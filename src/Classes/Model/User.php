@@ -49,7 +49,7 @@ class User extends AbstractModel
     protected $admin = false;
 
     /**
-     * @var DateTime $loggedOut
+     * @var DateTime
      *
      * @Column(type="datetimetz", nullable=true)
      */

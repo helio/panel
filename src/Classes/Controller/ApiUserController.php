@@ -77,7 +77,7 @@ class ApiUserController extends AbstractController
 
         $jobs = [];
         foreach (App::getDbHelper()->getRepository(Job::class)->findBy($searchCriteria, $orderBy, $limit, $offset) as $job) {
-            /** @var Job $job */
+            /* @var Job $job */
             $jobs[] = [
                 'id' => $job->getId(),
                 'html' => $this->fetchPartial('listItemJob', [

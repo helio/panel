@@ -9,7 +9,8 @@ return PhpCsFixer\Config::create()
         '@Symfony' => true,
         'array_syntax' => ['syntax' => 'short'],
         'concat_space' => ['spacing' => 'one'],
-        'phpdoc_var_without_name' => false,
+        // disabled because of OpenAPI docblocks with JSON inside.
+        'phpdoc_separation' => false,
     ])
     ->setFinder($finder);
 
