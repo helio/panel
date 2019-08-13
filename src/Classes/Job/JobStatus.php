@@ -29,7 +29,7 @@ final class JobStatus
         'status-1' => 'Ready',
         'status-2' => 'Running',
         'status-3' => 'Done',
-        'status-9' => 'Interrupted',
+        'status-9' => 'Deleted',
     ];
 
     public function __construct()

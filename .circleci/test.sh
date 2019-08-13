@@ -71,12 +71,13 @@ while true; do
         echo "Job never was deleted properly"
         exit 1;
     fi
-    if curl -fsL -o /dev/null -X GET -H "Authorization: Bearer ${JOB_TOKEN}" "${BASE_URL}/api/job?id=${JOB_ID}"; then
-        echo -ne "."
-    else
+    STATUS=$(curl -fsL -o /dev/null -X GET -H "Authorization: Bearer ${JOB_TOKEN}" "${BASE_URL}/api/job?id=${JOB_ID}")
+    STATUS_CODE=$(echo ${STATUS} | jq -r .status)
+    if [[ 0 -eq ${STATUS_CODE} ]]; then
         echo " Job was deleted!"
         break
     fi
+    echo -ne "."
     TIMEOUT=$(expr ${TIMEOUT} - 15)
     sleep 15;
 done
