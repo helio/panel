@@ -45,7 +45,7 @@ while true; do
         echo "Job never executed completely"
         exit 1;
     fi
-    if curl -fsL -o /dev/null -d '{"id":"'${JOB_ID}'"}' -H "Authorization: Bearer ${JOB_TOKEN}" "${BASE_URL}/api/job/isdone"; then
+    if curl -fsL -o /dev/null -X GET -H "Authorization: Bearer ${JOB_TOKEN}" "${BASE_URL}/api/job/isdone?id=${JOB_ID}"; then
         echo " Job was executed!"
         break
     fi
@@ -71,7 +71,7 @@ while true; do
         echo "Job never was deleted properly"
         exit 1;
     fi
-    if !curl -fsL -o /dev/null -H "Authorization: Bearer ${JOB_TOKEN}" "${BASE_URL}/api/job?id=${JOB_ID}"; then
+    if !curl -fsL -o /dev/null -X GET -H "Authorization: Bearer ${JOB_TOKEN}" "${BASE_URL}/api/job?id=${JOB_ID}"; then
         echo " Job was deleted!"
         break
     fi
