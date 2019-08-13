@@ -49,6 +49,7 @@ jobs:
           ssh ${DEPLOY_USERNAME}@nbf01.opsserver.ch "source .zshrc;
           source .profile;
           composer install --no-dev -o &&
+          crontab cnf/crontab
           vendor/bin/doctrine orm:schema-tool:update --force &&
           vendor/bin/doctrine orm:generate-proxies -q /home/${DEPLOY_USERNAME}/tmp"
           sleep 5

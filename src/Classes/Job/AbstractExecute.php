@@ -61,6 +61,7 @@ abstract class AbstractExecute implements JobInterface, DispatchableInterface
             ->setBudget((int) ($jobObject['budget'] ?? 0))
             ->setIsCharity($jobObject['isCharity'] ?? '' === 'on')
             ->setConfig($jobObject['config'] ?? [])
+            ->setAutoExecSchedule($jobObject['autoExecSchedule'] ?? '')
             ->setStatus(JobStatus::INIT);
         App::getDbHelper()->persist($this->job);
 

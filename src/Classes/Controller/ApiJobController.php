@@ -133,6 +133,7 @@ class ApiJobController extends AbstractController
             'budget' => FILTER_SANITIZE_STRING,
             'free' => FILTER_SANITIZE_STRING,
             'config' => FILTER_SANITIZE_STRING,
+            'autoExecSchedule' => FILTER_SANITIZE_STRING
         ]);
 
         JobFactory::getInstanceOfJob($this->job)->create($this->params);
@@ -203,7 +204,7 @@ class ApiJobController extends AbstractController
             $removed = true;
         } else {
             /* @var Execution $execution */
-            JobFactory::getInstanceOfJob($this->job)->stop($this->params, $this->request, $this->response);
+            JobFactory::getInstanceOfJob($this->job)->stop($this->params);
 
             // first: set all services to absent. then, remove the managers
             OrchestratorFactory::getOrchestratorForInstance($this->instance, $this->job)->dispatchJob();

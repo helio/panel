@@ -38,7 +38,7 @@ done
 curl -fsSL -o /dev/null -X POST -d '{"env":[{"LIMIT":"7"}]}' -H "Authorization: Bearer ${JOB_TOKEN}" "${BASE_URL}/api/job/${JOB_ID}/execute" || exit 2
 
 TIMEOUT=400
-echo -ne "Waiting for job to be completed. This may take a while"
+echo -ne "Waiting for job ${JOB_ID} to be completed. This may take a while"
 while true; do
     if [[ 0 -ge ${TIMEOUT} ]]; then
         echo " timeout"
@@ -64,7 +64,7 @@ done
 curl -fsSL -o /dev/null -X DELETE -H "Authorization: Bearer ${JOB_TOKEN}" "${BASE_URL}/api/job?id=${JOB_ID}"
 
 TIMEOUT=300
-echo -ne "Waiting for job to be completed. This may take a while"
+echo -ne "Waiting for job ${JOB_ID} to be completed. This may take a while"
 while true; do
     if [[ 0 -ge ${TIMEOUT} ]]; then
         echo " timeout"
