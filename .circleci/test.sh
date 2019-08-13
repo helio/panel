@@ -16,9 +16,10 @@ JOB_ID=$(echo ${JOB} | jq -r .id)
 JOB_TOKEN=$(echo ${JOB} | jq -r .token)
 
 TIMEOUT=500
-echo -ne "Waiting for job ready state. This may take a while"
+echo -ne "Waiting for job ${JOB_ID} ready state. This may take a while"
 while true; do
     if [[ 0 -ge ${TIMEOUT} ]]; then
+        echo " timeout"
         echo "Job never got created"
         exit 1;
     fi
@@ -34,12 +35,13 @@ done
 
 ##########
 # Execute job and wait for it to be done
-curl -fsSL -o /dev/null -X POST -d '{"env":[{"limit":"42"}]}' -H "Authorization: Bearer ${JOB_TOKEN}" "${BASE_URL}/api/job/${JOB_ID}/execute" || exit 2
+curl -fsSL -o /dev/null -X POST -d '{"env":[{"LIMIT":"7"}]}' -H "Authorization: Bearer ${JOB_TOKEN}" "${BASE_URL}/api/job/${JOB_ID}/execute" || exit 2
 
 TIMEOUT=400
 echo -ne "Waiting for job to be completed. This may take a while"
 while true; do
     if [[ 0 -ge ${TIMEOUT} ]]; then
+        echo " timeout"
         echo "Job never executed completely"
         exit 1;
     fi
@@ -65,6 +67,7 @@ TIMEOUT=300
 echo -ne "Waiting for job to be completed. This may take a while"
 while true; do
     if [[ 0 -ge ${TIMEOUT} ]]; then
+        echo " timeout"
         echo "Job never was deleted properly"
         exit 1;
     fi

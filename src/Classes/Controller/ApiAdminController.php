@@ -280,10 +280,10 @@ class ApiAdminController extends AbstractController
                     // it might be due to json array and object mixup, that value is still an array
                     if (is_array($value)) {
                         foreach ($value as $subkey => $subvalue) {
-                            $env[$subkey] = $subvalue;
+                            $env[strtoupper($subkey)] = $subvalue;
                         }
                     } else {
-                        $env[$key] = $value;
+                        $env[strtoupper($key)] = $value;
                     }
                 }
             }
@@ -294,10 +294,10 @@ class ApiAdminController extends AbstractController
                     // it might be due to json array and object mixup, that value is still an array
                     if (is_array($value)) {
                         foreach ($value as $subkey => $subvalue) {
-                            $executionEnv[$subkey] = $subvalue;
+                            $executionEnv[strtoupper($subkey)] = $subvalue;
                         }
                     } else {
-                        $executionEnv[$key] = $value;
+                        $executionEnv[strtoupper($key)] = $value;
                     }
                 }
                 /** @noinspection SlowArrayOperationsInLoopInspection */
