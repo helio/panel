@@ -7,6 +7,7 @@ use Helio\Panel\Job\AbstractExecute;
 use Helio\Panel\Job\DispatchConfig;
 use Helio\Panel\Utility\ExecUtility;
 use Helio\Panel\Utility\JwtUtility;
+use Helio\Panel\Utility\ServerUtility;
 
 class Execute extends AbstractExecute
 {
@@ -24,7 +25,7 @@ class Execute extends AbstractExecute
                 'HELIO_JOBID' => $this->job->getId(),
                 'HELIO_TOKEN' => JwtUtility::generateToken(null, null, null, $this->job)['token'],
                 'LIMIT' => $this->execution ? $this->execution->getConfig('limit', 100) : 100,
-                'SUBMIT_URL' => ExecUtility::getExecUrl($this->job, 'submitresult'),
+                'SUBMIT_URL' => ServerUtility::getBaseUrl() . ExecUtility::getExecUrl($this->job, 'submitresult', $this->execution),
             ]);
     }
 
