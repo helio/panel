@@ -61,7 +61,7 @@ done
 
 ##########
 # Delete Job and wait for its disappearance
-curl -fsL -X DELETE -H "Authorization: Bearer ${JOB_TOKEN}" "${BASE_URL}/api/job?id=${JOB_ID}"
+curl -fsSL -o /dev/null -X DELETE -H "Authorization: Bearer ${JOB_TOKEN}" "${BASE_URL}/api/job?id=${JOB_ID}"
 
 TIMEOUT=300
 echo -ne "Waiting for job to be completed. This may take a while"
