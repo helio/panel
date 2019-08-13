@@ -2,4 +2,4 @@
 #
 # Starts defined services
 #
-docker-compose up
+docker-compose up -d
