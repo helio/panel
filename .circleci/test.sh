@@ -23,6 +23,7 @@ while true; do
         exit 1;
     fi
     if curl -fsL -o /dev/null -H "Authorization: Bearer ${JOB_TOKEN}" "${BASE_URL}/api/job/isready?id=${JOB_ID}"; then
+        echo " Job is ready!"
         break
     fi
     echo -ne "."
@@ -43,6 +44,7 @@ while true; do
         exit 1;
     fi
     if curl -fsL -o /dev/null -d '{"id":"'${JOB_ID}'"}' -H "Authorization: Bearer ${JOB_TOKEN}" "${BASE_URL}/api/job/isdone"; then
+        echo " Job was executed!"
         break
     fi
     echo -ne "."
@@ -67,6 +69,7 @@ while true; do
         exit 1;
     fi
     if !curl -fsL -o /dev/null -H "Authorization: Bearer ${JOB_TOKEN}" "${BASE_URL}/api/job?id=${JOB_ID}"; then
+        echo " Job was deleted!"
         break
     fi
     echo -ne "."

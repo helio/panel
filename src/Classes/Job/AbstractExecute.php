@@ -33,7 +33,7 @@ abstract class AbstractExecute implements JobInterface, DispatchableInterface
     /**
      * Execute constructor.
      *
-     * @param Job            $job
+     * @param Job $job
      * @param Execution|null $execution
      *
      * @throws Exception
@@ -54,11 +54,11 @@ abstract class AbstractExecute implements JobInterface, DispatchableInterface
     public function create(array $jobObject): bool
     {
         $this->job->setName($jobObject['name'] ?? 'Automatically named during add')
-            ->setCpus((int) ($jobObject['cpus'] ?? 0))
-            ->setGpus((int) ($jobObject['gpus'] ?? 0))
+            ->setCpus((int)($jobObject['cpus'] ?? 0))
+            ->setGpus((int)($jobObject['gpus'] ?? 0))
             ->setLocation($jobObject['location'] ?? '')
             ->setBillingReference($jobObject['billingReference'] ?? '')
-            ->setBudget((int) ($jobObject['budget'] ?? 0))
+            ->setBudget((int)($jobObject['budget'] ?? 0))
             ->setIsCharity($jobObject['isCharity'] ?? '' === 'on')
             ->setConfig($jobObject['config'] ?? [])
             ->setStatus(JobStatus::INIT);
@@ -84,7 +84,7 @@ abstract class AbstractExecute implements JobInterface, DispatchableInterface
      */
     public function run(array $config): bool
     {
-        $this->execution->setJob($this->job)->setCreated()->setStatus(ExecutionStatus::READY);
+        $this->execution->setJob($this->job)->setConfig($config)->setCreated()->setStatus(ExecutionStatus::READY);
         App::getDbHelper()->persist($this->execution);
         App::getDbHelper()->flush();
 
@@ -114,7 +114,7 @@ abstract class AbstractExecute implements JobInterface, DispatchableInterface
     }
 
     /**
-     * @param array             $params
+     * @param array $params
      * @param ResponseInterface $response
      *
      * @return ResponseInterface
@@ -133,7 +133,7 @@ abstract class AbstractExecute implements JobInterface, DispatchableInterface
                 App::getDbHelper()->flush();
                 /* @var Response $response */
                 return $response->withJson(array_merge(json_decode($lockedExecution->getConfig(), true), [
-                    'id' => (string) $lockedExecution->getId(),
+                    'id' => (string)$lockedExecution->getId(),
                 ]), null, JSON_UNESCAPED_SLASHES);
             } catch (OptimisticLockException $e) {
                 // trying next execution if the current one was modified in the meantime
@@ -186,11 +186,11 @@ abstract class AbstractExecute implements JobInterface, DispatchableInterface
             ->join(Job::class, 'j')
             ->where(
                 $pendingQuery->expr()->andX()
-                ->add($pendingQuery->expr()->gt($pendingQuery->expr()->length('j.autoExecSchedule'), 0))
-                ->add($pendingQuery->expr()->eq('e.status', ExecutionStatus::READY))
-                ->add($pendingQuery->expr()->eq('j.status', JobStatus::READY))
-                ->add($pendingQuery->expr()->lte('e.priority', $this->execution->getPriority()))
-                ->add($pendingQuery->expr()->lte('j.priority', $this->job->getPriority()))
+                    ->add($pendingQuery->expr()->gt($pendingQuery->expr()->length('j.autoExecSchedule'), 0))
+                    ->add($pendingQuery->expr()->eq('e.status', ExecutionStatus::READY))
+                    ->add($pendingQuery->expr()->eq('j.status', JobStatus::READY))
+                    ->add($pendingQuery->expr()->lte('e.priority', $this->execution->getPriority()))
+                    ->add($pendingQuery->expr()->lte('j.priority', $this->job->getPriority()))
             );
         $now = new DateTime('now', ServerUtility::getTimezoneObject());
 
