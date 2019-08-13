@@ -163,7 +163,7 @@ class ApiJobExecuteController extends AbstractController
 
             // run the job and check if the replicas have changed
             $previousReplicaCount = JobFactory::getDispatchConfigOfJob($this->job, $this->execution)->getDispatchConfig()->getReplicaCountForJob($this->job);
-            JobFactory::getInstanceOfJob($this->job, $this->execution)->$command(json_decode((string) $this->request->getBody(), true) ?: []);
+            JobFactory::getInstanceOfJob($this->job, $this->execution)->$command(json_decode((string)$this->request->getBody(), true) ?: []);
             $newReplicaCount = JobFactory::getDispatchConfigOfJob($this->job, $this->execution)->getDispatchConfig()->getReplicaCountForJob($this->job);
 
             // if replica count has changed OR we have an enforcement (e.g. one replica per execution fixed), dispatch the job
@@ -281,41 +281,39 @@ class ApiJobExecuteController extends AbstractController
      *         )
      *     ),
      *
-     *     @OA\Response(response="200", description="Create a Job"),
+     *     @OA\Response(response="200", description="Job marked as done", ref="#/components/responses/200"),
      *     @OA\Response(response="404", ref="#/components/responses/404")
      * )
-     *
-     * @param array            $params
-     * @param Response         $response
-     * @param RequestInterface $request
      *
      * @return ResponseInterface
      *
      * @Route("/submitresult", methods={"POST", "PUT", "GET"}, name="job.exec.submitresult")
      */
-    public function submitresult(array $params, Response $response, RequestInterface $request): ResponseInterface
+    public function submitresultAction(): ResponseInterface
     {
         if ('__NEW' !== $this->execution->getName()) {
             /* @var Execution $execution */
             $this->execution->setStatus(ExecutionStatus::DONE);
-            $this->execution->setStats((string) $request->getBody());
+            $this->execution->setStats((string) $this->request->getBody());
             DbHelper::getInstance()->persist($this->execution);
             DbHelper::getInstance()->flush();
 
-            return $response;
+            return $this->render(['success' => true, 'message' => 'Job marked as done']);
         }
 
-        return $response->withStatus(StatusCode::HTTP_NOT_FOUND);
+        return $this->response->withStatus(StatusCode::HTTP_NOT_FOUND);
     }
 
+
     /**
+     * @param int $job
      * @param string $method any method of the respective job object
      *
      * @Route("/work/{method:[\w]+}", methods={"GET", "POST", "PUT"}, name="job.exec.work")
      *
      * @return ResponseInterface
      */
-    public function workAction(string $method): ResponseInterface
+    public function workAction(int $job, string $method): ResponseInterface
     {
         try {
             if (!JobStatus::isValidActiveStatus($this->job->getStatus())) {
@@ -434,13 +432,14 @@ class ApiJobExecuteController extends AbstractController
     }
 
     /**
+     * @param int $job
      * @param string $file
      *
      * @Route("/download/{file:[\w\.]+}", methods={"GET"}, name="job.download")
      *
      * @return ResponseInterface
      */
-    public function downloadAction(string $file): ResponseInterface
+    public function downloadAction(int $job, string $file): ResponseInterface
     {
         return ExecUtility::downloadFile(ExecUtility::getJobDataFolder($this->job) . $file, $this->response);
     }
