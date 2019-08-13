@@ -291,7 +291,7 @@ class ApiJobExecuteController extends AbstractController
      *
      * @return ResponseInterface
      *
-     * @Route("/submitresult", methods={"POST"}, name="job.exec.submitresult")
+     * @Route("/submitresult", methods={"POST", "PUT", "GET"}, name="job.exec.submitresult")
      */
     public function submitresult(array $params, Response $response, RequestInterface $request): ResponseInterface
     {
