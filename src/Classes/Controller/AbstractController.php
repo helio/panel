@@ -3,7 +3,6 @@
 namespace Helio\Panel\Controller;
 
 use Ergy\Slim\Annotations\RouteInfo;
-use RuntimeException;
 use Ergy\Slim\Annotations\Controller;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Request;
@@ -219,7 +218,7 @@ abstract class AbstractController extends Controller
      * magic method to prepare your controllers (e.g. use it with traits)
      * Warning: carefully name your methods.
      *
-     * @param RouteInfo $route
+     * @param  RouteInfo              $route
      * @return ResponseInterface|void
      */
     public function beforeExecuteRoute(RouteInfo $route)
@@ -245,7 +244,7 @@ abstract class AbstractController extends Controller
 
     /**
      * @param string $partial
-     * @param array $param
+     * @param array  $param
      *
      * @return string
      */
@@ -256,7 +255,7 @@ abstract class AbstractController extends Controller
 
     /**
      * @param array $params
-     * @param int $status
+     * @param int   $status
      *
      * @return ResponseInterface
      */
@@ -295,7 +294,7 @@ abstract class AbstractController extends Controller
     protected function json($data, int $status = StatusCode::HTTP_OK): ResponseInterface
     {
         if ($status > 299) {
-            LogHelper::warn('API error on ' . $this->request->getUri() . ' with code ' . $status . "\nResponse Data:\n" . print_r($data, true) . "\nRequest:\n" . print_r((string)$this->request->getBody(), true));
+            LogHelper::warn('API error on ' . $this->request->getUri() . ' with code ' . $status . "\nResponse Data:\n" . print_r($data, true) . "\nRequest:\n" . print_r((string) $this->request->getBody(), true));
         }
         if (array_key_exists('message', $data)) {
             $data['notification'] = $this->fetchPartial('message', [
@@ -310,14 +309,14 @@ abstract class AbstractController extends Controller
 
     /**
      * @param string $data
-     * @param int $status
+     * @param int    $status
      *
      * @return ResponseInterface
      */
     protected function rawJson(string $data, int $status = StatusCode::HTTP_OK): ResponseInterface
     {
         if ($status > 299) {
-            LogHelper::warn('API error on ' . $this->request->getUri() . ' with code ' . $status . "\nResponse Data:\n" . print_r($data, true) . "\nRequest:\n" . print_r((string)$this->request->getBody(), true));
+            LogHelper::warn('API error on ' . $this->request->getUri() . ' with code ' . $status . "\nResponse Data:\n" . print_r($data, true) . "\nRequest:\n" . print_r((string) $this->request->getBody(), true));
         }
 
         $this->response->getBody()->write($data);
@@ -336,7 +335,7 @@ abstract class AbstractController extends Controller
     protected function yaml($data, int $status = StatusCode::HTTP_OK): ResponseInterface
     {
         if ($status > 299) {
-            LogHelper::warn('API error on ' . $this->request->getUri() . ' with code ' . $status . "\nResponse Data:\n" . print_r($data, true) . "\nRequest:\n" . print_r((string)$this->request->getBody(), true));
+            LogHelper::warn('API error on ' . $this->request->getUri() . ' with code ' . $status . "\nResponse Data:\n" . print_r($data, true) . "\nRequest:\n" . print_r((string) $this->request->getBody(), true));
         }
 
         if (is_array($data)) {
@@ -348,14 +347,14 @@ abstract class AbstractController extends Controller
 
     /**
      * @param string $data
-     * @param int $status
+     * @param int    $status
      *
      * @return ResponseInterface
      */
     protected function rawYaml(string $data, int $status = StatusCode::HTTP_OK): ResponseInterface
     {
         if ($status > 299) {
-            LogHelper::warn('API error on ' . $this->request->getUri() . ' with code ' . $status . "\nResponse Data:\n" . print_r($data, true) . "\nRequest:\n" . print_r((string)$this->request->getBody(), true));
+            LogHelper::warn('API error on ' . $this->request->getUri() . ' with code ' . $status . "\nResponse Data:\n" . print_r($data, true) . "\nRequest:\n" . print_r((string) $this->request->getBody(), true));
         }
 
         $this->response->getBody()->write($data);

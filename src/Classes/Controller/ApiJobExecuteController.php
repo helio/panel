@@ -4,7 +4,6 @@ namespace Helio\Panel\Controller;
 
 use Exception;
 use Helio\Panel\Helper\DbHelper;
-use Psr\Http\Message\RequestInterface;
 use RuntimeException;
 use Helio\Panel\App;
 use Helio\Panel\Controller\Traits\HelperElasticController;
@@ -163,7 +162,7 @@ class ApiJobExecuteController extends AbstractController
 
             // run the job and check if the replicas have changed
             $previousReplicaCount = JobFactory::getDispatchConfigOfJob($this->job, $this->execution)->getDispatchConfig()->getReplicaCountForJob($this->job);
-            JobFactory::getInstanceOfJob($this->job, $this->execution)->$command(json_decode((string)$this->request->getBody(), true) ?: []);
+            JobFactory::getInstanceOfJob($this->job, $this->execution)->$command(json_decode((string) $this->request->getBody(), true) ?: []);
             $newReplicaCount = JobFactory::getDispatchConfigOfJob($this->job, $this->execution)->getDispatchConfig()->getReplicaCountForJob($this->job);
 
             // if replica count has changed OR we have an enforcement (e.g. one replica per execution fixed), dispatch the job
@@ -304,9 +303,8 @@ class ApiJobExecuteController extends AbstractController
         return $this->response->withStatus(StatusCode::HTTP_NOT_FOUND);
     }
 
-
     /**
-     * @param int $job
+     * @param int    $job
      * @param string $method any method of the respective job object
      *
      * @Route("/work/{method:[\w]+}", methods={"GET", "POST", "PUT"}, name="job.exec.work")
@@ -432,7 +430,7 @@ class ApiJobExecuteController extends AbstractController
     }
 
     /**
-     * @param int $job
+     * @param int    $job
      * @param string $file
      *
      * @Route("/download/{file:[\w\.]+}", methods={"GET"}, name="job.download")
