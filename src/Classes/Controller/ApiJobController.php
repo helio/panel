@@ -134,7 +134,7 @@ class ApiJobController extends AbstractController
             'budget' => FILTER_SANITIZE_STRING,
             'free' => FILTER_SANITIZE_STRING,
             'config' => FILTER_SANITIZE_STRING,
-            'autoExecSchedule' => FILTER_SANITIZE_STRING
+            'autoExecSchedule' => FILTER_SANITIZE_STRING,
         ]);
 
         JobFactory::getInstanceOfJob($this->job)->create($this->params);
@@ -250,6 +250,9 @@ class ApiJobController extends AbstractController
      */
     public function jobStatusAction(): ResponseInterface
     {
+        /** @var Execution $newestRun */
+        $newestRun = App::getDbHelper()->getRepository(Execution::class)->findOneBy(['job' => $this->job, 'status' => ExecutionStatus::DONE], ['created' => 'DESC']);
+
         return $this->render([
             'success' => true,
             'name' => $this->job->getName(),
@@ -266,6 +269,7 @@ class ApiJobController extends AbstractController
             'status' => $this->job->getStatus(),
             'message' => 'Job Status is ' . JobStatus::getLabel($this->job->getStatus()),
             'executions' => [
+                'newestRunTime' => $newestRun ? $newestRun->getCreated()->getTimestamp() : 0,
                 'total' => App::getDbHelper()->getRepository(Execution::class)->count(['job' => $this->job]),
                 'pending' => App::getDbHelper()->getRepository(Execution::class)->count(['job' => $this->job, 'status' => ExecutionStatus::READY]),
                 'running' => App::getDbHelper()->getRepository(Execution::class)->count(['job' => $this->job, 'status' => ExecutionStatus::RUNNING]),

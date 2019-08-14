@@ -39,7 +39,7 @@ class ExecuteScheduledJob extends Command
     }
 
     /**
-     * @param InputInterface $input
+     * @param InputInterface  $input
      * @param OutputInterface $output
      *
      * @return int|null
@@ -82,6 +82,7 @@ class ExecuteScheduledJob extends Command
                     }
                 } catch (Exception $e) {
                     App::getLogger()->err('Error ' . $e->getCode() . ' during init: ' . $e->getMessage());
+
                     return $e->getCode();
                 }
             }

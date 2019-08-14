@@ -9,6 +9,6 @@ SHELL=/usr/local/vzscripts/sfoutputtosyslog
 
 #       10      2       *       *       *       <command>
 
-        *       *       *       *       *       source ~/.profile; source ~/.zshrc> /dev/null 2>&1; env; helio app:execute-scheduled-jobs
+        *       *       *       *       *       source ~/.profile; source ~/.zshrc> /dev/null 2>&1; helio app:execute-scheduled-jobs
 
         39      2       *       *       *       crontab ~/cnf/crontab

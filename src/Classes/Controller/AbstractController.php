@@ -3,12 +3,12 @@
 namespace Helio\Panel\Controller;
 
 use Ergy\Slim\Annotations\RouteInfo;
-use RuntimeException;
 use Ergy\Slim\Annotations\Controller;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Request;
 use Slim\Http\Response;
 use Slim\Http\StatusCode;
+use Slim\Http\Stream;
 use Slim\Interfaces\CallableResolverInterface;
 use Slim\Interfaces\Http\EnvironmentInterface;
 use Slim\Interfaces\InvocationStrategyInterface;
@@ -218,15 +218,16 @@ abstract class AbstractController extends Controller
      * magic method to prepare your controllers (e.g. use it with traits)
      * Warning: carefully name your methods.
      *
-     * @param RouteInfo $route
+     * @param  RouteInfo              $route
+     * @return ResponseInterface|void
      */
-    public function beforeExecuteRoute(RouteInfo $route): void
+    public function beforeExecuteRoute(RouteInfo $route)
     {
         // first: setup everything
         foreach (get_class_methods($this) as $method) {
             if (0 === strpos($method, 'setup')) {
                 if (!$this->$method($route)) {
-                    throw new RuntimeException('Controller Setup failed: ' . $method, 1551432903);
+                    return new Response(StatusCode::HTTP_NOT_FOUND, null, new Stream(fopen('data://text/plain,Controller Setup failed at ' . $method . '()', 'r')));
                 }
             }
         }
@@ -235,7 +236,7 @@ abstract class AbstractController extends Controller
         foreach (get_class_methods($this) as $method) {
             if (0 === strpos($method, 'validate')) {
                 if (!$this->$method()) {
-                    throw new RuntimeException('Controller Validation failed: ' . $method, 1551432915);
+                    return new Response(StatusCode::HTTP_UNAUTHORIZED, null, new Stream(fopen('data://text/plain,Controller Validation failed at ' . $method . '()', 'r')));
                 }
             }
         }
@@ -321,8 +322,8 @@ abstract class AbstractController extends Controller
         $this->response->getBody()->write($data);
 
         return $this->response
-                ->withHeader('Content-Type', 'application/json')
-                ->withStatus($status);
+            ->withHeader('Content-Type', 'application/json')
+            ->withStatus($status);
     }
 
     /**
