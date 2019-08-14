@@ -56,6 +56,7 @@ class ApiJobController extends AbstractController
     /**
      * @OA\Post(
      *     path="/job",
+     *     description="Create or update a job",
      *     security={
      *         {"authByApitoken": {"any"}},
      *         {"authByJobtoken": {"any"}}
@@ -74,23 +75,8 @@ class ApiJobController extends AbstractController
      *             ),
      *             @OA\Property(
      *                 property="id",
-     *                 type="string",
+     *                 type="number",
      *                 description="The Id of the newly created job"
-     *             ),
-     *             @OA\Property(
-     *                 property="success",
-     *                 type="boolean",
-     *                 description="Indicates the success of the request"
-     *             ),
-     *             @OA\Property(
-     *                 property="html",
-     *                 type="string",
-     *                 description="A HTML-rendered snipped of the job to embed in UIs"
-     *             ),
-     *             @OA\Property(
-     *                 property="message",
-     *                 type="string",
-     *                 description="The Human readable success message"
      *             )
      *         )
      *     )
@@ -121,21 +107,27 @@ class ApiJobController extends AbstractController
             }
             // if the existing job hasn't got a proper type, we cannot continue either, but that's a hard fail...
             if (!JobType::isValidType($this->job->getType())) {
-                return $this->render(['success' => false, 'meassge' => $e->getMessage()], StatusCode::HTTP_NOT_ACCEPTABLE);
+                return $this->render(['success' => false, 'message' => $e->getMessage()], StatusCode::HTTP_NOT_ACCEPTABLE);
             }
         }
 
-        $this->optionalParameterCheck([
-            'name' => FILTER_SANITIZE_STRING,
-            'cpus' => FILTER_SANITIZE_STRING,
-            'gpus' => FILTER_SANITIZE_STRING,
-            'location' => FILTER_SANITIZE_STRING,
-            'billingReference' => FILTER_SANITIZE_STRING,
-            'budget' => FILTER_SANITIZE_STRING,
-            'free' => FILTER_SANITIZE_STRING,
-            'config' => FILTER_SANITIZE_STRING,
-            'autoExecSchedule' => FILTER_SANITIZE_STRING
-        ]);
+        try {
+            $this->optionalParameterCheck([
+                'name' => FILTER_SANITIZE_STRING,
+                'location' => FILTER_SANITIZE_STRING,
+                'billingReference' => FILTER_SANITIZE_STRING,
+                'free' => FILTER_SANITIZE_STRING,
+                'config' => FILTER_SANITIZE_STRING,
+                'autoExecSchedule' => FILTER_SANITIZE_STRING
+            ]);
+        } catch(\RuntimeException $e) {
+            LogHelper::getInstance()->warn('Error POST /api/job: "'. $e->getMessage(). '"', [
+                'stacktrace' => $e->getTrace(),
+                'url' => $this->request->getUri(),
+                'user' => $this->user->getId(),
+            ]);
+            return $this->render(['success' => false, 'message' => $e->getMessage()], StatusCode::HTTP_NOT_ACCEPTABLE);
+        }
 
         JobFactory::getInstanceOfJob($this->job)->create($this->params);
 
@@ -233,13 +225,14 @@ class ApiJobController extends AbstractController
      *     @OA\Parameter(
      *         name="id",
      *         in="query",
-     *         description="Id of the job which status you wandt to see",
+     *         description="Id of the job which status you want to see",
      *         required=true,
      *         @Oa\Items(
      *             type="integer"
      *         )
      *     ),
-     *     @OA\Response(response="200", ref="#/components/responses/200")
+     *     @OA\JsonContent(ref="#/components/schemas/User"),
+     *     @OA\Response(response="200", description="Response")
      * )
      *
      * @return ResponseInterface

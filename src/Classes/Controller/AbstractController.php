@@ -2,6 +2,7 @@
 
 namespace Helio\Panel\Controller;
 
+use OpenApi\Annotations as OA;
 use Ergy\Slim\Annotations\RouteInfo;
 use RuntimeException;
 use Ergy\Slim\Annotations\Controller;
@@ -53,21 +54,23 @@ use function OpenApi\scan;
  *     @OA\JsonContent(ref="#/components/schemas/Job")
  * )
  *
+ *
  * @OA\Schema(
  *     schema="default-content",
  *     @OA\Property(
  *         property="success",
- *         description="Indication whether the call was handeled successfully.",
- *         @OA\Items(
- *             type="boolean"
- *         )
+ *         description="Indication whether the call was handled successfully.",
+ *         type="boolean"
  *     ),
  *     @OA\Property(
  *         property="message",
  *         description="Human readable message describing what happened.",
- *         @OA\Items(
- *             type="string"
- *         )
+ *         type="string"
+ *     ),
+ *     @OA\Property(
+ *         property="notification",
+ *         description="HTML notification content for UIs to display",
+ *         type="string"
  *     )
  * )
  * @OA\Schema(
