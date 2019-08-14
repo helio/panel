@@ -9,6 +9,7 @@ use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Request;
 use Slim\Http\Response;
 use Slim\Http\StatusCode;
+use Slim\Http\Stream;
 use Slim\Interfaces\CallableResolverInterface;
 use Slim\Interfaces\Http\EnvironmentInterface;
 use Slim\Interfaces\InvocationStrategyInterface;
@@ -219,14 +220,15 @@ abstract class AbstractController extends Controller
      * Warning: carefully name your methods.
      *
      * @param RouteInfo $route
+     * @return ResponseInterface|void
      */
-    public function beforeExecuteRoute(RouteInfo $route): void
+    public function beforeExecuteRoute(RouteInfo $route)
     {
         // first: setup everything
         foreach (get_class_methods($this) as $method) {
             if (0 === strpos($method, 'setup')) {
                 if (!$this->$method($route)) {
-                    throw new RuntimeException('Controller Setup failed: ' . $method, 1551432903);
+                    return new Response(StatusCode::HTTP_NOT_FOUND, null, new Stream(fopen('data://text/plain,Controller Setup failed at ' . $method . '()', 'r')));
                 }
             }
         }
@@ -235,7 +237,7 @@ abstract class AbstractController extends Controller
         foreach (get_class_methods($this) as $method) {
             if (0 === strpos($method, 'validate')) {
                 if (!$this->$method()) {
-                    throw new RuntimeException('Controller Validation failed: ' . $method, 1551432915);
+                    return new Response(StatusCode::HTTP_UNAUTHORIZED, null, new Stream(fopen('data://text/plain,Controller Validation failed at ' . $method . '()', 'r')));
                 }
             }
         }
@@ -243,7 +245,7 @@ abstract class AbstractController extends Controller
 
     /**
      * @param string $partial
-     * @param array  $param
+     * @param array $param
      *
      * @return string
      */
@@ -254,7 +256,7 @@ abstract class AbstractController extends Controller
 
     /**
      * @param array $params
-     * @param int   $status
+     * @param int $status
      *
      * @return ResponseInterface
      */
@@ -293,7 +295,7 @@ abstract class AbstractController extends Controller
     protected function json($data, int $status = StatusCode::HTTP_OK): ResponseInterface
     {
         if ($status > 299) {
-            LogHelper::warn('API error on ' . $this->request->getUri() . ' with code ' . $status . "\nResponse Data:\n" . print_r($data, true) . "\nRequest:\n" . print_r((string) $this->request->getBody(), true));
+            LogHelper::warn('API error on ' . $this->request->getUri() . ' with code ' . $status . "\nResponse Data:\n" . print_r($data, true) . "\nRequest:\n" . print_r((string)$this->request->getBody(), true));
         }
         if (array_key_exists('message', $data)) {
             $data['notification'] = $this->fetchPartial('message', [
@@ -308,21 +310,21 @@ abstract class AbstractController extends Controller
 
     /**
      * @param string $data
-     * @param int    $status
+     * @param int $status
      *
      * @return ResponseInterface
      */
     protected function rawJson(string $data, int $status = StatusCode::HTTP_OK): ResponseInterface
     {
         if ($status > 299) {
-            LogHelper::warn('API error on ' . $this->request->getUri() . ' with code ' . $status . "\nResponse Data:\n" . print_r($data, true) . "\nRequest:\n" . print_r((string) $this->request->getBody(), true));
+            LogHelper::warn('API error on ' . $this->request->getUri() . ' with code ' . $status . "\nResponse Data:\n" . print_r($data, true) . "\nRequest:\n" . print_r((string)$this->request->getBody(), true));
         }
 
         $this->response->getBody()->write($data);
 
         return $this->response
-                ->withHeader('Content-Type', 'application/json')
-                ->withStatus($status);
+            ->withHeader('Content-Type', 'application/json')
+            ->withStatus($status);
     }
 
     /**
@@ -334,7 +336,7 @@ abstract class AbstractController extends Controller
     protected function yaml($data, int $status = StatusCode::HTTP_OK): ResponseInterface
     {
         if ($status > 299) {
-            LogHelper::warn('API error on ' . $this->request->getUri() . ' with code ' . $status . "\nResponse Data:\n" . print_r($data, true) . "\nRequest:\n" . print_r((string) $this->request->getBody(), true));
+            LogHelper::warn('API error on ' . $this->request->getUri() . ' with code ' . $status . "\nResponse Data:\n" . print_r($data, true) . "\nRequest:\n" . print_r((string)$this->request->getBody(), true));
         }
 
         if (is_array($data)) {
@@ -346,14 +348,14 @@ abstract class AbstractController extends Controller
 
     /**
      * @param string $data
-     * @param int    $status
+     * @param int $status
      *
      * @return ResponseInterface
      */
     protected function rawYaml(string $data, int $status = StatusCode::HTTP_OK): ResponseInterface
     {
         if ($status > 299) {
-            LogHelper::warn('API error on ' . $this->request->getUri() . ' with code ' . $status . "\nResponse Data:\n" . print_r($data, true) . "\nRequest:\n" . print_r((string) $this->request->getBody(), true));
+            LogHelper::warn('API error on ' . $this->request->getUri() . ' with code ' . $status . "\nResponse Data:\n" . print_r($data, true) . "\nRequest:\n" . print_r((string)$this->request->getBody(), true));
         }
 
         $this->response->getBody()->write($data);

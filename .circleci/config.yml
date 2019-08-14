@@ -89,7 +89,17 @@ jobs:
     - checkout
     - run:
         name: Functional Test on PROD
-        command: ./.circleci/test.sh
+        command: ./.circleci/testfunctional.sh
+
+  autoexec:
+    docker:
+    - image: everpeace/curl-jq
+
+    steps:
+    - checkout
+    - run:
+        name: Autoexec Test on PROD
+        command: ./.circleci/testautoexec.sh
 
 
 workflows:
@@ -119,3 +129,14 @@ workflows:
                 - master
     jobs:
     - functional
+
+  autoexectest:
+    triggers:
+      - schedule:
+          cron: "20 6 * * *"
+          filters:
+            branches:
+              only:
+                - master
+    jobs:
+    - autoexec

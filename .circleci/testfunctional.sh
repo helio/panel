@@ -2,14 +2,16 @@
 
 ##########
 # Guards and Variables
-if [[ -z "${TESTUSER_TOKEN}" ]]; then exit 1; fi
 BASE_URL=${1:-https://panel.idling.host}
+TOKEN=${2:-${TESTUSER_TOKEN}}
 ID=test-$(date "+%s")
 DATA='{"type":"busybox","jobname":"_test","billingReference":"'${ID}'"}'
 
+if [[ -z "${TOKEN}" ]]; then exit 1; fi
+
 ##########
 # Create the Job and wait for its successful provisioning
-JOB=$(curl -fsSL -m 360 -X POST -d ${DATA} -H "Authorization: Bearer ${TESTUSER_TOKEN}" "${BASE_URL}/api/job")
+JOB=$(curl -fsSL -m 360 -X POST -d ${DATA} -H "Authorization: Bearer ${TOKEN}" "${BASE_URL}/api/job")
 if [[ -z "${JOB}" ]]; then exit 2; fi
 
 JOB_ID=$(echo ${JOB} | jq -r .id)
