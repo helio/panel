@@ -3,6 +3,7 @@
 namespace Helio\Panel\Controller;
 
 use Exception;
+use OpenApi\Annotations as OA;
 use Helio\Panel\App;
 use Helio\Panel\Controller\Traits\HelperElasticController;
 use Helio\Panel\Controller\Traits\ModelInstanceController;
@@ -59,7 +60,7 @@ class ApiJobController extends AbstractController
      *         {"authByApitoken": {"any"}},
      *         {"authByJobtoken": {"any"}}
      *     },
-     *     @OA\RequestBody(ref="#/components/requestBodies/job"),
+     *     @OA\RequestBody(ref="#/components/requestBodies/job", @OA\MediaType(mediaType="application/json")),
      *     @OA\Response(response="406", ref="#/components/responses/406"),
      *     @OA\Response(
      *         response="200",
@@ -125,7 +126,7 @@ class ApiJobController extends AbstractController
         }
 
         $this->optionalParameterCheck([
-            'jobname' => FILTER_SANITIZE_STRING,
+            'name' => FILTER_SANITIZE_STRING,
             'cpus' => FILTER_SANITIZE_STRING,
             'gpus' => FILTER_SANITIZE_STRING,
             'location' => FILTER_SANITIZE_STRING,

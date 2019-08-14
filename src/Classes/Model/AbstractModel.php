@@ -29,6 +29,11 @@ abstract class AbstractModel
     protected $id;
 
     /**
+     * @OA\Property(
+     *     format="string",
+     *     description="Name of the item"
+     * )
+     *
      * @var string
      *
      * @Column

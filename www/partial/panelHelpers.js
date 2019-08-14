@@ -212,10 +212,8 @@ const wizard = function (id) {
         self.currentTab = 1.1;
 
         $.ajax({
-            accepts: {
-                mycustomtype: 'application/json'
-            },
             url: '/api/' + $(self.modal).data('endpoint'),
+            dataType: 'json',
             method: 'post',
             success: function (data) {
                 $(self.modal).data($(self.modal).data('idName'), data['id']);
@@ -623,17 +621,38 @@ const wizard = function (id) {
         let idName = $(self.modal).data('idName');
         let endpoint = $(self.modal).data('endpoint');
 
-        let data = idName + '=' + $(self.modal).data(idName);
-        $(self.modal + ' form').each(function () {
-            data += $(this).serialize() ? '&' + $(this).serialize() : '';
-        });
+        const id = $(self.modal).data(idName);
+        const formData = [
+            ...$(`${self.modal} form`).serializeArray(),
+            {name: idName, value: id}
+        ]
+
+        const data = formData.reduce((acc, curr) => {
+            // split empty values
+            if (!curr.value) {
+                return acc;
+            }
+
+            // hacky way to have config in a separate object
+            if (curr.name.startsWith('config.')) {
+               const name = curr.name.split('.')[1];
+               if (!acc['config']) {
+                   acc['config'] = {};
+               }
+               acc['config'][name] = curr.value;
+               return acc;
+            }
+
+            acc[curr.name] = curr.value;
+            return acc;
+        }, {});
+
         $.ajax({
-            accepts: {
-                mycustomtype: 'application/json'
-            },
             url: '/api/' + endpoint,
             method: 'post',
-            data: data,
+            dataType: 'json',
+            contentType: 'application/json',
+            data: JSON.stringify(data),
             success: function (data) {
                 $(self.modal + " .wizard-pf-dismiss").unbind('click').click(function () {
                     $(self.modal).modal('hide');
