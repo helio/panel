@@ -205,6 +205,6 @@ abstract class AbstractExecute implements JobInterface, DispatchableInterface
      */
     protected function calculateCosts(): int
     {
-        return floor($this->execution->getEstimatedRuntime() * (4 * $this->job->getGpus()) * 10 / 60);
+        return floor($this->execution->getEstimatedRuntime() * (4 * $this->job->getGpus() ?: 1) * $this->job->getCpus() ?: 1 * 10 / 60);
     }
 }
