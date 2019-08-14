@@ -38,6 +38,11 @@ class App extends \Slim\App
      */
     protected static $className;
 
+    /**
+     * @var string
+     */
+    protected static $appName;
+
     /** @var DbHelper */
     protected static $dbHelperClassName = DbHelper::class;
 
@@ -66,13 +71,14 @@ class App extends \Slim\App
         array $middleWaresToApply = [MiddlewareForHttpUtility::class]
     ): App {
         if (!self::$instance) {
-            // this is a kind of DI-hack to make the app testable
-            self::$className = static::class;
-
             // abort if $instance should exist, but doesn't (e.g. if we call getApp from inside the application)
             if (null === $appName) {
                 throw new RuntimeException('App instance cannot be created from here.', 1548056859);
             }
+
+            // this is a kind of DI-hack to make the app testable
+            self::$className = static::class;
+            self::$appName = $appName;
 
             self::$instance = new self::$className(['settings' => [
                 'displayErrorDetails' => !ServerUtility::isProd(),
@@ -141,7 +147,7 @@ class App extends \Slim\App
     {
         $class = self::$className;
 
-        return ($class::$logHelperClassName)::getInstance();
+        return ($class::$logHelperClassName)::getInstance(self::$appName);
     }
 
     /**

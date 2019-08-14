@@ -39,7 +39,7 @@ class ExecuteScheduledJob extends Command
     }
 
     /**
-     * @param InputInterface  $input
+     * @param InputInterface $input
      * @param OutputInterface $output
      *
      * @return int|null
@@ -61,6 +61,7 @@ class ExecuteScheduledJob extends Command
         /** @var Job $job */
         foreach ($jobs as $job) {
             if (Expression::isDue($job->getAutoExecSchedule()) && JobStatus::isValidActiveStatus($job->getStatus())) {
+                App::getLogger()->debug('Running Scheduled Job ' . $job->getId());
                 try {
                     /** @var Execution $execution */
                     $execution = (new Execution())->setStatus(ExecutionStatus::READY)->setJob($job)->setCreated()->setName('created by CLI');
@@ -73,14 +74,14 @@ class ExecuteScheduledJob extends Command
 
                     // if replica count has changed OR we have an enforcement (e.g. one replica per execution fixed), dispatch the job
                     if ($previousReplicaCount !== $newReplicaCount || JobFactory::getDispatchConfigOfJob($job, $execution)->getDispatchConfig()->getFixedReplicaCount()) {
+                        App::getLogger()->debug('Dispatching execution ' . $execution->getId() . 'for cron-run job ' . $job->getId());
                         OrchestratorFactory::getOrchestratorForInstance($pseudoInstance, $job)->dispatchJob();
                         App::getDbHelper()->persist($job);
                         App::getDbHelper()->persist($execution);
                         App::getDbHelper()->flush();
                     }
                 } catch (Exception $e) {
-                    $output->writeln('Error ' . $e->getCode() . ' during init: ' . $e->getMessage());
-
+                    App::getLogger()->err('Error ' . $e->getCode() . ' during init: ' . $e->getMessage());
                     return $e->getCode();
                 }
             }
