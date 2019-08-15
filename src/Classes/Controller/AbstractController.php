@@ -2,6 +2,8 @@
 
 namespace Helio\Panel\Controller;
 
+use Helio\Panel\Response\AbstractResponse;
+use Helio\Panel\Response\DefaultResponse;
 use OpenApi\Annotations as OA;
 use Ergy\Slim\Annotations\RouteInfo;
 use RuntimeException;
@@ -54,25 +56,6 @@ use function OpenApi\scan;
  *     @OA\JsonContent(ref="#/components/schemas/Job")
  * )
  *
- *
- * @OA\Schema(
- *     schema="default-content",
- *     @OA\Property(
- *         property="success",
- *         description="Indication whether the call was handled successfully.",
- *         type="boolean"
- *     ),
- *     @OA\Property(
- *         property="message",
- *         description="Human readable message describing what happened.",
- *         type="string"
- *     ),
- *     @OA\Property(
- *         property="notification",
- *         description="HTML notification content for UIs to display",
- *         type="string"
- *     )
- * )
  * @OA\Schema(
  *     schema="logentry",
  *     description="Log entry",
@@ -133,7 +116,7 @@ use function OpenApi\scan;
  *     response="200",
  *     description="Default success response.",
  *     @OA\JsonContent(
- *         @OA\Schema(ref="#/components/schemas/default-content")
+ *         @OA\Schema(ref="#/components/schemas/DefaultResponse")
  *     )
  * )
  * @OA\Response(
@@ -144,21 +127,21 @@ use function OpenApi\scan;
  *     response="405",
  *     description="You're not authorized to access this resource",
  *     @OA\JsonContent(
- *         @OA\Schema(ref="#/components/schemas/default-content")
+ *         @OA\Schema(ref="#/components/schemas/DefaultResponse")
  *     )
  * )
  * @OA\Response(
  *     response="406",
  *     description="You specified invalid parameters",
  *     @OA\JsonContent(
- *         @OA\Schema(ref="#/components/schemas/default-content")
+ *         @OA\Schema(ref="#/components/schemas/DefaultResponse")
  *     )
  * )
  * @OA\Response(
  *     response="500",
  *     description="Server Error or Exception.",
  *     @OA\JsonContent(
- *         @OA\Schema(ref="#/components/schemas/default-content")
+ *         @OA\Schema(ref="#/components/schemas/DefaultResponse")
  *     )
  * )
  * @OA\Response(
@@ -256,16 +239,16 @@ abstract class AbstractController extends Controller
     }
 
     /**
-     * @param array $params
+     * @param AbstractResponse $response
      * @param int   $status
      *
      * @return ResponseInterface
      */
-    protected function render(array $params = [], int $status = StatusCode::HTTP_OK): ResponseInterface
+    protected function render(AbstractResponse $response, int $status = StatusCode::HTTP_OK): ResponseInterface
     {
         $method = $this->getReturnType();
 
-        return $this->$method($params, $status);
+        return $this->$method($response, $status);
     }
 
     /**
@@ -274,8 +257,9 @@ abstract class AbstractController extends Controller
      *
      * @return ResponseInterface
      */
-    protected function html($data, int $status = StatusCode::HTTP_OK): ResponseInterface
+    protected function html(AbstractResponse $data, int $status = StatusCode::HTTP_OK): ResponseInterface
     {
+        $data = $data->toArray();
         if (array_key_exists('impersonate', $this->request->getCookieParams())) {
             $data['impersonating'] = true;
         }
@@ -293,17 +277,17 @@ abstract class AbstractController extends Controller
      *
      * @return ResponseInterface
      */
-    protected function json($data, int $status = StatusCode::HTTP_OK): ResponseInterface
+    protected function json(AbstractResponse $data, int $status = StatusCode::HTTP_OK): ResponseInterface
     {
         if ($status > 299) {
-            LogHelper::warn('API error on ' . $this->request->getUri() . ' with code ' . $status . "\nResponse Data:\n" . print_r($data, true) . "\nRequest:\n" . print_r((string) $this->request->getBody(), true));
+            LogHelper::warn('API error on ' . $this->request->getUri() . ' with code ' . $status . "\nResponse Data:\n" . print_r($data->toArray(), true) . "\nRequest:\n" . print_r((string) $this->request->getBody(), true));
         }
-        if (array_key_exists('message', $data)) {
-            $data['notification'] = $this->fetchPartial('message', [
+        if ($data instanceof DefaultResponse && isset($data->message)) {
+            $data->setNotification($this->fetchPartial('message', [
                 'message' => $data['message'],
                 'status' => $data['status'] ?? 'ok',
                 'success' => $data['success'] ?? 'success',
-            ]);
+            ]));
         }
 
         return $this->response->withJson($data)->withStatus($status);
@@ -334,8 +318,9 @@ abstract class AbstractController extends Controller
      *
      * @return ResponseInterface
      */
-    protected function yaml($data, int $status = StatusCode::HTTP_OK): ResponseInterface
+    protected function yaml(AbstractResponse $data, int $status = StatusCode::HTTP_OK): ResponseInterface
     {
+        $data = $data->toArray();
         if ($status > 299) {
             LogHelper::warn('API error on ' . $this->request->getUri() . ' with code ' . $status . "\nResponse Data:\n" . print_r($data, true) . "\nRequest:\n" . print_r((string) $this->request->getBody(), true));
         }

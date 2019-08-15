@@ -3,6 +3,8 @@
 namespace Helio\Panel\Controller;
 
 use Exception;
+use Helio\Panel\Response\DefaultResponse;
+use Helio\Panel\Response\JobCreateResponse;
 use OpenApi\Annotations as OA;
 use Helio\Panel\App;
 use Helio\Panel\Controller\Traits\HelperElasticController;
@@ -68,16 +70,7 @@ class ApiJobController extends AbstractController
      *         description="Job successfully created",
      *         @OA\JsonContent(
      *             type="object",
-     *             @OA\Property(
-     *                 property="token",
-     *                 type="string",
-     *                 description="The authentication token that's only valid for this job"
-     *             ),
-     *             @OA\Property(
-     *                 property="id",
-     *                 type="number",
-     *                 description="The Id of the newly created job"
-     *             )
+     *             ref="#/components/schemas/JobCreate"
      *         )
      *     )
      * )
@@ -96,18 +89,19 @@ class ApiJobController extends AbstractController
             ]);
 
             if (!JobType::isValidType($this->params['type'])) {
-                return $this->render(['success' => false, 'message' => 'Unknown Job Type'], StatusCode::HTTP_NOT_ACCEPTABLE);
+                return $this->render(new DefaultResponse(true, 'Unknown Job Type'), StatusCode::HTTP_NOT_ACCEPTABLE);
             }
 
             $this->job->setType($this->params['type']);
         } catch (Exception $e) {
             // If we have created a new job but haven't passed the jobtype (e.g. during wizard loading), we cannot continue.
             if ('___NEW' === $this->job->getName() && JobStatus::UNKNOWN === $this->job->getStatus()) {
-                return $this->render(['token' => JwtUtility::generateToken(null, $this->user, null, $this->job)['token'], 'id' => $this->job->getId()]);
+                $response = new JobCreateResponse($this->job->getId(), JwtUtility::generateToken(null, $this->user, null, $this->job)['token']);
+                return $this->render($response);
             }
             // if the existing job hasn't got a proper type, we cannot continue either, but that's a hard fail...
             if (!JobType::isValidType($this->job->getType())) {
-                return $this->render(['success' => false, 'message' => $e->getMessage()], StatusCode::HTTP_NOT_ACCEPTABLE);
+                return $this->render(new DefaultResponse(false, $e->getMessage()), StatusCode::HTTP_NOT_ACCEPTABLE);
             }
         }
 
@@ -118,15 +112,16 @@ class ApiJobController extends AbstractController
                 'billingReference' => FILTER_SANITIZE_STRING,
                 'free' => FILTER_SANITIZE_STRING,
                 'config' => FILTER_SANITIZE_STRING,
-                'autoExecSchedule' => FILTER_SANITIZE_STRING
+                'autoExecSchedule' => FILTER_SANITIZE_STRING,
             ]);
-        } catch(\RuntimeException $e) {
-            LogHelper::getInstance()->warn('Error POST /api/job: "'. $e->getMessage(). '"', [
+        } catch (\RuntimeException $e) {
+            LogHelper::getInstance()->warn('Error POST /api/job: "' . $e->getMessage() . '"', [
                 'stacktrace' => $e->getTrace(),
                 'url' => $this->request->getUri(),
                 'user' => $this->user->getId(),
             ]);
-            return $this->render(['success' => false, 'message' => $e->getMessage()], StatusCode::HTTP_NOT_ACCEPTABLE);
+
+            return $this->render(new DefaultResponse(false, $e->getMessage()), StatusCode::HTTP_NOT_ACCEPTABLE);
         }
 
         JobFactory::getInstanceOfJob($this->job)->create($this->params);
@@ -135,13 +130,14 @@ class ApiJobController extends AbstractController
 
         OrchestratorFactory::getOrchestratorForInstance($this->instance, $this->job)->provisionManager();
 
-        return $this->render([
-            'success' => true,
-            'token' => JwtUtility::generateToken(null, $this->user, null, $this->job)['token'],
-            'id' => $this->job->getId(),
-            'html' => $this->fetchPartial('listItemJob', ['job' => $this->job, 'user' => $this->user]),
-            'message' => 'Job <strong>' . $this->job->getName() . '</strong> added',
-        ]);
+        $response = new JobCreateResponse(
+            $this->job->getId(),
+            JwtUtility::generateToken(null, $this->user, null, $this->job)['token'],
+            $this->fetchPartial('listItemJob', ['job' => $this->job, 'user' => $this->user]),
+            'Job <strong>' . $this->job->getName() . '</strong> added'
+        );
+
+        return $this->render($response);
     }
 
     /**

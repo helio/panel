@@ -3,6 +3,8 @@
 namespace Helio\Panel\Controller;
 
 use Exception;
+use Helio\Panel\Response\DefaultResponse;
+use Helio\Panel\Response\TokenResponse;
 use InvalidArgumentException;
 use RuntimeException;
 use DateTime;
@@ -156,7 +158,7 @@ class DefaultController extends AbstractController
                 App::getDbHelper()->persist($user);
                 App::getDbHelper()->flush();
 
-                return $this->json(['success' => true, 'reason' => 'User already confirmed'], StatusCode::HTTP_REQUESTED_RANGE_NOT_SATISFIABLE);
+                return $this->json(new DefaultResponse(true, 'User already confirmed'), StatusCode::HTTP_REQUESTED_RANGE_NOT_SATISFIABLE);
             }
             $user = new User();
             $user->setEmail($this->params['email'])->setCreated();
@@ -174,7 +176,7 @@ class DefaultController extends AbstractController
         } catch (Exception $e) {
             LogHelper::err('Error during Server init: ' . $e->getMessage());
 
-            return $this->json(['success' => false, 'reason' => $e->getMessage()], StatusCode::HTTP_NOT_ACCEPTABLE);
+            return $this->json(DefaultResponse::fromThrowable($e), StatusCode::HTTP_NOT_ACCEPTABLE);
         }
 
         return $this->json([
@@ -231,12 +233,12 @@ class DefaultController extends AbstractController
             LogHelper::warn('Error at gettoken: ' . $e->getMessage() . "\nsupplied body has been:" . print_r((string) $this->request->getBody(), true));
 
             return $this->json(
-                ['success' => false, 'reason' => $e->getMessage()],
+                new DefaultResponse(false, $e->getMessage()),
                 $e->getCode() < 1000 ? $e->getCode() : StatusCode::HTTP_NOT_ACCEPTABLE
             );
         }
 
-        return $this->json(['success' => true, 'token' => JwtUtility::generateToken(null, $user, $server)['token']], StatusCode::HTTP_OK);
+        return $this->json(new TokenResponse(JwtUtility::generateToken(null, $user, $server)['token']), StatusCode::HTTP_OK);
     }
 
     /**
