@@ -28,6 +28,8 @@ use Slim\Http\StatusCode;
  * @author    Christoph Buchli <team@opencomputing.cloud>
  *
  * @RoutePrefix('/api/job')
+ *
+ * @OA\Tag(name="job", description="Job related APIs")
  */
 class ApiJobController extends AbstractController
 {
@@ -56,11 +58,13 @@ class ApiJobController extends AbstractController
     /**
      * @OA\Post(
      *     path="/job",
+     *     description="Create or update a job",
+     *     tags={"job"},
      *     security={
      *         {"authByApitoken": {"any"}},
      *         {"authByJobtoken": {"any"}}
      *     },
-     *     @OA\RequestBody(ref="#/components/requestBodies/job", @OA\MediaType(mediaType="application/json")),
+     *     @OA\RequestBody(@OA\JsonContent(ref="#/components/schemas/Job")),
      *     @OA\Response(response="406", ref="#/components/responses/406"),
      *     @OA\Response(
      *         response="200",
@@ -74,23 +78,20 @@ class ApiJobController extends AbstractController
      *             ),
      *             @OA\Property(
      *                 property="id",
-     *                 type="string",
-     *                 description="The Id of the newly created job"
+     *                 type="number",
+     *                 description="The id of the newly created job"
      *             ),
      *             @OA\Property(
      *                 property="success",
-     *                 type="boolean",
-     *                 description="Indicates the success of the request"
-     *             ),
-     *             @OA\Property(
-     *                 property="html",
-     *                 type="string",
-     *                 description="A HTML-rendered snipped of the job to embed in UIs"
+     *                 ref="#/components/schemas/default-content/properties/success"
      *             ),
      *             @OA\Property(
      *                 property="message",
-     *                 type="string",
-     *                 description="The Human readable success message"
+     *                 ref="#/components/schemas/default-content/properties/message"
+     *             ),
+     *             @OA\Property(
+     *                 property="notification",
+     *                 ref="#/components/schemas/default-content/properties/notification"
      *             )
      *         )
      *     )
@@ -121,21 +122,28 @@ class ApiJobController extends AbstractController
             }
             // if the existing job hasn't got a proper type, we cannot continue either, but that's a hard fail...
             if (!JobType::isValidType($this->job->getType())) {
-                return $this->render(['success' => false, 'meassge' => $e->getMessage()], StatusCode::HTTP_NOT_ACCEPTABLE);
+                return $this->render(['success' => false, 'message' => $e->getMessage()], StatusCode::HTTP_NOT_ACCEPTABLE);
             }
         }
 
-        $this->optionalParameterCheck([
-            'name' => FILTER_SANITIZE_STRING,
-            'cpus' => FILTER_SANITIZE_STRING,
-            'gpus' => FILTER_SANITIZE_STRING,
-            'location' => FILTER_SANITIZE_STRING,
-            'billingReference' => FILTER_SANITIZE_STRING,
-            'budget' => FILTER_SANITIZE_STRING,
-            'free' => FILTER_SANITIZE_STRING,
-            'config' => FILTER_SANITIZE_STRING,
-            'autoExecSchedule' => FILTER_SANITIZE_STRING,
-        ]);
+        try {
+            $this->optionalParameterCheck([
+                'name' => FILTER_SANITIZE_STRING,
+                'location' => FILTER_SANITIZE_STRING,
+                'billingReference' => FILTER_SANITIZE_STRING,
+                'free' => FILTER_SANITIZE_STRING,
+                'config' => FILTER_SANITIZE_STRING,
+                'autoExecSchedule' => FILTER_SANITIZE_STRING,
+            ]);
+        } catch (\RuntimeException $e) {
+            LogHelper::getInstance()->warn('Error POST /api/job: "' . $e->getMessage() . '"', [
+                'stacktrace' => $e->getTrace(),
+                'url' => $this->request->getUri(),
+                'user' => $this->user->getId(),
+            ]);
+
+            return $this->render(['success' => false, 'message' => $e->getMessage()], StatusCode::HTTP_NOT_ACCEPTABLE);
+        }
 
         JobFactory::getInstanceOfJob($this->job)->create($this->params);
 
@@ -155,12 +163,13 @@ class ApiJobController extends AbstractController
     /**
      * @OA\Delete(
      *     path="/job",
+     *     tags={"job"},
      *     security={
      *         {"authByApitoken": {"any"}},
      *         {"authByJobtoken": {"any"}}
      *     },
      *     @OA\Parameter(
-     *         name="jobid",
+     *         name="id",
      *         in="query",
      *         description="Id of the job to delete",
      *         required=true,
@@ -169,23 +178,26 @@ class ApiJobController extends AbstractController
      *         )
      *     ),
      *     @OA\Response(
-     *     response="200", description="Job has been deleted",
+     *         response="200",
+     *         description="Job has been deleted",
      *         @OA\JsonContent(
      *             type="object",
-     *             @OA\Property(
-     *                 property="success",
-     *                 type="boolean",
-     *                 description="Indicates the success of the request"
-     *             ),
      *             @OA\Property(
      *                 property="removed",
      *                 type="boolean",
      *                 description="Indicates whether the job has been deleted or cleanup still needs to be processed."
      *             ),
      *             @OA\Property(
+     *                 property="success",
+     *                 ref="#/components/schemas/default-content/properties/success"
+     *             ),
+     *             @OA\Property(
      *                 property="message",
-     *                 type="string",
-     *                 description="The Human readable success message"
+     *                 ref="#/components/schemas/default-content/properties/message"
+     *             ),
+     *             @OA\Property(
+     *                 property="notification",
+     *                 ref="#/components/schemas/default-content/properties/notification"
      *             )
      *         )
      *     )
@@ -226,20 +238,114 @@ class ApiJobController extends AbstractController
     /**
      * @OA\Get(
      *     path="/job",
+     *     tags={"job"},
      *     security={
      *         {"authByApitoken": {"any"}},
      *         {"authByJobtoken": {"any"}}
      *     },
+     *     description="Retrieve details of an existing job",
      *     @OA\Parameter(
      *         name="id",
      *         in="query",
-     *         description="Id of the job which status you wandt to see",
+     *         description="Id of the job which status you want to see",
      *         required=true,
      *         @Oa\Items(
      *             type="integer"
      *         )
      *     ),
-     *     @OA\Response(response="200", ref="#/components/responses/200")
+     *     @OA\Response(
+     *         response="200",
+     *         description="Response",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(
+     *                 property="id",
+     *                 ref="#/components/schemas/Job/properties/id"
+     *             ),
+     *             @OA\Property(
+     *                 property="name",
+     *                 ref="#/components/schemas/Job/properties/name"
+     *             ),
+     *             @OA\Property(
+     *                 property="billingReference",
+     *                 ref="#/components/schemas/Job/properties/billingReference"
+     *             ),
+     *             @OA\Property(
+     *                 property="budget",
+     *                 ref="#/components/schemas/Job/properties/budget"
+     *             ),
+     *             @OA\Property(
+     *                 property="type",
+     *                 ref="#/components/schemas/Job/properties/type"
+     *             ),
+     *             @OA\Property(
+     *                 property="priority",
+     *                 ref="#/components/schemas/Job/properties/priority"
+     *             ),
+     *             @OA\Property(
+     *                 property="created",
+     *                 type="string",
+     *                 description="Creation date time"
+     *             ),
+     *             @OA\Property(
+     *                 property="autoExecSchedule",
+     *                 ref="#/components/schemas/Job/properties/autoExecSchedule"
+     *             ),
+     *             @OA\Property(
+     *                 property="location",
+     *                 ref="#/components/schemas/Job/properties/location"
+     *             ),
+     *             @OA\Property(
+     *                 property="cpus",
+     *                 ref="#/components/schemas/Job/properties/cpus"
+     *             ),
+     *             @OA\Property(
+     *                 property="gpus",
+     *                 ref="#/components/schemas/Job/properties/gpus"
+     *             ),
+     *             @OA\Property(
+     *                 property="status",
+     *                 type="number",
+     *                 description="Job status as a number"
+     *             ),
+     *             @OA\Property(
+     *                 property="executions",
+     *                 type="object",
+     *                 @OA\Property(
+     *                     property="newestRunTime",
+     *                     description="Latest time this job has been started"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="total",
+     *                     description="Total executions"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="pending",
+     *                     description="Pending amount of executions"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="running",
+     *                     description="Currently running executions"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="done",
+     *                     description="Finished executions"
+     *                 )
+     *             ),
+     *             @OA\Property(
+     *                 property="success",
+     *                 ref="#/components/schemas/default-content/properties/success"
+     *             ),
+     *             @OA\Property(
+     *                 property="message",
+     *                 ref="#/components/schemas/default-content/properties/message"
+     *             ),
+     *             @OA\Property(
+     *                 property="notification",
+     *                 ref="#/components/schemas/default-content/properties/notification"
+     *             )
+     *         )
+     *     )
      * )
      *
      * @return ResponseInterface
@@ -281,6 +387,7 @@ class ApiJobController extends AbstractController
     /**
      * @OA\Get(
      *     path="/job/isready",
+     *     tags={"job"},
      *     description="HTTP Status Code indicates if the job is properly provisioned and ready to be executed",
      *     security={
      *         {"authByApitoken": {"any"}},
@@ -289,7 +396,7 @@ class ApiJobController extends AbstractController
      *     @OA\Parameter(
      *         name="id",
      *         in="query",
-     *         description="Id of the job which status you wandt to see",
+     *         description="Id of the job which status you want to see",
      *         required=true,
      *         @Oa\Items(
      *             type="integer"
@@ -325,6 +432,7 @@ class ApiJobController extends AbstractController
     /**
      * @OA\Get(
      *     path="/job/isdone",
+     *     tags={"job"},
      *     description="HTTP Status Code indicates if the job is done already",
      *     security={
      *         {"authByApitoken": {"any"}},
@@ -370,6 +478,7 @@ class ApiJobController extends AbstractController
     /**
      * @OA\Get(
      *     path="/job/logs",
+     *     tags={"job"},
      *     security={
      *         {"authByApitoken": {"any"}},
      *         {"authByJobtoken": {"any"}}
@@ -462,7 +571,7 @@ class ApiJobController extends AbstractController
         // TODO: set redundancy to >= 3 again if needed
         if ($this->job->getInitManagerIp() && $this->job->getClusterToken() && $this->job->getManagerToken() && count($this->job->getManagerNodes()) > 0) {
             $this->job->setStatus(JobStatus::READY);
-            NotificationUtility::notifyAdmin('Job is now read. By: ' . $this->job->getOwner()->getEmail() . ', type: ' . $this->job->getType() . ', id: ' . $this->job->getId());
+            NotificationUtility::notifyAdmin('Job is now ready. By: ' . $this->job->getOwner()->getEmail() . ', type: ' . $this->job->getType() . ', id: ' . $this->job->getId());
         }
         if (array_key_exists('deleted', $body) && 0 === count($this->job->getManagerNodes())) {
             $this->job->setStatus(JobStatus::DELETED);

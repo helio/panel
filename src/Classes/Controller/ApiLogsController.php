@@ -28,6 +28,7 @@ class ApiLogsController extends AbstractController
     /**
      * @OA\Get(
      *     path="/logs",
+     *     tags={"logs"},
      *     description="Aggregation of logs not associated to an execution or job",
      *     security={
      *         {"authByApitoken": {"any"}}

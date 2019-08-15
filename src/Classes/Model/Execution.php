@@ -51,7 +51,8 @@ class Execution extends AbstractModel
     /**
      * @OA\Property(
      *     description="The priority of the execution within each job. The lower, the more important.",
-     *     format="integer"
+     *     format="integer",
+     *     example="100"
      * )
      *
      * @var int
@@ -63,7 +64,8 @@ class Execution extends AbstractModel
     /**
      * @OA\Property(
      *     description="Estimated Runtime on ideal Hardware in Seconds; 0 means the execution won't terminate itself.",
-     *     format="integer"
+     *     format="integer",
+     *     example="3600"
      * )
      *
      * @var int
@@ -75,7 +77,8 @@ class Execution extends AbstractModel
     /**
      * @OA\Property(
      *     description="Execution statistics. The content depends on the JobType.",
-     *     format="string"
+     *     format="string",
+     *     example=""
      * )
      *
      * @var string

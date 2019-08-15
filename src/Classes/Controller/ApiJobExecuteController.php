@@ -2,6 +2,7 @@
 
 namespace Helio\Panel\Controller;
 
+use OpenApi\Annotations as OA;
 use Exception;
 use Helio\Panel\Helper\DbHelper;
 use RuntimeException;
@@ -20,7 +21,6 @@ use Helio\Panel\Execution\ExecutionStatus;
 use Helio\Panel\Utility\ExecUtility;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\UploadedFileInterface;
-use Slim\Http\Response;
 use Slim\Http\StatusCode;
 
 /**
@@ -29,6 +29,8 @@ use Slim\Http\StatusCode;
  * @author    Christoph Buchli <team@opencomputing.cloud>
  *
  * @RoutePrefix('/api/job/{jobid:[\d]+}/execute')
+ *
+ * @OA\Tag(name="job execute", description="Job execution related APIs")
  */
 class ApiJobExecuteController extends AbstractController
 {
@@ -59,7 +61,9 @@ class ApiJobExecuteController extends AbstractController
 
     /**
      * @OA\Post(
+     *     operationId="Helio\\Panel\\Controller\\ApiJobExecuteController::executionStatusAction-post",
      *     path="/job/{jobid}/execute",
+     *     tags={"job execute"},
      *     description="Executes a Job and therefore creates an execution environment. This may take a while!",
      *     security={
      *         {"authByJobtoken": {"any"}},
@@ -76,23 +80,17 @@ class ApiJobExecuteController extends AbstractController
      *     ),
      *
      *     @OA\RequestBody(
-     *         description=">- Job Type Specific configuration, formated like this
-
-        {
-            ""env"": [
-                {""SOURCE_PATH"":""https://account-name.zone-name.web.core.windows.net""},
-                {""TARGET_PATH"":""https://bucket.s3.aws-region.amazonaws.com""}
-            ]
-        }",
+     *         description="Job Type Specific configuration as JSON",
      *         @OA\MediaType(
      *             mediaType="application/json",
      *             @OA\Schema(
-     *                 type="string"
-     *             )
+     *                 type="object"
+     *             ),
+     *             example={"env": {"SOURCE_PATH": "https://account-name.zone-name.web.core.windows.net", "TARGET_PATH": "https://bucket.s3.aws-region.amazonaws.com"}}
      *         )
      *     ),
      *
-     *     @OA\Response(response="200", description="Create a Job",
+     *     @OA\Response(response="200", description="Job successfully executed",
      *         @OA\JsonContent(
      *             type="object",
      *             @OA\Property(
@@ -104,13 +102,19 @@ class ApiJobExecuteController extends AbstractController
      *                 property="id",
      *                 type="string",
      *                 description="The Id of the newly created execution"
+     *             ),
+     *             @OA\Property(
+     *                 property="estimates",
+     *                 ref="#/components/schemas/estimates"
      *             )
      *         )
      *     )
      * ),
      *
      * @OA\Delete(
+     *     operationId="Helio\\Panel\\Controller\\ApiJobExecuteController::executionStatusAction-delete",
      *     path="/job/{jobid}/execute",
+     *     tags={"job execute"},
      *     description="Removes an execution and destroys that specific execution environment. This may take a while!",
      *     security={
      *         {"authByApitoken": {"any"}},
@@ -183,7 +187,9 @@ class ApiJobExecuteController extends AbstractController
 
     /**
      * @OA\Get(
-     *    path="/job/{jobid}/execute",
+     *     path="/job/{jobid}/execute",
+     *     tags={"job execute"},
+     *     description="Retrieve the current status of an execution.",
      *     security={
      *         {"authByJobtoken": {"any"}},
      *         {"authByApitoken": {"any"}}
@@ -191,10 +197,10 @@ class ApiJobExecuteController extends AbstractController
      *     @OA\Parameter(
      *         name="id",
      *         in="query",
-     *         description="Id of the current Execution",
+     *         description="Id of the Execution",
      *         required=true,
      *         @Oa\Items(
-     *             type="string"
+     *             type="number"
      *         )
      *     ),
      *     @OA\Parameter(
@@ -203,17 +209,44 @@ class ApiJobExecuteController extends AbstractController
      *         description="Id of the job that the execution belongs to",
      *         required=true,
      *         @Oa\Items(
-     *             type="string"
+     *             type="number"
      *         )
      *     ),
      *     @OA\Response(response="200", description="Get a Job",
      *         @OA\JsonContent(
-     *           type="object",
-     *           @OA\Property(
-     *               property="success",
-     *               type="string",
-     *               description="boolean if the execution was successful"
-     *           )
+     *             type="object",
+     *             @OA\Property(
+     *                 property="success",
+     *                 ref="#/components/schemas/default-content/properties/success"
+     *             ),
+     *             @OA\Property(
+     *                 property="message",
+     *                 ref="#/components/schemas/default-content/properties/message"
+     *             ),
+     *             @OA\Property(
+     *                 property="notification",
+     *                 ref="#/components/schemas/default-content/properties/notification"
+     *             ),
+     *             @OA\Property(
+     *                 property="id",
+     *                 type="number"
+     *             ),
+     *             @OA\Property(
+     *                 property="results",
+     *                 type="string"
+     *             ),
+     *             @OA\Property(
+     *                 property="latestHeartbeat",
+     *                 type="string"
+     *             ),
+     *             @OA\Property(
+     *                 property="status",
+     *                 type="number"
+     *             ),
+     *             @OA\Property(
+     *                 property="estimates",
+     *                 ref="#/components/schemas/estimates"
+     *             )
      *         )
      *     )
      * )
@@ -243,10 +276,12 @@ class ApiJobExecuteController extends AbstractController
     /**
      * @OA\Post(
      *     path="/job/{jobid}/execute/submitresult",
+     *     tags={"job execute"},
      *     security={
      *         {"authByJobtoken": {"any"}},
      *         {"authByApitoken": {"any"}}
      *     },
+     *     description="Update the job execution with the passed result. This marks the execution as done and prevents reruns of the job execution.",
      *     @OA\Parameter(
      *         name="id",
      *         in="query",
@@ -266,21 +301,17 @@ class ApiJobExecuteController extends AbstractController
      *         )
      *     ),
      *     @OA\RequestBody(
-     *         description=">- Arbitrary Job result data as JSON, for example:
-
-        {
-            ""success"":true,
-            ""result"":42
-        }",
+     *         description="Arbitrary Job result data as JSON",
      *         @OA\MediaType(
      *             mediaType="application/json",
      *             @OA\Schema(
-     *                 type="string"
-     *             )
+     *                 type="string",
+     *             ),
+     *             example={"success": true, "result": 42}
      *         )
      *     ),
      *
-     *     @OA\Response(response="200", description="Job marked as done", ref="#/components/responses/200"),
+     *     @OA\Response(response="200", description="Job execution marked as done", @OA\JsonContent(ref="#/components/schemas/default-content")),
      *     @OA\Response(response="404", ref="#/components/responses/404")
      * )
      *
@@ -348,6 +379,7 @@ class ApiJobExecuteController extends AbstractController
     /**
      * @OA\Get(
      *     path="/job/{jobid}/execute/logs",
+     *     tags={"job execute"},
      *     description="Logs of an execution",
      *     security={
      *         {"authByApitoken": {"any"}},

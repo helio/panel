@@ -246,19 +246,6 @@ class DefaultController extends AbstractController
      */
     public function ApiDocAction(): ResponseInterface
     {
-        // exclude all files named ApiInterface.php because they are meant as single-entry points (see self::JobApiDocAction())
-        return $this->renderApiDocumentation('/^(.(?!Job\/[^\/]{1,}\/ApiInterface\.php))*$/');
-    }
-
-    /**
-     * @param string jobtype
-     *
-     * @return ResponseInterface
-     *
-     * @Route("apidoc/job/{jobtype:[\w]+}", methods={"GET"}, name="api.doc")
-     */
-    public function JobApiDocAction(string $jobtype): ResponseInterface
-    {
-        return $this->renderApiDocumentation(['App.php', 'Job/' . ucfirst(strtolower($jobtype)) . '/ApiInterface.php']);
+        return $this->renderApiDocumentation();
     }
 }

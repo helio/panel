@@ -29,39 +29,24 @@ class Job extends AbstractModel
 {
     /**
      * @OA\Property(
-     *         format="object",
-     *         description=">- Your Job specific JSON config looking like this:
-
-            {
-                ""image"": ""nginx:1.8"",
-                ""env"": [
-                    {""SOURCE_PATH"":""https://account-name.zone-name.web.core.windows.net""},
-                    {""TARGET_PATH"":""https://bucket.s3.aws-region.amazonaws.com""}
-                ],
-                ""registry"": {
-                    ""server"": ""example.azurecr.io"",
-                    ""username"": ""$DOCKER_USER"",
-                    ""password"": ""$DOCKER_PASSWORD"",
-                    ""email"": ""docker@example.com""
-                },
-                ""cliparams"": {
-                   ""env"": [
-                       {""SECRET_SOURCE"":""https://my.vautl:42/""}
-                   ]
-                }
-            }",
-     *         example="{""image"":""nginx:1.8"",""env"":[{""SOURCE_PATH"":""https://account-name.zone-name.web.core.windows.net""},{""TARGET_PATH"":""https://bucket.s3.aws-region.amazonaws.com""}],""registry"":{""server"":""example.azurecr.io"",""username"":""$DOCKER_USER"",""password"":""$DOCKER_PASSWORD"",""email"":""docker@example.com""},""cliparams"":{""env"":[{""SECRET_SOURCE"":""https://my.vautl:42/""}]}}"
+     *     description="Job type specific configuration",
+     *     oneOf={
+     *         @OA\Schema(ref="#/components/schemas/docker"),
+     *         @OA\Schema(ref="#/components/schemas/gitlab")
+     *     },
+     *     @OA\Discriminator(
+     *         propertyName="type"
+     *     ),
+     *     example={"image":"nginx:1.8","env":{"SOURCE_PATH":"https://account-name.zone-name.web.core.windows.net","TARGET_PATH":"https://bucket.s3.aws-region.amazonaws.com"},"registry":{"server":"example.azurecr.io","username":"$DOCKER_USER","password":"$DOCKER_PASSWORD","email":"docker@example.com"},"cliparams":{"env":{"SECRET_SOURCE":"https://my.vault.example:42/"}}}
      * )
      *
-     * @var string
+     * @var object
      *
      * @Column(type="text")
      */
     protected $config = '';
 
     /**
-     * @OA\Property(ref="#/components/schemas/jobstatus")
-     *
      * @var string
      *
      * @Column
@@ -116,7 +101,8 @@ class Job extends AbstractModel
     /**
      * @OA\Property(
      *     description="Specify in which location this job should run",
-     *     format="string"
+     *     format="string",
+     *     example="europe-west:switzerland-zurich"
      * ),
      *
      * @var string
@@ -127,7 +113,8 @@ class Job extends AbstractModel
 
     /**
      * @OA\Property(
-     *     description="A billing reference (e.g. your customer's order number)"
+     *     description="A billing reference (e.g. your customer's order number)",
+     *     example="customer-project-1502-0B"
      * )
      *
      * @var string
@@ -139,7 +126,8 @@ class Job extends AbstractModel
     /**
      * @OA\Property(
      *     description="We terminate jobs automatically once they have reached the maximum budget set here",
-     *     format="number"
+     *     format="number",
+     *     example="10000"
      * )
      *
      * @var int
@@ -151,7 +139,8 @@ class Job extends AbstractModel
     /**
      * @OA\Property(
      *     description="Cron Schedule to automatically execute the Job",
-     *     format="string"
+     *     format="string",
+     *     example="30 6 * * *"
      * )
      *
      * @var string
@@ -163,7 +152,8 @@ class Job extends AbstractModel
     /**
      * @OA\Property(
      *     description="Priority. The lower, the more urgent the execution.",
-     *     format="integer"
+     *     format="integer",
+     *     example="100"
      * )
      *
      * @var int

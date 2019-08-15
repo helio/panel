@@ -19,12 +19,12 @@ use Slim\Views\PhpRenderer;
  * Class App.
  *
  *
- * @OA\Info(title="Helio API", version="0.1.0")
+ * @OA\Info(title="Helio API", version="0.2.0")
  *
  *
- * @OA\Server(url="http://localhost:8099/api", description="DEV API")
- * @OA\Server(url="https://panelprev.idling.host/api", description="STAGE API")
  * @OA\Server(url="https://panel.idling.host/api", description="PROD API")
+ * @OA\Server(url="https://panelprev.idling.host/api", description="STAGE API")
+ * @OA\Server(url="https://panel.helio.test/api", description="DEV API")
  */
 class App extends \Slim\App
 {

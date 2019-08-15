@@ -46,28 +46,22 @@ use function OpenApi\scan;
  * )
  *
  ***************************** Schemas for Re-Use
- *
- * @OA\RequestBody(
- *     request="job",
- *     description="Job Settings in Body or Query String",
- *     @OA\JsonContent(ref="#/components/schemas/Job")
- * )
- *
  * @OA\Schema(
  *     schema="default-content",
  *     @OA\Property(
  *         property="success",
- *         description="Indication whether the call was handeled successfully.",
- *         @OA\Items(
- *             type="boolean"
- *         )
+ *         description="Indication whether the call was handled successfully.",
+ *         type="boolean"
  *     ),
  *     @OA\Property(
  *         property="message",
  *         description="Human readable message describing what happened.",
- *         @OA\Items(
- *             type="string"
- *         )
+ *         type="string"
+ *     ),
+ *     @OA\Property(
+ *         property="notification",
+ *         description="HTML notification content for UIs to display",
+ *         type="string"
  *     )
  * )
  * @OA\Schema(
@@ -134,8 +128,18 @@ use function OpenApi\scan;
  *     )
  * )
  * @OA\Response(
+ *     response="401",
+ *     description="The requested resource is invalid or not accessible.",
+ *     @OA\JsonContent(
+ *         @OA\Schema(ref="#/components/schemas/default-content")
+ *     )
+ * )
+ * @OA\Response(
  *     response="404",
- *     description="Resource not found"
+ *     description="Resource not found",
+ *     @OA\JsonContent(
+ *         @OA\Schema(ref="#/components/schemas/default-content")
+ *     )
  * )
  * @OA\Response(
  *     response="405",
@@ -176,7 +180,7 @@ use function OpenApi\scan;
  * @property callable notAllowedHandler
  * @property CallableResolverInterface callableResolver
  *
- * @author    Christoph Buchli <team@opencomputing.cloud>
+ * @author Christoph Buchli <team@opencomputing.cloud>
  */
 abstract class AbstractController extends Controller
 {
@@ -227,7 +231,8 @@ abstract class AbstractController extends Controller
         foreach (get_class_methods($this) as $method) {
             if (0 === strpos($method, 'setup')) {
                 if (!$this->$method($route)) {
-                    return new Response(StatusCode::HTTP_NOT_FOUND, null, new Stream(fopen('data://text/plain,Controller Setup failed at ' . $method . '()', 'r')));
+                    return (new Response(StatusCode::HTTP_NOT_FOUND))
+                        ->withJson(['success' => false, 'message' => 'Controller Setup failed at ' . $method . '()']);
                 }
             }
         }
@@ -236,7 +241,8 @@ abstract class AbstractController extends Controller
         foreach (get_class_methods($this) as $method) {
             if (0 === strpos($method, 'validate')) {
                 if (!$this->$method()) {
-                    return new Response(StatusCode::HTTP_UNAUTHORIZED, null, new Stream(fopen('data://text/plain,Controller Validation failed at ' . $method . '()', 'r')));
+                    return (new Response(StatusCode::HTTP_UNAUTHORIZED))
+                        ->withJson(['success' => false, 'message' => 'Controller Validation failed at ' . $method . '()']);
                 }
             }
         }

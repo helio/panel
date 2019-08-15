@@ -25,9 +25,9 @@ final class JobStatus
     public const DELETED = 9;
 
     public const labels = [
-        'status-0' => 'Creating',
-        'status-1' => 'Ready',
-        'status-2' => 'Running',
+        'status-0' => 'Unknown',
+        'status-1' => 'Creating',
+        'status-2' => 'Ready',
         'status-3' => 'Done',
         'status-9' => 'Deleted',
     ];
