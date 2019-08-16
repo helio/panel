@@ -15,6 +15,7 @@ use Helio\Panel\Model\Instance;
 use Helio\Panel\Model\Job;
 use Helio\Panel\Orchestrator\OrchestratorFactory;
 use Helio\Panel\Utility\MiddlewareForCliUtility;
+use Helio\Panel\Utility\NotificationUtility;
 use Slim\Http\Environment;
 use Slim\Http\Request;
 use Symfony\Component\Console\Command\Command;
@@ -39,7 +40,7 @@ class ExecuteScheduledJob extends Command
     }
 
     /**
-     * @param InputInterface  $input
+     * @param InputInterface $input
      * @param OutputInterface $output
      *
      * @return int|null
@@ -58,11 +59,13 @@ class ExecuteScheduledJob extends Command
         $app->getContainer()['request'] = $request;
 
         $jobs = App::getDbHelper()->getRepository(Job::class)->matching(new Criteria($expression));
+
         /** @var Job $job */
         foreach ($jobs as $job) {
-            if (Expression::isDue($job->getAutoExecSchedule()) && JobStatus::isValidActiveStatus($job->getStatus())) {
-                App::getLogger()->debug('Running Scheduled Job ' . $job->getId());
-                try {
+            try {
+                if (Expression::isDue($job->getAutoExecSchedule()) && JobStatus::isValidActiveStatus($job->getStatus())) {
+                    App::getLogger()->debug('Running Scheduled Job ' . $job->getId());
+
                     /** @var Execution $execution */
                     $execution = (new Execution())->setStatus(ExecutionStatus::READY)->setJob($job)->setCreated()->setName('created by CLI');
                     $pseudoInstance = new Instance();
@@ -80,11 +83,12 @@ class ExecuteScheduledJob extends Command
                         App::getDbHelper()->persist($execution);
                         App::getDbHelper()->flush();
                     }
-                } catch (Exception $e) {
-                    App::getLogger()->err('Error ' . $e->getCode() . ' during init: ' . $e->getMessage());
 
-                    return $e->getCode();
+                    NotificationUtility::notifyAdmin('Job ' . $job->getId() . ' successfully automatically executed');
                 }
+            } catch (Exception $e) {
+                App::getLogger()->err('Error ' . $e->getCode() . ' during init: ' . $e->getMessage());
+                continue;
             }
         }
 
