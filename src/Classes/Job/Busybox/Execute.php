@@ -24,7 +24,7 @@ class Execute extends AbstractExecute
             ->setEnvVariables([
                 'HELIO_JOBID' => $this->job->getId(),
                 'HELIO_TOKEN' => JwtUtility::generateToken(null, null, null, $this->job)['token'],
-                'LIMIT' => $this->execution ? $this->execution->getConfig('limit', 100) : 100,
+                'LIMIT' => $this->execution ? $this->execution->getConfig('limit', $this->job->getConfig('env.LIMIT', 100)) : 100,
                 'SUBMIT_URL' => ServerUtility::getBaseUrl() . ExecUtility::getExecUrl($this->job, 'submitresult', $this->execution),
             ]);
     }

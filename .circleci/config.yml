@@ -132,7 +132,7 @@ workflows:
   autoexectest:
     triggers:
       - schedule:
-          cron: "20 6 * * *"
+          cron: "20 4 * * *"
           filters:
             branches:
               only:
