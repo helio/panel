@@ -26,32 +26,6 @@ class ApiLogsController extends AbstractController
     use HelperElasticController;
 
     /**
-     * @OA\Get(
-     *     path="/logs",
-     *     tags={"logs"},
-     *     description="Aggregation of logs not associated to an execution or job",
-     *     security={
-     *         {"authByApitoken": {"any"}}
-     *     },
-     *     @OA\Response(response="200", ref="#/components/responses/logs"),
-     *     @OA\Parameter(
-     *         name="size",
-     *         in="query",
-     *         description="Amount of log entries to retreive",
-     *         @Oa\Items(
-     *             type="integer"
-     *         )
-     *     ),
-     *     @OA\Parameter(
-     *         name="from",
-     *         in="query",
-     *         description="Amount of log entries to skip",
-     *         @Oa\Items(
-     *             type="integer"
-     *         )
-     *     )
-     * )
-     *
      * @return ResponseInterface
      *
      * @throws Exception
