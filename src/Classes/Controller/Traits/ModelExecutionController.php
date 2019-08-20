@@ -33,7 +33,8 @@ trait ModelExecutionController
         $this->setupJob($route);
         $executionId = filter_var($this->params['executionid'] ?? ('executionid' === $this->getIdAlias() ? (array_key_exists('id', $this->params) ? $this->params['id'] : 0) : 0), FILTER_SANITIZE_NUMBER_INT);
         if ($executionId > 0) {
-            $this->execution = App::getDbHelper()->getRepository(Execution::class)->find($executionId);
+            // TODO(michael): probably resolving it via $this->job (via the association) would be better.
+            $this->execution = App::getDbHelper()->getRepository(Execution::class)->findOneBy(['id' => $executionId, 'job' => $this->job->getId()]);
 
             return true;
         }
