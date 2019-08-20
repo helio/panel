@@ -27,7 +27,9 @@ trait ModelParametrizedController
     public function setupParams(RouteInfo $route): bool
     {
         if (!$this->params) {
-            $this->params = array_merge(json_decode($this->request->getBody(), true) ?? [], $this->request->getParams() ?? [], $route->params ?? []);
+            // FIXME(michael): this should return in a 400 bad request but doesn't currently.
+            $body = \GuzzleHttp\json_decode($this->request->getBody(), true);
+            $this->params = array_merge($body, $this->request->getParams() ?? [], $route->params ?? []);
         }
 
         return true;
