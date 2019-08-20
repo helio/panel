@@ -6,8 +6,10 @@ use Exception;
 use Helio\Panel\App;
 use Helio\Panel\Controller\Traits\ModelUserController;
 use Helio\Panel\Controller\Traits\TypeBrowserController;
+use Helio\Panel\Helper\LogHelper;
 use Helio\Panel\Model\Instance;
 use Helio\Panel\Model\User;
+use Helio\Panel\Service\UserService;
 use Helio\Panel\Utility\CookieUtility;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Http\StatusCode;
@@ -24,6 +26,21 @@ class PanelController extends AbstractController
 {
     use ModelUserController;
     use TypeBrowserController;
+
+    /**
+     * @var UserService
+     */
+    private $userService;
+
+    public function __construct()
+    {
+        $dbHelper = App::getDbHelper();
+        $userRepository = $dbHelper->getRepository(User::class);
+        $em = $dbHelper->get();
+        $zapierHelper = App::getZapierHelper();
+        $logger = LogHelper::getInstance();
+        $this->userService = new UserService($userRepository, $em, $zapierHelper, $logger);
+    }
 
     protected function getMode(): ?string
     {
@@ -119,7 +136,7 @@ class PanelController extends AbstractController
         }
 
         return $this->render([
-            'users' => App::getDbHelper()->getRepository(User::class)->findAll(),
+            'users' => $this->userService->findAll(),
             'user' => $this->user,
             'title' => 'Admin - Helio Panel',
             'module' => 'admin',

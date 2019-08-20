@@ -40,7 +40,7 @@ class PanelTest extends TestCase
         ZapierHelper::setResponseStack([new Response(200, [], '{"success" => "true"}')]);
         $response = $this->runApp('POST', '/user/login', true, null, ['email' => 'email@example.com']);
 
-        $this->assertEquals(302, $response->getStatusCode());
+        $this->assertEquals(302, $response->getStatusCode(), $response->getBody());
         $this->assertCount(1, $response->getHeader('Location'));
         $this->assertStringContainsString('confirm?signature', $response->getHeader('Location')[0]);
     }

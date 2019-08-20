@@ -3,6 +3,7 @@
 namespace Helio\Panel\Controller;
 
 use Exception;
+use Helio\Panel\Service\UserService;
 use InvalidArgumentException;
 use RuntimeException;
 use DateTime;
@@ -32,6 +33,21 @@ class DefaultController extends AbstractController
 {
     use ModelParametrizedController;
     use TypeBrowserController;
+
+    /**
+     * @var UserService
+     */
+    private $userService;
+
+    public function __construct()
+    {
+        $dbHelper = App::getDbHelper();
+        $userRepository = $dbHelper->getRepository(User::class);
+        $em = $dbHelper->get();
+        $zapierHelper = App::getZapierHelper();
+        $logger = LogHelper::getInstance();
+        $this->userService = new UserService($userRepository, $em, $zapierHelper, $logger);
+    }
 
     protected function getMode(): ?string
     {
@@ -88,15 +104,9 @@ class DefaultController extends AbstractController
         // normal user process
         $this->requiredParameterCheck(['email' => FILTER_SANITIZE_EMAIL]);
 
-        $user = App::getDbHelper()->getRepository(User::class)->findOneBy(['email' => $this->params['email']]);
+        $user = $this->userService->findUserByEmail($this->params['email']);
         if (!$user) {
-            $user = new User();
-            $user->setEmail($this->params['email'])->setCreated();
-            App::getDbHelper()->persist($user);
-            App::getDbHelper()->flush();
-            if (!App::getZapierHelper()->submitUserToZapier($user)) {
-                throw new RuntimeException('Error during User Creation', 1546940197);
-            }
+            $user = $this->userService->create($this->params['email']);
         }
 
         if (!NotificationUtility::sendConfirmationMail($user)) {
@@ -142,7 +152,7 @@ class DefaultController extends AbstractController
             $server->setStatus(InstanceStatus::INIT);
 
             /** @var User $user */
-            $user = App::getDbHelper()->getRepository(User::class)->findOneBy(['email' => $this->params['email']]);
+            $user = $this->userService->findUserByEmail($this->params['email']);
             if ($user) {
                 if (!$user->isActive()) {
                     throw new InvalidArgumentException(
@@ -158,16 +168,14 @@ class DefaultController extends AbstractController
 
                 return $this->json(['success' => true, 'reason' => 'User already confirmed'], StatusCode::HTTP_REQUESTED_RANGE_NOT_SATISFIABLE);
             }
-            $user = new User();
-            $user->setEmail($this->params['email'])->setCreated();
+
+            $user = $this->userService->create($this->params['email'], false);
+
             $server->setOwner($user);
             App::getDbHelper()->persist($user);
             App::getDbHelper()->merge($server);
             App::getDbHelper()->flush();
 
-            if (!App::getZapierHelper()->submitUserToZapier($user)) {
-                throw new RuntimeException('Error during user creation', 1531253379);
-            }
             if (!NotificationUtility::sendConfirmationMail($user, '+15 minutes')) {
                 throw new RuntimeException('Couldn\'t send confirmation mail', 1531253400);
             }
@@ -203,9 +211,7 @@ class DefaultController extends AbstractController
             ]);
             $ip = filter_var(ServerUtility::getClientIp(), FILTER_VALIDATE_IP);
 
-            /** @var User $user */
-            $user = App::getDbHelper()->getRepository(User::class)->findOneBy(['email' => $this->params['email']]);
-
+            $user = $this->userService->findUserByEmail($this->params['email']);
             if (!$user) {
                 throw new InvalidArgumentException('User not found', StatusCode::HTTP_FORBIDDEN);
             }

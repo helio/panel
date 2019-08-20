@@ -10,6 +10,7 @@ use Helio\Panel\Middleware\ReAuthenticate;
 use Helio\Panel\Model\Instance;
 use Helio\Panel\Model\Job;
 use Helio\Panel\Model\User;
+use Helio\Panel\Service\UserService;
 use Psr\Http\Message\RequestInterface;
 use Slim\Http\Request;
 use Slim\Http\Response;
@@ -33,6 +34,13 @@ class MiddlewareForHttpUtility extends AbstractUtility
      */
     public static function addMiddleware(App $app): void
     {
+        $dbHelper = App::getDbHelper();
+        $userRepository = $dbHelper->getRepository(User::class);
+        $em = $dbHelper->get();
+        $zapierHelper = App::getZapierHelper();
+        $logger = LogHelper::getInstance();
+        $userService = new UserService($userRepository, $em, $zapierHelper, $logger);
+
         $app->add(new ReAuthenticate());
 
         $app->add(new JwtAuthentication([
@@ -44,11 +52,11 @@ class MiddlewareForHttpUtility extends AbstractUtility
                 ]),
                 new RequestMethodRule(['passthrough' => ['OPTIONS']]),
             ],
-            'before' => function (Request $request, array $arguments) {
+            'before' => function (Request $request, array $arguments) use ($userService) {
                 // set user if authenticated via jwt
                 if (array_key_exists('u', $arguments['decoded'])) {
                     /** @var User $user */
-                    $user = App::getDbHelper()->getRepository(User::class)->find($arguments['decoded']['u']);
+                    $user = $userService->findById($arguments['decoded']['u']);
                     if ($user->getLoggedOut() && !array_key_exists('sticky', $arguments['decoded'])) {
                         $tokenGenerationTime = (new DateTime('now', ServerUtility::getTimezoneObject()))->setTimestamp($arguments['decoded']['iat']);
                         $userLoggedOutTime = $user->getLoggedOut()->setTimezone(ServerUtility::getTimezoneObject());
@@ -61,7 +69,7 @@ class MiddlewareForHttpUtility extends AbstractUtility
                     // impersonation feature for admin users completely mocks another user
                     if (array_key_exists('impersonate', $request->getCookieParams()) && $user->isAdmin() && (string) (int) $request->getCookieParams()['impersonate'] === (string) $request->getCookieParams()['impersonate']) {
                         App::getApp()->getContainer()['impersonatinguser'] = clone $user;
-                        $user = App::getDbHelper()->getRepository(User::class)->find((int) $request->getCookieParams()['impersonate']) ?? $user;
+                        $user = $userService->findById((int) $request->getCookieParams()['impersonate']) ?? $user;
                     }
 
                     App::getApp()->getContainer()['user'] = $user;

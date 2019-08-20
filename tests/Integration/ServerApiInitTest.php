@@ -106,7 +106,7 @@ class ServerApiInitTest extends TestCase
     public function testServerInit(): void
     {
         $response = $this->exec();
-        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals(200, $response->getStatusCode(), $response->getBody());
         $body = (string) $response->getBody();
         $this->assertStringContainsString('server_id', $body);
         $this->assertStringContainsString('user_id', $body);
