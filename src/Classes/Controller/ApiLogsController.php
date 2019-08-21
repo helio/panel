@@ -7,8 +7,7 @@ use Helio\Panel\Controller\Traits\ModelUserController;
 use Helio\Panel\Controller\Traits\HelperElasticController;
 use Helio\Panel\Controller\Traits\ModelParametrizedController;
 use Helio\Panel\Controller\Traits\TypeApiController;
-use Helio\Panel\Model\Job;
-use Helio\Panel\Model\Execution;
+use Helio\Panel\Helper\ElasticHelper;
 use Psr\Http\Message\ResponseInterface;
 
 /**
@@ -42,6 +41,8 @@ class ApiLogsController extends AbstractController
         $size = array_key_exists('size', $this->params) ? $this->params['size'] : 10;
         $from = array_key_exists('from', $this->params) ? $this->params['from'] : 0;
 
-        return $this->render($this->setWindow($from, $size)->getWeirdLogEntries($this->user->getId()));
+        $weirdLogEntries = $this->setWindow($from, $size)->getWeirdLogEntries($this->user->getId());
+
+        return $this->render(ElasticHelper::serializeLogEntries($weirdLogEntries));
     }
 }

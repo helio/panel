@@ -3,6 +3,7 @@
 namespace Helio\Panel\Controller;
 
 use Exception;
+use Helio\Panel\Helper\ElasticHelper;
 use OpenApi\Annotations as OA;
 use Helio\Panel\App;
 use Helio\Panel\Controller\Traits\HelperElasticController;
@@ -520,7 +521,9 @@ class ApiJobController extends AbstractController
      */
     public function logsAction(): ResponseInterface
     {
-        return $this->render($this->setWindow()->getLogEntries($this->job->getOwner()->getId(), $this->job->getId()));
+        $data = $this->setWindow()->getLogEntries($this->job->getOwner()->getId(), $this->job->getId());
+
+        return $this->render(ElasticHelper::serializeLogEntries($data));
     }
 
     /**

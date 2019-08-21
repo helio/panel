@@ -30,6 +30,7 @@ class ElasticHelper implements HelperInterface
     protected static $executionIdFieldName = 'HELIO_EXECUTIONID';
     protected static $logEntryFieldName = 'log';
     protected static $timestampFieldName = '@timestamp';
+    protected static $sourceFieldName = 'source';
 
     /**
      * ElasticHelper constructor.
@@ -94,7 +95,7 @@ class ElasticHelper implements HelperInterface
         ];
 
         if ($cleanSource) {
-            $params['body']['_source'] = [self::$logEntryFieldName, self::$timestampFieldName];
+            $params['body']['_source'] = [self::$logEntryFieldName, self::$timestampFieldName, self::$sourceFieldName];
         }
 
         $filter = [];
@@ -123,7 +124,9 @@ class ElasticHelper implements HelperInterface
 
         LogHelper::debug('Running Elastic Query: ' . json_encode($params));
         try {
-            return $this->client->search($params)['hits'];
+            $response = $this->client->search($params);
+
+            return $response['hits'];
         } catch (Exception $e) {
             LogHelper::warn('Error in Elastic Query: ' . $e->getMessage());
 
@@ -139,6 +142,37 @@ class ElasticHelper implements HelperInterface
     public function getWeirdLogEntries(int $userId): array
     {
         return $this->getLogEntries($userId, -1, -1, false);
+    }
+
+    /**
+     * FIXME(michael): wrong place for this, but well..
+     *
+     * Transforms a raw ES response into something we can use.
+     *
+     * @param  array $data
+     * @return array
+     */
+    public static function serializeLogEntries(array $data): array
+    {
+        ['total' => $total, 'hits' => $hits] = $data;
+        // ES 7 switches from single value to an object with {value, relation}
+        // https://www.elastic.co/guide/en/elasticsearch/reference/current/breaking-changes-7.0.html
+        if (is_array($total)) {
+            $total = $total['value'];
+        }
+
+        return [
+            'total' => $total,
+            'logs' => array_map(function ($entry) {
+                $source = $entry['_source'];
+
+                return [
+                    'timestamp' => $source[self::$timestampFieldName],
+                    'message' => $source[self::$logEntryFieldName],
+                    'source' => $source[self::$sourceFieldName],
+                ];
+            }, $hits),
+        ];
     }
 
     /**
