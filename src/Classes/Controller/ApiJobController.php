@@ -107,7 +107,7 @@ class ApiJobController extends AbstractController
     public function addJobAction(): ResponseInterface
     {
         // TODO: Remove this again once CPUs is implemented
-        if (array_key_exists('cpus', $this->request->getParsedBody())) {
+        if (is_array( $this->request->getParsedBody()) && array_key_exists('cpus', $this->request->getParsedBody())) {
             NotificationUtility::alertAdmin('Job with specified CPUs created by ' . $this->user->getId() . ' -> ' . $this->user->getEmail());
         }
 
