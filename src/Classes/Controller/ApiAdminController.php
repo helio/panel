@@ -62,8 +62,8 @@ class ApiAdminController extends AbstractController
      */
     public function serverListAction(): ResponseInterface
     {
-        $limit = (int)($this->params['limit'] ?? 10);
-        $offset = (int)($this->params['offset'] ?? 0);
+        $limit = (int) ($this->params['limit'] ?? 10);
+        $offset = (int) ($this->params['offset'] ?? 0);
         $order = explode(',', filter_var($this->params['orderby'] ?? 'status DESC, priority ASC', FILTER_SANITIZE_STRING));
         $orderBy = [];
         foreach ($order as $field) {
@@ -89,8 +89,8 @@ class ApiAdminController extends AbstractController
      */
     public function jobListAction(): ResponseInterface
     {
-        $limit = (int)($this->params['limit'] ?? 10);
-        $offset = (int)($this->params['offset'] ?? 0);
+        $limit = (int) ($this->params['limit'] ?? 10);
+        $offset = (int) ($this->params['offset'] ?? 0);
         $order = explode(',', filter_var($this->params['orderby'] ?? 'created DESC', FILTER_SANITIZE_STRING));
         $orderBy = [];
         foreach ($order as $field) {

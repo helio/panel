@@ -331,7 +331,7 @@ class ApiJobExecuteController extends AbstractController
             DbHelper::getInstance()->persist($this->execution);
             DbHelper::getInstance()->flush();
 
-            OrchestratorFactory::getOrchestratorForInstance(new Instance(),$this->job)->dispatchJob();
+            OrchestratorFactory::getOrchestratorForInstance(new Instance(), $this->job)->dispatchJob();
 
             return $this->render(['success' => true, 'message' => 'Job marked as done']);
         }
