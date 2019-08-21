@@ -65,7 +65,8 @@ ZAPIER_HOOK_URL=/hooks/catch/1234/blahd3d/
 
 ### Slack
 
-Slack Webhook for Admin Notifications. Activates on PROD if the following ENV-Variable is set:
+Slack Webhook for Admin Notifications and Alerts. Activates if the following ENV-Variable is set:
 ```bash 
 SLACK_WEBHOOK=dblasdjb/absdljbadso/34jb3lj
+SLACK_WEBHOOK_ALERT=dblasdjb/absdljbadbbo/34jb3tt
 ```
