@@ -3,6 +3,7 @@
 namespace Helio\Panel\Controller;
 
 use Helio\Panel\Helper\ElasticHelper;
+use Helio\Panel\Model\Instance;
 use OpenApi\Annotations as OA;
 use Exception;
 use Helio\Panel\Helper\DbHelper;
@@ -319,6 +320,7 @@ class ApiJobExecuteController extends AbstractController
      * @return ResponseInterface
      *
      * @Route("/submitresult", methods={"POST", "PUT", "GET"}, name="job.exec.submitresult")
+     * @throws Exception
      */
     public function submitresultAction(): ResponseInterface
     {
@@ -328,6 +330,8 @@ class ApiJobExecuteController extends AbstractController
             $this->execution->setStats((string) $this->request->getBody());
             DbHelper::getInstance()->persist($this->execution);
             DbHelper::getInstance()->flush();
+
+            OrchestratorFactory::getOrchestratorForInstance(new Instance(),$this->job)->dispatchJob();
 
             return $this->render(['success' => true, 'message' => 'Job marked as done']);
         }

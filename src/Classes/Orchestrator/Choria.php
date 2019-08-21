@@ -106,14 +106,16 @@ class Choria implements OrchestratorInterface
             return false;
         }
 
-        $resultDispatch = ServerUtility::executeShellCommand($this->parseCommand(self::$dispatchCommand, false, [
+        ServerUtility::executeShellCommand($this->parseCommand(self::$dispatchCommand, false, [
             $this->job->getManagerNodes()[0],
             ArrayUtility::modelsToStringOfIds($this->job->getExecutions()->toArray()),
         ]));
 
-        $resultJoinWorkers = ServerUtility::executeShellCommand($this->parseCommand(self::$joinWorkersCommand, false, [$this->job->getClusterToken(), $this->job->getInitManagerIp(), 1]));
+        if ($this->job->getActiveExecutionCount() > 0) {
+            ServerUtility::executeShellCommand($this->parseCommand(self::$joinWorkersCommand, false, [$this->job->getClusterToken(), $this->job->getInitManagerIp(), 1]));
+        }
 
-        return $resultDispatch && $resultJoinWorkers;
+        return true;
     }
 
     /**
