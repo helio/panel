@@ -148,7 +148,7 @@ class ApiJobController extends AbstractController
 
         JobFactory::getInstanceOfJob($this->job)->create($this->params);
 
-        NotificationUtility::notifyAdmin('New Job was created by ' . $this->user->getEmail() . ', type: ' . $this->job->getType() . ', id: ' . $this->job->getId() . ', manager: ' . $this->job->getManagerNodes()[0] ?? 'unknown');
+        NotificationUtility::notifyAdmin('New Job was created by ' . $this->user->getEmail() . ', type: ' . $this->job->getType() . ', id: ' . $this->job->getId() . ', expected manager: manager-init-' . ServerUtility::getShortHashOfString($this->job->getId()));
 
         OrchestratorFactory::getOrchestratorForInstance($this->instance, $this->job)->provisionManager();
 
@@ -574,11 +574,11 @@ class ApiJobController extends AbstractController
         // TODO: set redundancy to >= 3 again if needed
         if ($this->job->getInitManagerIp() && $this->job->getClusterToken() && $this->job->getManagerToken() && count($this->job->getManagerNodes()) > 0) {
             $this->job->setStatus(JobStatus::READY);
-            NotificationUtility::notifyAdmin('Job is now ready. By: ' . $this->job->getOwner()->getEmail() . ', type: ' . $this->job->getType() . ', id: ' . $this->job->getId() . ', manager: ' . $this->job->getManagerNodes()[0] ?? 'unknown');
+            NotificationUtility::notifyAdmin('Job is now ready. By: ' . $this->job->getOwner()->getEmail() . ', type: ' . $this->job->getType() . ', id: ' . $this->job->getId() . ', expected manager: manager-init-' . ServerUtility::getShortHashOfString($this->job->getId()));
         }
         if (array_key_exists('deleted', $body) && 0 === count($this->job->getManagerNodes())) {
             $this->job->setStatus(JobStatus::DELETED);
-            NotificationUtility::notifyAdmin('Job was deleted by ' . $this->job->getOwner()->getEmail() . ', type: ' . $this->job->getType() . ', id: ' . $this->job->getId() . ', manager: ' . $this->job->getManagerNodes()[0] ?? 'unknown');
+            NotificationUtility::notifyAdmin('Job was deleted by ' . $this->job->getOwner()->getEmail() . ', type: ' . $this->job->getType() . ', id: ' . $this->job->getId() . ', expected manager: manager-init-' . ServerUtility::getShortHashOfString($this->job->getId()));
         }
 
         $this->persistJob();
