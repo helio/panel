@@ -79,4 +79,31 @@ EOM;
 
         return $return;
     }
+
+    /**
+     * @param string $content
+     *
+     * @return bool
+     */
+    public static function alertAdmin(string $content = ''): bool
+    {
+        if (ServerUtility::get('SLACK_WEBHOOK_ALERT', '')) {
+            try {
+                $return = App::getSlackHelper()->sendNotification($content);
+            } catch (GuzzleException $e) {
+                $return = false;
+            } catch (Exception $e) {
+                $return = false;
+            }
+        } else {
+            $return = ServerUtility::isProd() ? @mail('team@helio.exchange', 'ADMIN ALERT from Panel', $content, 'From: hello@idling.host', '-f hello@idling.host') : true;
+        }
+        if ($return) {
+            LogHelper::info('Sent Alert Mail to admin');
+        } else {
+            LogHelper::warn('Failed to sent alert Mail to admin. Reason: ' . $return);
+        }
+
+        return $return;
+    }
 }

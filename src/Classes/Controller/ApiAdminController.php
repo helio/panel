@@ -307,15 +307,17 @@ class ApiAdminController extends AbstractController
             }
             /** @noinspection SlowArrayOperationsInLoopInspection */
             $executionEnv = array_merge(['HELIO_JOBID' => $this->job->getId(), 'HELIO_USERID' => $this->job->getOwner()->getId(), 'HELIO_EXECUTIONID' => $execution->getId()], $executionEnv);
-            // TODO: These redundante quotes are here to make env stuff `docker service create` compatible :(
+
             foreach ($executionEnv as $item => $value) {
-                $yamlEnv[] = "'$item=$value'";
+                // remove newlines because they cause yaml to parse them in a herein unwanted way
+                $escapedVal = str_replace(["\n", "\r"], ['\n', '\r'], $value);
+                $yamlEnv[] = escapeshellarg("$item=$escapedVal");
             }
 
             // compose service config
             $services[$servicename] = [
                 'service_name' => $servicename,
-                'image' => $dcfjt->getImage() ?: 'hello-world',
+                'image' => escapeshellarg($dcfjt->getImage() ?: 'hello-world'),
                 'replicas' => $dcfjt->getReplicaCountForJob($this->job),
                 'env' => $yamlEnv,
             ];

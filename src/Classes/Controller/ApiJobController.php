@@ -106,6 +106,11 @@ class ApiJobController extends AbstractController
      */
     public function addJobAction(): ResponseInterface
     {
+        // TODO: Remove this again once CPUs is implemented
+        if (is_array( $this->request->getParsedBody()) && array_key_exists('cpus', $this->request->getParsedBody())) {
+            NotificationUtility::alertAdmin('Job with specified CPUs created by ' . $this->user->getId() . ' -> ' . $this->user->getEmail());
+        }
+
         try {
             $this->requiredParameterCheck([
                 'type' => FILTER_SANITIZE_STRING,
@@ -537,6 +542,11 @@ class ApiJobController extends AbstractController
     {
         $body = $this->request->getParsedBody();
         LogHelper::debug('Body received into job ' . $this->job->getId() . ' callback:' . print_r($body, true));
+
+        if (array_key_exists('error', $body)) {
+            // TODO: Implement error handling
+            NotificationUtility::notifyAdmin('Error Callback received in Panel: ' . print_r($body, true));
+        }
 
         // remember manager nodes.
         if (array_key_exists('nodes', $body)) {
