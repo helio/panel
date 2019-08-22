@@ -38,8 +38,8 @@ class Execute extends AbstractExecute
         parent::create($jobObject);
         $options = [
             'gitlabEndpoint' => FILTER_SANITIZE_URL,
-            'gitlabToken' => FILTER_SANITIZE_STRING,
-            'gitlabTags' => FILTER_SANITIZE_STRING,
+            'gitlabToken' => FILTER_SANITIZE_STRING | FILTER_SANITIZE_MAGIC_QUOTES,
+            'gitlabTags' => FILTER_SANITIZE_STRING | FILTER_SANITIZE_MAGIC_QUOTES,
         ];
 
         $cleanConfig = [];

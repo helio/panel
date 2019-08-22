@@ -61,7 +61,7 @@ class Execute extends AbstractExecute
      */
     public function getDispatchConfig(): DispatchConfig
     {
-        return (new DispatchConfig())->setImage('gitlab.idling.host:4567/helio/runner/ep85:latest')->setEnvVariables([
+        return (new DispatchConfig())->setImage('hub.helio.dev:4567/helio/runner/ep85:latest')->setEnvVariables([
             'HELIO_JOBID' => $this->job->getId(),
             'HELIO_TOKEN' => JwtUtility::generateToken(null, $this->job->getOwner(), null, $this->job)['token'],
             'HELIO_URL' => ServerUtility::getBaseUrl(),

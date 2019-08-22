@@ -68,11 +68,11 @@ jobs:
     - run:
         name: Build application Docker image
         command: |
-          docker login -u panel -p ${GITLAB_TOKEN} gitlab.idling.host:4567
+          docker login -u panel -p ${GITLAB_TOKEN} hub.helio.dev:4567
           START_DIR="$(pwd -P)"
           for img in $(find src -name Dockerfile); do
             cd "${START_DIR}/$(dirname $img)"
-            IMGNAME=gitlab.idling.host:4567/helio/runner/$(echo $(basename $(dirname $img)) | tr '[:upper:]' '[:lower:]')
+            IMGNAME=hub.helio.dev:4567/helio/runner/$(echo $(basename $(dirname $img)) | tr '[:upper:]' '[:lower:]')
             TAGNAME=$(echo ${CIRCLE_BRANCH} | tr '/' '_')
             docker build -t ${IMGNAME}:${TAGNAME} . && docker push "${IMGNAME}:${TAGNAME}"
             if [ "${CIRCLE_BRANCH}" == "master" ]; then
