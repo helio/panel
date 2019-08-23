@@ -49,6 +49,7 @@ class MiddlewareForHttpUtility extends AbstractUtility
             'rules' => [
                 new RequestPathRule([
                     'path' => '/(api|panel)',
+                    'ignore' => '/api/login',
                 ]),
                 new RequestMethodRule(['passthrough' => ['OPTIONS']]),
             ],

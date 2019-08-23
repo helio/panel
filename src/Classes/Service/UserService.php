@@ -9,7 +9,10 @@ use Doctrine\ORM\ORMException;
 use GuzzleHttp\Exception\GuzzleException;
 use Helio\Panel\Helper\ZapierHelper;
 use Helio\Panel\Model\User;
+use Helio\Panel\Utility\JwtUtility;
+use Helio\Panel\Utility\NotificationUtility;
 use Monolog\Logger;
+use RuntimeException;
 
 class UserService
 {
@@ -83,5 +86,26 @@ class UserService
         }
 
         return $user;
+    }
+
+    public function login(string $email): array
+    {
+        $user = $this->findUserByEmail($email);
+        if (!$user) {
+            $user = $this->create($email);
+        }
+
+        if (!NotificationUtility::sendConfirmationMail($user)) {
+            throw new RuntimeException('Error during User Creation', 1545655919);
+        }
+
+        $token = null;
+
+        // catch Demo User
+        if ('email@example.com' === $user->getEmail()) {
+            $token = JwtUtility::generateToken('+5 minutes', $user)['token'];
+        }
+
+        return ['user' => $user, 'token' => $token];
     }
 }

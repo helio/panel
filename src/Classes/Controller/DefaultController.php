@@ -104,17 +104,8 @@ class DefaultController extends AbstractController
         // normal user process
         $this->requiredParameterCheck(['email' => FILTER_SANITIZE_EMAIL]);
 
-        $user = $this->userService->findUserByEmail($this->params['email']);
-        if (!$user) {
-            $user = $this->userService->create($this->params['email']);
-        }
-
-        if (!NotificationUtility::sendConfirmationMail($user)) {
-            throw new RuntimeException('Error during User Creation', 1545655919);
-        }
-
-        // catch Demo User
-        if ('email@example.com' === $user->getEmail()) {
+        ['user' => $user, 'token' => $token] = $this->userService->login($this->params['email']);
+        if ($token) {
             return $this->response->withRedirect(ServerUtility::getBaseUrl() . 'confirm?signature=' . JwtUtility::generateToken('+5 minutes', $user)['token']);
         }
 

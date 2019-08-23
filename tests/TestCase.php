@@ -20,6 +20,7 @@ use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Request;
 use Slim\Http\Environment;
 use Doctrine\Common\Persistence\ObjectRepository;
+use Slim\Http\RequestBody;
 use Webfactory\Doctrine\ORMTestInfrastructure\ORMInfrastructure;
 
 /**
@@ -175,6 +176,10 @@ class TestCase extends \PHPUnit\Framework\TestCase
         // Add request data, if it exists
         if (null !== $requestData) {
             $request = $request->withParsedBody($requestData);
+
+            $body = new RequestBody();
+            $body->write(json_encode($requestData));
+            $request = $request->withBody($body);
         }
 
         if ($attributes) {
