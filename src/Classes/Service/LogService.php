@@ -19,6 +19,9 @@ class LogService
 
     public function retrieveLogs(int $userId, Log $log, int $jobId = null, int $executionId = null)
     {
+        $firstCursor = null;
+        $lastCursor = null;
+
         $data = $this->elasticHelper->getLogEntries(
             $userId,
             $jobId,
@@ -61,8 +64,8 @@ class LogService
             'total' => $total,
             'logs' => $logs,
             'cursor' => [
-                'first' => (string) $firstCursor ?? null,
-                'last' => (string) $lastCursor ?? null,
+                'first' => (string) $firstCursor,
+                'last' => (string) $lastCursor,
             ],
         ];
     }
