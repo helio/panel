@@ -51,7 +51,7 @@ class Execute extends AbstractExecute
         $this->job->setConfig($cleanConfig);
 
         App::getDbHelper()->persist($this->job);
-        App::getDbHelper()->flush();
+        App::getDbHelper()->flush($this->job);
 
         return true;
     }

@@ -107,7 +107,7 @@ class ApiJobController extends AbstractController
     public function addJobAction(): ResponseInterface
     {
         // TODO: Remove this again once CPUs is implemented
-        if (is_array( $this->request->getParsedBody()) && array_key_exists('cpus', $this->request->getParsedBody())) {
+        if (is_array($this->request->getParsedBody()) && array_key_exists('cpus', $this->request->getParsedBody())) {
             NotificationUtility::alertAdmin('Job with specified CPUs created by ' . $this->user->getId() . ' -> ' . $this->user->getEmail());
         }
 
@@ -151,6 +151,7 @@ class ApiJobController extends AbstractController
             return $this->render(['success' => false, 'message' => $e->getMessage()], StatusCode::HTTP_NOT_ACCEPTABLE);
         }
 
+        $this->job->setOwner($this->user)->setCreated();
         JobFactory::getInstanceOfJob($this->job)->create($this->params);
 
         NotificationUtility::notifyAdmin('New Job was created by ' . $this->user->getEmail() . ', type: ' . $this->job->getType() . ', id: ' . $this->job->getId() . ', expected manager: manager-init-' . ServerUtility::getShortHashOfString($this->job->getId()));
@@ -217,6 +218,10 @@ class ApiJobController extends AbstractController
      */
     public function removeJobAction(): ResponseInterface
     {
+        if (null === $this->job->getId()) {
+            return $this->render(['success' => false, 'message' => 'Job not found'], StatusCode::HTTP_NOT_FOUND);
+        }
+
         $removed = false;
         if (!JobType::isValidType($this->job->getType())) {
             $this->job->setHidden(true);
@@ -362,6 +367,10 @@ class ApiJobController extends AbstractController
      */
     public function jobStatusAction(): ResponseInterface
     {
+        if (null === $this->job->getId()) {
+            return $this->render(['success' => false, 'message' => 'Job not found'], StatusCode::HTTP_NOT_FOUND);
+        }
+
         /** @var Execution $newestRun */
         $newestRun = App::getDbHelper()->getRepository(Execution::class)->findOneBy(['job' => $this->job, 'status' => ExecutionStatus::DONE], ['created' => 'DESC']);
 
@@ -428,6 +437,9 @@ class ApiJobController extends AbstractController
      */
     public function jobIsReadyAction(): ResponseInterface
     {
+        if (null === $this->job->getId()) {
+            return $this->render(['success' => false, 'message' => 'Job not found'], StatusCode::HTTP_NOT_FOUND);
+        }
         $ready = JobStatus::READY === $this->job->getStatus();
         $status = $ready ? StatusCode::HTTP_OK : StatusCode::HTTP_FAILED_DEPENDENCY;
         $message = $ready ? 'Job is ready' : 'Execution environment for job is being prepared...';
@@ -475,6 +487,10 @@ class ApiJobController extends AbstractController
      */
     public function isDoneAction(): ResponseInterface
     {
+        if (null === $this->job->getId()) {
+            return $this->render(['success' => false, 'message' => 'Job not found'], StatusCode::HTTP_NOT_FOUND);
+        }
+
         $executionsTotal = App::getDbHelper()->getRepository(Execution::class)->count(['job' => $this->job]);
         $executionsPending = App::getDbHelper()->getRepository(Execution::class)->count(['job' => $this->job, 'status' => ExecutionStatus::READY]);
 
@@ -526,6 +542,10 @@ class ApiJobController extends AbstractController
      */
     public function logsAction(): ResponseInterface
     {
+        if (null === $this->job->getId()) {
+            return $this->render(['success' => false, 'message' => 'Job not found'], StatusCode::HTTP_NOT_FOUND);
+        }
+
         $data = $this->setWindow()->getLogEntries($this->job->getOwner()->getId(), $this->job->getId());
 
         return $this->render(ElasticHelper::serializeLogEntries($data));
@@ -540,6 +560,10 @@ class ApiJobController extends AbstractController
      */
     public function callbackAction(): ResponseInterface
     {
+        if (null === $this->job->getId()) {
+            return $this->render(['success' => false, 'message' => 'Job not found'], StatusCode::HTTP_NOT_FOUND);
+        }
+
         $body = $this->request->getParsedBody();
         LogHelper::debug('Body received into job ' . $this->job->getId() . ' callback:' . print_r($body, true));
 
@@ -621,6 +645,10 @@ class ApiJobController extends AbstractController
      */
     public function getRedundantManagerNodeConfigAction(): ResponseInterface
     {
+        if (null === $this->job->getId()) {
+            return $this->render(['success' => false, 'message' => 'Job not found'], StatusCode::HTTP_NOT_FOUND);
+        }
+
         $config = [
             'classes' => ['role::base', 'profile::docker'],
             'profile::docker::manager' => true,
@@ -646,6 +674,10 @@ class ApiJobController extends AbstractController
      */
     public function abortAddJobAction(): ResponseInterface
     {
+        if (null === $this->job->getId()) {
+            return $this->render(['success' => false, 'message' => 'Job not found'], StatusCode::HTTP_NOT_FOUND);
+        }
+
         if ($this->job && JobStatus::UNKNOWN === $this->job->getStatus() && $this->job->getOwner() && $this->job->getOwner()->getId() === $this->user->getId()) {
             $this->user->removeJob($this->job);
             App::getDbHelper()->remove($this->job);

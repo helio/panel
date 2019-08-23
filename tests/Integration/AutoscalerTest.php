@@ -251,17 +251,12 @@ class AutoscalerTest extends TestCase
      */
     public function testReplicaGetAppliedOnNewJob(): void
     {
-        $this->runApp('POST', '/api/job', true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']]);
-        $this->assertEquals('', ServerUtility::getLastExecutedShellCommand(), 'must not fire node init command as long as no job type is set');
+        $this->runApp('POST', '/api/job', true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']], ['type' => JobType::ENERGY_PLUS_85, 'name' => 'testing 1551430480']);
 
-        /** @var Job $precreatedJob */
-        $precreatedJob = $this->jobRepository->findOneByName('___NEW');
-
-        $this->assertNotNull($precreatedJob);
-
-        $this->runApp('POST', '/api/job', true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']], ['jobid' => $precreatedJob->getId(), 'type' => JobType::ENERGY_PLUS_85, 'jobname' => 'testing 1551430480']);
+        /** @var Job $job */
+        $job = $this->jobRepository->findOneByName('testing 1551430480');
 
         $this->assertStringContainsString('ssh', ServerUtility::getLastExecutedShellCommand());
-        $this->assertStringContainsString('manager-init-' . ServerUtility::getShortHashOfString($precreatedJob->getId()), ServerUtility::getLastExecutedShellCommand());
+        $this->assertStringContainsString('manager-init-' . ServerUtility::getShortHashOfString($job->getId()), ServerUtility::getLastExecutedShellCommand());
     }
 }

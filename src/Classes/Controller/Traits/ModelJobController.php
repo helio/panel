@@ -49,9 +49,7 @@ trait ModelJobController
 
         // finally, if there is no job at all, simply create one.
         $this->job = (new Job())
-            ->setName('___NEW')
-            ->setOwner($this->user)
-            ->setCreated();
+            ->setName('___NEW');
 
         return true;
     }

@@ -71,7 +71,7 @@ abstract class AbstractExecute implements JobInterface, DispatchableInterface
             App::getDbHelper()->persist($this->execution);
         }
 
-        App::getDbHelper()->flush();
+        App::getDbHelper()->flush($this->job);
 
         return true;
     }
