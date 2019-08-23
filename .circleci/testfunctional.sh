@@ -5,7 +5,7 @@
 BASE_URL=${1:-https://panel.idling.host}
 TOKEN=${2:-${TESTUSER_TOKEN}}
 ID=test-$(date "+%s")
-DATA='{"type":"busybox","jobname":"_test","billingReference":"'${ID}'"}'
+DATA='{"type":"busybox","name":"_test","billingReference":"'${ID}'"}'
 
 if [[ -z "${TOKEN}" ]]; then exit 1; fi
 
