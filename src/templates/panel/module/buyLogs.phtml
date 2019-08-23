@@ -1,0 +1,29 @@
+<?php /** @var \Helio\Panel\Model\Job $job */ ?>
+
+<h2 class="display c--white a--center">Logs for <?php echo $job->getId() ?></h2>
+<div class="container-fluid">
+    <div class="row toolbar-pf table-view-pf-toolbar">
+        <div class="col-sm-12">
+            <form class="toolbar-pf-actions form-inline" id="helio-job-logs-form">
+                <div class="form-group toolbar-pf-filter">
+                    <div class="input-group">
+                        <input type="number" name="interval" required class="form-control" placeholder="10" autocomplete="off"/>
+                        <span class="input-group-addon">seconds</span>
+                    </div>
+                    <button class="btn btn-default" type="submit">Set refresh interval</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <table class="table table-striped table-bordered table-hover bg-white" id="helio-job-logs" data-fetch-url="/api/job/logs?id=<?php echo $job->getId() ?>">
+        <thead>
+            <tr>
+                <th class="width-150">Time</th>
+                <th>Log</th>
+                <th class="width-100">Source</th>
+                <th class="width-100">Execution ID</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>

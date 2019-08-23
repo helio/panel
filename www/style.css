@@ -92,3 +92,26 @@
     width: 100%;
     position: absolute;
 }
+
+.helio-monospace {
+    font-family: monospace, serif;
+    font-size: 110%;
+}
+
+.width-150 {
+    width: 150px;
+}
+.width-100 {
+    width: 100px;
+}
+.bg-white {
+    background-color: #fff;
+}
+
+.helio-page-detail-container {
+    height: 100vh;
+}
+.form-control-horizontal {
+    display: inline;
+    width: auto;
+}

@@ -14,8 +14,6 @@ class ElasticHelper implements HelperInterface
 {
     /** @var Client */
     protected $client;
-    protected $from = 0;
-    protected $size = 10;
 
     /**
      * @var array<ElasticHelper>
@@ -25,12 +23,12 @@ class ElasticHelper implements HelperInterface
     /**
      * @var string
      */
-    protected static $indexTemplate = 'log_user_%s';
-    protected static $jobIdFieldName = 'HELIO_JOBID';
-    protected static $executionIdFieldName = 'HELIO_EXECUTIONID';
-    protected static $logEntryFieldName = 'log';
-    protected static $timestampFieldName = '@timestamp';
-    protected static $sourceFieldName = 'source';
+    public static $indexTemplate = 'log_user_%s';
+    public static $jobIdFieldName = 'HELIO_JOBID';
+    public static $executionIdFieldName = 'HELIO_EXECUTIONID';
+    public static $logEntryFieldName = 'log';
+    public static $timestampFieldName = '@timestamp';
+    public static $sourceFieldName = 'source';
 
     /**
      * ElasticHelper constructor.
@@ -68,19 +66,31 @@ class ElasticHelper implements HelperInterface
      * @param int      $userId
      * @param int|null $jobId       negative value means the field must not exist
      * @param int|null $executionId negative value means the field must not exist
-     * @param bool     $cleanSource wether or not to only display clean fields
+     * @param int      $from
+     * @param int      $size
+     * @param string   $sort
+     * @param string   $cursor
+     * @param bool     $cleanSource
      *
      * @return array
      */
-    public function getLogEntries(int $userId, int $jobId = null, int $executionId = null, bool $cleanSource = true): array
-    {
+    public function getLogEntries(
+        int $userId,
+        int $jobId = null,
+        int $executionId = null,
+        int $from = 0,
+        int $size = 10,
+        string $sort = 'desc',
+        string $cursor = null,
+        bool $cleanSource = true
+    ): array {
         $params = [
             'index' => vsprintf(self::$indexTemplate, [$userId]),
             'body' => [
-                'from' => $this->getFrom(),
-                'size' => $this->getSize(),
+                'from' => $from,
+                'size' => $size,
                 'sort' => [
-                    self::$timestampFieldName => 'desc',
+                    self::$timestampFieldName => $sort,
                 ],
                 'query' => [
                     'bool' => [
@@ -94,8 +104,18 @@ class ElasticHelper implements HelperInterface
             ],
         ];
 
+        if ($cursor) {
+            $params['body']['search_after'] = [$cursor];
+        }
+
         if ($cleanSource) {
-            $params['body']['_source'] = [self::$logEntryFieldName, self::$timestampFieldName, self::$sourceFieldName];
+            $params['body']['_source'] = [
+                self::$logEntryFieldName,
+                self::$timestampFieldName,
+                self::$sourceFieldName,
+                self::$executionIdFieldName,
+                self::$jobIdFieldName,
+            ];
         }
 
         $filter = [];
@@ -132,86 +152,5 @@ class ElasticHelper implements HelperInterface
 
             return [];
         }
-    }
-
-    /**
-     * @param int $userId
-     *
-     * @return array
-     */
-    public function getWeirdLogEntries(int $userId): array
-    {
-        return $this->getLogEntries($userId, -1, -1, false);
-    }
-
-    /**
-     * FIXME(michael): wrong place for this, but well..
-     *
-     * Transforms a raw ES response into something we can use.
-     *
-     * @param  array $data
-     * @return array
-     */
-    public static function serializeLogEntries(array $data): array
-    {
-        ['total' => $total, 'hits' => $hits] = $data;
-        // ES 7 switches from single value to an object with {value, relation}
-        // https://www.elastic.co/guide/en/elasticsearch/reference/current/breaking-changes-7.0.html
-        if (is_array($total)) {
-            $total = $total['value'];
-        }
-
-        return [
-            'total' => $total,
-            'logs' => array_map(function ($entry) {
-                $source = $entry['_source'];
-
-                return [
-                    'timestamp' => $source[self::$timestampFieldName],
-                    'message' => $source[self::$logEntryFieldName],
-                    'source' => $source[self::$sourceFieldName],
-                ];
-            }, $hits),
-        ];
-    }
-
-    /**
-     * @return int
-     */
-    protected function getFrom(): int
-    {
-        return $this->from;
-    }
-
-    /**
-     * @param int $from
-     *
-     * @return ElasticHelper
-     */
-    public function setFrom(int $from): ElasticHelper
-    {
-        $this->from = $from;
-
-        return $this;
-    }
-
-    /**
-     * @return int
-     */
-    protected function getSize(): int
-    {
-        return $this->size;
-    }
-
-    /**
-     * @param int $size
-     *
-     * @return ElasticHelper
-     */
-    public function setSize(int $size): ElasticHelper
-    {
-        $this->size = $size;
-
-        return $this;
     }
 }

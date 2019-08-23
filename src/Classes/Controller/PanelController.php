@@ -8,6 +8,7 @@ use Helio\Panel\Controller\Traits\ModelUserController;
 use Helio\Panel\Controller\Traits\TypeBrowserController;
 use Helio\Panel\Helper\LogHelper;
 use Helio\Panel\Model\Instance;
+use Helio\Panel\Model\Job;
 use Helio\Panel\Model\User;
 use Helio\Panel\Service\UserService;
 use Helio\Panel\Utility\CookieUtility;
@@ -32,6 +33,11 @@ class PanelController extends AbstractController
      */
     private $userService;
 
+    /**
+     * @var \Doctrine\ORM\EntityRepository
+     */
+    private $jobRepository;
+
     public function __construct()
     {
         $dbHelper = App::getDbHelper();
@@ -40,6 +46,7 @@ class PanelController extends AbstractController
         $zapierHelper = App::getZapierHelper();
         $logger = LogHelper::getInstance();
         $this->userService = new UserService($userRepository, $em, $zapierHelper, $logger);
+        $this->jobRepository = $dbHelper->getRepository(Job::class);
     }
 
     protected function getMode(): ?string
@@ -75,7 +82,7 @@ class PanelController extends AbstractController
     /**
      * @return ResponseInterface
      *
-     * @Route("/buy", "methods={"GET", "POST"}, name="panel.buy")
+     * @Route("/buy", methods={"GET", "POST"}, name="panel.buy")
      */
     public function BuyAction(): ResponseInterface
     {
@@ -86,6 +93,28 @@ class PanelController extends AbstractController
             'module' => 'buy',
             'partialJs' => ['jobList'],
             'modalTemplates' => ['addJob'],
+        ]);
+    }
+
+    /**
+     * @return ResponseInterface
+     *
+     * @Route("/buy/{jobid:[\d]+}/logs", methods={"GET"}, name="panel.buy.logs")
+     */
+    public function jobLogsAction(string $jobId): ResponseInterface
+    {
+        /** @var Job $job */
+        $job = $this->jobRepository->find($jobId);
+        if (null === $job) {
+            return $this->render([], StatusCode::HTTP_NOT_FOUND);
+        }
+
+        return $this->render([
+            'user' => $this->user,
+            'job' => $job,
+            'title' => 'Logs for Job ' . $job->getId(),
+            'module' => 'buyLogs',
+            'partialJs' => ['logs'],
         ]);
     }
 

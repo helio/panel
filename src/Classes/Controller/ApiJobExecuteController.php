@@ -4,12 +4,13 @@ namespace Helio\Panel\Controller;
 
 use Helio\Panel\Helper\ElasticHelper;
 use Helio\Panel\Model\Instance;
+use Helio\Panel\Request\Log;
+use Helio\Panel\Service\LogService;
 use OpenApi\Annotations as OA;
 use Exception;
 use Helio\Panel\Helper\DbHelper;
 use RuntimeException;
 use Helio\Panel\App;
-use Helio\Panel\Controller\Traits\HelperElasticController;
 use Helio\Panel\Controller\Traits\ModelInstanceController;
 use Helio\Panel\Controller\Traits\ModelExecutionController;
 use Helio\Panel\Controller\Traits\TypeApiController;
@@ -50,8 +51,17 @@ class ApiJobExecuteController extends AbstractController
         AuthorizedActiveJobController::persistJob insteadof ModelInstanceController, ModelExecutionController;
     }
 
-    use HelperElasticController;
     use TypeApiController;
+
+    /**
+     * @var LogService
+     */
+    private $logService;
+
+    public function __construct()
+    {
+        $this->logService = new LogService(ElasticHelper::getInstance());
+    }
 
     /**
      * @return string
@@ -424,6 +434,22 @@ class ApiJobExecuteController extends AbstractController
      *             type="integer"
      *         )
      *     ),
+     *     @OA\Parameter(
+     *         name="cursor",
+     *         in="query",
+     *         description="Retrieve results specified after this cursor",
+     *         @OA\Schema(
+     *             type="string"
+     *         )
+     *     ),
+     *     @OA\Parameter(
+     *         name="sort",
+     *         in="query",
+     *         @OA\Schema(
+     *             enum={"asc", "desc"},
+     *             default="desc"
+     *         )
+     *     ),
      *     @OA\Response(response="200", ref="#/components/responses/logs"),
      * )
      *
@@ -445,13 +471,10 @@ class ApiJobExecuteController extends AbstractController
             return $this->render([]);
         }
 
-        $logEntries = $this->setWindow()->getLogEntries(
-            $job->getOwner()->getId(),
-            $job->getId(),
-            $this->execution->getId()
-        );
+        $requestParams = Log::fromParams($this->params);
+        $data = $this->logService->retrieveLogs($this->job->getOwner()->getId(), $requestParams, $this->job->getId(), $this->execution->getId());
 
-        return $this->render(ElasticHelper::serializeLogEntries($logEntries));
+        return $this->render($data);
     }
 
     /**

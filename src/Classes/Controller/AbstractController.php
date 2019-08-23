@@ -2,6 +2,7 @@
 
 namespace Helio\Panel\Controller;
 
+use OpenApi\Annotations as OA;
 use Ergy\Slim\Annotations\RouteInfo;
 use Ergy\Slim\Annotations\Controller;
 use Psr\Http\Message\ResponseInterface;
@@ -64,21 +65,6 @@ use function OpenApi\scan;
  *     )
  * )
  * @OA\Schema(
- *     schema="logentry",
- *     description="Log entry",
- *     type="object",
- *     @OA\Property(
- *         property="@timestamp",
- *         description="Timestamp of the entry",
- *         type="number"
- *     ),
- *     @OA\Property(
- *         property="log",
- *         description="Log Entry",
- *         type="string"
- *     )
- * )
- * @OA\Schema(
  *     schema="logs",
  *     description="List of Log entries",
  *     type="object",
@@ -89,12 +75,49 @@ use function OpenApi\scan;
  *     ),
  *     @OA\Property(
  *         type="array",
- *         property="hits",
+ *         property="logs",
+ *         description="Log items",
  *         @OA\Items(
  *             @OA\Property(
- *                 property="_source",
- *                 @OA\Items(ref="#/components/schemas/logentry")
- *             )
+ *                 property="timestamp",
+ *                 description="Time & Date in ISO8601 format",
+ *                 type="string"
+ *             ),
+ *             @OA\Property(
+ *                 property="message",
+ *                 description="Log message",
+ *                 type="string"
+ *             ),
+ *             @OA\Property(
+ *                 property="source",
+ *                 description="stdout or stderr",
+ *                 type="string"
+ *             ),
+ *             @OA\Property(
+ *                 property="executionId",
+ *                 description="execution id",
+ *                 type="integer"
+ *             ),
+ *             @OA\Property(
+ *                 property="jobId",
+ *                 description="job id",
+ *                 type="integer"
+ *             ),
+ *         )
+ *     ),
+ *     @OA\Property(
+ *         property="cursor",
+ *         type="object",
+ *         description="Cursor to use when querying next",
+ *         @OA\Property(
+ *             property="first",
+ *             description="Cursor to first element",
+ *             type="string"
+ *         ),
+ *         @OA\Property(
+ *             property="last",
+ *             description="Cursor to last element",
+ *             type="string"
  *         )
  *     )
  * )

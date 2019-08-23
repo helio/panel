@@ -4,9 +4,10 @@ namespace Helio\Panel\Controller;
 
 use Exception;
 use Helio\Panel\Helper\ElasticHelper;
+use Helio\Panel\Request\Log;
+use Helio\Panel\Service\LogService;
 use OpenApi\Annotations as OA;
 use Helio\Panel\App;
-use Helio\Panel\Controller\Traits\HelperElasticController;
 use Helio\Panel\Controller\Traits\ModelInstanceController;
 use Helio\Panel\Controller\Traits\TypeDynamicController;
 use Helio\Panel\Controller\Traits\AuthorizedJobController;
@@ -44,9 +45,17 @@ class ApiJobController extends AbstractController
         AuthorizedJobController::optionalParameterCheck insteadof ModelInstanceController;
     }
 
-    use HelperElasticController;
-
     use TypeDynamicController;
+
+    /**
+     * @var LogService
+     */
+    private $logService;
+
+    public function __construct()
+    {
+        $this->logService = new LogService(ElasticHelper::getInstance());
+    }
 
     /**
      * @return string
@@ -509,17 +518,17 @@ class ApiJobController extends AbstractController
      *     @OA\Parameter(
      *         name="id",
      *         in="query",
-     *         description="Id of the job which logs you wandt to see",
+     *         description="Id of the job which logs you want to see",
      *         required=true,
-     *         @Oa\Items(
-     *             type="integer"
+     *         @Oa\Schema(
+     *             type="integer",
      *         )
      *     ),
      *     @OA\Parameter(
      *         name="size",
      *         in="query",
      *         description="Amount of log entries to retreive",
-     *         @Oa\Items(
+     *         @Oa\Schema(
      *             type="integer"
      *         )
      *     ),
@@ -527,11 +536,27 @@ class ApiJobController extends AbstractController
      *         name="from",
      *         in="query",
      *         description="Amount of log entries to skip",
-     *         @Oa\Items(
+     *         @Oa\Schema(
      *             type="integer"
      *         )
      *     ),
-     *     @OA\Response(response="200", description="The Log Entries")
+     *     @OA\Parameter(
+     *         name="cursor",
+     *         in="query",
+     *         description="Retrieve results specified after this cursor",
+     *         @OA\Schema(
+     *             type="string"
+     *         )
+     *     ),
+     *     @OA\Parameter(
+     *         name="sort",
+     *         in="query",
+     *         @OA\Schema(
+     *             enum={"asc", "desc"},
+     *             default="desc"
+     *         )
+     *     ),
+     *     @OA\Response(response="200", ref="#/components/responses/logs")
      * )
      *
      * @return ResponseInterface
@@ -546,9 +571,10 @@ class ApiJobController extends AbstractController
             return $this->render(['success' => false, 'message' => 'Job not found'], StatusCode::HTTP_NOT_FOUND);
         }
 
-        $data = $this->setWindow()->getLogEntries($this->job->getOwner()->getId(), $this->job->getId());
+        $requestParams = Log::fromParams($this->params);
+        $data = $this->logService->retrieveLogs($this->job->getOwner()->getId(), $requestParams, $this->job->getId());
 
-        return $this->render(ElasticHelper::serializeLogEntries($data));
+        return $this->render($data);
     }
 
     /**

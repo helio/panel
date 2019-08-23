@@ -4,10 +4,11 @@ namespace Helio\Panel\Controller;
 
 use Exception;
 use Helio\Panel\Controller\Traits\ModelUserController;
-use Helio\Panel\Controller\Traits\HelperElasticController;
 use Helio\Panel\Controller\Traits\ModelParametrizedController;
 use Helio\Panel\Controller\Traits\TypeApiController;
 use Helio\Panel\Helper\ElasticHelper;
+use Helio\Panel\Request\Log;
+use Helio\Panel\Service\LogService;
 use Psr\Http\Message\ResponseInterface;
 
 /**
@@ -22,7 +23,16 @@ class ApiLogsController extends AbstractController
     use ModelUserController;
     use ModelParametrizedController;
     use TypeApiController;
-    use HelperElasticController;
+
+    /**
+     * @var LogService
+     */
+    private $logService;
+
+    public function __construct()
+    {
+        $this->logService = new LogService(ElasticHelper::getInstance());
+    }
 
     /**
      * @return ResponseInterface
@@ -33,16 +43,9 @@ class ApiLogsController extends AbstractController
      */
     public function logsAction(): ResponseInterface
     {
-        $this->optionalParameterCheck([
-            'size' => FILTER_SANITIZE_NUMBER_INT,
-            'from' => FILTER_SANITIZE_NUMBER_INT,
-        ]);
+        $requestParams = Log::fromParams($this->params);
+        $data = $this->logService->retrieveLogs($this->user->getId(), $requestParams, -1, -1);
 
-        $size = array_key_exists('size', $this->params) ? $this->params['size'] : 10;
-        $from = array_key_exists('from', $this->params) ? $this->params['from'] : 0;
-
-        $weirdLogEntries = $this->setWindow($from, $size)->getWeirdLogEntries($this->user->getId());
-
-        return $this->render(ElasticHelper::serializeLogEntries($weirdLogEntries));
+        return $this->render($data);
     }
 }

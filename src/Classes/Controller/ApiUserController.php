@@ -5,7 +5,6 @@ namespace Helio\Panel\Controller;
 use Exception;
 use Helio\Panel\App;
 use Helio\Panel\Controller\Traits\ModelUserController;
-use Helio\Panel\Controller\Traits\HelperElasticController;
 use Helio\Panel\Controller\Traits\ModelParametrizedController;
 use Helio\Panel\Controller\Traits\TypeApiController;
 use Helio\Panel\Job\JobStatus;
@@ -29,7 +28,6 @@ class ApiUserController extends AbstractController
     use ModelUserController;
     use ModelParametrizedController;
     use TypeApiController;
-    use HelperElasticController;
 
     /**
      * @return ResponseInterface
