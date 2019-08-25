@@ -115,3 +115,10 @@
     display: inline;
     width: auto;
 }
+
+.table-fixed {
+    table-layout: fixed;
+}
+.ww-break-word {
+    word-wrap: break-word;
+}

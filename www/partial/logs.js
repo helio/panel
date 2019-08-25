@@ -62,7 +62,7 @@ $(document).ready(function () {
             return htmlToElement(`
 <tr>
     <td>${formatDate(timestamp)}</td>
-    <td class="helio-monospace">${message}</td>
+    <td class="helio-monospace ww-break-word">${message}</td>
     <td>${source}</td>
     <td>${executionId}</td>
 </tr>`);
@@ -85,10 +85,13 @@ $(document).ready(function () {
         if (!state.loadOlder) {
             return
         }
+        state.loadOlder = false
+
         fetchLogs(url, { cursor: state.cursor.last, size: 100, sort: 'desc' })
             .then(({ logs, cursor }) => {
                 if (logs.length && cursor.last) {
                     state.cursor.last = cursor.last
+                    state.loadOlder = true
                 } else {
                     // if there is no log elements and no last cursor, we reached the end and can disable loading more.
                     state.loadOlder = false;
@@ -142,8 +145,9 @@ $(document).ready(function () {
 
     loadOlder();
 
+    const buffer = $scrollContainer.scrollHeight / 3
     window.addEventListener('scroll', () => {
-        if ($scrollContainer.scrollTop + $scrollContainer.clientHeight >= $scrollContainer.scrollHeight) {
+        if (state.loadOlder && $scrollContainer.scrollTop + $scrollContainer.clientHeight >= ($scrollContainer.scrollHeight - buffer)) {
             loadOlder()
         }
     }, { passive: true })
