@@ -33,14 +33,22 @@ class CliAuthenticate implements MiddlewareInterface
      */
     private $userService;
 
-    public function __construct()
+    /**
+     * Setting up the user service
+     * This cannot be in the constructor, because $dbHelper->getRepository freezes the container.
+     *
+     * @throws Exception
+     */
+    protected function setupUserService(): void
     {
-        $dbHelper = App::getDbHelper();
-        $userRepository = $dbHelper->getRepository(User::class);
-        $em = $dbHelper->get();
-        $zapierHelper = App::getZapierHelper();
-        $logger = LogHelper::getInstance();
-        $this->userService = new UserService($userRepository, $em, $zapierHelper, $logger);
+        if (null === $this->userService) {
+            $dbHelper = App::getDbHelper();
+            $userRepository = $dbHelper->getRepository(User::class);
+            $em = $dbHelper->get();
+            $zapierHelper = App::getZapierHelper();
+            $logger = LogHelper::getInstance();
+            $this->userService = new UserService($userRepository, $em, $zapierHelper, $logger);
+        }
     }
 
     /**
@@ -53,6 +61,8 @@ class CliAuthenticate implements MiddlewareInterface
      */
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
+        $this->setupUserService();
+
         /** @var Request $request */
         if ($request->getAttribute('JWT_SECRET', '') && $request->getServerParam('JWT_SECRET') === ServerUtility::get('JWT_SECRET')) {
             /** @var Job $job */

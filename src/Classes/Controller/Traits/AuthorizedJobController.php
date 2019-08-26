@@ -14,7 +14,7 @@ trait AuthorizedJobController
      */
     public function validateJob(): bool
     {
-        if ($this->job && $this->job->getId() === null) {
+        if ($this->job && null === $this->job->getId()) {
             return true;
         }
         // job has to be owned by current user or authenticated by jwt token

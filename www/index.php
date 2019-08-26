@@ -12,6 +12,6 @@ try {
         'file' => $e->getFile(),
         'line' => $e->getLine(),
         'prev' => $e->getTrace(),
-        'stacktrace' => 'PROD' === \Helio\Panel\Utility\ServerUtility::get('SITE_ENV') ? null : $e->getTrace(),
+        'stacktrace' => 'PROD' === \Helio\Panel\Utility\ServerUtility::get('SITE_ENV', '') ? null : $e->getTrace(),
     ]);
 }
