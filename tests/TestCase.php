@@ -8,6 +8,7 @@ use Helio\Panel\Model\Instance;
 use Helio\Panel\Model\Job;
 use Helio\Panel\Model\QueryFunction\TimestampDiff;
 use Helio\Panel\Model\Execution;
+use Helio\Panel\Model\Type\PreferencesType;
 use Helio\Panel\Model\Type\UTCDateTimeType;
 use Helio\Panel\Model\User;
 use Helio\Panel\Utility\MiddlewareForHttpUtility;
@@ -74,6 +75,9 @@ class TestCase extends \PHPUnit\Framework\TestCase
         DbHelper::reset();
         Type::overrideType('datetime', UTCDateTimeType::class);
         Type::overrideType('datetimetz', UTCDateTimeType::class);
+        if (!Type::hasType(PreferencesType::TypeName)) {
+            Type::addType(PreferencesType::TypeName, PreferencesType::class);
+        }
 
         $this->infrastructure = ORMInfrastructure::createWithDependenciesFor([User::class, Instance::class, Job::class, Execution::class]);
         $this->infrastructure->getEntityManager()->getConfiguration()->addFilter('deleted', DeletedFilter::class);

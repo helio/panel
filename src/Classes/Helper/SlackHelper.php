@@ -2,10 +2,8 @@
 
 namespace Helio\Panel\Helper;
 
-use Exception;
 use GuzzleHttp\Client;
 use Helio\Panel\Utility\ServerUtility;
-use Psr\Http\Message\ResponseInterface;
 use GuzzleHttp\Exception\GuzzleException;
 
 class SlackHelper implements HelperInterface
@@ -14,6 +12,9 @@ class SlackHelper implements HelperInterface
      * @var array<SlackHelper>
      */
     protected static $instances;
+
+    /** @var Client */
+    protected $client;
 
     /**
      * @return $this
@@ -29,21 +30,43 @@ class SlackHelper implements HelperInterface
     }
 
     /**
-     * @param string $message
-     *
-     * @return mixed|ResponseInterface
-     *
-     * @throws GuzzleException
-     * @throws Exception
+     * SlackHelper constructor.
      */
-    public function sendNotification(string $message)
+    public function __construct()
     {
         // Create an HTTP Client using Guzzle
-        $http_client = new Client([
+        $this->client = new Client([
             'base_uri' => 'https://hooks.slack.com/services/',
         ]);
+    }
 
-        // Make an authenticated HTTP Request
-        return 200 === $http_client->request('POST', ServerUtility::get('SLACK_WEBHOOK'), ['body' => '{"text":"' . $message . '"}'])->getStatusCode();
+    /**
+     * @param string $message
+     *
+     * @return bool
+     * @throws GuzzleException
+     */
+    public function sendNotification(string $message): bool
+    {
+        if (!ServerUtility::get('SLACK_WEBHOOK', '')) {
+            return false;
+        }
+
+        return 200 === $this->client->request('POST', ServerUtility::get('SLACK_WEBHOOK'), ['body' => '{"text":"' . $message . '"}'])->getStatusCode();
+    }
+
+    /**
+     * @param string $message
+     *
+     * @return bool
+     * @throws GuzzleException
+     */
+    public function sendAlert(string $message): bool
+    {
+        if (!ServerUtility::get('SLACK_WEBHOOK_ALERT', '')) {
+            return false;
+        }
+
+        return 200 === $this->client->request('POST', ServerUtility::get('SLACK_WEBHOOK'), ['body' => '{"text":"' . $message . '"}'])->getStatusCode();
     }
 }

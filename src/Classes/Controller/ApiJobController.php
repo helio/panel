@@ -3,7 +3,9 @@
 namespace Helio\Panel\Controller;
 
 use Exception;
+use GuzzleHttp\Exception\GuzzleException;
 use Helio\Panel\Helper\ElasticHelper;
+use Helio\Panel\Model\Preferences\NotificationPreferences;
 use Helio\Panel\Request\Log;
 use Helio\Panel\Service\LogService;
 use OpenApi\Annotations as OA;
@@ -112,6 +114,7 @@ class ApiJobController extends AbstractController
      * @Route("", methods={"POST"}, name="job.add")
      *
      * @throws Exception
+     * @throws GuzzleException
      */
     public function addJobAction(): ResponseInterface
     {
@@ -163,7 +166,9 @@ class ApiJobController extends AbstractController
         $this->job->setOwner($this->user)->setCreated();
         JobFactory::getInstanceOfJob($this->job)->create($this->params);
 
-        NotificationUtility::notifyAdmin('New Job was created by ' . $this->user->getEmail() . ', type: ' . $this->job->getType() . ', id: ' . $this->job->getId() . ', expected manager: manager-init-' . ServerUtility::getShortHashOfString($this->job->getId()));
+        if (!$this->user->getNotificationPreference(NotificationPreferences::MUTE_ADMIN)) {
+            NotificationUtility::notifyAdmin('New Job was created by ' . $this->user->getEmail() . ', type: ' . $this->job->getType() . ', id: ' . $this->job->getId() . ', expected manager: manager-init-' . ServerUtility::getShortHashOfString($this->job->getId()));
+        }
 
         OrchestratorFactory::getOrchestratorForInstance($this->instance, $this->job)->provisionManager();
 
@@ -581,6 +586,7 @@ class ApiJobController extends AbstractController
      * @return ResponseInterface
      *
      * @throws Exception
+     * @throws GuzzleException
      *
      * @Route("/callback", methods={"POST", "GET"}, "name="job.callback")
      */
@@ -593,8 +599,8 @@ class ApiJobController extends AbstractController
         $body = $this->request->getParsedBody();
         LogHelper::debug('Body received into job ' . $this->job->getId() . ' callback:' . print_r($body, true));
 
+        // TODO: Remove this notification because it's only a debug help for Kevin
         if (array_key_exists('error', $body)) {
-            // TODO: Implement error handling
             NotificationUtility::notifyAdmin('Error Callback received in Panel: ' . print_r($body, true));
         }
 
@@ -634,11 +640,17 @@ class ApiJobController extends AbstractController
         // TODO: set redundancy to >= 3 again if needed
         if ($this->job->getInitManagerIp() && $this->job->getClusterToken() && $this->job->getManagerToken() && count($this->job->getManagerNodes()) > 0) {
             $this->job->setStatus(JobStatus::READY);
-            NotificationUtility::notifyAdmin('Job is now ready. By: ' . $this->job->getOwner()->getEmail() . ', type: ' . $this->job->getType() . ', id: ' . $this->job->getId() . ', expected manager: manager-init-' . ServerUtility::getShortHashOfString($this->job->getId()));
+            NotificationUtility::notifyUser($this->job->getOwner(), 'Your job with the id ' . $this->job->getId() . ' is now ready to be executed on Helio', NotificationPreferences::EMAIL_ON_JOB_READY);
+            if (!$this->job->getOwner()->getNotificationPreference(NotificationPreferences::MUTE_ADMIN)) {
+                NotificationUtility::notifyAdmin('Job is now ready. By: ' . $this->job->getOwner()->getEmail() . ', type: ' . $this->job->getType() . ', id: ' . $this->job->getId() . ', expected manager: manager-init-' . ServerUtility::getShortHashOfString($this->job->getId()));
+            }
         }
         if (array_key_exists('deleted', $body) && 0 === count($this->job->getManagerNodes())) {
             $this->job->setStatus(JobStatus::DELETED);
-            NotificationUtility::notifyAdmin('Job was deleted by ' . $this->job->getOwner()->getEmail() . ', type: ' . $this->job->getType() . ', id: ' . $this->job->getId() . ', expected manager: manager-init-' . ServerUtility::getShortHashOfString($this->job->getId()));
+            NotificationUtility::notifyUser($this->job->getOwner(), 'Your job with the id ' . $this->job->getId() . ' is now completely removed from Helio', NotificationPreferences::EMAIL_ON_JOB_DELETED);
+            if (!$this->job->getOwner()->getNotificationPreference(NotificationPreferences::MUTE_ADMIN)) {
+                NotificationUtility::notifyAdmin('Job was deleted by ' . $this->job->getOwner()->getEmail() . ', type: ' . $this->job->getType() . ', id: ' . $this->job->getId() . ', expected manager: manager-init-' . ServerUtility::getShortHashOfString($this->job->getId()));
+            }
         }
 
         $this->persistJob();

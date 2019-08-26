@@ -9,6 +9,7 @@ use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Tools\Setup;
 use Helio\Panel\Model\Filter\DeletedFilter;
 use Helio\Panel\Model\QueryFunction\TimestampDiff;
+use Helio\Panel\Model\Type\PreferencesType;
 use Helio\Panel\Model\Type\UTCDateTimeType;
 use Helio\Panel\Utility\ServerUtility;
 
@@ -92,6 +93,7 @@ class DbHelper implements HelperInterface
 
             Type::overrideType('datetime', UTCDateTimeType::class);
             Type::overrideType('datetimetz', UTCDateTimeType::class);
+            Type::addType(PreferencesType::TypeName, PreferencesType::class);
 
             $configObject = Setup::createAnnotationMetadataConfiguration([realpath($this->getPathToModels())], !ServerUtility::isProd(), ServerUtility::getTmpPath());
             $configObject->setAutoGenerateProxyClasses(!ServerUtility::isProd());

@@ -6,6 +6,7 @@ use Ahc\Cron\Expression;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\Common\Collections\ExpressionBuilder;
 use Exception;
+use GuzzleHttp\Exception\GuzzleException;
 use Helio\Panel\App;
 use Helio\Panel\Execution\ExecutionStatus;
 use Helio\Panel\Job\JobFactory;
@@ -13,6 +14,7 @@ use Helio\Panel\Job\JobStatus;
 use Helio\Panel\Model\Execution;
 use Helio\Panel\Model\Instance;
 use Helio\Panel\Model\Job;
+use Helio\Panel\Model\Preferences\NotificationPreferences;
 use Helio\Panel\Orchestrator\OrchestratorFactory;
 use Helio\Panel\Utility\MiddlewareForCliUtility;
 use Helio\Panel\Utility\NotificationUtility;
@@ -46,6 +48,7 @@ class ExecuteScheduledJob extends Command
      * @return int|null
      *
      * @throws Exception
+     * @throws GuzzleException
      */
     protected function execute(InputInterface $input, OutputInterface $output): ?int
     {
@@ -84,7 +87,9 @@ class ExecuteScheduledJob extends Command
                         App::getDbHelper()->flush();
                     }
 
-                    NotificationUtility::notifyAdmin('Job ' . $job->getId() . ' successfully automatically executed');
+                    if (!$job->getOwner()->getNotificationPreference(NotificationPreferences::MUTE_ADMIN)) {
+                        NotificationUtility::notifyAdmin('Job ' . $job->getId() . ' successfully automatically executed');
+                    }
                 }
             } catch (Exception $e) {
                 App::getLogger()->err('Error ' . $e->getCode() . ' during init: ' . $e->getMessage());

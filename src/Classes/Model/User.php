@@ -13,6 +13,7 @@ use Doctrine\ORM\Mapping\Table;
 use Doctrine\ORM\Mapping\Column;
 use Doctrine\ORM\Mapping\OneToMany;
 use Doctrine\Common\Collections\ArrayCollection;
+use Helio\Panel\Model\Preferences\NotificationPreferences;
 use Helio\Panel\Utility\ServerUtility;
 
 /**
@@ -56,6 +57,14 @@ class User extends AbstractModel implements \JsonSerializable
     protected $loggedOut;
 
     /**
+     * @var notificationPreferences
+     *
+     * TODO: Remove the options here once the schema has been updated on all systems
+     * @Column(type="preferences", nullable=true, options={"default": "\\Helio\\Panel\\Model\\Preferences\\NotificationPreferences:0"})
+     */
+    protected $notificationPreferences;
+
+    /**
      * @var array<Instance>
      *
      * @OneToMany(targetEntity="Instance", mappedBy="owner", cascade={"persist"})
@@ -79,6 +88,7 @@ class User extends AbstractModel implements \JsonSerializable
         parent::__construct();
         $this->instances = new ArrayCollection();
         $this->jobs = new ArrayCollection();
+        $this->notificationPreferences = new NotificationPreferences(NotificationPreferences::EMAIL_ON_EXECUTION_ENDED | NotificationPreferences::EMAIL_ON_JOB_READY);
     }
 
     /**
@@ -233,6 +243,23 @@ class User extends AbstractModel implements \JsonSerializable
         $loggedOut->setTimezone(new DateTimeZone('UTC'));
 
         $this->loggedOut = $loggedOut;
+    }
+
+    /**
+     * @return NotificationPreferences
+     */
+    public function getNotificationPreferences(): NotificationPreferences
+    {
+        return $this->notificationPreferences;
+    }
+
+    /**
+     * @param  int  $preference
+     * @return bool
+     */
+    public function getNotificationPreference(int $preference): bool
+    {
+        return $this->notificationPreferences->isFlagSet($preference);
     }
 
     /**

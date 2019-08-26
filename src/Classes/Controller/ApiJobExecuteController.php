@@ -4,8 +4,10 @@ namespace Helio\Panel\Controller;
 
 use Helio\Panel\Helper\ElasticHelper;
 use Helio\Panel\Model\Instance;
+use Helio\Panel\Model\Preferences\NotificationPreferences;
 use Helio\Panel\Request\Log;
 use Helio\Panel\Service\LogService;
+use Helio\Panel\Utility\NotificationUtility;
 use OpenApi\Annotations as OA;
 use Exception;
 use Helio\Panel\Helper\DbHelper;
@@ -342,6 +344,8 @@ class ApiJobExecuteController extends AbstractController
             DbHelper::getInstance()->flush();
 
             OrchestratorFactory::getOrchestratorForInstance(new Instance(), $this->job)->dispatchJob();
+
+            NotificationUtility::notifyUser($this->job->getOwner(), 'Your Job with the id ' . $this->job->getId() . ' was successfully executed' . "\n" . 'The results can now be used.', NotificationPreferences::EMAIL_ON_EXECUTION_ENDED);
 
             return $this->render(['success' => true, 'message' => 'Job marked as done']);
         }

@@ -4,6 +4,7 @@ namespace Helio\Test\Functional;
 
 use Doctrine\DBAL\Types\Type;
 use Helio\Panel\Model\Instance;
+use Helio\Panel\Model\Preferences\NotificationPreferences;
 use Helio\Panel\Model\Type\UTCDateTimeType;
 use Helio\Panel\Model\User;
 use Helio\Panel\Utility\ServerUtility;
@@ -123,5 +124,30 @@ class DatabaseTest extends TestCase
         $this->assertNotNull($foundServer);
         $this->assertEquals($server->getCreated()->getTimestamp(), $foundServer->getCreated()->getTimestamp());
         $this->assertEquals($server->getCreated()->getTimezone()->getName(), $foundServer->getCreated()->getTimezone()->getName());
+    }
+
+    public function testBitFlagConversionDefaultValues(): void
+    {
+        $user = (new User())->setCreated()->setName('testuer');
+        $this->infrastructure->getEntityManager()->persist($user);
+        $this->infrastructure->getEntityManager()->flush();
+
+        /** @var User $foundUser */
+        $foundUser = $this->infrastructure->getRepository(User::class)->find($user->getId());
+        $this->assertTrue($foundUser->getNotificationPreference(NotificationPreferences::EMAIL_ON_JOB_READY));
+    }
+
+    public function testBitFlagConversionManipulation(): void
+    {
+        /** @var User $user */
+        $user = (new User())->setCreated()->setName('testuer');
+        $this->assertFalse($user->getNotificationPreference(NotificationPreferences::MUTE_ADMIN));
+        $user->getNotificationPreferences()->setFlag(NotificationPreferences::MUTE_ADMIN, true);
+        $this->infrastructure->getEntityManager()->persist($user);
+        $this->infrastructure->getEntityManager()->flush();
+
+        /** @var User $foundUser */
+        $foundUser = $this->infrastructure->getRepository(User::class)->find($user->getId());
+        $this->assertTrue($foundUser->getNotificationPreference(NotificationPreferences::MUTE_ADMIN));
     }
 }
