@@ -55,8 +55,7 @@ class ExecuteScheduledJob extends Command
             'REQUEST_URI' => '/',
         ]));
 
-        $app = App::getApp('cli', [MiddlewareForCliUtility::class]);
-        $app->getContainer()['request'] = $request;
+        $app = App::getApp('cli', [MiddlewareForCliUtility::class], $request);
 
         $jobs = App::getDbHelper()->getRepository(Job::class)->matching(new Criteria($expression));
 
@@ -86,8 +85,9 @@ class ExecuteScheduledJob extends Command
 
                     NotificationUtility::notifyAdmin('Job ' . $job->getId() . ' successfully automatically executed');
                 }
-            } catch (Exception $e) {
+            } catch (\Throwable $e) {
                 App::getLogger()->err('Error ' . $e->getCode() . ' during init: ' . $e->getMessage());
+                App::getLogger()->err($e);
                 continue;
             }
         }

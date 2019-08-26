@@ -13,6 +13,7 @@ use Helio\Panel\Helper\ZapierHelper;
 use Helio\Panel\Utility\MiddlewareForHttpUtility;
 use Helio\Panel\Utility\ServerUtility;
 use Monolog\Logger;
+use Slim\Http\Request;
 use Slim\Views\PhpRenderer;
 
 /**
@@ -58,17 +59,10 @@ class App extends \Slim\App
     /** @var SlackHelper */
     protected static $slackHelperClassName = SlackHelper::class;
 
-    /**
-     * @param string|null $appName
-     * @param array       $middleWaresToApply
-     *
-     * @return App
-     *
-     * @throws Exception
-     */
     public static function getApp(
         ?string $appName = null,
-        array $middleWaresToApply = [MiddlewareForHttpUtility::class]
+        array $middleWaresToApply = [MiddlewareForHttpUtility::class],
+        Request $request = null
     ): App {
         if (!self::$instance) {
             // abort if $instance should exist, but doesn't (e.g. if we call getApp from inside the application)
@@ -91,6 +85,9 @@ class App extends \Slim\App
                 [APPLICATION_ROOT . '/src/Classes/Controller/'],
                 APPLICATION_ROOT . '/tmp/cache/' . $appName
             );
+            if ($request) {
+                self::$instance->getContainer()['request'] = $request;
+            }
 
             foreach ($middleWaresToApply as $middleware) {
                 $middleware::addMiddleware(self::$instance);
