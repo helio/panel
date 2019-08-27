@@ -23,7 +23,7 @@ class PanelTest extends TestCase
      */
     public function testGetHomeContainsWithLogin(): void
     {
-        $response = $this->runApp('GET', '/');
+        $response = $this->runWebApp('GET', '/');
 
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertStringContainsString('Log In', (string) $response->getBody());
@@ -38,7 +38,7 @@ class PanelTest extends TestCase
     public function testLoginGetRedirectedWithExampleUser(): void
     {
         ZapierHelper::setResponseStack([new Response(200, [], '{"success" => "true"}')]);
-        $response = $this->runApp('POST', '/user/login', true, null, ['email' => 'email@example.com']);
+        $response = $this->runWebApp('POST', '/user/login', true, null, ['email' => 'email@example.com']);
 
         $this->assertEquals(302, $response->getStatusCode(), $response->getBody());
         $this->assertCount(1, $response->getHeader('Location'));
@@ -51,17 +51,17 @@ class PanelTest extends TestCase
     public function testActivationLinkActivatesUser(): void
     {
         ZapierHelper::setResponseStack([new Response(200, [], '{"success" => "true"}')]);
-        $response = $this->runApp('POST', '/user/login', true, null, ['email' => 'email@example.com']);
+        $response = $this->runWebApp('POST', '/user/login', true, null, ['email' => 'email@example.com']);
         $this->assertEquals(302, $response->getStatusCode());
         $this->assertCount(1, $response->getHeader('Location'));
         $this->assertStringContainsString('/confirm', $response->getHeader('Location')[0]);
 
         $confirmationUrl = $response->getHeader('Location')[0];
 
-        $response = $this->runApp('GET', $confirmationUrl, true);
+        $response = $this->runWebApp('GET', $confirmationUrl, true);
         $this->assertEquals(StatusCode::HTTP_FOUND, $response->getStatusCode());
         $this->assertStringContainsString('/panel', $response->getHeaderLine('location'));
-        $response = $this->runApp('GET', $response->getHeaderLine('location'), true, null, null, $response->getHeaderLine('set-cookie'));
+        $response = $this->runWebApp('GET', $response->getHeaderLine('location'), true, null, null, $response->getHeaderLine('set-cookie'));
 
         /** @var User $user */
         $user = $this->userRepository->findOneByEmail('email@example.com');
@@ -74,17 +74,17 @@ class PanelTest extends TestCase
     public function testLoggedOutInvalidatesToken(): void
     {
         ZapierHelper::setResponseStack([new Response(200, [], '{"success" => "true"}')]);
-        $response = $this->runApp('POST', '/user/login', true, null, ['email' => 'email@example.com'], null);
+        $response = $this->runWebApp('POST', '/user/login', true, null, ['email' => 'email@example.com'], null);
         $this->assertEquals(302, $response->getStatusCode());
         $this->assertCount(1, $response->getHeader('Location'));
         $this->assertStringContainsString('/confirm', $response->getHeader('Location')[0]);
 
         $confirmationUrl = $response->getHeader('Location')[0];
 
-        $response = $this->runApp('GET', $confirmationUrl, true);
+        $response = $this->runWebApp('GET', $confirmationUrl, true);
         $this->assertEquals(StatusCode::HTTP_FOUND, $response->getStatusCode());
         $this->assertStringContainsString('/panel', $response->getHeaderLine('location'));
-        $this->runApp('GET', $response->getHeaderLine('location'), true, null, null, $response->getHeaderLine('set-cookie'));
+        $this->runWebApp('GET', $response->getHeaderLine('location'), true, null, null, $response->getHeaderLine('set-cookie'));
 
         /** @var User $user */
         $user = $this->userRepository->findOneByEmail('email@example.com');
@@ -97,13 +97,13 @@ class PanelTest extends TestCase
         // simulate second-percision when storing values in the database
         $now = \DateTime::createFromFormat('Y-m-d H:i:s', (new \DateTime())->format('Y-m-d H:i:s'));
 
-        $this->runApp('GET', '/panel/logout', true);
+        $this->runWebApp('GET', '/panel/logout', true);
 
         $user = $this->userRepository->findOneByEmail('email@example.com');
 
         $this->assertGreaterThanOrEqual($now, $user->getLoggedOut());
 
-        $response = $this->runApp('GET', $confirmationUrl, true);
+        $response = $this->runWebApp('GET', $confirmationUrl, true);
         $this->assertEquals(302, $response->getStatusCode());
     }
 }

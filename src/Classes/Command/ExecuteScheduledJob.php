@@ -31,6 +31,32 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 class ExecuteScheduledJob extends Command
 {
+    /** @var array */
+    protected $middlewaresToApply;
+
+    /** @var App */
+    protected $app;
+
+    /**
+     * ExecuteScheduledJob constructor.
+     * @param  string    $appClassName
+     * @param  array     $middlewaresToApply
+     * @throws Exception
+     */
+    public function __construct(string $appClassName = App::class, $middlewaresToApply = [MiddlewareForCliUtility::class])
+    {
+        parent::__construct();
+        $this->middlewaresToApply = $middlewaresToApply;
+        $request = Request::createFromEnvironment(Environment::mock([
+            'REQUEST_METHOD' => 'POST',
+            'REQUEST_URI' => '/',
+        ]));
+
+        /* @var App $appClassName */
+        $this->app = $appClassName::getApp('cli', $this->middlewaresToApply);
+        $this->app->getContainer()['request'] = $request;
+    }
+
     /**
      * Configure Command.
      */
@@ -53,13 +79,6 @@ class ExecuteScheduledJob extends Command
     protected function execute(InputInterface $input, OutputInterface $output): ?int
     {
         $expression = (new ExpressionBuilder())->neq('autoExecSchedule', '');
-        $request = Request::createFromEnvironment(Environment::mock([
-            'REQUEST_METHOD' => 'POST',
-            'REQUEST_URI' => '/',
-        ]));
-
-        $app = App::getApp('cli', [MiddlewareForCliUtility::class]);
-        $app->getContainer()['request'] = $request;
 
         $jobs = App::getDbHelper()->getRepository(Job::class)->matching(new Criteria($expression));
 
@@ -92,7 +111,7 @@ class ExecuteScheduledJob extends Command
                     }
                 }
             } catch (Exception $e) {
-                App::getLogger()->err('Error ' . $e->getCode() . ' during init: ' . $e->getMessage());
+                App::getLogger()->err('Warning ' . $e->getCode() . ' during cronjob job init: ' . $e->getMessage());
                 continue;
             }
         }

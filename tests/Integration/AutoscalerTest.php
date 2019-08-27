@@ -77,7 +77,7 @@ class AutoscalerTest extends TestCase
      */
     protected function exec(): ResponseInterface
     {
-        return $this->runApp('GET', $this->url, true, $this->headers);
+        return $this->runWebApp('GET', $this->url, true, $this->headers);
     }
 
     /**
@@ -211,7 +211,7 @@ class AutoscalerTest extends TestCase
         $job = (new Job())->setInitManagerIp('1.1.1.1')->setManagerNodes(['1', '2', '3'])->setOwner($this->user)->setStatus(JobStatus::READY)->setType(JobType::INFINITEBOX);
         $this->infrastructure->getEntityManager()->persist($job);
         $this->infrastructure->getEntityManager()->flush();
-        $result = $this->runApp('GET', '/api/admin/getJobHiera?jobid=' . $job->getId(), true, $this->headers);
+        $result = $this->runWebApp('GET', '/api/admin/getJobHiera?jobid=' . $job->getId(), true, $this->headers);
 
         $this->assertEquals(200, $result->getStatusCode());
 
@@ -221,7 +221,7 @@ class AutoscalerTest extends TestCase
         $this->infrastructure->getEntityManager()->persist($job);
         $this->infrastructure->getEntityManager()->flush();
 
-        $result = $this->runApp('GET', '/api/admin/getJobHiera?jobid=' . $job->getId(), true, $this->headers);
+        $result = $this->runWebApp('GET', '/api/admin/getJobHiera?jobid=' . $job->getId(), true, $this->headers);
         $this->assertEquals(200, $result->getStatusCode());
         $this->assertEquals(1, $this->findValueOfKeyInHiera($result, $job->getType() . '-' . $job->getId() . '-' . $execution1->getId() . '.replicas'));
 
@@ -231,7 +231,7 @@ class AutoscalerTest extends TestCase
         $this->infrastructure->getEntityManager()->persist($job);
         $this->infrastructure->getEntityManager()->flush();
 
-        $result = $this->runApp('GET', '/api/admin/getJobHiera?jobid=' . $job->getId(), true, $this->headers);
+        $result = $this->runWebApp('GET', '/api/admin/getJobHiera?jobid=' . $job->getId(), true, $this->headers);
         $this->assertEquals(200, $result->getStatusCode());
         $this->assertEquals(1, $this->findValueOfKeyInHiera($result, $job->getType() . '-' . $job->getId() . '-' . $execution1->getId() . '.replicas'));
 
@@ -241,7 +241,7 @@ class AutoscalerTest extends TestCase
         $this->infrastructure->getEntityManager()->persist($execution2);
         $this->infrastructure->getEntityManager()->flush();
 
-        $result = $this->runApp('GET', '/api/admin/getJobHiera?jobid=' . $job->getId(), true, $this->headers);
+        $result = $this->runWebApp('GET', '/api/admin/getJobHiera?jobid=' . $job->getId(), true, $this->headers);
         $this->assertEquals(200, $result->getStatusCode());
         $this->assertEquals('absent', $this->findValueOfKeyInHiera($result, $job->getType() . '-' . $job->getId() . '-' . $execution1->getId() . '.ensure'));
     }
@@ -251,7 +251,7 @@ class AutoscalerTest extends TestCase
      */
     public function testReplicaGetAppliedOnNewJob(): void
     {
-        $this->runApp('POST', '/api/job', true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']], ['type' => JobType::ENERGY_PLUS_85, 'name' => 'testing 1551430480']);
+        $this->runWebApp('POST', '/api/job', true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']], ['type' => JobType::ENERGY_PLUS_85, 'name' => 'testing 1551430480']);
 
         /** @var Job $job */
         $job = $this->jobRepository->findOneByName('testing 1551430480');

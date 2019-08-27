@@ -51,7 +51,7 @@ class ServerApiGettokenTest extends TestCase
      */
     protected function exec(): ResponseInterface
     {
-        return $this->runApp('POST', '/server/gettoken', true, null, $this->data);
+        return $this->runWebApp('POST', '/server/gettoken', true, null, $this->data);
     }
 
     /**

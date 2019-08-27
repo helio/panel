@@ -44,7 +44,7 @@ class ServerApiInitTest extends TestCase
      */
     protected function exec(): ResponseInterface
     {
-        return $this->runApp('POST', '/server/init', true, null, $this->data);
+        return $this->runWebApp('POST', '/server/init', true, null, $this->data);
     }
 
     /**

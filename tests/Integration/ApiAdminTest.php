@@ -51,7 +51,7 @@ class ApiAdminTest extends TestCase
      */
     public function testGetJobHiera(): void
     {
-        $result = $this->runApp('GET', '/api/admin/getJobHiera?jobid=' . $this->job->getId(), true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']]);
+        $result = $this->runWebApp('GET', '/api/admin/getJobHiera?jobid=' . $this->job->getId(), true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']]);
         $hiera = (string) $result->getBody();
 
         $this->assertEquals(StatusCode::HTTP_OK, $result->getStatusCode());

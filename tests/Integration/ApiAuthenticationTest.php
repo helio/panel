@@ -13,7 +13,7 @@ class ApiAuthenticationTest extends TestCase
      */
     public function testApiLoginWithoutBodyYieldsBadRequest(): void
     {
-        $response = $this->runApp('POST', '/api/login');
+        $response = $this->runWebApp('POST', '/api/login');
 
         $this->assertEquals(400, $response->getStatusCode());
         $body = json_decode((string) $response->getBody(), true);
@@ -28,7 +28,7 @@ class ApiAuthenticationTest extends TestCase
      */
     public function testApiLoginWithEmptyBodyYieldsBadRequest(): void
     {
-        $response = $this->runApp('POST', '/api/login', false, ['Content-Type' => 'application/json'], []);
+        $response = $this->runWebApp('POST', '/api/login', false, ['Content-Type' => 'application/json'], []);
 
         $this->assertEquals(400, $response->getStatusCode());
         $body = json_decode((string) $response->getBody(), true);
@@ -43,7 +43,7 @@ class ApiAuthenticationTest extends TestCase
      */
     public function testApiLoginWithWrongContentTypeYieldsBadRequest(): void
     {
-        $response = $this->runApp('POST', '/api/login', false, ['Content-Type' => 'text/plain'], ['email' => 'email@example.com']);
+        $response = $this->runWebApp('POST', '/api/login', false, ['Content-Type' => 'text/plain'], ['email' => 'email@example.com']);
 
         $this->assertEquals(400, $response->getStatusCode());
         $body = json_decode((string) $response->getBody(), true);
@@ -58,7 +58,7 @@ class ApiAuthenticationTest extends TestCase
      */
     public function testApiLoginWithInvalidEmailYieldsBadRequest(): void
     {
-        $response = $this->runApp('POST', '/api/login', false, ['Content-Type' => 'application/json'], ['email' => 'wrong email']);
+        $response = $this->runWebApp('POST', '/api/login', false, ['Content-Type' => 'application/json'], ['email' => 'wrong email']);
 
         $this->assertEquals(400, $response->getStatusCode());
         $body = json_decode((string) $response->getBody(), true);
@@ -74,7 +74,7 @@ class ApiAuthenticationTest extends TestCase
     public function testApiLoginWithExampleUserGivesToken(): void
     {
         ZapierHelper::setResponseStack([new Response(200, [], '{"success" => "true"}')]);
-        $response = $this->runApp('POST', '/api/login', false, ['Content-Type' => 'application/json'], ['email' => 'email@example.com']);
+        $response = $this->runWebApp('POST', '/api/login', false, ['Content-Type' => 'application/json'], ['email' => 'email@example.com']);
 
         $this->assertEquals(200, $response->getStatusCode(), $response->getBody());
         $body = json_decode((string) $response->getBody(), true);
@@ -89,7 +89,7 @@ class ApiAuthenticationTest extends TestCase
     public function testApiLoginWithRandomUserGivesToken(): void
     {
         ZapierHelper::setResponseStack([new Response(200, [], '{"success" => "true"}')]);
-        $response = $this->runApp('POST', '/api/login', false, ['Content-Type' => 'application/json'], ['email' => 'someone@example.com']);
+        $response = $this->runWebApp('POST', '/api/login', false, ['Content-Type' => 'application/json'], ['email' => 'someone@example.com']);
 
         $this->assertEquals(200, $response->getStatusCode(), $response->getBody());
         $body = json_decode((string) $response->getBody(), true);

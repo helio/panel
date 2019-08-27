@@ -75,10 +75,10 @@ class ApiJobTest extends TestCase
      */
     public function testThatIdParameterBehavesLikeJobIdOnJobApi()
     {
-        $statusResult = $this->runApp('GET', '/api/job/isready?jobid=' . $this->job->getId(), true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, null, null, $this->job)['token']]);
+        $statusResult = $this->runWebApp('GET', '/api/job/isready?jobid=' . $this->job->getId(), true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, null, null, $this->job)['token']]);
         $this->assertEquals(StatusCode::HTTP_OK, $statusResult->getStatusCode());
 
-        $statusResult = $this->runApp('GET', '/api/job/isready?id=' . $this->job->getId(), true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, null, null, $this->job)['token']]);
+        $statusResult = $this->runWebApp('GET', '/api/job/isready?id=' . $this->job->getId(), true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, null, null, $this->job)['token']]);
         $this->assertEquals(StatusCode::HTTP_OK, $statusResult->getStatusCode(), 'on the job api, the parameter "id" should be synonym to "jobid".');
     }
 
@@ -89,12 +89,12 @@ class ApiJobTest extends TestCase
     {
         $header = ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, null, null, $this->job)['token']];
         $executionId = base64_encode(random_bytes(8));
-        $statusResult = $this->runApp('GET', '/api/job/isdone?id=' . $this->job->getId(), true, $header);
+        $statusResult = $this->runWebApp('GET', '/api/job/isdone?id=' . $this->job->getId(), true, $header);
         $this->assertEquals(StatusCode::HTTP_FAILED_DEPENDENCY, $statusResult->getStatusCode());
 
-        $this->runApp('POST', '/api/job/' . $this->job->getId() . '/execute', true, $header, ['name' => $executionId]);
+        $this->runWebApp('POST', '/api/job/' . $this->job->getId() . '/execute', true, $header, ['name' => $executionId]);
 
-        $statusResult = $this->runApp('GET', '/api/job/isdone?id=' . $this->job->getId(), true, $header);
+        $statusResult = $this->runWebApp('GET', '/api/job/isdone?id=' . $this->job->getId(), true, $header);
         $this->assertEquals(StatusCode::HTTP_FAILED_DEPENDENCY, $statusResult->getStatusCode());
 
         /** @var Execution $exec */
@@ -103,8 +103,7 @@ class ApiJobTest extends TestCase
         $this->infrastructure->getEntityManager()->persist($exec);
         $this->infrastructure->getEntityManager()->flush();
 
-        $tasks = $this->infrastructure->getRepository(Execution::class)->findAll();
-        $statusResult = $this->runApp('GET', '/api/job/isdone?id=' . $this->job->getId(), true, $header, ['billingReference' => $executionId]);
+        $statusResult = $this->runWebApp('GET', '/api/job/isdone?id=' . $this->job->getId(), true, $header, ['billingReference' => $executionId]);
         $this->assertEquals(StatusCode::HTTP_OK, $statusResult->getStatusCode());
     }
 
@@ -114,13 +113,13 @@ class ApiJobTest extends TestCase
     public function testJobCreationAndUpdateWorks(): void
     {
         $header = ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']];
-        $updateResponse = $this->runApp('POST', '/api/job', true, $header, ['name' => 'testJobCreationAndUpdateWorks', 'type' => 'docker', 'id' => $this->job->getId()]);
+        $updateResponse = $this->runWebApp('POST', '/api/job', true, $header, ['name' => 'testJobCreationAndUpdateWorks', 'type' => 'docker', 'id' => $this->job->getId()]);
         $this->assertEquals(StatusCode::HTTP_OK, $updateResponse->getStatusCode());
         $body = json_decode((string) $updateResponse->getBody(), true);
         $this->assertArrayHasKey('id', $body);
         $this->assertEquals($this->job->getId(), $body['id']);
 
-        $response = $this->runApp('GET', '/api/job?id=' . $this->job->getId(), true, $header);
+        $response = $this->runWebApp('GET', '/api/job?id=' . $this->job->getId(), true, $header);
         $this->assertEquals(StatusCode::HTTP_OK, $response->getStatusCode());
         $body = json_decode((string) $response->getBody(), true);
         $this->assertEquals($this->job->getId(), $body['id']);

@@ -28,7 +28,7 @@ class ApiUserTest extends TestCase
 
         $this->infrastructure->getEntityManager()->flush();
 
-        $response = $this->runApp('GET', '/api/user/joblist', true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $user)['token']]);
+        $response = $this->runWebApp('GET', '/api/user/joblist', true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $user)['token']]);
 
         $this->assertEquals(200, $response->getStatusCode());
         $body = json_decode((string) $response->getBody(), true);
@@ -49,7 +49,7 @@ class ApiUserTest extends TestCase
 
         $this->infrastructure->getEntityManager()->flush();
 
-        $response = $this->runApp('GET', '/api/user/joblist', true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $user)['token']]);
+        $response = $this->runWebApp('GET', '/api/user/joblist', true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $user)['token']]);
 
         $this->assertEquals(200, $response->getStatusCode());
         $body = json_decode((string) $response->getBody(), true);
@@ -69,7 +69,7 @@ class ApiUserTest extends TestCase
 
         $this->infrastructure->getEntityManager()->flush();
 
-        $response = $this->runApp('GET', '/api/user/joblist', true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $user)['token']]);
+        $response = $this->runWebApp('GET', '/api/user/joblist', true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $user)['token']]);
 
         $this->assertEquals(200, $response->getStatusCode());
         $body = json_decode((string) $response->getBody(), true);
@@ -89,7 +89,7 @@ class ApiUserTest extends TestCase
 
         $this->infrastructure->getEntityManager()->flush();
 
-        $response = $this->runApp('GET', '/api/user/joblist?deleted=1', true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $user)['token']]);
+        $response = $this->runWebApp('GET', '/api/user/joblist?deleted=1', true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $user)['token']]);
 
         $this->assertEquals(200, $response->getStatusCode());
         $body = json_decode((string) $response->getBody(), true);
@@ -109,7 +109,7 @@ class ApiUserTest extends TestCase
 
         $this->infrastructure->getEntityManager()->flush();
 
-        $response = $this->runApp('GET', '/api/user/joblist?deleted=1', true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $user)['token']]);
+        $response = $this->runWebApp('GET', '/api/user/joblist?deleted=1', true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $user)['token']]);
 
         $this->assertEquals(200, $response->getStatusCode());
         $body = json_decode((string) $response->getBody(), true);
@@ -130,7 +130,7 @@ class ApiUserTest extends TestCase
 
         $this->infrastructure->getEntityManager()->flush();
 
-        $response = $this->runApp('GET', '/api/user/joblist?deleted=1', true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $user)['token']]);
+        $response = $this->runWebApp('GET', '/api/user/joblist?deleted=1', true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $user)['token']]);
 
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertEmpty($response->getHeaderLine('Set-Cookie'));

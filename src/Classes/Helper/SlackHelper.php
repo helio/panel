@@ -67,6 +67,6 @@ class SlackHelper implements HelperInterface
             return false;
         }
 
-        return 200 === $this->client->request('POST', ServerUtility::get('SLACK_WEBHOOK'), ['body' => '{"text":"' . $message . '"}'])->getStatusCode();
+        return 200 === $this->client->request('POST', ServerUtility::get('SLACK_WEBHOOK_ALERT'), ['body' => '{"text":"' . $message . '"}'])->getStatusCode();
     }
 }

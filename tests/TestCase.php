@@ -22,6 +22,9 @@ use Slim\Http\Request;
 use Slim\Http\Environment;
 use Doctrine\Common\Persistence\ObjectRepository;
 use Slim\Http\RequestBody;
+use Symfony\Component\Console\Application;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Tester\CommandTester;
 use Webfactory\Doctrine\ORMTestInfrastructure\ORMInfrastructure;
 
 /**
@@ -137,7 +140,7 @@ class TestCase extends \PHPUnit\Framework\TestCase
      *
      * @throws \Exception
      */
-    protected function runApp(
+    protected function runWebApp(
         $requestMethod,
         $requestUri,
         $withMiddleware = false,
@@ -196,5 +199,35 @@ class TestCase extends \PHPUnit\Framework\TestCase
         $app->getContainer()['request'] = $request;
 
         return $app->run(true);
+    }
+
+    /**
+     * @param $command
+     * @param  array         $parameters
+     * @param  bool          $withMiddleware
+     * @param  null          $app
+     * @return CommandTester
+     */
+    protected function runCliApp(
+        string $command,
+        array $parameters = [],
+        bool $withMiddleware = true,
+        &$app = null
+    ) {
+        /* @var Command $commandInstance */
+        if (false === $withMiddleware) {
+            $commandInstance = new $command(App::class, []);
+        } else {
+            $commandInstance = new $command(App::class);
+        }
+
+        $app = new Application();
+        $app->add($commandInstance);
+
+        $command = $app->find($commandInstance->getName());
+        $testresult = new CommandTester($command);
+        $testresult->execute($parameters);
+
+        return $testresult;
     }
 }

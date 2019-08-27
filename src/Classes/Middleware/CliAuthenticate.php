@@ -39,7 +39,7 @@ class CliAuthenticate implements MiddlewareInterface
      *
      * @throws Exception
      */
-    protected function setupUserService(): void
+    public function __construct()
     {
         if (null === $this->userService) {
             $dbHelper = App::getDbHelper();
@@ -61,8 +61,6 @@ class CliAuthenticate implements MiddlewareInterface
      */
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
-        $this->setupUserService();
-
         /** @var Request $request */
         if ($request->getAttribute('JWT_SECRET', '') && $request->getServerParam('JWT_SECRET') === ServerUtility::get('JWT_SECRET')) {
             /** @var Job $job */

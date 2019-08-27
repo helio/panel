@@ -80,38 +80,41 @@ class App extends \Slim\App
             self::$className = static::class;
             self::$appName = $appName;
 
-            self::$instance = new self::$className(['settings' => [
+            /** @var App $instance */
+            $instance = new self::$className(['settings' => [
                 'displayErrorDetails' => !ServerUtility::isProd(),
             ]]);
 
-            self::$instance->getContainer()['renderer'] = new PhpRenderer(APPLICATION_ROOT . '/src/templates');
+            $instance->getContainer()['renderer'] = new PhpRenderer(APPLICATION_ROOT . '/src/templates');
 
-            self::$instance->getContainer()['router'] = new Router(
-                self::$instance,
+            $instance->getContainer()['router'] = new Router(
+                $instance,
                 [APPLICATION_ROOT . '/src/Classes/Controller/'],
                 APPLICATION_ROOT . '/tmp/cache/' . $appName
             );
+            self::$instance = $instance;
 
             foreach ($middleWaresToApply as $middleware) {
-                $middleware::addMiddleware(self::$instance);
+                $middleware::addMiddleware($instance);
             }
+
+            // self::$instance must only be set at the very end because App::isReady() may return invalid results otherwise!
+            self::$instance = $instance;
         }
 
         return self::$instance;
     }
 
     /**
-     * @param string|null $appName
-     * @param array       $middleWaresToApply
-     *
+     * @param  string|null $appName
+     * @param  array       $middleWaresToApply
      * @return App
-     *
      * @throws Exception
      */
     public static function getNewApp(
         ?string $appName = null,
-        array $middleWaresToApply = [MiddlewareForHttpUtility::class]
-    ): App {
+        array $middleWaresToApply = [MiddlewareForHttpUtility::class]): App
+    {
         self::$instance = null;
         self::$className = '';
 

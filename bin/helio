@@ -5,12 +5,10 @@ require __DIR__ . '/../src/bootstrap.php';
 
 use Symfony\Component\Console\Application;
 
-$command = new \Helio\Panel\Command\ExecuteScheduledJob();
-
-$application = new Application();
-$application->add($command);
 
 try {
+    $application = new Application();
+    $application->add(new \Helio\Panel\Command\ExecuteScheduledJob());
     $application->run();
 } catch (\Throwable $e) {
     echo 'Error during cli execution: ' . print_r([
@@ -18,7 +16,8 @@ try {
             'code' => $e->getCode(),
             'file' => $e->getFile(),
             'line' => $e->getLine(),
-            'prev' => $e->getTrace(),
-            'stacktrace' => 'PROD' === \Helio\Panel\Utility\ServerUtility::get('SITE_ENV', '') ? null : $e->getTrace(),
+            'args' => implode(' ', $_SERVER['argv'])
         ], true);
+
+    exit(1);
 }

@@ -19,7 +19,7 @@ class AppTest extends TestCase
 
         $tokenCookie = ['token' => JwtUtility::generateToken(null, $user)['token']];
 
-        $response = $this->runApp('GET', '/panel', true, null, null, $tokenCookie);
+        $response = $this->runWebApp('GET', '/panel', true, null, null, $tokenCookie);
 
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertEquals($user->getId(), \Helio\Test\Infrastructure\App::getTestApp()->getContainer()->get('user')->getId());
@@ -35,7 +35,7 @@ class AppTest extends TestCase
         $this->infrastructure->import($user);
 
         $tokenCookie = ['token' => JwtUtility::generateToken(null, $user)['token']];
-        $response = $this->runApp('GET', '/panel', true, null, null, $tokenCookie);
+        $response = $this->runWebApp('GET', '/panel', true, null, null, $tokenCookie);
 
         $body = (string) $response->getBody();
         $this->assertEquals(200, $response->getStatusCode());
@@ -51,7 +51,7 @@ class AppTest extends TestCase
         $user->setId(1221)->setName('testuser')->setActive(true);
         $this->infrastructure->import($user);
 
-        $response = $this->runApp('GET', '/panel', true, null, null, ['token' => JwtUtility::generateToken(null, $user)['token']]);
+        $response = $this->runWebApp('GET', '/panel', true, null, null, ['token' => JwtUtility::generateToken(null, $user)['token']]);
 
         $body = (string) $response->getBody();
         $this->assertEquals(200, $response->getStatusCode());
@@ -69,7 +69,7 @@ class AppTest extends TestCase
 
         $tokenCookie = ['token' => JwtUtility::generateToken(null, $user)['token']];
 
-        $response = $this->runApp('GET', '/panel', true, null, null, $tokenCookie);
+        $response = $this->runWebApp('GET', '/panel', true, null, null, $tokenCookie);
 
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertEquals($user->getId(), \Helio\Test\Infrastructure\App::getTestApp()->getContainer()->get('user')->getId());
@@ -85,7 +85,7 @@ class AppTest extends TestCase
         $this->infrastructure->import($user);
 
         $tokenCookie = ['token' => JwtUtility::generateToken(null, $user)['token']];
-        $response = $this->runApp('GET', '/panel', true, null, null, $tokenCookie);
+        $response = $this->runWebApp('GET', '/panel', true, null, null, $tokenCookie);
         $cookies = $response->getHeader('set-cookie');
 
         // guard asserts

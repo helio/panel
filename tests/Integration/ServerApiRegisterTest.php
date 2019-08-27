@@ -81,7 +81,7 @@ class ServerApiRegisterTest extends TestCase
             $this->assertFalse($this->imported, 'Data already imported, cannot exec test. Please reset data again.');
         }
 
-        return $this->runApp('POST', '/api/instance/register', true, $this->header, null !== $data ? $data : $this->data);
+        return $this->runWebApp('POST', '/api/instance/register', true, $this->header, null !== $data ? $data : $this->data);
     }
 
     /**
