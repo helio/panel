@@ -9,6 +9,7 @@ RUN apk add --no-cache bash gcompat libstdc++ curl jq coreutils && \
     chmod +x /tmp/install.sh && \
     sed -i 's/install_directory=""/install_directory=\$default_install_directory/g' /tmp/install.sh && \
     sed -i 's/link_directory=""/link_directory=\$default_link_directory/g' /tmp/install.sh && \
+    ln -s /lib /lib64 && \
     yes | /tmp/install.sh && \
     /bin/bash -c 'energyplus --version' && \
     rm -f /tmp/install.sh
