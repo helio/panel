@@ -55,7 +55,7 @@
                 <span class="list-group-item-value">Your Jobs</span>
             </a>
         </li>
-        <li class="list-group-item <?php echo $sellActive ?? ''; ?>">
+        <li class="list-group-item <?php echo $sellActive ?? ''; echo(!$user->isAdmin() ? 'hidden' : '') ?>">
             <a href="/panel/sell">
                 <span class="fa fa-server" data-toggle="tooltip" title="" data-original-title="Your Workforce"></span>
                 <span class="list-group-item-value">Your Workforce</span>
