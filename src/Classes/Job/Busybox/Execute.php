@@ -20,12 +20,11 @@ class Execute extends AbstractExecute
     {
         return (new DispatchConfig())
             ->setImage('hub.helio.dev:4567/helio/runner/busybox:latest')
-            ->setArgs(['/bin/sh', '-c', '\'i=0; while [ "$i" -le "${LIMIT:-5}" ]; do echo "$i: $(date)"; i=$((i+1)); sleep 10; done; wget -q --header "Authorization: Bearer $HELIO_TOKEN" $SUBMIT_URL\''])
             ->setEnvVariables([
                 'HELIO_JOBID' => $this->job->getId(),
                 'HELIO_TOKEN' => JwtUtility::generateToken(null, null, null, $this->job)['token'],
                 'LIMIT' => (int) ($this->execution ? $this->execution->getConfig('limit', $this->job->getConfig('env.LIMIT', 100)) : 100),
-                'SUBMIT_URL' => ServerUtility::getBaseUrl() . ExecUtility::getExecUrl($this->job, 'submitresult', $this->execution),
+                'REPORT_URL' => ServerUtility::getBaseUrl() . ExecUtility::getExecUrl($this->job, 'submitresult', $this->execution),
             ]);
     }
 
