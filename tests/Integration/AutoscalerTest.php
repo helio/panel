@@ -172,6 +172,7 @@ class AutoscalerTest extends TestCase
      */
     public function testArgInHiera(): void
     {
+        $this->markTestSkipped('Args removed from busybox Dockerfile. Do we still need args? this test checks if args is there. 2019-08-27');
         $this->job->setType(JobType::BUSYBOX);
         $execution = (new Execution())->setJob($this->job)->setStatus(ExecutionStatus::READY);
         $this->infrastructure->getEntityManager()->persist($this->job);
