@@ -56,14 +56,15 @@ class ManagerNodesTest extends TestCase
         $this->infrastructure->getEntityManager()->persist($this->user);
         $this->infrastructure->getEntityManager()->flush();
 
-        $response = $this->runApp('POST', '/api/job?type=' . JobType::ENERGY_PLUS_85, true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']]);
+        $response = $this->runApp('POST', '/api/job', true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']], ['type' => JobType::ENERGY_PLUS_85, 'name' => 'ManagerNodesTest']);
 
         $this->assertEquals(StatusCode::HTTP_OK, $response->getStatusCode());
 
         $body = (string) $response->getBody();
-        $jobid = json_decode($body, true)['id'];
-        $rawcommand = ServerUtility::getLastExecutedShellCommand();
+        $jobid = \GuzzleHttp\json_decode($body, true)['id'];
+
         $command = str_replace('\\"', '"', ServerUtility::getLastExecutedShellCommand());
+
         $pattern = '/^.*"callback":"' . str_replace('/', '\\/', ServerUtility::getBaseUrl()) . '([^"]+)"/';
         $matches = [];
         preg_match($pattern, $command, $matches);
@@ -79,7 +80,7 @@ class ManagerNodesTest extends TestCase
 
         // simulate provisioning call backs
         $response = $this->runApp('POST', $url, true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']], $this->callbackDataInit);
-        $this->assertEquals(StatusCode::HTTP_OK, $response->getStatusCode());
+        $this->assertEquals(StatusCode::HTTP_OK, $response->getStatusCode(), $url);
 
         // fake it till we make it: since we cannot query puppet for the manager-IP, we force it here.
         /** @var Job $job */

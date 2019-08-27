@@ -101,7 +101,7 @@ class Choria implements OrchestratorInterface
             return false;
         }
         if (!$this->job->getManagerNodes() || !$this->job->getClusterToken() || !$this->job->getInitManagerIp()) {
-            LogHelper::warn('dispatchJob called on job that\'s not ready. Aborting.');
+            LogHelper::warn('dispatchJob called on job ' . $this->job->getId() . ' that\'s not ready. Aborting.');
 
             return false;
         }

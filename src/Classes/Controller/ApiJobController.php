@@ -163,11 +163,13 @@ class ApiJobController extends AbstractController
             return $this->render(['success' => false, 'message' => $e->getMessage()], StatusCode::HTTP_NOT_ACCEPTABLE);
         }
 
-        $this->job->setOwner($this->user)->setCreated();
+        $this->job->setOwner($this->user);
+        $isNew = null === $this->job->getId();
         JobFactory::getInstanceOfJob($this->job)->create($this->params);
 
         if (!$this->user->getNotificationPreference(NotificationPreferences::MUTE_ADMIN)) {
-            NotificationUtility::notifyAdmin('New Job was created by ' . $this->user->getEmail() . ', type: ' . $this->job->getType() . ', id: ' . $this->job->getId() . ', expected manager: manager-init-' . ServerUtility::getShortHashOfString($this->job->getId()));
+            $str = $isNew ? 'New Job was created' : 'Job was updated';
+            NotificationUtility::notifyAdmin($str . ' by ' . $this->user->getEmail() . ', type: ' . $this->job->getType() . ', id: ' . $this->job->getId() . ', expected manager: manager-init-' . ServerUtility::getShortHashOfString($this->job->getId()));
         }
 
         OrchestratorFactory::getOrchestratorForInstance($this->instance, $this->job)->provisionManager();
@@ -177,7 +179,7 @@ class ApiJobController extends AbstractController
             'token' => JwtUtility::generateToken(null, $this->user, null, $this->job)['token'],
             'id' => $this->job->getId(),
             'html' => $this->fetchPartial('listItemJob', ['job' => $this->job, 'user' => $this->user]),
-            'message' => 'Job <strong>' . $this->job->getName() . '</strong> added',
+            'message' => 'Job <strong>' . $this->job->getName() . '</strong> ' . ($isNew ? 'added' : 'updated'),
         ]);
     }
 

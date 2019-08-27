@@ -96,7 +96,7 @@ class TestCase extends \PHPUnit\Framework\TestCase
         if (!\defined('APPLICATION_ROOT')) {
             \define('APPLICATION_ROOT', \dirname(__DIR__));
             \define('LOG_DEST', 'php://stdout');
-            \define('LOG_LVL', Logger::WARNING);
+            \define('LOG_LVL', in_array('-v', $_SERVER['argv'], true) ? Logger::WARNING : Logger::EMERGENCY);
         }
 
         // make sure no shell commands are being executed.
