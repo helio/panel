@@ -39,7 +39,9 @@ trait ModelExecutionController
             return true;
         }
 
-        $this->execution = (new Execution())->setStatus(ExecutionStatus::UNKNOWN)->setJob($this->job)->setCreated()->setName('___NEW');
+        $this->execution = (new Execution())
+            ->setStatus(ExecutionStatus::UNKNOWN)
+            ->setName('___NEW');
 
         return true;
     }

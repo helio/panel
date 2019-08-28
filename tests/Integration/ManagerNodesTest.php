@@ -9,6 +9,7 @@ use Helio\Panel\Model\Job;
 use Helio\Panel\Model\Execution;
 use Helio\Panel\Model\User;
 use Helio\Panel\Utility\JwtUtility;
+use Helio\Test\Infrastructure\Orchestrator\OrchestratorFactory;
 use Helio\Test\Infrastructure\Utility\ServerUtility;
 use Helio\Test\TestCase;
 use Slim\Http\StatusCode;
@@ -56,12 +57,16 @@ class ManagerNodesTest extends TestCase
         $this->infrastructure->getEntityManager()->persist($this->user);
         $this->infrastructure->getEntityManager()->flush();
 
-        $response = $this->runWebApp('POST', '/api/job', true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']], ['type' => JobType::ENERGY_PLUS_85, 'name' => 'ManagerNodesTest']);
-
+        $response = $this->runWebApp('POST',
+            '/api/job',
+            true,
+            ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']],
+            ['type' => JobType::ENERGY_PLUS_85, 'name' => sprintf('ManagerNodesTest - %s', $this->getName())]
+        );
         $this->assertEquals(StatusCode::HTTP_OK, $response->getStatusCode());
 
         $body = (string) $response->getBody();
-        $jobid = \GuzzleHttp\json_decode($body, true)['id'];
+        $jobId = \GuzzleHttp\json_decode($body, true)['id'];
 
         $command = str_replace('\\"', '"', ServerUtility::getLastExecutedShellCommand());
 
@@ -71,11 +76,11 @@ class ManagerNodesTest extends TestCase
         $this->assertNotEmpty($matches);
         $url = '/' . $matches[1];
 
-        $this->callbackDataInit = ['nodes' => 'manager-init-' . ServerUtility::getShortHashOfString($jobid) . '.example.com', 'swarm_token_manager' => 'blah:manager', 'swarm_token_worker' => 'blah:worker'];
+        $this->callbackDataInit = ['nodes' => 'manager-init-' . ServerUtility::getShortHashOfString($jobId) . '.example.com', 'swarm_token_manager' => 'blah:manager', 'swarm_token_worker' => 'blah:worker'];
         $this->callbackDataManagerIp = ['manager_ip' => '1.2.3.4:2345'];
         $this->callbackDataRedundancy = ['nodes' => [
-            'manager-redundancy-' . ServerUtility::getShortHashOfString($jobid) . '-1.example.com',
-            'manager-redundancy-' . ServerUtility::getShortHashOfString($jobid) . '-2.example.com',
+            'manager-redundancy-' . ServerUtility::getShortHashOfString($jobId) . '-1.example.com',
+            'manager-redundancy-' . ServerUtility::getShortHashOfString($jobId) . '-2.example.com',
         ], 'docker_token' => 'blah'];
 
         // simulate provisioning call backs
@@ -84,7 +89,7 @@ class ManagerNodesTest extends TestCase
 
         // fake it till we make it: since we cannot query puppet for the manager-IP, we force it here.
         /** @var Job $job */
-        $job = $this->jobRepository->find($jobid);
+        $job = $this->jobRepository->find($jobId);
         $response = $this->runWebApp('POST', $url, true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']], $this->callbackDataManagerIp);
         $this->assertEquals(StatusCode::HTTP_OK, $response->getStatusCode());
         $this->infrastructure->getEntityManager()->persist($job);
@@ -95,8 +100,9 @@ class ManagerNodesTest extends TestCase
         $this->assertEquals(StatusCode::HTTP_OK, $response->getStatusCode());
 
         ServerUtility::resetLastExecutedCommand();
+        OrchestratorFactory::resetInstances();
 
-        $this->job = $this->jobRepository->find($jobid);
+        $this->job = $this->jobRepository->find($jobId);
     }
 
     /**
@@ -104,9 +110,26 @@ class ManagerNodesTest extends TestCase
      */
     public function testOnlyOneManagerNodesGetInitializedOnNewJob(): void
     {
-        $result = json_decode((string) $this->runWebApp('POST', '/api/job?type=' . JobType::GITLAB_RUNNER, true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']], null)->getBody(), true);
+        $response = $this->runWebApp(
+            'POST',
+            '/api/job',
+            true,
+            ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']],
+            ['type' => JobType::GITLAB_RUNNER, 'name' => $this->getName()]
+        );
+        $this->assertEquals(StatusCode::HTTP_OK, $response->getStatusCode());
+
+        $result = json_decode((string) $response->getBody(), true);
         $this->assertArrayHasKey('id', $result, 'no ID of new job returned');
-        $this->runWebApp('POST', '/api/job', true, ['Authorization' => 'Bearer ' . $result['token']], ['jobid' => $result['id'], 'name' => 'testing 1551430509']);
+
+        $response = $this->runWebApp('POST',
+            '/api/job',
+            true,
+            ['Authorization' => 'Bearer ' . $result['token']],
+            ['id' => $result['id'], 'name' => 'testing 1551430509']
+        );
+        $this->assertEquals(StatusCode::HTTP_OK, $response->getStatusCode());
+
         $this->assertNotNull($this->jobRepository->findOneBy(['name' => 'testing 1551430509'])->getManagerNodes(), 'init node not ready, must not call to create redundant manager nodes yet');
     }
 
@@ -115,11 +138,19 @@ class ManagerNodesTest extends TestCase
      */
     public function testRedundantManagersGetSetupOnCallbackCall(): void
     {
-        $jobid = json_decode((string) $this->runWebApp('POST', '/api/job?type=' . JobType::GITLAB_RUNNER, true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']])->getBody(), true)['id'];
+        $response = $this->runWebApp(
+            'POST',
+            '/api/job',
+            true,
+            ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']],
+            ['type' => JobType::GITLAB_RUNNER, 'name' => $this->getName()]
+        );
+        $jobId = json_decode((string) $response->getBody(), true)['id'];
+
         /** @var Job $job */
-        $job = $this->jobRepository->find($jobid);
+        $job = $this->jobRepository->find($jobId);
         $this->assertCount(0, $job->getManagerNodes());
-        $this->assertStringContainsString('manager-init-' . ServerUtility::getShortHashOfString($jobid), ServerUtility::getLastExecutedShellCommand());
+        $this->assertStringContainsString('manager-init-' . ServerUtility::getShortHashOfString($jobId), ServerUtility::getLastExecutedShellCommand());
         $this->assertStringContainsString('user_id', ServerUtility::getLastExecutedShellCommand());
         $this->assertStringContainsString($this->user->getId(), ServerUtility::getLastExecutedShellCommand());
         $command = str_replace('\\"', '"', ServerUtility::getLastExecutedShellCommand());
@@ -140,13 +171,13 @@ class ManagerNodesTest extends TestCase
 
         // TODO: Move these assertions below callbackDataRedundancy as soon as job is supposed to have redundant managers.
         //$this->assertContains('blah:manager', ServerUtility::getLastExecutedShellCommand(1));
-        //$this->assertContains('manager-redundancy-' . ServerUtility::getShortHashOfString($jobid), ServerUtility::getLastExecutedShellCommand());
+        //$this->assertContains('manager-redundancy-' . ServerUtility::getShortHashOfString($jobId), ServerUtility::getLastExecutedShellCommand());
         //$this->assertContains('1.2.3.4:2345', ServerUtility::getLastExecutedShellCommand());
         //$this->assertContains('blah:worker', ServerUtility::getLastExecutedShellCommand());
 
         //$this->runApp('POST', $url, true, null, $this->callbackDataRedundancy);
 
-        $job = $this->jobRepository->find($jobid);
+        $job = $this->jobRepository->find($jobId);
         $this->assertEquals(JobStatus::READY, $job->getStatus());
         $this->assertCount(1, $job->getManagerNodes());
     }
@@ -156,7 +187,14 @@ class ManagerNodesTest extends TestCase
      */
     public function testReplicaGetAppliedOnNewExecution(): void
     {
-        $this->runWebApp('POST', '/api/job/' . $this->job->getId() . '/execute', true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']]);
+        $response = $this->runWebApp('POST',
+            '/api/job/' . $this->job->getId() . '/execute',
+            true,
+            ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']],
+            ['name' => $this->getName()]
+        );
+        $this->assertEquals(StatusCode::HTTP_OK, $response->getStatusCode());
+
         $executions = $this->executionRepository->findBy(['job' => $this->job->getId()]);
         $this->assertIsArray($executions);
         $this->assertCount(1, $executions);
@@ -173,7 +211,13 @@ class ManagerNodesTest extends TestCase
      */
     public function testReplicaDontGetAppliedTwiceOnTwoNewExecutions(): void
     {
-        $this->runWebApp('POST', '/api/job/' . $this->job->getId() . '/execute', true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']]);
+        $response = $this->runWebApp('POST',
+            '/api/job/' . $this->job->getId() . '/execute',
+            true,
+            ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']],
+            ['name' => $this->getName()]
+        );
+        $this->assertEquals(StatusCode::HTTP_OK, $response->getStatusCode());
 
         $this->assertStringContainsString('helio::queue', ServerUtility::getLastExecutedShellCommand());
         $this->assertStringContainsString('helio::task', ServerUtility::getLastExecutedShellCommand(1));
@@ -193,14 +237,26 @@ class ManagerNodesTest extends TestCase
         $this->infrastructure->getEntityManager()->persist($this->job);
         $this->infrastructure->getEntityManager()->flush();
 
-        $this->runWebApp('POST', '/api/job/' . $this->job->getId() . '/execute', true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']]);
+        $response = $this->runWebApp('POST',
+            '/api/job/' . $this->job->getId() . '/execute',
+            true,
+            ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']],
+            ['name' => $this->getName()]
+        );
+        $this->assertEquals(StatusCode::HTTP_OK, $response->getStatusCode());
 
         $this->assertStringContainsString('helio::task', ServerUtility::getLastExecutedShellCommand(1));
         $this->assertStringContainsString('helio::queue', ServerUtility::getLastExecutedShellCommand());
 
         ServerUtility::resetLastExecutedCommand();
 
-        $this->runWebApp('POST', '/api/job/' . $this->job->getId() . '/execute', true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']]);
+        $response = $this->runWebApp('POST',
+            '/api/job/' . $this->job->getId() . '/execute',
+            true,
+            ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']],
+            ['name' => $this->getName() . '#2']
+        );
+        $this->assertEquals(StatusCode::HTTP_OK, $response->getStatusCode());
         $this->assertStringContainsString('helio::task', ServerUtility::getLastExecutedShellCommand(1));
         $this->assertStringContainsString('helio::queue', ServerUtility::getLastExecutedShellCommand());
 
@@ -225,8 +281,21 @@ class ManagerNodesTest extends TestCase
         $this->infrastructure->getEntityManager()->persist($this->job);
         $this->infrastructure->getEntityManager()->flush();
 
-        $this->runWebApp('POST', '/api/job/' . $this->job->getId() . '/execute', true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']]);
-        $this->runWebApp('POST', '/api/job/' . $this->job->getId() . '/execute/submitresult', true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']], ['result' => 42]);
+        $response = $this->runWebApp('POST',
+            '/api/job/' . $this->job->getId() . '/execute',
+            true,
+            ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']],
+            ['name' => $this->getName()]
+        );
+        $this->assertEquals(StatusCode::HTTP_OK, $response->getStatusCode());
+
+        $response = $this->runWebApp('POST',
+            '/api/job/' . $this->job->getId() . '/execute/submitresult',
+            true,
+            ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']],
+            ['result' => 42]
+        );
+        $this->assertEquals(StatusCode::HTTP_OK, $response->getStatusCode(), $response->getBody());
     }
 
     /**
@@ -237,7 +306,13 @@ class ManagerNodesTest extends TestCase
         $i = 1 + JobFactory::getDispatchConfigOfJob($this->job)->getDispatchConfig()->getExecutionPerReplica();
         do {
             --$i;
-            $this->runWebApp('POST', '/api/job/' . $this->job->getId() . '/execute', true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']]);
+            $response = $this->runWebApp('POST',
+                '/api/job/' . $this->job->getId() . '/execute',
+                true,
+                ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']],
+                ['name' => sprintf('%s-%s', $this->getName(), $i)]
+            );
+            $this->assertEquals(StatusCode::HTTP_OK, $response->getStatusCode());
         } while ($i > 0);
 
         $this->assertStringContainsString('helio::queue', ServerUtility::getLastExecutedShellCommand());
@@ -249,7 +324,12 @@ class ManagerNodesTest extends TestCase
      */
     public function testJobStatusEndpointReflectsStatus(): void
     {
-        $result = $this->runWebApp('POST', '/api/job?type=' . JobType::GITLAB_RUNNER, true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']]);
+        $result = $this->runWebApp('POST',
+            '/api/job',
+            true,
+            ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']],
+            ['type' => JobType::GITLAB_RUNNER, 'name' => $this->getName()]
+        );
         $this->assertEquals(StatusCode::HTTP_OK, $result->getStatusCode());
         $body = json_decode((string) $result->getBody(), true);
         $this->assertNotNull($body);
@@ -263,19 +343,20 @@ class ManagerNodesTest extends TestCase
         $this->assertNotEmpty($matches);
         $callbackUrl = '/' . $matches[1];
 
-        $statusResult = $this->runWebApp('GET', "/api/job/isready?jobid=${jobid}", true, ['Authorization' => 'Bearer ' . $jobtoken]);
-        $this->assertEquals($statusResult->getStatusCode(), StatusCode::HTTP_FAILED_DEPENDENCY);
+        $response = $this->runWebApp('GET', "/api/job/isready?jobid=${jobid}", true, ['Authorization' => 'Bearer ' . $jobtoken]);
+        $this->assertEquals($response->getStatusCode(), StatusCode::HTTP_FAILED_DEPENDENCY);
 
-        $this->runWebApp('POST', $callbackUrl, true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']], $this->callbackDataInit, null);
-        $this->assertEquals(StatusCode::HTTP_FAILED_DEPENDENCY, $statusResult->getStatusCode());
+        $response = $this->runWebApp('POST', $callbackUrl, true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']], $this->callbackDataInit, null);
+        $this->assertEquals(StatusCode::HTTP_OK, $response->getStatusCode());
 
-        $this->runWebApp('POST', $callbackUrl, true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']], $this->callbackDataManagerIp, null);
-        $this->assertEquals(StatusCode::HTTP_FAILED_DEPENDENCY, $statusResult->getStatusCode());
+        $response = $this->runWebApp('POST', $callbackUrl, true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']], $this->callbackDataManagerIp, null);
+        $this->assertEquals(StatusCode::HTTP_OK, $response->getStatusCode());
 
-        $this->runWebApp('POST', $callbackUrl, true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']], $this->callbackDataRedundancy, null);
+        $response = $this->runWebApp('POST', $callbackUrl, true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']], $this->callbackDataRedundancy, null);
+        $this->assertEquals(StatusCode::HTTP_OK, $response->getStatusCode());
 
-        $statusResult = $this->runWebApp('GET', "/api/job/isready?jobid=${jobid}", true, ['Authorization' => 'Bearer ' . $jobtoken]);
+        $response = $this->runWebApp('GET', "/api/job/isready?jobid=${jobid}", true, ['Authorization' => 'Bearer ' . $jobtoken]);
 
-        $this->assertEquals(StatusCode::HTTP_OK, $statusResult->getStatusCode());
+        $this->assertEquals(StatusCode::HTTP_OK, $response->getStatusCode());
     }
 }

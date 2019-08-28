@@ -63,8 +63,10 @@ class ApiInstanceController extends AbstractController
                 $this->instance->setFqdn($this->params['fqdn']);
             }
 
-            $this->instance->setIp($ip);
-            $this->instance->setStatus(InstanceStatus::CREATED);
+            $this->instance->setOwner($this->user)
+                ->setIp($ip)
+                ->setStatus(InstanceStatus::CREATED)
+                ->setCreated();
             $this->persistInstance();
 
             $token = MasterFactory::getMasterForInstance($this->instance)->doSign();
@@ -90,6 +92,9 @@ class ApiInstanceController extends AbstractController
      */
     public function stopServerAction(): ResponseInterface
     {
+        if (null === $this->instance->getId()) {
+            return $this->render(['success' => false, 'message' => 'Instance not found'], StatusCode::HTTP_NOT_FOUND);
+        }
         if (OrchestratorFactory::getOrchestratorForInstance($this->instance)->stopComputing()) {
             $this->instance->setStatus(InstanceStatus::READY);
             $this->persistInstance();
@@ -109,6 +114,9 @@ class ApiInstanceController extends AbstractController
      */
     public function startInstanceAction(): ResponseInterface
     {
+        if (null === $this->instance->getId()) {
+            return $this->render(['success' => false, 'message' => 'Instance not found'], StatusCode::HTTP_NOT_FOUND);
+        }
         if (OrchestratorFactory::getOrchestratorForInstance($this->instance)->startComputing()) {
             $this->instance->setStatus(InstanceStatus::RUNNING);
             $this->persistInstance();
@@ -128,6 +136,9 @@ class ApiInstanceController extends AbstractController
      */
     public function removeInstanceAction(): ResponseInterface
     {
+        if (null === $this->instance->getId()) {
+            return $this->render(['success' => false, 'message' => 'Instance not found'], StatusCode::HTTP_NOT_FOUND);
+        }
         $this->instance->setHidden(true);
         $this->persistInstance();
 
@@ -143,6 +154,9 @@ class ApiInstanceController extends AbstractController
      */
     public function cleanupInstanceAction(): ResponseInterface
     {
+        if (null === $this->instance->getId()) {
+            return $this->render(['success' => false, 'message' => 'Instance not found'], StatusCode::HTTP_NOT_FOUND);
+        }
         if (OrchestratorFactory::getOrchestratorForInstance($this->instance)->stopComputing() && OrchestratorFactory::getOrchestratorForInstance($this->instance)->removeInstance()) {
             $this->instance->setHidden(true);
             $this->persistInstance();
@@ -162,6 +176,9 @@ class ApiInstanceController extends AbstractController
      */
     public function toggleFreeComputingAction(): ResponseInterface
     {
+        if (null === $this->instance->getId()) {
+            return $this->render(['success' => false, 'message' => 'Instance not found'], StatusCode::HTTP_NOT_FOUND);
+        }
         $this->instance->setAllowFreeComputing(!$this->instance->isAllowFreeComputing());
         $this->persistInstance();
 
@@ -197,8 +214,7 @@ class ApiInstanceController extends AbstractController
         $this->instance
             ->setFqdn($this->params['fqdn'])
             ->setInstanceType($this->params['instancetype'])
-            ->setStatus(InstanceStatus::INIT)
-            ->setOwner($this->user);
+            ->setStatus(InstanceStatus::INIT);
 
         $this->optionalParameterCheck([
             'instancename' => FILTER_SANITIZE_STRING,
@@ -229,6 +245,13 @@ class ApiInstanceController extends AbstractController
         if (!array_key_exists('allowFree', $this->params) || 'on' !== $this->params['allowFree']) {
             $this->instance->setAllowFreeComputing(false);
         }
+
+        if (null === $this->instance->getId()) {
+            $this->instance
+                ->setOwner($this->user)
+                ->setCreated();
+        }
+
         if (array_key_exists('provision', $this->params) && 'on' === $this->params['provision'] && InstanceFactory::getInstanceForServer($this->instance)->provisionInstance()) {
             $this->persistInstance();
             $this->instance->setStatus(InstanceStatus::CREATED);
@@ -253,6 +276,9 @@ class ApiInstanceController extends AbstractController
      */
     public function abortAddInstanceAction(): ResponseInterface
     {
+        if (null === $this->instance->getId()) {
+            return $this->render(['success' => false, 'message' => 'Instance not found'], StatusCode::HTTP_NOT_FOUND);
+        }
         if ($this->instance && InstanceStatus::UNKNOWN === $this->instance->getStatus() && $this->instance->getOwner() && $this->instance->getOwner()->getId() === $this->user->getId()) {
             $this->user->removeInstance($this->instance);
             App::getDbHelper()->remove($this->instance);
@@ -277,6 +303,9 @@ class ApiInstanceController extends AbstractController
      */
     public function getStatusAction(): ResponseInterface
     {
+        if (null === $this->instance->getId()) {
+            return $this->render(['success' => false, 'message' => 'Instance not found'], StatusCode::HTTP_NOT_FOUND);
+        }
         $status = $this->ensureAndGetInstanceStatus();
 
         $data = [
@@ -303,6 +332,9 @@ class ApiInstanceController extends AbstractController
      */
     public function callbackAction(): ResponseInterface
     {
+        if (null === $this->instance->getId()) {
+            return $this->render(['success' => false, 'message' => 'Instance not found'], StatusCode::HTTP_NOT_FOUND);
+        }
         $body = $this->request->getParsedBody();
         LogHelper::debug('Body received into instance ' . $this->instance->getId() . ' callback:' . print_r($body, true));
 
@@ -323,6 +355,9 @@ class ApiInstanceController extends AbstractController
      */
     public function createSnapshotAction(): ResponseInterface
     {
+        if (null === $this->instance->getId()) {
+            return $this->render(['success' => false, 'message' => 'Instance not found'], StatusCode::HTTP_NOT_FOUND);
+        }
         if ($json = $this->createSnapshot()) {
             $this->instance->setSnapshotConfig(json_encode($json));
             $this->persistInstance();

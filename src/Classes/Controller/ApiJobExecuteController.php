@@ -10,9 +10,7 @@ use Helio\Panel\Service\LogService;
 use Helio\Panel\Utility\NotificationUtility;
 use OpenApi\Annotations as OA;
 use Exception;
-use Helio\Panel\Helper\DbHelper;
 use RuntimeException;
-use Helio\Panel\App;
 use Helio\Panel\Controller\Traits\ModelInstanceController;
 use Helio\Panel\Controller\Traits\ModelExecutionController;
 use Helio\Panel\Controller\Traits\TypeApiController;
@@ -170,11 +168,19 @@ class ApiJobExecuteController extends AbstractController
             // run and stop have the same interface, thus we can reuse the code
             $command = 'run';
             if ('DELETE' === $this->request->getMethod()) {
+                if (null === $this->execution->getId()) {
+                    return $this->render(['success' => false, 'message' => 'Execution not found'], StatusCode::HTTP_NOT_FOUND);
+                }
+
                 $command = 'stop';
                 $estimates = [];
             } else {
-                $this->execution->setName(array_key_exists('name', $this->params) ? $this->params['name'] : 'automatically created');
+                $this->execution
+                    ->setName(array_key_exists('name', $this->params) ? $this->params['name'] : 'automatically created')
+                    ->setJob($this->job)
+                    ->setCreated();
                 $this->persistExecution();
+
                 $estimates = ['estimates' => JobFactory::getDispatchConfigOfJob($this->job, $this->execution)->getExecutionEstimates()];
             }
 
@@ -271,7 +277,7 @@ class ApiJobExecuteController extends AbstractController
      */
     public function executionStatusAction(): ResponseInterface
     {
-        if (!$this->execution) {
+        if (null === $this->execution->getId()) {
             return $this->render(['error' => 'no execution specified'], StatusCode::HTTP_NOT_FOUND);
         }
 
@@ -340,8 +346,7 @@ class ApiJobExecuteController extends AbstractController
             /* @var Execution $execution */
             $this->execution->setStatus(ExecutionStatus::DONE);
             $this->execution->setStats((string) $this->request->getBody());
-            DbHelper::getInstance()->persist($this->execution);
-            DbHelper::getInstance()->flush();
+            $this->persistExecution();
 
             OrchestratorFactory::getOrchestratorForInstance(new Instance(), $this->job)->dispatchJob();
 
@@ -367,6 +372,9 @@ class ApiJobExecuteController extends AbstractController
             if (!JobStatus::isValidActiveStatus($this->job->getStatus())) {
                 throw new RuntimeException('job not ready');
             }
+            if (null === $this->execution->getId()) {
+                return $this->render(['error' => 'no execution specified'], StatusCode::HTTP_NOT_FOUND);
+            }
 
             return JobFactory::getInstanceOfJob($this->job, $this->execution)->$method($this->params, $this->response, $this->request);
         } catch (Exception $e) {
@@ -382,12 +390,11 @@ class ApiJobExecuteController extends AbstractController
     public function heartbeatAction(): ResponseInterface
     {
         try {
-            if (!$this->execution) {
+            if (null === $this->execution->getId()) {
                 return $this->render(['error' => 'unknown execution', 'params' => $this->params, 'execution' => $this->execution, StatusCode::HTTP_NOT_FOUND]);
             }
-            $this->execution->setLatestAction()->setStatus(ExecutionStatus::RUNNING);
-            App::getDbHelper()->persist($this->execution);
-            App::getDbHelper()->flush();
+            $this->execution->setStatus(ExecutionStatus::RUNNING);
+            $this->persistExecution();
 
             return $this->render();
         } catch (Exception $e) {
@@ -465,8 +472,8 @@ class ApiJobExecuteController extends AbstractController
      */
     public function logsAction(): ResponseInterface
     {
-        if (!$this->execution) {
-            return $this->render([]);
+        if (null === $this->execution->getId()) {
+            return $this->render(['error' => 'no execution specified'], StatusCode::HTTP_NOT_FOUND);
         }
 
         /** @var Job $job */
@@ -488,6 +495,10 @@ class ApiJobExecuteController extends AbstractController
      */
     public function uploadAction(): ResponseInterface
     {
+        if (null === $this->execution->getId()) {
+            return $this->render(['error' => 'no execution specified'], StatusCode::HTTP_NOT_FOUND);
+        }
+
         /** @var UploadedFileInterface $uploadedFile */
         $uploadedFile = $this->request->getUploadedFiles()['file'];
         if ($uploadedFile && UPLOAD_ERR_OK === $uploadedFile->getError()) {
@@ -509,6 +520,10 @@ class ApiJobExecuteController extends AbstractController
      */
     public function downloadAction(int $job, string $file): ResponseInterface
     {
+        if (null === $this->execution->getId()) {
+            return $this->render(['error' => 'no execution specified'], StatusCode::HTTP_NOT_FOUND);
+        }
+
         return ExecUtility::downloadFile(ExecUtility::getJobDataFolder($this->job) . $file, $this->response);
     }
 }

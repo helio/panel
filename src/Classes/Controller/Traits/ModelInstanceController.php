@@ -56,9 +56,7 @@ trait ModelInstanceController
         // finally, if there is no instance, simply create one.
         $this->instance = (new Instance())
             ->setName('___NEW')
-            ->setStatus(InstanceStatus::UNKNOWN)
-            ->setOwner($this->user)
-            ->setCreated();
+            ->setStatus(InstanceStatus::UNKNOWN);
 
         return true;
     }
