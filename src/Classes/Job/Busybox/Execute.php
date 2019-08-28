@@ -33,6 +33,6 @@ class Execute extends AbstractExecute
      */
     protected function calculateRuntime(): int
     {
-        return $this->execution->getConfig('limit', 100) * 10 + 30;
+        return ($this->execution ? $this->execution->getConfig('limit', $this->job->getConfig('env.LIMIT', 100)) : 100) * 10 + 30;
     }
 }

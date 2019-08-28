@@ -68,14 +68,13 @@ abstract class AbstractExecute implements JobInterface, DispatchableInterface
             $this->job->setStatus(JobStatus::INIT)->setCreated();
         }
 
-        App::getDbHelper()->persist($this->job);
-
         // set execution
-        if ($this->execution->getId()) {
+        if (null !== $this->execution->getId()) {
             $this->execution->setJob($this->job)->setEstimatedRuntime($this->calculateRuntime());
             App::getDbHelper()->persist($this->execution);
         }
 
+        App::getDbHelper()->persist($this->job);
         App::getDbHelper()->flush($this->job);
 
         return true;
@@ -91,6 +90,7 @@ abstract class AbstractExecute implements JobInterface, DispatchableInterface
     public function run(array $config): bool
     {
         $this->execution->setJob($this->job)->setConfig($config)->setCreated()->setStatus(ExecutionStatus::READY);
+        $this->execution->setEstimatedRuntime($this->calculateRuntime());
         App::getDbHelper()->persist($this->execution);
         App::getDbHelper()->flush();
 
@@ -174,6 +174,24 @@ abstract class AbstractExecute implements JobInterface, DispatchableInterface
         ];
     }
 
+    public function isExecutionStillAffordable(): bool
+    {
+        if ($this->job->getBudget() > 0) {
+            // current execution would burst the budget
+            if ($this->calculateCosts() + $this->job->getBudgetUsed() > $this->job->getBudget()) {
+                return false;
+            }
+
+            // all pending executions would burst the budget
+            // Note: This is not production ready since not all executions cost the same, so it's just an assumption here to multiply them.
+            if ($this->job->getActiveExecutionCount() * $this->calculateCosts() + $this->job->getBudgetUsed() > $this->job->getBudget()) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     /**
      * @return int
      */
@@ -192,7 +210,8 @@ abstract class AbstractExecute implements JobInterface, DispatchableInterface
             ->join(Job::class, 'j')
             ->where(
                 $pendingQuery->expr()->andX()
-                    ->add($pendingQuery->expr()->gt($pendingQuery->expr()->length('j.autoExecSchedule'), 0))
+                    ->add($pendingQuery->expr()->eq('j.id', $this->job->getId()))
+                    ->add($pendingQuery->expr()->eq($pendingQuery->expr()->length('j.autoExecSchedule'), 0))
                     ->add($pendingQuery->expr()->eq('e.status', ExecutionStatus::READY))
                     ->add($pendingQuery->expr()->eq('j.status', JobStatus::READY))
                     ->add($pendingQuery->expr()->lte('e.priority', $this->execution->getPriority()))
@@ -206,10 +225,11 @@ abstract class AbstractExecute implements JobInterface, DispatchableInterface
     }
 
     /**
-     * @return int
+     * @return float cost in dollars
      */
-    protected function calculateCosts(): int
+    protected function calculateCosts(): float
     {
-        return floor($this->execution->getEstimatedRuntime() * (4 * $this->job->getGpus() ?: 1) * $this->job->getCpus() ?: 1 * 10 / 60);
+        //      seconds of runtime                        make it hours         gpus are 10x more expensive than cpus                 CPU $ per Hour
+        return ($this->execution->getEstimatedRuntime() / 3600) * (10 * ($this->job->getGpus() ?: 1)) * ($this->job->getCpus() ?: 1) * 0.01;
     }
 }

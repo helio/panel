@@ -5,6 +5,9 @@ namespace Helio\Panel\Job;
 use Helio\Panel\Model\Job;
 use Helio\Panel\Model\Execution;
 
+/**
+ * Class JobFactory.
+ */
 class JobFactory
 {
     /**

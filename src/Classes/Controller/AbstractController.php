@@ -138,7 +138,7 @@ use function OpenApi\scan;
  *     @OA\Property(
  *         property="cost",
  *         description="Estimated cost in USD",
- *         type="integer"
+ *         type="number"
  *     )
  * )
  *

@@ -2,6 +2,7 @@
 
 namespace Helio\Panel\Controller;
 
+use GuzzleHttp\Exception\GuzzleException;
 use Helio\Panel\Helper\ElasticHelper;
 use Helio\Panel\Model\Instance;
 use Helio\Panel\Model\Preferences\NotificationPreferences;
@@ -173,21 +174,24 @@ class ApiJobExecuteController extends AbstractController
                 }
 
                 $command = 'stop';
-                $estimates = [];
             } else {
                 $this->execution
                     ->setName(array_key_exists('name', $this->params) ? $this->params['name'] : 'automatically created')
                     ->setJob($this->job)
                     ->setCreated();
                 $this->persistExecution();
-
-                $estimates = ['estimates' => JobFactory::getDispatchConfigOfJob($this->job, $this->execution)->getExecutionEstimates()];
             }
 
             // run the job and check if the replicas have changed
+            // TODO: Fix this ugly mess and cleanup DispatchConfig all together
             $previousReplicaCount = JobFactory::getDispatchConfigOfJob($this->job, $this->execution)->getDispatchConfig()->getReplicaCountForJob($this->job);
             JobFactory::getInstanceOfJob($this->job, $this->execution)->$command(json_decode((string) $this->request->getBody(), true) ?: []);
             $newReplicaCount = JobFactory::getDispatchConfigOfJob($this->job, $this->execution)->getDispatchConfig()->getReplicaCountForJob($this->job);
+
+            if (!JobFactory::getDispatchConfigOfJob($this->job, $this->execution)->isExecutionStillAffordable()) {
+                //TODO: Return here once the budget discussion is settled.
+                NotificationUtility::alertAdmin('Execution could not start for user: ' . $this->user->getId() . ' / job: ' . $this->job->getId() . ' because the budget was used up.');
+            }
 
             // if replica count has changed OR we have an enforcement (e.g. one replica per execution fixed), dispatch the job
             if ($previousReplicaCount !== $newReplicaCount || JobFactory::getDispatchConfigOfJob($this->job, $this->execution)->getDispatchConfig()->getFixedReplicaCount()) {
@@ -196,11 +200,20 @@ class ApiJobExecuteController extends AbstractController
                 $this->persistJob();
             }
 
-            return $this->render(array_merge([
+            $result = [
                 'status' => 'success',
                 'id' => $this->execution->getId(),
-            ], $estimates));
+            ];
+            if ('run' === $command) {
+                $result['estimates'] = JobFactory::getDispatchConfigOfJob($this->job, $this->execution)->getExecutionEstimates();
+            } else {
+                $this->persistJob();
+            }
+
+            return $this->render($result);
         } catch (Exception $e) {
+            return $this->render(['success' => false, 'message' => $e->getMessage()], StatusCode::HTTP_INTERNAL_SERVER_ERROR);
+        } catch (GuzzleException $e) {
             return $this->render(['success' => false, 'message' => $e->getMessage()], StatusCode::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -345,10 +358,13 @@ class ApiJobExecuteController extends AbstractController
         if ('__NEW' !== $this->execution->getName()) {
             /* @var Execution $execution */
             $this->execution->setStatus(ExecutionStatus::DONE);
+
             $this->execution->setStats((string) $this->request->getBody());
             $this->persistExecution();
 
             OrchestratorFactory::getOrchestratorForInstance(new Instance(), $this->job)->dispatchJob();
+            $this->job->setBudgetUsed(JobFactory::getDispatchConfigOfJob($this->job, $this->execution)->getExecutionEstimates()['cost'] + $this->job->getBudgetUsed());
+            $this->persistJob();
 
             NotificationUtility::notifyUser(
                 $this->job->getOwner(),
@@ -356,7 +372,6 @@ class ApiJobExecuteController extends AbstractController
                 sprintf("Your Job %d with id %d was successfully executed\nThe results can now be used.", $this->job->getId(), $this->execution->getId()),
                 NotificationPreferences::EMAIL_ON_EXECUTION_ENDED
             );
-
             return $this->render(['success' => true, 'message' => 'Job marked as done']);
         }
 

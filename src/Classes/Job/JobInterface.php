@@ -2,6 +2,7 @@
 
 namespace Helio\Panel\Job;
 
+use Helio\Panel\Model\Execution;
 use Helio\Panel\Model\Job;
 use Psr\Http\Message\ResponseInterface;
 
@@ -12,10 +13,10 @@ interface JobInterface
 {
     /**
      * JobInterface constructor.
-     *
-     * @param Job $job
+     * @param Job            $job
+     * @param Execution|null $execution
      */
-    public function __construct(Job $job);
+    public function __construct(Job $job, Execution $execution = null);
 
     /**
      * @param array $jobObject

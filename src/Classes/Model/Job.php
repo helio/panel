@@ -137,6 +137,13 @@ class Job extends AbstractModel
     protected $budget = 0;
 
     /**
+     * @var float
+     *
+     * @Column
+     */
+    protected $budgetUsed = 0.0;
+
+    /**
      * @OA\Property(
      *     description="Cron Schedule to automatically execute the Job",
      *     format="string",
@@ -404,6 +411,26 @@ class Job extends AbstractModel
     public function setBudget(int $budget): Job
     {
         $this->budget = $budget;
+
+        return $this;
+    }
+
+    /**
+     * @return float
+     */
+    public function getBudgetUsed(): float
+    {
+        return (float) $this->budgetUsed;
+    }
+
+    /**
+     * @param float $budgetUsed
+     *
+     * @return Job
+     */
+    public function setBudgetUsed(float $budgetUsed): Job
+    {
+        $this->budgetUsed = $budgetUsed;
 
         return $this;
     }

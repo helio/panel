@@ -137,6 +137,10 @@ class DispatchConfig
      * @param Job $job
      *
      * @return int
+     *
+     * Note:
+     * This is super ugly to pass the job here instead of using $this->job, but it's required because the excutions might differ
+     * Singletons suck
      */
     public function getReplicaCountForJob(Job $job): int
     {

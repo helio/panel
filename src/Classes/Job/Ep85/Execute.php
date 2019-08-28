@@ -24,7 +24,8 @@ class Execute extends AbstractExecute
      */
     public function run(array $config): bool
     {
-        $this->execution = $this->execution->setJob($this->job)->setCreated()->setConfig('');
+        parent::run($config);
+        $this->execution->setConfig('');
         App::getDbHelper()->persist($this->execution);
         App::getDbHelper()->flush();
 
