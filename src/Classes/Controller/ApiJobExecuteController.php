@@ -350,7 +350,12 @@ class ApiJobExecuteController extends AbstractController
 
             OrchestratorFactory::getOrchestratorForInstance(new Instance(), $this->job)->dispatchJob();
 
-            NotificationUtility::notifyUser($this->job->getOwner(), 'Your Job with the id ' . $this->job->getId() . ' was successfully executed' . "\n" . 'The results can now be used.', NotificationPreferences::EMAIL_ON_EXECUTION_ENDED);
+            NotificationUtility::notifyUser(
+                $this->job->getOwner(),
+                sprintf('Job %s (%d), Execution %s (%d) executed', $this->job->getName(), $this->job->getId(), $this->execution->getName(), $this->execution->getId()),
+                sprintf("Your Job %d with id %d was successfully executed\nThe results can now be used.", $this->job->getId(), $this->execution->getId()),
+                NotificationPreferences::EMAIL_ON_EXECUTION_ENDED
+            );
 
             return $this->render(['success' => true, 'message' => 'Job marked as done']);
         }

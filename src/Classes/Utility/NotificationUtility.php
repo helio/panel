@@ -52,11 +52,12 @@ EOM;
 
     /**
      * @param  User   $user
+     * @param  string $subject
      * @param  string $message
      * @param  int    $context has to be a constant from NotificationPreferences
      * @return bool
      */
-    public static function notifyUser(User $user, string $message, int $context): bool
+    public static function notifyUser(User $user, string $subject, string $message, int $context): bool
     {
         if (!$user->getNotificationPreference($context)) {
             return false;
@@ -67,7 +68,7 @@ EOM;
             $message,
         ]);
 
-        return self::sendMail($user->getEmail(), 'New Notification from Helio', $content);
+        return self::sendMail($user->getEmail(), $subject . ' - Helio', $content);
     }
 
     /**
@@ -106,7 +107,14 @@ EOM;
      */
     protected static function sendMail(string $recepient, string $subject, string $content)
     {
-        $return = ServerUtility::isProd() ? @mail($recepient, $subject, $content, 'From: hello@idling.host', '-f hello@idling.host') : true;
+        $subject = str_replace("\n", '', $subject);
+        $return = ServerUtility::isProd() ?
+            @mail($recepient,
+                $subject,
+                $content,
+                'From: hello@idling.host',
+                '-f hello@idling.host'
+            ) : true;
 
         if ($return) {
             LogHelper::info('Sent Mail to ' . $recepient);
@@ -116,7 +124,7 @@ EOM;
 
         // write mail to PHPStorm Console
         if (PHP_SAPI === 'cli-server' && 'PROD' !== ServerUtility::get('SITE_ENV')) {
-            LogHelper::logToConsole("mail sent to $recepient:\n$content");
+            LogHelper::logToConsole("mail sent to $recepient:\n$subject\n\n$content");
         }
 
         return $return;

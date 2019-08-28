@@ -642,14 +642,14 @@ class ApiJobController extends AbstractController
         // TODO: set redundancy to >= 3 again if needed
         if ($this->job->getInitManagerIp() && $this->job->getClusterToken() && $this->job->getManagerToken() && count($this->job->getManagerNodes()) > 0) {
             $this->job->setStatus(JobStatus::READY);
-            NotificationUtility::notifyUser($this->job->getOwner(), 'Your job with the id ' . $this->job->getId() . ' is now ready to be executed on Helio', NotificationPreferences::EMAIL_ON_JOB_READY);
+            NotificationUtility::notifyUser($this->job->getOwner(), sprintf('Job %s (%d) ready', $this->job->getName(), $this->job->getId()), 'Your job with the id ' . $this->job->getId() . ' is now ready to be executed on Helio', NotificationPreferences::EMAIL_ON_JOB_READY);
             if (!$this->job->getOwner()->getNotificationPreference(NotificationPreferences::MUTE_ADMIN)) {
                 NotificationUtility::notifyAdmin('Job is now ready. By: ' . $this->job->getOwner()->getEmail() . ', type: ' . $this->job->getType() . ', id: ' . $this->job->getId() . ', expected manager: manager-init-' . ServerUtility::getShortHashOfString($this->job->getId()));
             }
         }
         if (array_key_exists('deleted', $body) && 0 === count($this->job->getManagerNodes())) {
             $this->job->setStatus(JobStatus::DELETED);
-            NotificationUtility::notifyUser($this->job->getOwner(), 'Your job with the id ' . $this->job->getId() . ' is now completely removed from Helio', NotificationPreferences::EMAIL_ON_JOB_DELETED);
+            NotificationUtility::notifyUser($this->job->getOwner(), sprintf('Job %s (%d) removed', $this->job->getName(), $this->job->getId()), 'Your job with the id ' . $this->job->getId() . ' is now completely removed from Helio', NotificationPreferences::EMAIL_ON_JOB_DELETED);
             if (!$this->job->getOwner()->getNotificationPreference(NotificationPreferences::MUTE_ADMIN)) {
                 NotificationUtility::notifyAdmin('Job was deleted by ' . $this->job->getOwner()->getEmail() . ', type: ' . $this->job->getType() . ', id: ' . $this->job->getId() . ', expected manager: manager-init-' . ServerUtility::getShortHashOfString($this->job->getId()));
             }
