@@ -4,7 +4,9 @@ namespace Helio\Panel\Controller\Traits;
 
 use Exception;
 use Helio\Panel\App;
+use Helio\Panel\Exception\HttpException;
 use Helio\Panel\Model\User;
+use Slim\Http\StatusCode;
 
 trait ModelUserController
 {
@@ -26,19 +28,17 @@ trait ModelUserController
     }
 
     /**
-     * @return bool
-     *
      * @throws Exception
      */
-    public function validateUserIsSet(): bool
+    public function validateUserIsSet(): void
     {
         if ($this->user) {
             $this->persistUser();
 
-            return true;
+            return;
         }
 
-        return false;
+        throw new HttpException(StatusCode::HTTP_NOT_FOUND, 'No user found');
     }
 
     /**

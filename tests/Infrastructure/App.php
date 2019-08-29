@@ -7,7 +7,6 @@ use Helio\Panel\Utility\MiddlewareForHttpUtility;
 use Helio\Test\Infrastructure\Helper\DbHelper;
 use Helio\Test\Infrastructure\Helper\LogHelper;
 use Helio\Test\Infrastructure\Helper\ZapierHelper;
-use Helio\Test\Infrastructure\Helper\ElasticHelper;
 
 class App extends \Helio\Panel\App
 {
@@ -29,9 +28,6 @@ class App extends \Helio\Panel\App
 
     /** @var LogHelper */
     protected static $logHelperClassName = LogHelper::class;
-
-    /** @var ElasticHelper */
-    protected static $elasticHelperClassName = ElasticHelper::class;
 
     /**
      * @param bool  $cleanInstance

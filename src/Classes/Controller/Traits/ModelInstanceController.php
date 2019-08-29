@@ -5,10 +5,12 @@ namespace Helio\Panel\Controller\Traits;
 use Ergy\Slim\Annotations\RouteInfo;
 use Exception;
 use Helio\Panel\App;
+use Helio\Panel\Exception\HttpException;
 use Helio\Panel\Instance\InstanceStatus;
 use Helio\Panel\Master\MasterFactory;
 use Helio\Panel\Model\Instance;
 use Helio\Panel\Orchestrator\OrchestratorFactory;
+use Slim\Http\StatusCode;
 
 /**
  * Trait ModelInstanceController.
@@ -24,15 +26,11 @@ trait ModelInstanceController
     protected $instance;
 
     /**
-     * optionally create a new default instance if none is passed.
-     *
      * @param RouteInfo $route
-     *
-     * @return bool
      *
      * @throws Exception
      */
-    public function setupInstance(RouteInfo $route): bool
+    public function setupInstance(RouteInfo $route): void
     {
         $this->setupUser();
 
@@ -41,7 +39,7 @@ trait ModelInstanceController
             $this->instance = App::getApp()->getContainer()->get('instance');
             $this->persistInstance();
 
-            return true;
+            return;
         }
 
         // if requested by params, pick the instance by query
@@ -50,7 +48,7 @@ trait ModelInstanceController
         if ($instanceId > 0) {
             $this->instance = App::getDbHelper()->getRepository(Instance::class)->find($instanceId);
 
-            return true;
+            return;
         }
 
         // finally, if there is no instance, simply create one.
@@ -58,25 +56,23 @@ trait ModelInstanceController
             ->setName('___NEW')
             ->setStatus(InstanceStatus::UNKNOWN);
 
-        return true;
+        return;
     }
 
     /**
-     * @return bool
-     *
      * @throws Exception
      */
-    public function validateInstanceIsSet(): bool
+    public function validateInstanceIsSet(): void
     {
         if ($this->instance) {
             if ('___NEW' !== $this->instance->getName()) {
                 $this->persistInstance();
             }
 
-            return true;
+            return;
         }
 
-        return false;
+        throw new HttpException(StatusCode::HTTP_NOT_FOUND, 'No instance found');
     }
 
     /**

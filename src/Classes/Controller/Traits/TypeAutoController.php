@@ -13,7 +13,7 @@ trait TypeAutoController
 {
     protected function getReturnType(): ?string
     {
-        if (false !== stripos($this->request->getContentType(), 'json')) {
+        if ('application/json' === $this->request->getMediaType()) {
             return 'json';
         }
 

@@ -2,18 +2,18 @@
 
 namespace Helio\Panel\Controller\Traits;
 
-/**
- * Trait AuthorizedAdminController.
- */
+use Helio\Panel\Exception\HttpException;
+use Slim\Http\StatusCode;
+
 trait AuthorizedAdminController
 {
     use ModelUserController;
 
-    /**
-     * @return bool
-     */
-    public function validateUserAsAdmin(): bool
+    public function validateUserAsAdmin(): void
     {
-        return $this->user->isAdmin();
+        if ($this->user->isAdmin()) {
+            return;
+        }
+        throw new HttpException(StatusCode::HTTP_FORBIDDEN, 'Insufficient permissions');
     }
 }

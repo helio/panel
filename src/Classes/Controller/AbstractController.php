@@ -252,20 +252,14 @@ abstract class AbstractController extends Controller
         // first: setup everything
         foreach (get_class_methods($this) as $method) {
             if (0 === strpos($method, 'setup')) {
-                if (!$this->$method($route)) {
-                    return (new Response(StatusCode::HTTP_NOT_FOUND))
-                        ->withJson(['success' => false, 'message' => 'Controller Setup failed at ' . $method . '()']);
-                }
+                $this->$method($route);
             }
         }
 
         // then: validate everything
         foreach (get_class_methods($this) as $method) {
             if (0 === strpos($method, 'validate')) {
-                if (!$this->$method()) {
-                    return (new Response(StatusCode::HTTP_UNAUTHORIZED))
-                        ->withJson(['success' => false, 'message' => 'Controller Validation failed at ' . $method . '()']);
-                }
+                $this->$method();
             }
         }
     }

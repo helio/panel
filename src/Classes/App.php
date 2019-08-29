@@ -4,10 +4,12 @@ namespace Helio\Panel;
 
 use Ergy\Slim\Annotations\Router;
 use Exception;
+use Helio\Panel\Exception\HttpException;
 use Helio\Panel\Helper\SlackHelper;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use RuntimeException;
 use Helio\Panel\Helper\DbHelper;
-use Helio\Panel\Helper\ElasticHelper;
 use Helio\Panel\Helper\LogHelper;
 use Helio\Panel\Helper\ZapierHelper;
 use Helio\Panel\Utility\MiddlewareForHttpUtility;
@@ -52,9 +54,6 @@ class App extends \Slim\App
     /** @var LogHelper */
     protected static $logHelperClassName = LogHelper::class;
 
-    /** @var ElasticHelper */
-    protected static $elasticHelperClassName = ElasticHelper::class;
-
     /** @var SlackHelper */
     protected static $slackHelperClassName = SlackHelper::class;
 
@@ -85,9 +84,22 @@ class App extends \Slim\App
                 'displayErrorDetails' => !ServerUtility::isProd(),
             ]]);
 
-            $instance->getContainer()['renderer'] = new PhpRenderer(APPLICATION_ROOT . '/src/templates');
+            $container = $instance->getContainer();
+            $container['renderer'] = new PhpRenderer(APPLICATION_ROOT . '/src/templates');
 
-            $instance->getContainer()['router'] = new Router(
+            $container['errorHandler'] = function ($c) {
+                return function (ServerRequestInterface $request, ResponseInterface $response, \Throwable $t) use ($c) {
+                    if ($t instanceof HttpException) {
+                        return $response
+                            ->withStatus($t->getStatusCode())
+                            ->withHeader('Content-Type', 'application/json')
+                            ->write(\GuzzleHttp\json_encode($t));
+                    }
+                    throw $t;
+                };
+            };
+
+            $container['router'] = new Router(
                 $instance,
                 [APPLICATION_ROOT . '/src/Classes/Controller/'],
                 APPLICATION_ROOT . '/tmp/cache/' . $appName
@@ -103,22 +115,6 @@ class App extends \Slim\App
         }
 
         return self::$instance;
-    }
-
-    /**
-     * @param  string|null $appName
-     * @param  array       $middleWaresToApply
-     * @return App
-     * @throws Exception
-     */
-    public static function getNewApp(
-        ?string $appName = null,
-        array $middleWaresToApply = [MiddlewareForHttpUtility::class]): App
-    {
-        self::$instance = null;
-        self::$className = '';
-
-        return self::getApp($appName, $middleWaresToApply);
     }
 
     /**
@@ -163,18 +159,6 @@ class App extends \Slim\App
         $class = self::$className;
 
         return ($class::$zapierHelperClassName)::getInstance();
-    }
-
-    /**
-     * @return ElasticHelper
-     *
-     * @throws Exception
-     */
-    public static function getElasticHelper(): ElasticHelper
-    {
-        $class = self::$className;
-
-        return ($class::$elasticHelperClassName)::getInstance();
     }
 
     /**

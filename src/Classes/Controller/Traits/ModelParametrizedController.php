@@ -3,8 +3,10 @@
 namespace Helio\Panel\Controller\Traits;
 
 use Ergy\Slim\Annotations\RouteInfo;
+use Helio\Panel\Exception\HttpException;
 use RuntimeException;
 use Slim\Http\Request;
+use Slim\Http\StatusCode;
 
 /**
  * Trait ModelParametrizedController.
@@ -27,7 +29,15 @@ trait ModelParametrizedController
     public function setupParams(RouteInfo $route): bool
     {
         if (!$this->params) {
-            $this->params = array_merge(json_decode($this->request->getBody(), true) ?? [], $this->request->getParams() ?? [], $route->params ?? []);
+            $body = null;
+            if ('application/json' === $this->request->getMediaType() && $this->request->getBody()->getSize()) {
+                try {
+                    $body = \GuzzleHttp\json_decode($this->request->getBody(), true);
+                } catch (\InvalidArgumentException $e) {
+                    throw new HttpException(StatusCode::HTTP_BAD_REQUEST, $e->getMessage(), $e);
+                }
+            }
+            $this->params = array_merge($body ?: [], $this->request->getParams() ?? [], $route->params ?? []);
         }
 
         return true;
@@ -44,7 +54,7 @@ trait ModelParametrizedController
     {
         foreach ($params as $key => $type) {
             if (!array_key_exists($key, $this->params)) {
-                throw new RuntimeException("Param ${key} not set", 1545654109);
+                throw new HttpException(StatusCode::HTTP_BAD_REQUEST, "Param ${key} not set", null, 1545654109);
             }
         }
         $this->optionalParameterCheck($params);
@@ -72,10 +82,10 @@ trait ModelParametrizedController
             foreach ($type as $currentType) {
                 $test = filter_var($this->params[$key], $currentType);
                 if (false === $test) {
-                    throw new RuntimeException("Param ${key} resulted in filter error", 1545654117);
+                    throw new HttpException(StatusCode::HTTP_BAD_REQUEST, "Param ${key} resulted in filter error", null, 1545654109);
                 }
                 if ($test !== $this->params[$key]) {
-                    throw new RuntimeException("Param ${key} has invalid characters", 1545654122);
+                    throw new HttpException(StatusCode::HTTP_BAD_REQUEST, "Param ${key} has invalid characters", null, 1545654109);
                 }
             }
         }
