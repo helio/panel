@@ -2,7 +2,6 @@
 
 namespace Helio\Panel\Controller;
 
-use GuzzleHttp\Exception\GuzzleException;
 use Helio\Panel\Helper\ElasticHelper;
 use Helio\Panel\Model\Instance;
 use Helio\Panel\Model\Preferences\NotificationPreferences;
@@ -211,9 +210,7 @@ class ApiJobExecuteController extends AbstractController
             }
 
             return $this->render($result);
-        } catch (Exception $e) {
-            return $this->render(['success' => false, 'message' => $e->getMessage()], StatusCode::HTTP_INTERNAL_SERVER_ERROR);
-        } catch (GuzzleException $e) {
+        } catch (\Throwable $e) {
             return $this->render(['success' => false, 'message' => $e->getMessage()], StatusCode::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
