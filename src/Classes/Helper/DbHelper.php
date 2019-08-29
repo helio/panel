@@ -98,6 +98,9 @@ class DbHelper implements HelperInterface
             $configObject = Setup::createAnnotationMetadataConfiguration([realpath($this->getPathToModels())], !ServerUtility::isProd(), ServerUtility::getTmpPath());
             $configObject->setAutoGenerateProxyClasses(!ServerUtility::isProd());
             $configObject->addCustomNumericFunction('timestampdiff', TimestampDiff::class);
+            if (!ServerUtility::isProd()) {
+                $configObject->setSQLLogger(new SQLLogger());
+            }
 
             // add filters
             foreach ($this->getFilters() as $name => $filter) {

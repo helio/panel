@@ -4,6 +4,7 @@
 
 namespace Helio\Panel\Model;
 
+use Doctrine\Common\Collections\Criteria;
 use Exception;
 use DateTime;
 use DateTimeZone;
@@ -13,7 +14,9 @@ use Doctrine\ORM\Mapping\Table;
 use Doctrine\ORM\Mapping\Column;
 use Doctrine\ORM\Mapping\OneToMany;
 use Doctrine\Common\Collections\ArrayCollection;
+use Helio\Panel\Job\JobStatus;
 use Helio\Panel\Model\Preferences\NotificationPreferences;
+use Helio\Panel\Model\Preferences\UserPreferences;
 use Helio\Panel\Utility\ServerUtility;
 
 /**
@@ -63,6 +66,13 @@ class User extends AbstractModel implements \JsonSerializable
      * @Column(type="preferences", nullable=true, options={"default": "\\Helio\\Panel\\Model\\Preferences\\NotificationPreferences:0"})
      */
     protected $notificationPreferences;
+
+    /**
+     * @var array
+     *
+     * @Column(type="json", nullable=true)
+     */
+    protected $preferences = [];
 
     /**
      * @var array<Instance>
@@ -262,12 +272,36 @@ class User extends AbstractModel implements \JsonSerializable
         return $this->notificationPreferences->isFlagSet($preference);
     }
 
+    public function getPreferences(): UserPreferences
+    {
+        return new UserPreferences($this->preferences ?? []);
+    }
+
+    public function setPreferences(UserPreferences $preferences): self
+    {
+        $this->preferences = $preferences->jsonSerialize();
+
+        return $this;
+    }
+
     /**
      * @return Collection
      */
     public function getJobs(): Collection
     {
         return $this->jobs;
+    }
+
+    public function getRunningJobsCount(): int
+    {
+        $criteria = Criteria::create()
+            ->where(
+                Criteria::expr()->in('status', JobStatus::getRunningStatusCodes())
+            );
+
+        return $this->jobs
+            ->matching($criteria)
+            ->count();
     }
 
     /**

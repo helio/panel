@@ -78,6 +78,7 @@ class ApiJobController extends AbstractController
      *     },
      *     @OA\RequestBody(@OA\JsonContent(ref="#/components/schemas/Job")),
      *     @OA\Response(response="406", ref="#/components/responses/406"),
+     *     @OA\Response(response="403", description="Max limit of running jobs reached")
      *     @OA\Response(
      *         response="200",
      *         description="Job successfully created",
@@ -118,6 +119,18 @@ class ApiJobController extends AbstractController
      */
     public function addJobAction(): ResponseInterface
     {
+        $runningJobsCount = $this->user->getRunningJobsCount();
+        $runningJobsLimit = $this->user->getPreferences()->getLimits()->getRunningJobs();
+        if ($runningJobsCount >= $runningJobsLimit) {
+            NotificationUtility::alertAdmin('Running jobs limit reached ' . $this->user->getId() . ' / ' . $this->user->getEmail());
+
+            return $this->render([
+                'success' => false,
+                'message' => sprintf('Limit of running jobs reached. Amount running: %d / Limit: %d. Please contact helio support if you have any questions.', $runningJobsCount, $runningJobsLimit),
+                'limits' => $this->user->getPreferences()->getLimits(),
+            ], StatusCode::HTTP_FORBIDDEN);
+        }
+
         // TODO: Remove this again once CPUs is implemented
         if (is_array($this->request->getParsedBody()) && array_key_exists('cpus', $this->request->getParsedBody())) {
             NotificationUtility::alertAdmin('Job with specified CPUs created by ' . $this->user->getId() . ' -> ' . $this->user->getEmail());

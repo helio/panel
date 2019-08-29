@@ -4,6 +4,7 @@
 
 namespace Helio\Panel\Model;
 
+use Doctrine\Common\Collections\Criteria;
 use Exception;
 use OpenApi\Annotations as OA;
 use Doctrine\Common\Collections\Collection;
@@ -516,6 +517,13 @@ class Job extends AbstractModel
         return $this->executions;
     }
 
+    public function getRunningExecutionsCount(): int
+    {
+        $criteria = Criteria::create()->where(Criteria::expr()->in('status', ExecutionStatus::getRunningStatusCodes()));
+
+        return $this->executions->matching($criteria)->count();
+    }
+
     /**
      * @param array $executions
      *
@@ -650,7 +658,7 @@ class Job extends AbstractModel
     public function getActiveExecutionCount(): int
     {
         return count(array_filter($this->getExecutions()->toArray(), function (Execution $execution) {
-            return ExecutionStatus::isValidPendingStatus($execution->getStatus());
+            return ExecutionStatus::isValidPendingStatus($execution->getStatus()) || ExecutionStatus::isRunning($execution->getStatus());
         }));
     }
 }

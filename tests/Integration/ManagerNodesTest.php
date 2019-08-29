@@ -312,7 +312,7 @@ class ManagerNodesTest extends TestCase
                 ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']],
                 ['name' => sprintf('%s-%s', $this->getName(), $i)]
             );
-            $this->assertEquals(StatusCode::HTTP_OK, $response->getStatusCode());
+            $this->assertEquals(StatusCode::HTTP_OK, $response->getStatusCode(), (string) $response->getBody());
         } while ($i > 0);
 
         $this->assertStringContainsString('helio::queue', ServerUtility::getLastExecutedShellCommand());

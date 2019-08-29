@@ -7,25 +7,25 @@ use Webfactory\Doctrine\ORMTestInfrastructure\ORMInfrastructure;
 
 class DbHelper extends \Helio\Panel\Helper\DbHelper
 {
-    /** @var ORMInfrastructure $infarastructure */
-    protected static $infarastructure;
+    /** @var ORMInfrastructure $infrastructure */
+    protected static $infrastructure;
 
     /**
      * @param $infrastructure
      */
     public static function setInfrastructure($infrastructure): void
     {
-        self::$infarastructure = $infrastructure;
+        self::$infrastructure = $infrastructure;
     }
 
     public function getConnection(): EntityManager
     {
-        return self::$infarastructure->getEntityManager();
+        return self::$infrastructure->getEntityManager();
     }
 
     public function getRepository(string $entityName)
     {
-        return self::$infarastructure->getRepository($entityName);
+        return self::$infrastructure->getRepository($entityName);
     }
 
     /**
@@ -34,9 +34,9 @@ class DbHelper extends \Helio\Panel\Helper\DbHelper
     protected function getConnectionSettings(): array
     {
         return [
-            'driver' => self::$infarastructure->getEntityManager()->getConnection()->getDriver()->getName(),
-            'user' => self::$infarastructure->getEntityManager()->getConnection()->getUsername(),
-            'password' => self::$infarastructure->getEntityManager()->getConnection()->getPassword(),
+            'driver' => self::$infrastructure->getEntityManager()->getConnection()->getDriver()->getName(),
+            'user' => self::$infrastructure->getEntityManager()->getConnection()->getUsername(),
+            'password' => self::$infrastructure->getEntityManager()->getConnection()->getPassword(),
             'memory' => true,
         ];
     }

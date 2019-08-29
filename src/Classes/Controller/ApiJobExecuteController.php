@@ -151,18 +151,35 @@ class ApiJobExecuteController extends AbstractController
      *         )
      *     ),
      *     @OA\Response(response="200", ref="#/components/responses/200"),
+     *     @OA\Response(response="403", description="Job is not ready or limits reached")
      *     @OA\Response(response="500", ref="#/components/responses/500")
      * )
      *
      * @return ResponseInterface
      *
      * @Route("", methods={"POST", "PUT", "DELETE"}, name="job.exec")
+     * @throws \GuzzleHttp\Exception\GuzzleException
      */
     public function execAction(): ResponseInterface
     {
         try {
             if (!JobStatus::isValidActiveStatus($this->job->getStatus())) {
-                throw new RuntimeException('job not ready');
+                return $this->render([
+                   'success' => false,
+                   'message' => 'Job not ready',
+                ], StatusCode::HTTP_FORBIDDEN);
+            }
+
+            $runningExecutionsCount = $this->job->getRunningExecutionsCount();
+            $runningExecutionsLimit = $this->user->getPreferences()->getLimits()->getRunningExecutions();
+            if ($runningExecutionsCount >= $runningExecutionsLimit) {
+                NotificationUtility::alertAdmin('Running executions limit reached for user: ' . $this->user->getId() . ' / job: ' . $this->job->getId());
+
+                return $this->render([
+                    'success' => false,
+                    'message' => sprintf('Limit of running executions reached. Amount running: %d / Limit: %d. Please contact helio support if you have any questions.', $runningExecutionsCount, $runningExecutionsLimit),
+                    'limits' => $this->user->getPreferences()->getLimits(),
+                ], StatusCode::HTTP_FORBIDDEN);
             }
 
             // run and stop have the same interface, thus we can reuse the code
@@ -175,8 +192,9 @@ class ApiJobExecuteController extends AbstractController
                 $command = 'stop';
             } else {
                 $this->execution
-                    ->setName(array_key_exists('name', $this->params) ? $this->params['name'] : 'automatically created')
                     ->setJob($this->job)
+                    ->setCreated()
+                    ->setName(array_key_exists('name', $this->params) ? $this->params['name'] : 'automatically created')->setJob($this->job)
                     ->setCreated();
                 $this->persistExecution();
             }
@@ -369,6 +387,7 @@ class ApiJobExecuteController extends AbstractController
                 sprintf("Your Job %d with id %d was successfully executed\nThe results can now be used.", $this->job->getId(), $this->execution->getId()),
                 NotificationPreferences::EMAIL_ON_EXECUTION_ENDED
             );
+
             return $this->render(['success' => true, 'message' => 'Job marked as done']);
         }
 

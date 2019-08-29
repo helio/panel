@@ -70,13 +70,11 @@ final class ExecutionStatus
         return self::labels["status-$status"];
     }
 
-    public static function getAllButTerminatedStatusCodes(): array
+    public static function getRunningStatusCodes(): array
     {
         return [
             self::READY,
             self::RUNNING,
-            self::DONE,
-            self::STOPPED,
         ];
     }
 }
