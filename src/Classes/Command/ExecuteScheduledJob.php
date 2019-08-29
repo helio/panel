@@ -107,7 +107,7 @@ class ExecuteScheduledJob extends Command
                     }
 
                     if (!$job->getOwner()->getNotificationPreference(NotificationPreferences::MUTE_ADMIN)) {
-                        NotificationUtility::notifyAdmin('Job ' . $job->getId() . ' successfully automatically executed');
+                        NotificationUtility::notifyAdmin('New execution for job ' . $job->getId() . ' automatically created');
                     }
                 }
             } catch (Exception $e) {
