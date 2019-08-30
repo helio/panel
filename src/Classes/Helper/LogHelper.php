@@ -41,7 +41,7 @@ use Psr\Log\LogLevel;
 class LogHelper implements HelperInterface
 {
     /**
-     * @var array<Logger>
+     * @var Logger[]
      */
     protected static $logger = [];
 
@@ -114,5 +114,12 @@ class LogHelper implements HelperInterface
         }
 
         return self::$logger[$suffix];
+    }
+
+    public static function pushProcessorToAllInstances(callable $callback)
+    {
+        foreach (self::$logger as $l) {
+            $l->pushProcessor($callback);
+        }
     }
 }

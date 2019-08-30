@@ -12,6 +12,9 @@ use Helio\Panel\Model\Job;
 use Helio\Panel\Model\User;
 use Helio\Panel\Service\UserService;
 use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Ramsey\Uuid\Uuid;
 use Slim\Http\Request;
 use Slim\Http\Response;
 use Slim\Http\StatusCode;
@@ -129,5 +132,23 @@ class MiddlewareForHttpUtility extends AbstractUtility
                 return $response->write('<html lang="en"><head><title>Error</title></head><body><p><strong>Status:</strong>cors  error</p></body>')->withStatus(StatusCode::HTTP_UNAUTHORIZED);
             },
         ]));
+
+        if (ServerUtility::isLocalDevEnv()) {
+            $app->add(new \RKA\Middleware\ProxyDetection([$_SERVER['REMOTE_ADDR']]));
+        }
+
+        $app->add(function (ServerRequestInterface $request, ResponseInterface $response, callable $next): ResponseInterface {
+            $requestId = $request->getHeader('X-Choria-Request-ID');
+            if (!$requestId) {
+                $requestId = Uuid::uuid4()->toString();
+            }
+            LogHelper::pushProcessorToAllInstances(function (array $record) use ($requestId): array {
+                $record['extra']['requestId'] = $requestId;
+
+                return $record;
+            });
+
+            return $next($request, $response);
+        });
     }
 }

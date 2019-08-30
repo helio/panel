@@ -36,13 +36,15 @@
     "symfony/yaml": "^4.2",
     "zircote/swagger-php": "^3.0",
     "elasticsearch/elasticsearch": "^6.7",
-    "adhocore/cron-expr": "^0.0.6"
+    "adhocore/cron-expr": "^0.0.6",
+    "ramsey/uuid": "^3.8"
   },
   "require-dev": {
     "roave/security-advisories": "dev-master",
     "phpunit/phpunit": "*",
     "webfactory/doctrine-orm-test-infrastructure": "^1.5",
-    "friendsofphp/php-cs-fixer": "^2.15"
+    "friendsofphp/php-cs-fixer": "^2.15",
+    "akrabat/proxy-detection-middleware": "^0.4.0"
   },
   "autoload-dev": {
     "psr-4": {
