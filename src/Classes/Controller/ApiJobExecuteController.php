@@ -4,7 +4,6 @@ namespace Helio\Panel\Controller;
 
 use Helio\Panel\Helper\ElasticHelper;
 use Helio\Panel\Model\Instance;
-use Helio\Panel\Model\Preferences\NotificationPreferences;
 use Helio\Panel\Request\Log;
 use Helio\Panel\Service\LogService;
 use Helio\Panel\Utility\NotificationUtility;
@@ -165,8 +164,8 @@ class ApiJobExecuteController extends AbstractController
         try {
             if (!JobStatus::isValidActiveStatus($this->job->getStatus())) {
                 return $this->render([
-                   'success' => false,
-                   'message' => 'Job not ready',
+                    'success' => false,
+                    'message' => 'Job not ready',
                 ], StatusCode::HTTP_FORBIDDEN);
             }
 
@@ -381,12 +380,23 @@ class ApiJobExecuteController extends AbstractController
             $this->job->setBudgetUsed(JobFactory::getDispatchConfigOfJob($this->job, $this->execution)->getExecutionEstimates()['cost'] + $this->job->getBudgetUsed());
             $this->persistJob();
 
-            NotificationUtility::notifyUser(
-                $this->job->getOwner(),
-                sprintf('Job %s (%d), Execution %s (%d) executed', $this->job->getName(), $this->job->getId(), $this->execution->getName(), $this->execution->getId()),
-                sprintf("Your Job %d with id %d was successfully executed\nThe results can now be used.", $this->job->getId(), $this->execution->getId()),
-                NotificationPreferences::EMAIL_ON_EXECUTION_ENDED
-            );
+            if ($this->execution->isAutoExecuted()) {
+                if (!$this->user->getPreferences()->getNotifications()->isEmailOnAutoscheduledExecutionEnded()) {
+                    NotificationUtility::notifyUser(
+                        $this->job->getOwner(),
+                        sprintf('Job %s (%d), Execution %s (%d) executed', $this->job->getName(), $this->job->getId(), $this->execution->getName(), $this->execution->getId()),
+                        sprintf("Your Job %d with id %d was successfully executed\nThe results can now be used.", $this->job->getId(), $this->execution->getId())
+                    );
+                }
+            } else {
+                if (!$this->user->getPreferences()->getNotifications()->isEmailOnExecutionEnded()) {
+                    NotificationUtility::notifyUser(
+                        $this->job->getOwner(),
+                        sprintf('Job %s (%d), Execution %s (%d) executed', $this->job->getName(), $this->job->getId(), $this->execution->getName(), $this->execution->getId()),
+                        sprintf("Your Job %d with id %d was successfully executed\nThe results can now be used.", $this->job->getId(), $this->execution->getId())
+                    );
+                }
+            }
 
             return $this->render(['success' => true, 'message' => 'Job marked as done']);
         }

@@ -55,28 +55,8 @@ class CookieUtilityTest extends TestCase
         )->getHeader('set-cookie');
         $this->assertIsArray($responseCookies);
         $this->assertCount(1, $responseCookies);
-        $this->assertCloseDateTime($future, $this->getExpires($responseCookies[0]));
-        $this->assertCloseInt($future->getTimestamp() - $now->getTimestamp(), $this->getMaxAge($responseCookies[0]), 1);
-    }
-
-    /**
-     * @param \DateTimeInterface $expected
-     * @param \DateTimeInterface $actual
-     */
-    protected function assertCloseDateTime(\DateTimeInterface $expected, \DateTimeInterface $actual): void
-    {
-        $this->assertCloseInt($expected->getTimestamp(), $actual->getTimestamp(), 1);
-    }
-
-    /**
-     * @param int $expected
-     * @param int $actual
-     * @param int $maxDistance
-     */
-    protected function assertCloseInt(int $expected, int $actual, int $maxDistance): void
-    {
-        $this->assertLessThanOrEqual($expected + $maxDistance, $actual);
-        $this->assertGreaterThanOrEqual($expected - $maxDistance, $actual);
+        $this->assertEqualsWithDelta($future, $this->getExpires($responseCookies[0]), 1.0);
+        $this->assertEqualsWithDelta($future->getTimestamp() - $now->getTimestamp(), $this->getMaxAge($responseCookies[0]), 1.0);
     }
 
     /**

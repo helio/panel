@@ -100,6 +100,13 @@ class Execution extends AbstractModel
     protected $latestHeartbeat;
 
     /**
+     * @var bool
+     *
+     * @Column(type="boolean", nullable=TRUE)
+     */
+    protected $autoExecuted = false;
+
+    /**
      * @return Job
      */
     public function getJob(): ?Job
@@ -221,6 +228,25 @@ class Execution extends AbstractModel
         }
 
         return $this->latestHeartbeat;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isAutoExecuted(): bool
+    {
+        return $this->autoExecuted;
+    }
+
+    /**
+     * @param  bool      $autoExecuted
+     * @return Execution
+     */
+    public function setAutoExecuted(bool $autoExecuted): Execution
+    {
+        $this->autoExecuted = $autoExecuted;
+
+        return $this;
     }
 
     /**

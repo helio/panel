@@ -101,7 +101,7 @@ class PanelTest extends TestCase
 
         $user = $this->userRepository->findOneByEmail('email@example.com');
 
-        $this->assertGreaterThanOrEqual($now, $user->getLoggedOut());
+        $this->assertEqualsWithDelta($now, $user->getLoggedOut(), 1.0);
 
         $response = $this->runWebApp('GET', $confirmationUrl, true);
         $this->assertEquals(302, $response->getStatusCode());

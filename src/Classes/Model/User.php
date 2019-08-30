@@ -15,8 +15,8 @@ use Doctrine\ORM\Mapping\Column;
 use Doctrine\ORM\Mapping\OneToMany;
 use Doctrine\Common\Collections\ArrayCollection;
 use Helio\Panel\Job\JobStatus;
-use Helio\Panel\Model\Preferences\NotificationPreferences;
 use Helio\Panel\Model\Preferences\UserPreferences;
+use Helio\Panel\Utility\ArrayUtility;
 use Helio\Panel\Utility\ServerUtility;
 
 /**
@@ -60,14 +60,6 @@ class User extends AbstractModel implements \JsonSerializable
     protected $loggedOut;
 
     /**
-     * @var notificationPreferences
-     *
-     * TODO: Remove the options here once the schema has been updated on all systems
-     * @Column(type="preferences", nullable=true, options={"default": "\\Helio\\Panel\\Model\\Preferences\\NotificationPreferences:0"})
-     */
-    protected $notificationPreferences;
-
-    /**
      * @var array
      *
      * @Column(type="json", nullable=true)
@@ -98,7 +90,6 @@ class User extends AbstractModel implements \JsonSerializable
         parent::__construct();
         $this->instances = new ArrayCollection();
         $this->jobs = new ArrayCollection();
-        $this->notificationPreferences = new NotificationPreferences(NotificationPreferences::EMAIL_ON_EXECUTION_ENDED | NotificationPreferences::EMAIL_ON_JOB_READY);
     }
 
     /**
@@ -255,23 +246,6 @@ class User extends AbstractModel implements \JsonSerializable
         $this->loggedOut = $loggedOut;
     }
 
-    /**
-     * @return NotificationPreferences
-     */
-    public function getNotificationPreferences(): NotificationPreferences
-    {
-        return $this->notificationPreferences;
-    }
-
-    /**
-     * @param  int  $preference
-     * @return bool
-     */
-    public function getNotificationPreference(int $preference): bool
-    {
-        return $this->notificationPreferences->isFlagSet($preference);
-    }
-
     public function getPreferences(): UserPreferences
     {
         return new UserPreferences($this->preferences ?? []);
@@ -282,6 +256,11 @@ class User extends AbstractModel implements \JsonSerializable
         $this->preferences = $preferences->jsonSerialize();
 
         return $this;
+    }
+
+    public function getPreference(string $preference)
+    {
+        return ArrayUtility::getFirstByDotNotation([$this->getPreferences()->jsonSerialize()], [$preference]);
     }
 
     /**

@@ -57,8 +57,7 @@ class CostCalculatorTest extends TestCase
 
         $completedTimestamp = $result['estimates']['completion'];
         $now = (new \DateTime('now', ServerUtility::getTimezoneObject()))->getTimestamp();
-        $this->assertLessThan($now + 1030 + 5, $completedTimestamp);
-        $this->assertGreaterThan($now + 1030 - 5, $completedTimestamp);
+        $this->assertEqualsWithDelta($now + 1030, $completedTimestamp, 1.0);
 
         $cost = $result['estimates']['cost'];
         $this->assertGreaterThan(0.0, $cost);
@@ -82,8 +81,7 @@ class CostCalculatorTest extends TestCase
 
         $completedTimestamp = $result['estimates']['completion'];
         $now = (new \DateTime('now', ServerUtility::getTimezoneObject()))->getTimestamp();
-        $this->assertLessThan($now + 130 + 5, $completedTimestamp);
-        $this->assertGreaterThan($now + 130 - 5, $completedTimestamp);
+        $this->assertEqualsWithDelta($now + 130, $completedTimestamp, 1.0);
 
         $cost = $result['estimates']['cost'];
         $this->assertGreaterThan(0.0, $cost);

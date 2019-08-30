@@ -54,15 +54,10 @@ EOM;
      * @param  User   $user
      * @param  string $subject
      * @param  string $message
-     * @param  int    $context has to be a constant from NotificationPreferences
      * @return bool
      */
-    public static function notifyUser(User $user, string $subject, string $message, int $context): bool
+    public static function notifyUser(User $user, string $subject, string $message): bool
     {
-        if (!$user->getNotificationPreference($context)) {
-            return false;
-        }
-
         $content = vsprintf(self::$notificationMailTemplate, [
             $user->getName(),
             $message,

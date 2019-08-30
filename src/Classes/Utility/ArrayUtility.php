@@ -29,6 +29,20 @@ class ArrayUtility extends AbstractUtility
     }
 
     /**
+     * @param array  $dataBag
+     * @param string $path
+     * @param $value
+     * @return array
+     */
+    public static function setByDotNotation(array $dataBag, string $path, $value)
+    {
+        $dot = new Dot($dataBag);
+        $dot->set($path, $value);
+
+        return $dot->jsonSerialize();
+    }
+
+    /**
      * @param array<AbstractModel> $models
      *
      * @return string

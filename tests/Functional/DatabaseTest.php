@@ -4,7 +4,6 @@ namespace Helio\Test\Functional;
 
 use Doctrine\DBAL\Types\Type;
 use Helio\Panel\Model\Instance;
-use Helio\Panel\Model\Preferences\NotificationPreferences;
 use Helio\Panel\Model\Type\UTCDateTimeType;
 use Helio\Panel\Model\User;
 use Helio\Panel\Utility\ServerUtility;
@@ -105,8 +104,8 @@ class DatabaseTest extends TestCase
         $foundServer = $this->instanceRepository->findOneByName('testserver');
 
         $this->assertNotNull($foundServer);
-        $this->assertEquals($server->getCreated()->getTimestamp(), $foundServer->getCreated()->getTimestamp());
-        $this->assertEquals($server->getCreated()->getTimezone()->getName(), $foundServer->getCreated()->getTimezone()->getName());
+        $this->assertEqualsWithDelta($server->getCreated()->getTimestamp(), $foundServer->getCreated()->getTimestamp(), 1.0);
+        $this->assertEqualsWithDelta($server->getCreated()->getTimezone()->getName(), $foundServer->getCreated()->getTimezone()->getName(), 1.0);
     }
 
     public function testTimestampAutoSetter(): void
@@ -122,8 +121,8 @@ class DatabaseTest extends TestCase
         $foundServer = $this->instanceRepository->findOneByName('testserver');
 
         $this->assertNotNull($foundServer);
-        $this->assertEquals($server->getCreated()->getTimestamp(), $foundServer->getCreated()->getTimestamp());
-        $this->assertEquals($server->getCreated()->getTimezone()->getName(), $foundServer->getCreated()->getTimezone()->getName());
+        $this->assertEqualsWithDelta($server->getCreated()->getTimestamp(), $foundServer->getCreated()->getTimestamp(), 1.0);
+        $this->assertEqualsWithDelta($server->getCreated()->getTimezone()->getName(), $foundServer->getCreated()->getTimezone()->getName(), 1.0);
     }
 
     public function testBitFlagConversionDefaultValues(): void
@@ -134,20 +133,20 @@ class DatabaseTest extends TestCase
 
         /** @var User $foundUser */
         $foundUser = $this->infrastructure->getRepository(User::class)->find($user->getId());
-        $this->assertTrue($foundUser->getNotificationPreference(NotificationPreferences::EMAIL_ON_JOB_READY));
+        $this->assertTrue($foundUser->getPreferences()->getNotifications()->isEmailOnJobReady());
     }
 
     public function testBitFlagConversionManipulation(): void
     {
         /** @var User $user */
         $user = (new User())->setCreated()->setName('testuer');
-        $this->assertFalse($user->getNotificationPreference(NotificationPreferences::MUTE_ADMIN));
-        $user->getNotificationPreferences()->setFlag(NotificationPreferences::MUTE_ADMIN, true);
+        $this->assertFalse($user->getPreferences()->getNotifications()->isMuteAdmin());
+        $user->getPreferences()->getNotifications()->setMuteAdmin(true);
         $this->infrastructure->getEntityManager()->persist($user);
         $this->infrastructure->getEntityManager()->flush();
 
         /** @var User $foundUser */
         $foundUser = $this->infrastructure->getRepository(User::class)->find($user->getId());
-        $this->assertTrue($foundUser->getNotificationPreference(NotificationPreferences::MUTE_ADMIN));
+        $foundUser->getPreferences()->getNotifications()->isMuteAdmin();
     }
 }

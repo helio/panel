@@ -14,7 +14,6 @@ use Helio\Panel\Job\JobStatus;
 use Helio\Panel\Model\Execution;
 use Helio\Panel\Model\Instance;
 use Helio\Panel\Model\Job;
-use Helio\Panel\Model\Preferences\NotificationPreferences;
 use Helio\Panel\Orchestrator\OrchestratorFactory;
 use Helio\Panel\Utility\MiddlewareForCliUtility;
 use Helio\Panel\Utility\NotificationUtility;
@@ -89,8 +88,13 @@ class ExecuteScheduledJob extends Command
                     App::getLogger()->debug('Running Scheduled Job ' . $job->getId());
 
                     /** @var Execution $execution */
-                    $execution = (new Execution())->setStatus(ExecutionStatus::READY)->setJob($job)->setCreated()->setName('created by CLI');
                     $pseudoInstance = new Instance();
+                    $execution = (new Execution())
+                        ->setStatus(ExecutionStatus::READY)
+                        ->setJob($job)
+                        ->setAutoExecuted(true)
+                        ->setCreated()
+                        ->setName('created by CLI');
 
                     // run the job and check if the replicas have changed
                     $previousReplicaCount = JobFactory::getDispatchConfigOfJob($job, $execution)->getDispatchConfig()->getReplicaCountForJob($job);
@@ -106,7 +110,7 @@ class ExecuteScheduledJob extends Command
                         App::getDbHelper()->flush();
                     }
 
-                    if (!$job->getOwner()->getNotificationPreference(NotificationPreferences::MUTE_ADMIN)) {
+                    if (!$job->getOwner()->getPreferences()->getNotifications()->isMuteAdmin()) {
                         NotificationUtility::notifyAdmin('New execution for job ' . $job->getId() . ' automatically created');
                     }
                 }

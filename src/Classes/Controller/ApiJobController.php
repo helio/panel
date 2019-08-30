@@ -5,7 +5,6 @@ namespace Helio\Panel\Controller;
 use Exception;
 use GuzzleHttp\Exception\GuzzleException;
 use Helio\Panel\Helper\ElasticHelper;
-use Helio\Panel\Model\Preferences\NotificationPreferences;
 use Helio\Panel\Request\Log;
 use Helio\Panel\Service\LogService;
 use OpenApi\Annotations as OA;
@@ -161,7 +160,7 @@ class ApiJobController extends AbstractController
         $isNew = null === $this->job->getId();
         JobFactory::getInstanceOfJob($this->job)->create($this->params);
 
-        if (!$this->user->getNotificationPreference(NotificationPreferences::MUTE_ADMIN)) {
+        if (!$this->user->getPreferences()->getNotifications()->isMuteAdmin()) {
             $str = $isNew ? 'New Job was created' : 'Job was updated';
             NotificationUtility::notifyAdmin($str . ' by ' . $this->user->getEmail() . ', type: ' . $this->job->getType() . ', id: ' . $this->job->getId() . ', expected manager: manager-init-' . ServerUtility::getShortHashOfString($this->job->getId()));
         }
@@ -636,15 +635,19 @@ class ApiJobController extends AbstractController
         // TODO: set redundancy to >= 3 again if needed
         if ($this->job->getInitManagerIp() && $this->job->getClusterToken() && $this->job->getManagerToken() && count($this->job->getManagerNodes()) > 0) {
             $this->job->setStatus(JobStatus::READY);
-            NotificationUtility::notifyUser($this->job->getOwner(), sprintf('Job %s (%d) ready', $this->job->getName(), $this->job->getId()), 'Your job with the id ' . $this->job->getId() . ' is now ready to be executed on Helio', NotificationPreferences::EMAIL_ON_JOB_READY);
-            if (!$this->job->getOwner()->getNotificationPreference(NotificationPreferences::MUTE_ADMIN)) {
+            if (!$this->job->getOwner()->getPreferences()->getNotifications()->isEmailOnJobReady()) {
+                NotificationUtility::notifyUser($this->job->getOwner(), sprintf('Job %s (%d) ready', $this->job->getName(), $this->job->getId()), 'Your job with the id ' . $this->job->getId() . ' is now ready to be executed on Helio');
+            }
+            if (!$this->job->getOwner()->getPreferences()->getNotifications()->isMuteAdmin()) {
                 NotificationUtility::notifyAdmin('Job is now ready. By: ' . $this->job->getOwner()->getEmail() . ', type: ' . $this->job->getType() . ', id: ' . $this->job->getId() . ', expected manager: manager-init-' . ServerUtility::getShortHashOfString($this->job->getId()));
             }
         }
         if (array_key_exists('deleted', $body) && 0 === count($this->job->getManagerNodes())) {
             $this->job->setStatus(JobStatus::DELETED);
-            NotificationUtility::notifyUser($this->job->getOwner(), sprintf('Job %s (%d) removed', $this->job->getName(), $this->job->getId()), 'Your job with the id ' . $this->job->getId() . ' is now completely removed from Helio', NotificationPreferences::EMAIL_ON_JOB_DELETED);
-            if (!$this->job->getOwner()->getNotificationPreference(NotificationPreferences::MUTE_ADMIN)) {
+            if (!$this->job->getOwner()->getPreferences()->getNotifications()->isEmailOnJobDeleted()) {
+                NotificationUtility::notifyUser($this->job->getOwner(), sprintf('Job %s (%d) removed', $this->job->getName(), $this->job->getId()), 'Your job with the id ' . $this->job->getId() . ' is now completely removed from Helio');
+            }
+            if (!$this->job->getOwner()->getPreferences()->getNotifications()->isMuteAdmin()) {
                 NotificationUtility::notifyAdmin('Job was deleted by ' . $this->job->getOwner()->getEmail() . ', type: ' . $this->job->getType() . ', id: ' . $this->job->getId() . ', expected manager: manager-init-' . ServerUtility::getShortHashOfString($this->job->getId()));
             }
         }

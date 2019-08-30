@@ -15,6 +15,7 @@ use Helio\Panel\Helper\ZapierHelper;
 use Helio\Panel\Utility\MiddlewareForHttpUtility;
 use Helio\Panel\Utility\ServerUtility;
 use Monolog\Logger;
+use Slim\Http\Response;
 use Slim\Views\PhpRenderer;
 
 /**
@@ -90,6 +91,7 @@ class App extends \Slim\App
             $container['errorHandler'] = function ($c) {
                 return function (ServerRequestInterface $request, ResponseInterface $response, \Throwable $t) use ($c) {
                     if ($t instanceof HttpException) {
+                        /* @var Response $response */
                         return $response
                             ->withStatus($t->getStatusCode())
                             ->withHeader('Content-Type', 'application/json')
@@ -104,7 +106,6 @@ class App extends \Slim\App
                 [APPLICATION_ROOT . '/src/Classes/Controller/'],
                 APPLICATION_ROOT . '/tmp/cache/' . $appName
             );
-            self::$instance = $instance;
 
             foreach ($middleWaresToApply as $middleware) {
                 $middleware::addMiddleware($instance);
