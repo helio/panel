@@ -11,7 +11,7 @@ if [[ -z "${TOKEN}" ]]; then exit 1; fi
 
 ##########
 # Create the Job and wait for its successful provisioning
-JOB=$(curl -fsSL -m 360 -X POST -d ${DATA} -H "Authorization: Bearer ${TOKEN}" "${BASE_URL}/api/job")
+JOB=$(curl -fsSL -m 360 -X POST -d ${DATA} -H 'Content-Type: application/json' -H "Authorization: Bearer ${TOKEN}" "${BASE_URL}/api/job")
 if [[ -z "${JOB}" ]]; then exit 2; fi
 
 JOB_ID=$(echo ${JOB} | jq -r .id)
@@ -37,7 +37,7 @@ done
 
 ##########
 # Execute job and wait for it to be done
-curl -fsSL -o /dev/null -X POST -d '{"env":[{"LIMIT":"7"}]}' -H "Authorization: Bearer ${JOB_TOKEN}" "${BASE_URL}/api/job/${JOB_ID}/execute" || exit 2
+curl -fsSL -o /dev/null -X POST -H 'Content-Type: application/json' -d '{"env":[{"LIMIT":"7"}]}' -H "Authorization: Bearer ${JOB_TOKEN}" "${BASE_URL}/api/job/${JOB_ID}/execute" || exit 2
 
 TIMEOUT=400
 echo -ne "Waiting for job ${JOB_ID} to be completed. This may take a while"

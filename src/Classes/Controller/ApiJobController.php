@@ -136,45 +136,24 @@ class ApiJobController extends AbstractController
             NotificationUtility::alertAdmin('Job with specified CPUs created by ' . $this->user->getId() . ' -> ' . $this->user->getEmail());
         }
 
-        try {
-            $this->requiredParameterCheck([
-                'type' => FILTER_SANITIZE_STRING,
-            ]);
+        $this->requiredParameterCheck([
+            'type' => FILTER_SANITIZE_STRING,
+        ]);
 
-            if (!JobType::isValidType($this->params['type'])) {
-                return $this->render(['success' => false, 'message' => 'Unknown Job Type'], StatusCode::HTTP_NOT_ACCEPTABLE);
-            }
-
-            $this->job->setType($this->params['type']);
-        } catch (Exception $e) {
-            // If we have created a new job but haven't passed the jobtype (e.g. during wizard loading), we cannot continue.
-            if ('___NEW' === $this->job->getName() && JobStatus::UNKNOWN === $this->job->getStatus()) {
-                return $this->render(['token' => JwtUtility::generateToken(null, $this->user, null, $this->job)['token'], 'id' => $this->job->getId()]);
-            }
-            // if the existing job hasn't got a proper type, we cannot continue either, but that's a hard fail...
-            if (!JobType::isValidType($this->job->getType())) {
-                return $this->render(['success' => false, 'message' => $e->getMessage()], StatusCode::HTTP_NOT_ACCEPTABLE);
-            }
+        if (!JobType::isValidType($this->params['type'])) {
+            return $this->render(['success' => false, 'message' => 'Unknown Job Type'], StatusCode::HTTP_NOT_ACCEPTABLE);
         }
 
-        try {
-            $this->optionalParameterCheck([
-                'name' => FILTER_SANITIZE_STRING,
-                'location' => FILTER_SANITIZE_STRING,
-                'billingReference' => FILTER_SANITIZE_STRING,
-                'free' => FILTER_SANITIZE_STRING,
-                'config' => FILTER_SANITIZE_STRING,
-                'autoExecSchedule' => FILTER_SANITIZE_STRING,
-            ]);
-        } catch (\RuntimeException $e) {
-            LogHelper::getInstance()->warn('Error POST /api/job: "' . $e->getMessage() . '"', [
-                'stacktrace' => $e->getTrace(),
-                'url' => $this->request->getUri(),
-                'user' => $this->user->getId(),
-            ]);
+        $this->job->setType($this->params['type']);
 
-            return $this->render(['success' => false, 'message' => $e->getMessage()], StatusCode::HTTP_NOT_ACCEPTABLE);
-        }
+        $this->optionalParameterCheck([
+            'name' => FILTER_SANITIZE_STRING,
+            'location' => FILTER_SANITIZE_STRING,
+            'billingReference' => FILTER_SANITIZE_STRING,
+            'free' => FILTER_SANITIZE_STRING,
+            'config' => FILTER_SANITIZE_STRING,
+            'autoExecSchedule' => FILTER_SANITIZE_STRING,
+        ]);
 
         $this->job->setOwner($this->user);
         $isNew = null === $this->job->getId();
