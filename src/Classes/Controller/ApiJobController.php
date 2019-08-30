@@ -136,15 +136,17 @@ class ApiJobController extends AbstractController
             NotificationUtility::alertAdmin('Job with specified CPUs created by ' . $this->user->getId() . ' -> ' . $this->user->getEmail());
         }
 
-        $this->requiredParameterCheck([
-            'type' => FILTER_SANITIZE_STRING,
-        ]);
+        if (!$this->job->getType()) {
+            $this->requiredParameterCheck([
+                'type' => FILTER_SANITIZE_STRING,
+            ]);
 
-        if (!JobType::isValidType($this->params['type'])) {
-            return $this->render(['success' => false, 'message' => 'Unknown Job Type'], StatusCode::HTTP_NOT_ACCEPTABLE);
+            if (!JobType::isValidType($this->params['type'])) {
+                return $this->render(['success' => false, 'message' => 'Unknown Job Type'], StatusCode::HTTP_NOT_ACCEPTABLE);
+            }
+
+            $this->job->setType($this->params['type']);
         }
-
-        $this->job->setType($this->params['type']);
 
         $this->optionalParameterCheck([
             'name' => FILTER_SANITIZE_STRING,

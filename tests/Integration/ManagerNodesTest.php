@@ -114,7 +114,7 @@ class ManagerNodesTest extends TestCase
             'POST',
             '/api/job',
             true,
-            ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']],
+            ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token'], 'Content-Type' => 'application/json'],
             ['type' => JobType::GITLAB_RUNNER, 'name' => $this->getName()]
         );
         $this->assertEquals(StatusCode::HTTP_OK, $response->getStatusCode());
@@ -125,7 +125,7 @@ class ManagerNodesTest extends TestCase
         $response = $this->runWebApp('POST',
             '/api/job',
             true,
-            ['Authorization' => 'Bearer ' . $result['token']],
+            ['Authorization' => 'Bearer ' . $result['token'], 'Content-Type' => 'application/json'],
             ['id' => $result['id'], 'name' => 'testing 1551430509']
         );
         $this->assertEquals(StatusCode::HTTP_OK, $response->getStatusCode());
