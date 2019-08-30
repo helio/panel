@@ -635,7 +635,7 @@ class ApiJobController extends AbstractController
         // TODO: set redundancy to >= 3 again if needed
         if ($this->job->getInitManagerIp() && $this->job->getClusterToken() && $this->job->getManagerToken() && count($this->job->getManagerNodes()) > 0) {
             $this->job->setStatus(JobStatus::READY);
-            if (!$this->job->getOwner()->getPreferences()->getNotifications()->isEmailOnJobReady()) {
+            if ($this->job->getOwner()->getPreferences()->getNotifications()->isEmailOnJobReady()) {
                 NotificationUtility::notifyUser($this->job->getOwner(), sprintf('Job %s (%d) ready', $this->job->getName(), $this->job->getId()), 'Your job with the id ' . $this->job->getId() . ' is now ready to be executed on Helio');
             }
             if (!$this->job->getOwner()->getPreferences()->getNotifications()->isMuteAdmin()) {
@@ -644,7 +644,7 @@ class ApiJobController extends AbstractController
         }
         if (array_key_exists('deleted', $body) && 0 === count($this->job->getManagerNodes())) {
             $this->job->setStatus(JobStatus::DELETED);
-            if (!$this->job->getOwner()->getPreferences()->getNotifications()->isEmailOnJobDeleted()) {
+            if ($this->job->getOwner()->getPreferences()->getNotifications()->isEmailOnJobDeleted()) {
                 NotificationUtility::notifyUser($this->job->getOwner(), sprintf('Job %s (%d) removed', $this->job->getName(), $this->job->getId()), 'Your job with the id ' . $this->job->getId() . ' is now completely removed from Helio');
             }
             if (!$this->job->getOwner()->getPreferences()->getNotifications()->isMuteAdmin()) {

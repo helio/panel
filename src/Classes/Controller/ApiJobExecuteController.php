@@ -381,7 +381,7 @@ class ApiJobExecuteController extends AbstractController
             $this->persistJob();
 
             if ($this->execution->isAutoExecuted()) {
-                if (!$this->user->getPreferences()->getNotifications()->isEmailOnAutoscheduledExecutionEnded()) {
+                if ($this->user->getPreferences()->getNotifications()->isEmailOnAutoscheduledExecutionEnded()) {
                     NotificationUtility::notifyUser(
                         $this->job->getOwner(),
                         sprintf('Job %s (%d), Execution %s (%d) executed', $this->job->getName(), $this->job->getId(), $this->execution->getName(), $this->execution->getId()),
@@ -389,7 +389,7 @@ class ApiJobExecuteController extends AbstractController
                     );
                 }
             } else {
-                if (!$this->user->getPreferences()->getNotifications()->isEmailOnExecutionEnded()) {
+                if ($this->user->getPreferences()->getNotifications()->isEmailOnExecutionEnded()) {
                     NotificationUtility::notifyUser(
                         $this->job->getOwner(),
                         sprintf('Job %s (%d), Execution %s (%d) executed', $this->job->getName(), $this->job->getId(), $this->execution->getName(), $this->execution->getId()),
