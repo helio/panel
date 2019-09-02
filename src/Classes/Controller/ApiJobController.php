@@ -121,7 +121,7 @@ class ApiJobController extends AbstractController
         $runningJobsCount = $this->user->getRunningJobsCount();
         $runningJobsLimit = $this->user->getPreferences()->getLimits()->getRunningJobs();
         if ($runningJobsCount >= $runningJobsLimit) {
-            NotificationUtility::alertAdmin('Running jobs limit reached ' . $this->user->getId() . ' / ' . $this->user->getEmail());
+            NotificationUtility::alertAdmin(sprintf('Running jobs limit (running: %d / limit: %d) reached for user %d / %d', $runningJobsCount, $runningJobsLimit, $this->user->getId(), $this->user->getEmail()));
 
             return $this->render([
                 'success' => false,

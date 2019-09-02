@@ -172,7 +172,7 @@ class ApiJobExecuteController extends AbstractController
             $runningExecutionsCount = $this->job->getRunningExecutionsCount();
             $runningExecutionsLimit = $this->user->getPreferences()->getLimits()->getRunningExecutions();
             if ($runningExecutionsCount >= $runningExecutionsLimit) {
-                NotificationUtility::alertAdmin('Running executions limit reached for user: ' . $this->user->getId() . ' / job: ' . $this->job->getId());
+                NotificationUtility::alertAdmin(sprintf('Running executions limit (running: %d / limit: %d) reached for user %d at job %d', $runningExecutionsCount, $runningExecutionsLimit, $this->user->getId(), $this->job->getId()));
 
                 return $this->render([
                     'success' => false,
