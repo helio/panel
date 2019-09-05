@@ -48,7 +48,7 @@ class Choria implements OrchestratorInterface
     private static $inspectCommand = 'mco playbook run helio::cluster::node::inspect --input \'{"node_fqdn":"$fqdn","callback":"$instanceCallback"}\'';
     private static $getRunnderIdCommand = 'mco playbook run helio::cluster::node::getid --input \'{"node_fqdn":"$fqdn","callback":"$instanceCallback"}\'';
     private static $dispatchCommand = 'mco playbook run helio::task::update --input \'{"cluster_address":"%s","task_ids":"[%s]"}\'';
-    private static $joinWorkersCommand = 'mco playbook run helio::queue --input \'{"cluster_join_token":"%s","cluster_join_address":"%s","cluster_join_count":"%s"}\'';
+    private static $joinWorkersCommand = 'mco playbook run helio::queue --input \'{"cluster_join_token":"%s","cluster_join_address":"%s","cluster_join_count":"%s","manager_id":"%s"}\'';
 
     /**
      * Choria constructor.
@@ -112,7 +112,14 @@ class Choria implements OrchestratorInterface
         ]));
 
         if ($this->job->getActiveExecutionCount() > 0) {
-            ServerUtility::executeShellCommand($this->parseCommand(self::$joinWorkersCommand, false, [$this->job->getClusterToken(), $this->job->getInitManagerIp(), 1]));
+            ServerUtility::executeShellCommand(
+                $this->parseCommand(self::$joinWorkersCommand, false, [
+                    $this->job->getClusterToken(),
+                    $this->job->getInitManagerIp(),
+                    1,
+                    $this->job->getManagerID(),
+                ])
+            );
         }
 
         return true;

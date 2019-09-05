@@ -618,6 +618,9 @@ class ApiJobController extends AbstractController
         if (array_key_exists('swarm_token_manager', $body)) {
             $this->job->setManagerToken($body['swarm_token_manager']);
         }
+        if (array_key_exists('manager_id', $body)) {
+            $this->job->setManagerID($body['manager_id']);
+        }
 
         // get manager IP
         if (array_key_exists('manager_ip', $body)) {

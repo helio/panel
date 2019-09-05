@@ -213,6 +213,12 @@ class Job extends AbstractModel
     protected $managerNodes = [];
 
     /**
+     * @var string
+     * @Column(type="string")
+     */
+    protected $managerID = '';
+
+    /**
      * @var int
      *
      * @internal
@@ -660,5 +666,24 @@ class Job extends AbstractModel
         return count(array_filter($this->getExecutions()->toArray(), function (Execution $execution) {
             return ExecutionStatus::isValidPendingStatus($execution->getStatus()) || ExecutionStatus::isRunning($execution->getStatus());
         }));
+    }
+
+    /**
+     * @param  string $managerID
+     * @return Job
+     */
+    public function setManagerID(string $managerID): Job
+    {
+        $this->managerID = $managerID;
+
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getManagerID(): string
+    {
+        return $this->managerID;
     }
 }
