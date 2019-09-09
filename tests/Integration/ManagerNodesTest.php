@@ -9,6 +9,7 @@ use Helio\Panel\Model\Job;
 use Helio\Panel\Model\Execution;
 use Helio\Panel\Model\User;
 use Helio\Panel\Utility\JwtUtility;
+use Helio\Test\Infrastructure\Helper\TestHelper;
 use Helio\Test\Infrastructure\Orchestrator\OrchestratorFactory;
 use Helio\Test\Infrastructure\Utility\ServerUtility;
 use Helio\Test\TestCase;
@@ -68,13 +69,7 @@ class ManagerNodesTest extends TestCase
         $body = (string) $response->getBody();
         $jobId = \GuzzleHttp\json_decode($body, true)['id'];
 
-        $command = str_replace('\\"', '"', ServerUtility::getLastExecutedShellCommand());
-
-        $pattern = '/^.*"callback":"' . str_replace('/', '\\/', ServerUtility::getBaseUrl()) . '([^"]+)"/';
-        $matches = [];
-        preg_match($pattern, $command, $matches);
-        $this->assertNotEmpty($matches);
-        $url = '/' . $matches[1];
+        $url = TestHelper::getCallbackUrlFromExecutedShellCommand();
 
         $this->callbackDataInit = ['nodes' => 'manager-init-' . ServerUtility::getShortHashOfString($jobId) . '.example.com', 'swarm_token_manager' => 'blah:manager', 'swarm_token_worker' => 'blah:worker'];
         $this->callbackDataManagerIp = ['manager_ip' => '1.2.3.4:2345'];
@@ -153,12 +148,8 @@ class ManagerNodesTest extends TestCase
         $this->assertStringContainsString('manager-init-' . ServerUtility::getShortHashOfString($jobId), ServerUtility::getLastExecutedShellCommand());
         $this->assertStringContainsString('user_id', ServerUtility::getLastExecutedShellCommand());
         $this->assertStringContainsString($this->user->getId(), ServerUtility::getLastExecutedShellCommand());
-        $command = str_replace('\\"', '"', ServerUtility::getLastExecutedShellCommand());
-        $pattern = '/^.*"callback":"' . str_replace('/', '\\/', ServerUtility::getBaseUrl()) . '([^"]+)"/';
-        $matches = [];
-        preg_match($pattern, $command, $matches);
-        $this->assertNotEmpty($matches);
-        $url = '/' . $matches[1];
+
+        $url = TestHelper::getCallbackUrlFromExecutedShellCommand();
 
         $this->assertStringNotContainsString('token=', $url);
 
@@ -336,12 +327,7 @@ class ManagerNodesTest extends TestCase
         $jobid = $body['id'];
         $jobtoken = $body['token'];
 
-        $command = str_replace('\\"', '"', ServerUtility::getLastExecutedShellCommand());
-        $pattern = '/^.*"callback":"' . str_replace('/', '\\/', ServerUtility::getBaseUrl()) . '([^"]+)"/';
-        $matches = [];
-        preg_match($pattern, $command, $matches);
-        $this->assertNotEmpty($matches);
-        $callbackUrl = '/' . $matches[1];
+        $callbackUrl = TestHelper::getCallbackUrlFromExecutedShellCommand();
 
         $response = $this->runWebApp('GET', "/api/job/isready?jobid=${jobid}", true, ['Authorization' => 'Bearer ' . $jobtoken]);
         $this->assertEquals($response->getStatusCode(), StatusCode::HTTP_FAILED_DEPENDENCY);
@@ -358,5 +344,47 @@ class ManagerNodesTest extends TestCase
         $response = $this->runWebApp('GET', "/api/job/isready?jobid=${jobid}", true, ['Authorization' => 'Bearer ' . $jobtoken]);
 
         $this->assertEquals(StatusCode::HTTP_OK, $response->getStatusCode());
+    }
+
+    /**
+     * @throws \Doctrine\ORM\ORMException
+     * @throws \Doctrine\ORM\OptimisticLockException
+     * @throws \Exception
+     */
+    public function testManagerNodeGetsRecreatedOnNewExecutionOfPausedJob(): void
+    {
+        $this->job->setStatus(JobStatus::READY_PAUSED);
+        $this->infrastructure->getEntityManager()->persist($this->job);
+        $this->infrastructure->getEntityManager()->flush();
+
+        $result = $this->runWebApp('POST',
+            sprintf('/api/job/%s/execute', $this->job->getId()),
+            true,
+            ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user, null, $this->job)['token']],
+            ['type' => JobType::GITLAB_RUNNER, 'name' => $this->getName()]
+        );
+        $this->assertEquals(StatusCode::HTTP_OK, $result->getStatusCode());
+        $this->assertStringContainsString('infrastructure::gce::create', ServerUtility::getLastExecutedShellCommand(2));
+        $this->assertStringContainsString('helio::task::update', ServerUtility::getLastExecutedShellCommand(1));
+        $this->assertStringContainsString('helio::queue', ServerUtility::getLastExecutedShellCommand());
+    }
+
+    /**
+     * @throws \Doctrine\ORM\ORMException
+     * @throws \Doctrine\ORM\OptimisticLockException
+     * @throws \Exception
+     */
+    public function testManagerNodeDoesNotGetRecreatedOnNewExecutionOfRunningJob(): void
+    {
+        $result = $this->runWebApp('POST',
+            sprintf('/api/job/%s/execute', $this->job->getId()),
+            true,
+            ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user, null, $this->job)['token']],
+            ['type' => JobType::GITLAB_RUNNER, 'name' => $this->getName()]
+        );
+        $this->assertEquals(StatusCode::HTTP_OK, $result->getStatusCode());
+        $this->assertEmpty(ServerUtility::getLastExecutedShellCommand(2));
+        $this->assertStringContainsString('helio::task::update', ServerUtility::getLastExecutedShellCommand(1));
+        $this->assertStringContainsString('helio::queue', ServerUtility::getLastExecutedShellCommand());
     }
 }

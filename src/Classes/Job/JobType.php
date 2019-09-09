@@ -36,11 +36,17 @@ final class JobType
 
     public static function isValidType(string $type): bool
     {
-        return self::GITLAB_RUNNER === $type
-            || self::ENERGY_PLUS_85 === $type
-            || self::DOCKER === $type
-            || self::BUSYBOX === $type
-            || self::INFINITEBOX === $type;
+        return in_array($type, self::getAllValidTypes(), true);
+    }
+
+    public static function getAllValidTypes(): array
+    {
+        return [self::GITLAB_RUNNER,
+            self::ENERGY_PLUS_85,
+            self::DOCKER,
+            self::BUSYBOX,
+            self::INFINITEBOX,
+        ];
     }
 
     /**

@@ -2,6 +2,7 @@
 <div class="modal fade" id="addJob" tabindex="-1" role="dialog"
      aria-labelledby="Add a new Job" aria-hidden="true"
      data-id-name="id" data-endpoint="job"
+     data-precreate-payload='{"type":"<?php echo \Helio\Panel\Job\JobType::BUSYBOX; ?>"}'
      data-container-selector="#helio-joblist"
      data-container-endpoint="user/joblist"
 >
@@ -255,7 +256,8 @@
                         <div class="wizard-pf-contents hidden">
                             <div class="wizard-pf-process blank-slate-pf">
                                 <div class="spinner spinner-lg blank-slate-pf-icon"></div>
-                                <h3 class="blank-slate-pf-main-action">Service is being provisioned. This might take a few minutes.</h3>
+                                <h3 class="blank-slate-pf-main-action">Service is being provisioned. This might take a
+                                    few minutes.</h3>
                                 <p class="blank-slate-pf-secondary-action">
                                     &nbsp;
                                 </p>

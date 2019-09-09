@@ -70,7 +70,7 @@ class ApiUserController extends AbstractController
 
         // if the user wants to see terminated workloads, skip the status filter
         if (!$includeTerminated) {
-            $searchCriteria['status'] = JobStatus::getAllButDeletedStatusCodes();
+            $searchCriteria['status'] = JobStatus::getAllButDeletedAndUnknownStatusCodes();
         }
 
         $jobs = [];

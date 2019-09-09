@@ -150,7 +150,7 @@ class ApiJobExecuteController extends AbstractController
      *         )
      *     ),
      *     @OA\Response(response="200", ref="#/components/responses/200"),
-     *     @OA\Response(response="403", description="Job is not ready or limits reached")
+     *     @OA\Response(response="403", description="Job is not ready or limits reached"),
      *     @OA\Response(response="500", ref="#/components/responses/500")
      * )
      *
@@ -167,6 +167,11 @@ class ApiJobExecuteController extends AbstractController
                     'success' => false,
                     'message' => 'Job not ready',
                 ], StatusCode::HTTP_FORBIDDEN);
+            }
+
+            if (JobStatus::READY_PAUSED === $this->job->getStatus()) {
+                OrchestratorFactory::getOrchestratorForInstance($this->instance, $this->job)->provisionManager();
+                $this->persistJob();
             }
 
             $runningExecutionsCount = $this->job->getRunningExecutionsCount();
@@ -205,7 +210,7 @@ class ApiJobExecuteController extends AbstractController
             $newReplicaCount = JobFactory::getDispatchConfigOfJob($this->job, $this->execution)->getDispatchConfig()->getReplicaCountForJob($this->job);
 
             if (!JobFactory::getDispatchConfigOfJob($this->job, $this->execution)->isExecutionStillAffordable()) {
-                //TODO: Return here once the budget discussion is settled.
+                //TODO: Return with an error here once the budget discussion is settled.
                 NotificationUtility::alertAdmin('Execution could not start for user: ' . $this->user->getId() . ' / job: ' . $this->job->getId() . ' because the budget was used up.');
             }
 
@@ -371,7 +376,7 @@ class ApiJobExecuteController extends AbstractController
     {
         if ('__NEW' !== $this->execution->getName()) {
             /* @var Execution $execution */
-            $this->execution->setStatus(ExecutionStatus::DONE);
+            $this->execution->setStatus(ExecutionStatus::DONE)->setLatestHeartbeat();
 
             $this->execution->setStats((string) $this->request->getBody());
             $this->persistExecution();
@@ -429,6 +434,36 @@ class ApiJobExecuteController extends AbstractController
     }
 
     /**
+     * @OA\Post(
+     *     path="/job/{jobid}/execute/heartbeat",
+     *     tags={"job execute"},
+     *     security={
+     *         {"authByJobtoken": {"any"}},
+     *         {"authByApitoken": {"any"}}
+     *     },
+     *     description="Update the job execution heartbeat. This marks the execution as successfully and correctly running.",
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="query",
+     *         description="Id of the current Execution",
+     *         required=true,
+     *         @Oa\Items(
+     *             type="string"
+     *         )
+     *     ),
+     *     @OA\Parameter(
+     *         name="jobid",
+     *         in="path",
+     *         description="Id of the job that the execution belongs to",
+     *         required=true,
+     *         @Oa\Items(
+     *             type="string"
+     *         )
+     *     ),
+     *     @OA\Response(response="200", description="Job execution pinged as running", @OA\JsonContent(ref="#/components/schemas/default-content")),
+     *     @OA\Response(response="404", ref="#/components/responses/404"),
+     *     @OA\Response(response="500", ref="#/components/responses/500")
+     * )
      * @return ResponseInterface
      *
      * @Route("/heartbeat", methods={"POST", "PUT"}, name="job.heartbeat")
@@ -437,9 +472,16 @@ class ApiJobExecuteController extends AbstractController
     {
         try {
             if (null === $this->execution->getId()) {
-                return $this->render(['error' => 'unknown execution', 'params' => $this->params, 'execution' => $this->execution, StatusCode::HTTP_NOT_FOUND]);
+                return $this->render(['error' => 'unknown execution', 'params' => $this->params, 'execution' => $this->execution], StatusCode::HTTP_NOT_FOUND);
             }
-            $this->execution->setStatus(ExecutionStatus::RUNNING);
+
+            // if the job is not currently running, mark it so
+            if (!ExecutionStatus::isRunning($this->execution->getStatus())) {
+                $this->execution->setStatus(ExecutionStatus::RUNNING)->setStarted();
+            }
+
+            // persist moment
+            $this->execution->setLatestHeartbeat();
             $this->persistExecution();
 
             return $this->render();

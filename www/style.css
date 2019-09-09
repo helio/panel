@@ -35,6 +35,30 @@
     border-color: green;
 }
 
+.helio .job span.status- {
+    border-color: deeppink;
+}
+
+.helio .job span.status-21,
+.helio .job span.status-22,
+.helio .job span.status-92,
+.helio .job span.status-91,
+.helio .job span.status-0 {
+    border-color: red;
+}
+
+.helio .job span.status-1 {
+    border-color: orangered;
+}
+
+.helio .job span.status-2 {
+    border-color: green;
+}
+
+.helio .job span.status-3 {
+    border-color: yellow;
+}
+
 .draw {
     transition: color 0.25s;
 }

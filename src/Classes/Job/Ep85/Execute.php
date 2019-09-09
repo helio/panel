@@ -8,7 +8,6 @@ use Helio\Panel\Job\AbstractExecute;
 use Helio\Panel\Job\DispatchConfig;
 use Helio\Panel\Execution\ExecutionStatus;
 use Helio\Panel\Utility\ExecUtility;
-use Helio\Panel\Utility\JwtUtility;
 use Helio\Panel\Utility\ServerUtility;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response;
@@ -37,7 +36,6 @@ class Execute extends AbstractExecute
             'idf_sha1' => ServerUtility::getHashOfString($idf),
             'epw' => $epw,
             'epw_sha1' => ServerUtility::getHashOfString($epw),
-            'report' => array_key_exists('report_url', $config) ? $config['report_url'] : ExecUtility::getExecUrl($this->job, 'submitresult'),
             'upload' => array_key_exists('upload_url', $config) ? $config['upload_url'] : ExecUtility::getExecUrl($this->job, 'upload'),
         ];
 
@@ -62,11 +60,7 @@ class Execute extends AbstractExecute
      */
     public function getDispatchConfig(): DispatchConfig
     {
-        return (new DispatchConfig())->setImage('hub.helio.dev:4567/helio/runner/ep85:latest')->setEnvVariables([
-            'HELIO_JOBID' => $this->job->getId(),
-            'HELIO_TOKEN' => JwtUtility::generateToken(null, $this->job->getOwner(), null, $this->job)['token'],
-            'HELIO_URL' => ServerUtility::getBaseUrl(),
-        ]);
+        return (new DispatchConfig())->setImage('hub.helio.dev:4567/helio/runner/ep85:latest')->setEnvVariables($this->getCommonEnvVariables());
     }
 
     /**

@@ -68,6 +68,13 @@
                 <span class="list-group-item-value">Admin</span>
             </a>
         </li>
+        <li class="list-group-item <?php echo $adminStatsActive ?? '';
+        echo(!$user->isAdmin() ? 'hidden' : '') ?>">
+            <a href="/panel/admin/stats">
+                <span class="fa fa-rocket" data-toggle="tooltip" title="" data-original-title="Admin Stats"></span>
+                <span class="list-group-item-value">Admin Stats</span>
+            </a>
+        </li>
 
 
         <li class="list-group-item secondary-nav-item-pf mobile-nav-item-pf visible-xs-block <?php echo $profileActive ?? ''; ?>">

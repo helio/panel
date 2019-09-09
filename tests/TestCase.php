@@ -12,10 +12,11 @@ use Helio\Panel\Model\Type\PreferencesType;
 use Helio\Panel\Model\Type\UTCDateTimeType;
 use Helio\Panel\Model\User;
 use Helio\Panel\Utility\MiddlewareForHttpUtility;
-use Helio\Panel\Utility\ServerUtility;
 use Helio\Test\Infrastructure\App;
 use Helio\Test\Infrastructure\Helper\DbHelper;
 use Helio\Test\Infrastructure\Helper\ZapierHelper;
+use Helio\Test\Infrastructure\Orchestrator\OrchestratorFactory;
+use Helio\Test\Infrastructure\Utility\ServerUtility;
 use Monolog\Logger;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Request;
@@ -92,6 +93,9 @@ class TestCase extends \PHPUnit\Framework\TestCase
         $this->instanceRepository = $this->infrastructure->getRepository(Instance::class);
         $this->jobRepository = $this->infrastructure->getRepository(Job::class);
         $this->executionRepository = $this->infrastructure->getRepository(Execution::class);
+
+        ServerUtility::resetLastExecutedCommand();
+        OrchestratorFactory::resetInstances();
     }
 
     public static function setUpBeforeClass(): void
@@ -104,6 +108,15 @@ class TestCase extends \PHPUnit\Framework\TestCase
 
         // make sure no shell commands are being executed.
         ServerUtility::setTesting();
+    }
+
+    public function tearDown(): void
+    {
+        // N.B. when you remove jobs/users, you need to reset the instances of orchestrator singleton cache
+        // otherwise following tests create new jobs with the same ID, instance cache thinks it knows them still,
+        // but the object is actually gone already.
+        // Singletons are evil.
+        OrchestratorFactory::resetInstances();
     }
 
     /**

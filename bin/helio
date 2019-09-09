@@ -4,11 +4,14 @@
 require __DIR__ . '/../src/bootstrap.php';
 
 use Symfony\Component\Console\Application;
-
+use Helio\Panel\Command;
 
 try {
     $application = new Application();
-    $application->add(new \Helio\Panel\Command\ExecuteScheduledJob());
+    $application->add(new Command\ExecuteScheduledJob());
+    $application->add(new Command\MaintenanceRedeployHangingJobs());
+    $application->add(new Command\MaintenanceRerunHangingExecution());
+    $application->add(new Command\MaintenanceRemoveStaleClusters());
     $application->run();
 } catch (\Throwable $e) {
     echo 'Error during cli execution: ' . print_r([
@@ -16,8 +19,7 @@ try {
             'code' => $e->getCode(),
             'file' => $e->getFile(),
             'line' => $e->getLine(),
-            'args' => implode(' ', $_SERVER['argv'])
+            'args' => implode(' ', $_SERVER['argv']),
         ], true);
-
     exit(1);
 }

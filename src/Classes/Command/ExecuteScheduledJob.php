@@ -6,7 +6,6 @@ use Ahc\Cron\Expression;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\Common\Collections\ExpressionBuilder;
 use Exception;
-use GuzzleHttp\Exception\GuzzleException;
 use Helio\Panel\App;
 use Helio\Panel\Execution\ExecutionStatus;
 use Helio\Panel\Job\JobFactory;
@@ -15,50 +14,12 @@ use Helio\Panel\Model\Execution;
 use Helio\Panel\Model\Instance;
 use Helio\Panel\Model\Job;
 use Helio\Panel\Orchestrator\OrchestratorFactory;
-use Helio\Panel\Utility\MiddlewareForCliUtility;
 use Helio\Panel\Utility\NotificationUtility;
-use Slim\Http\Environment;
-use Slim\Http\Request;
-use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
-/**
- * Symfony console command.
- *
- * Class ExecuteScheduledJob
- */
-class ExecuteScheduledJob extends Command
+class ExecuteScheduledJob extends AbstractCommand
 {
-    /** @var array */
-    protected $middlewaresToApply;
-
-    /** @var App */
-    protected $app;
-
-    /**
-     * ExecuteScheduledJob constructor.
-     * @param  string    $appClassName
-     * @param  array     $middlewaresToApply
-     * @throws Exception
-     */
-    public function __construct(string $appClassName = App::class, $middlewaresToApply = [MiddlewareForCliUtility::class])
-    {
-        parent::__construct();
-        $this->middlewaresToApply = $middlewaresToApply;
-        $request = Request::createFromEnvironment(Environment::mock([
-            'REQUEST_METHOD' => 'POST',
-            'REQUEST_URI' => '/',
-        ]));
-
-        /* @var App $appClassName */
-        $this->app = $appClassName::getApp('cli', $this->middlewaresToApply);
-        $this->app->getContainer()['request'] = $request;
-    }
-
-    /**
-     * Configure Command.
-     */
     protected function configure(): void
     {
         $this->setName('app:execute-scheduled-jobs')
@@ -66,15 +27,6 @@ class ExecuteScheduledJob extends Command
             ->setHelp('This task should run as often as possible through a cron.');
     }
 
-    /**
-     * @param InputInterface  $input
-     * @param OutputInterface $output
-     *
-     * @return int|null
-     *
-     * @throws Exception
-     * @throws GuzzleException
-     */
     protected function execute(InputInterface $input, OutputInterface $output): ?int
     {
         $expression = (new ExpressionBuilder())->neq('autoExecSchedule', '');

@@ -1,0 +1,99 @@
+<div id="helio-adminStats-list">
+    <?php
+    if (isset($jobs)) {
+
+        /** @var \Helio\Panel\Model\Job $job */
+        foreach ($jobs as $job) {
+            $adminActive = isset($admin) ? ' hidden' : '';
+            $jobId = $job->getId();
+            $typeIcon = \Helio\Panel\Job\JobType::getIconClassesForType($job->getType());
+            $jobStatus = $job->getStatus();
+            $jobStatusText = \Helio\Panel\Job\JobStatus::getLabel($jobStatus);
+            $jobCreated = $job->getCreated()->format(DATE_ATOM);
+            $jobName = $job->getName();
+            $jobManagers = join($job->getManagerNodes(),',');
+            $jobExecCount = $job->getActiveExecutionCount();
+            $jobAutoExecSchedule = $job->getAutoExecSchedule() ?: 'none';
+            $jobPermanent = $job->isPersistent() ? 'yes' : 'no';
+            $jobManagerIp = $job->getInitManagerIp();
+            $userEmail = $job->getOwner()->getEmail();
+            $jobToken = \Helio\Panel\Utility\JwtUtility::generateToken(null, null, null, $job)['token'];
+            $userToken = \Helio\Panel\Utility\JwtUtility::generateToken(null, $job->getOwner())['token'];
+
+            echo <<<EOJ
+
+<div class="list-group-item job loadable"
+     data-id="${jobId}"
+     data-status="${jobStatus}"
+     data-idname="jobid"
+>
+
+    <div class="loader loader-absolute">
+        <div class="spinner spinner-lg"></div>
+    </div>
+
+    <div class="list-group-item-header">
+        <div class="list-view-pf-expand">
+            <span class="fa fa-angle-right"></span>
+        </div>
+        <div class="list-view-pf-actions${adminActive}">
+            <div class="dropdown pull-right dropdown-kebab-pf">
+                <button class="btn btn-link dropdown-toggle" type="button" id="dropdownKebabRight9"
+                        data-toggle="dropdown"
+                        aria-haspopup="true" aria-expanded="true">
+                    <span class="fa fa-ellipsis-v"></span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownKebabRight9">
+                    <li><a data-action="job" data-method="delete">Delete Job</a></li>
+                    <li><a href="buy/${jobId}/logs">Logs</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="list-view-pf-main-info">
+            <div class="list-view-pf-left">
+                <span title="${jobId}"
+                      class="${typeIcon} list-view-pf-icon-sm status-${jobStatus}"></span>
+            </div>
+            <div class="list-view-pf-body">
+                <div class="list-view-pf-description">
+                    <div class="list-group-item-heading">
+                        <p>
+                            Job <i>${jobId}</i> created on ${jobCreated} by ${userEmail} with ${jobExecCount} Executions and Status ${jobStatusText}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="list-group-item-container container-fluid hidden">
+        <div class="close">
+            <span class="pficon pficon-close"></span>
+        </div>
+        <div class="row">
+            <div class="col-lg-12">
+                <h2>${jobName}</h2>
+                <p>
+                    Managers: ${jobManagers}<br />
+                    InitManagerIp: ${jobManagerIp}
+                </p>
+            </div>
+            <div class="col-lg-12">
+                <span>Open in new Window: <a href="/api/admin/getJobHiera?jobid=${jobId}" target="_blank">JobHiera</a><br /></span>
+                <span>Job Token:</span><pre class="prettyprint">${jobToken}</pre>
+                <span>User Token:</span><pre class="prettyprint">${userToken}</pre>
+                <span>Exec Schedule:</span><pre class="prettyprint">${jobAutoExecSchedule}</pre>
+                <span>Persistent? </span><pre class="prettyprint">${jobPermanent}</pre>
+            </div>
+EOJ;
+            \Helio\Panel\Utility\ViewUtility::includePartial('jobDetailAdmin');
+            echo <<<EOJ
+        </div>
+    </div>
+</div>
+EOJ;
+        }
+    }
+    ?>
+</div>

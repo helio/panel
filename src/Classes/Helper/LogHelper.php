@@ -87,13 +87,6 @@ class LogHelper implements HelperInterface
         self::getInstance()->log($level, $message);
     }
 
-    /**
-     * @param string $suffix
-     *
-     * @return Logger
-     *
-     * @throws Exception
-     */
     public static function getInstance(string $suffix = 'app'): Logger
     {
         if (!array_key_exists($suffix, self::$logger)) {

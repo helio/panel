@@ -70,9 +70,6 @@ GET_CURRENT_EXECUTION_EPWURL() {
 GET_CURRENT_UPLOAD_URL() {
     echo $(GET_EXEC_URL $(echo "${EXECUTION_CONFIG}" | jq -r '.upload'))
 }
-GET_CURRENT_REPORT_URL() {
-    echo $(GET_EXEC_URL $(echo "${EXECUTION_CONFIG}" | jq -r '.report'))
-}
 
 SET_CURRENT_EXECUTION_CONFIG() {
     DEBUG "Setting Execution Config from $(GET_EXEC_URL "/work/getnextinqueue")"
@@ -141,11 +138,11 @@ UPLOAD_RESULT() {
 }
 
 REPORT() {
-    DEBUG "reporting success to $(GET_CURRENT_REPORT_URL)"
+    DEBUG "reporting success to ${REPORT_URL}"
     # note: unfourtuntately, due to whitespaces and potential linebreaks, we have to go through a file
     echo '{"success":"'${1}'","epw_stat":"'$(wc ${CURRENT_EPW_FILENAME})'","idf_stat":"'$(wc ${CURRENT_IDF_FILENAME})'", "started":"'${STARTED}'", "ended":"'$(date +%s)'","executionid":"'$(GET_CURRENT_EXECUTION_ID)'"}' > /tmp/report
     DEBUG "report data: " $(cat /tmp/report | tr -d '[:space:]')
-    curl -H "Authorization: Bearer ${HELIO_TOKEN}" -fsSLo /dev/null -X PUT -H "Content-Type: application/json" --data @/tmp/report "$(GET_CURRENT_REPORT_URL)&XDEBUG_SESSION_START=true" && rm -f /tmp/report || return 1
+    curl -H "Authorization: Bearer ${HELIO_TOKEN}" -fsSLo /dev/null -X PUT -H "Content-Type: application/json" --data @/tmp/report "${REPORT_URL}" && rm -f /tmp/report || return 1
 }
 
 # Subshell heartbeat
@@ -154,7 +151,7 @@ HEARTBEAT() {
         if [[ -f /tmp/executionId ]]; then
             DEBUG "Hearbeat"
             if [[ -n "$(cat /tmp/executionId | tr -d '[:space:]')" ]]; then
-                curl -H "Authorization: Bearer ${HELIO_TOKEN}" -fsSLo /dev/null -X PUT $(GET_EXEC_URL "/heartbeat")\&executionid=$(cat /tmp/executionId | tr -d '[:space:]')
+                curl -H "Authorization: Bearer ${HELIO_TOKEN}" -fsSLo /dev/null -X PUT ${HEARTBEAT_URL}\&executionid=$(cat /tmp/executionId | tr -d '[:space:]')
             fi
             DEBUG "Heartbeat done"
         fi

@@ -11,6 +11,8 @@ use Helio\Panel\Helper\DbHelper;
 use Helio\Panel\Model\Job;
 use Helio\Panel\Model\Execution;
 use Helio\Panel\Execution\ExecutionStatus;
+use Helio\Panel\Utility\ExecUtility;
+use Helio\Panel\Utility\JwtUtility;
 use Helio\Panel\Utility\ServerUtility;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response;
@@ -60,6 +62,7 @@ abstract class AbstractExecute implements JobInterface, DispatchableInterface
             ->setBillingReference($jobObject['billingReference'] ?? '')
             ->setBudget((int) ($jobObject['budget'] ?? 0))
             ->setIsCharity($jobObject['isCharity'] ?? '' === 'on')
+            ->setPersistent($jobObject['persistent'] ?? '' === 'on')
             ->setConfig($jobObject['config'] ?? [])
             ->setAutoExecSchedule($jobObject['autoExecSchedule'] ?? '');
 
@@ -97,13 +100,6 @@ abstract class AbstractExecute implements JobInterface, DispatchableInterface
         return true;
     }
 
-    /**
-     * @param array $config
-     *
-     * @return bool
-     *
-     * @throws Exception
-     */
     public function stop(array $config): bool
     {
         $executions = $this->execution ? [$this->execution] : DbHelper::getInstance()->getRepository(Execution::class)->findBy(['job' => $this->job]);
@@ -114,19 +110,13 @@ abstract class AbstractExecute implements JobInterface, DispatchableInterface
                 App::getDbHelper()->persist($execution);
             }
         }
+        $this->job->setStatus(JobStatus::DELETING);
+        App::getDbHelper()->persist($this->job);
         App::getDbHelper()->flush();
 
         return true;
     }
 
-    /**
-     * @param array             $params
-     * @param ResponseInterface $response
-     *
-     * @return ResponseInterface
-     *
-     * @throws Exception
-     */
     public function getnextinqueue(array $params, ResponseInterface $response): ResponseInterface
     {
         $executions = App::getDbHelper()->getRepository(Execution::class)->findBy(['job' => $this->job, 'status' => ExecutionStatus::READY], ['priority' => 'ASC', 'created' => 'ASC'], 5);
@@ -149,11 +139,6 @@ abstract class AbstractExecute implements JobInterface, DispatchableInterface
         return $response->withStatus(StatusCode::HTTP_NOT_FOUND);
     }
 
-    /**
-     * @return array
-     *
-     * @throws Exception
-     */
     public function getExecutionEstimates(): array
     {
         $pendingExecutions = App::getDbHelper()->getRepository(Execution::class)->count(['status' => ExecutionStatus::READY, 'job' => $this->job]);
@@ -192,16 +177,8 @@ abstract class AbstractExecute implements JobInterface, DispatchableInterface
         return true;
     }
 
-    /**
-     * @return int
-     */
     abstract protected function calculateRuntime(): int;
 
-    /**
-     * @return DateTime
-     *
-     * @throws Exception
-     */
     protected function calculateCompletion(): DateTime
     {
         $pendingQuery = App::getDbHelper()->getRepository(Execution::class)->createQueryBuilder('e');
@@ -224,12 +201,23 @@ abstract class AbstractExecute implements JobInterface, DispatchableInterface
         return $now->setTimestamp($now->getTimestamp() + $duration);
     }
 
-    /**
-     * @return float cost in dollars
-     */
     protected function calculateCosts(): float
     {
         //      seconds of runtime                        make it hours         gpus are 10x more expensive than cpus                 CPU $ per Hour
         return ($this->execution->getEstimatedRuntime() / 3600) * (10 * ($this->job->getGpus() ?: 1)) * ($this->job->getCpus() ?: 1) * 0.01;
+    }
+
+    /**
+     * @return array
+     * @throws Exception
+     */
+    protected function getCommonEnvVariables(): array
+    {
+        return array_merge($this->job->getConfig('env', []), [
+            'HELIO_JOBID' => $this->job->getId(),
+            'HELIO_TOKEN' => JwtUtility::generateToken(null, null, null, $this->job)['token'],
+            'REPORT_URL' => ServerUtility::getBaseUrl() . ExecUtility::getExecUrl($this->job, 'submitresult', $this->execution),
+            'HEARTBEAT_URL' => ServerUtility::getBaseUrl() . ExecUtility::getExecUrl($this->job, 'heartbeat', $this->execution),
+        ]);
     }
 }

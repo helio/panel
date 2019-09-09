@@ -126,11 +126,6 @@ class App extends \Slim\App
         return (bool) self::$instance;
     }
 
-    /**
-     * @return DbHelper
-     *
-     * @throws Exception
-     */
     public static function getDbHelper(): DbHelper
     {
         $class = self::$className;
@@ -138,11 +133,6 @@ class App extends \Slim\App
         return ($class::$dbHelperClassName)::getInstance();
     }
 
-    /**
-     * @return Logger
-     *
-     * @throws Exception
-     */
     public static function getLogger(): Logger
     {
         $class = self::$className;
@@ -150,11 +140,6 @@ class App extends \Slim\App
         return ($class::$logHelperClassName)::getInstance(self::$appName);
     }
 
-    /**
-     * @return ZapierHelper
-     *
-     * @throws Exception
-     */
     public static function getZapierHelper(): ZapierHelper
     {
         $class = self::$className;
@@ -162,11 +147,6 @@ class App extends \Slim\App
         return ($class::$zapierHelperClassName)::getInstance();
     }
 
-    /**
-     * @return SlackHelper
-     *
-     * @throws Exception
-     */
     public static function getSlackHelper(): SlackHelper
     {
         $class = self::$className;

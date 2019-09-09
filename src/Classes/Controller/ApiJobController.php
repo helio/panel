@@ -4,6 +4,7 @@ namespace Helio\Panel\Controller;
 
 use Exception;
 use GuzzleHttp\Exception\GuzzleException;
+use Helio\Panel\Exception\HttpException;
 use Helio\Panel\Helper\ElasticHelper;
 use Helio\Panel\Request\Log;
 use Helio\Panel\Service\LogService;
@@ -77,7 +78,7 @@ class ApiJobController extends AbstractController
      *     },
      *     @OA\RequestBody(@OA\JsonContent(ref="#/components/schemas/Job")),
      *     @OA\Response(response="406", ref="#/components/responses/406"),
-     *     @OA\Response(response="403", description="Max limit of running jobs reached")
+     *     @OA\Response(response="403", description="Max limit of running jobs reached"),
      *     @OA\Response(
      *         response="200",
      *         description="Job successfully created",
@@ -151,7 +152,6 @@ class ApiJobController extends AbstractController
             'name' => FILTER_SANITIZE_STRING,
             'location' => FILTER_SANITIZE_STRING,
             'billingReference' => FILTER_SANITIZE_STRING,
-            'free' => FILTER_SANITIZE_STRING,
             'config' => FILTER_SANITIZE_STRING,
             'autoExecSchedule' => FILTER_SANITIZE_STRING,
         ]);
@@ -165,7 +165,11 @@ class ApiJobController extends AbstractController
             NotificationUtility::notifyAdmin($str . ' by ' . $this->user->getEmail() . ', type: ' . $this->job->getType() . ', id: ' . $this->job->getId() . ', expected manager: manager-init-' . ServerUtility::getShortHashOfString($this->job->getId()));
         }
 
-        OrchestratorFactory::getOrchestratorForInstance($this->instance, $this->job)->provisionManager();
+        // if there is an error with the provisioning of the manager, don't fail immediatly but set the job to try again later
+        if (!OrchestratorFactory::getOrchestratorForInstance($this->instance, $this->job)->provisionManager()) {
+            $this->job->setStatus(JobStatus::INIT_ERROR);
+            $this->persistJob();
+        }
 
         return $this->render([
             'success' => true,
@@ -231,28 +235,23 @@ class ApiJobController extends AbstractController
             return $this->render(['success' => false, 'message' => 'Job not found'], StatusCode::HTTP_NOT_FOUND);
         }
 
-        $removed = false;
         if (!JobType::isValidType($this->job->getType())) {
-            $this->job->setHidden(true);
-            $removed = true;
+            $this->job->setHidden(true)->setStatus(JobStatus::DELETED);
         } else {
             /* @var Execution $execution */
             JobFactory::getInstanceOfJob($this->job)->stop($this->params);
 
             // first: set all services to absent. then, remove the managers
-            OrchestratorFactory::getOrchestratorForInstance($this->instance, $this->job)->dispatchJob();
-            OrchestratorFactory::getOrchestratorForInstance($this->instance, $this->job)->removeManager();
+            if (!OrchestratorFactory::getOrchestratorForInstance($this->instance, $this->job)->dispatchJob()
+                || !OrchestratorFactory::getOrchestratorForInstance($this->instance, $this->job)->removeManager()) {
+                $this->job->setStatus(JobStatus::DELETING_ERROR);
+            } else {
+                $this->job->setStatus(JobStatus::DELETING);
+            }
         }
-
-        // on PROD, we wait for the callbacks to confirm job removal. on Dev, simply set it to deleted.
-        if (!ServerUtility::isProd()) {
-            $this->job->setStatus(JobStatus::DELETED);
-            $removed = true;
-        }
-
         $this->persistJob();
 
-        return $this->render(['success' => true, 'message' => 'Job scheduled for removal.', 'removed' => $removed]);
+        return $this->render(['success' => true, 'message' => 'Job scheduled for removal.', 'removed' => JobStatus::DELETED === $this->job->getStatus()]);
     }
 
     /**
@@ -594,9 +593,22 @@ class ApiJobController extends AbstractController
         $body = $this->request->getParsedBody();
         LogHelper::debug('Body received into job ' . $this->job->getId() . ' callback:' . print_r($body, true));
 
-        // TODO: Remove this notification because it's only a debug help for Kevin
         if (array_key_exists('error', $body)) {
+            // TODO: Remove this notification because it's only a debug help for Kevin
             NotificationUtility::notifyAdmin('Error Callback received in Panel: ' . print_r($body, true));
+
+            LogHelper::warn('Error Callback received for job ' . $this->job->getId() . ' schedule retry...');
+            switch ($this->job->getStatus()) {
+                case JobStatus::INIT:
+                    $this->job->setStatus(JobStatus::INIT_ERROR);
+                    break;
+                case JobStatus::DELETING:
+                    $this->job->setStatus(JobStatus::DELETING_ERROR);
+                    break;
+                default:
+                    throw new HttpException(StatusCode::HTTP_NOT_ACCEPTABLE, 'Error Callback received for Job with undetermined status');
+                    break;
+            }
         }
 
         // remember manager nodes.
@@ -645,8 +657,15 @@ class ApiJobController extends AbstractController
                 NotificationUtility::notifyAdmin('Job is now ready. By: ' . $this->job->getOwner()->getEmail() . ', type: ' . $this->job->getType() . ', id: ' . $this->job->getId() . ', expected manager: manager-init-' . ServerUtility::getShortHashOfString($this->job->getId()));
             }
         }
+
         if (array_key_exists('deleted', $body) && 0 === count($this->job->getManagerNodes())) {
-            $this->job->setStatus(JobStatus::DELETED);
+            if (JobStatus::DELETING === $this->job->getStatus()) {
+                $this->job->setStatus(JobStatus::DELETED);
+            } elseif (JobStatus::READY_PAUSING === $this->job->getStatus()) {
+                $this->job->setStatus(JobStatus::READY_PAUSED);
+            } else {
+                LogHelper::err(sprintf('This is highly irregular: Manager for job %s was deleted without proper removal status', $this->job->getId()));
+            }
             if ($this->job->getOwner()->getPreferences()->getNotifications()->isEmailOnJobDeleted()) {
                 NotificationUtility::notifyUser($this->job->getOwner(), sprintf('Job %s (%d) removed', $this->job->getName(), $this->job->getId()), 'Your job with the id ' . $this->job->getId() . ' is now completely removed from Helio');
             }

@@ -120,6 +120,8 @@ function initActionButtons(item) {
         };
         request.send(new FormData(e.target));
     });
+
+    item.addClass('done');
 }
 
 
@@ -131,8 +133,7 @@ function filterItemsByTextSearch(element) {
     $(itemSelector).each(function () {
         if (!value || $(this).find(textSelector).text().search(new RegExp(value, 'i')) > -1) {
             $(this).show();
-        }
-        else {
+        } else {
             $(this).hide();
         }
     });
@@ -213,6 +214,7 @@ const wizard = function (id) {
 
         $.ajax({
             url: '/api/' + $(self.modal).data('endpoint'),
+            data: $(self.modal).data('precreate-payload'),
             dataType: 'json',
             method: 'post',
             success: function (data) {
@@ -635,12 +637,12 @@ const wizard = function (id) {
 
             // hacky way to have config in a separate object
             if (curr.name.startsWith('config.')) {
-               const name = curr.name.split('.')[1];
-               if (!acc['config']) {
-                   acc['config'] = {};
-               }
-               acc['config'][name] = curr.value;
-               return acc;
+                const name = curr.name.split('.')[1];
+                if (!acc['config']) {
+                    acc['config'] = {};
+                }
+                acc['config'][name] = curr.value;
+                return acc;
             }
 
             acc[curr.name] = curr.value;

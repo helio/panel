@@ -10,5 +10,8 @@ SHELL=/usr/local/vzscripts/sfoutputtosyslog
 #       10      2       *       *       *       <command>
 
         *       *       *       *       *       source ~/.profile; source ~/.zshrc> /dev/null 2>&1; helio app:execute-scheduled-jobs
+        */10    *       *       *       *       source ~/.profile; source ~/.zshrc> /dev/null 2>&1; helio app:maintenance-redeploy-hanging-jobs
+        28      *       *       *       *       source ~/.profile; source ~/.zshrc> /dev/null 2>&1; helio app:maintenance-rerun-hanging-executions
+        42      *       *       *       *       source ~/.profile; source ~/.zshrc> /dev/null 2>&1; helio app:maintenance-remove-stale-clusters
 
         39      2       *       *       *       crontab ~/cnf/crontab

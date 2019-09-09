@@ -51,7 +51,7 @@ class Execution extends AbstractModel
     /**
      * @OA\Property(
      *     description="The priority of the execution within each job. The lower, the more important.",
-     *     format="integer",
+     *     type="integer",
      *     example="100"
      * )
      *
@@ -64,7 +64,7 @@ class Execution extends AbstractModel
     /**
      * @OA\Property(
      *     description="Estimated Runtime on ideal Hardware in Seconds; 0 means the execution won't terminate itself.",
-     *     format="integer",
+     *     type="integer",
      *     example="3600"
      * )
      *
@@ -77,7 +77,7 @@ class Execution extends AbstractModel
     /**
      * @OA\Property(
      *     description="Execution statistics. The content depends on the JobType.",
-     *     format="string",
+     *     type="string",
      *     example=""
      * )
      *
@@ -89,8 +89,22 @@ class Execution extends AbstractModel
 
     /**
      * @OA\Property(
+     *     description="DateTime Object of when the worker started working on this execution.",
+     *     type="string",
+     *     format="date-time"
+     * )
+     *
+     * @var DateTime
+     *
+     * @Column(type="datetimetz", nullable=TRUE)
+     */
+    protected $started;
+
+    /**
+     * @OA\Property(
      *     description="DateTime Object of when the worker last reported operations.",
-     *     format="string"
+     *     type="string",
+     *     format="date-time"
      * )
      *
      * @var DateTime
@@ -219,18 +233,6 @@ class Execution extends AbstractModel
     }
 
     /**
-     * @return DateTime
-     */
-    public function getLatestHeartbeat(): ?DateTime
-    {
-        if ($this->created->getTimezone()->getName() !== $this->getTimezone()) {
-            $this->created->setTimezone(new DateTimeZone($this->getTimezone()));
-        }
-
-        return $this->latestHeartbeat;
-    }
-
-    /**
      * @return bool
      */
     public function isAutoExecuted(): bool
@@ -250,6 +252,18 @@ class Execution extends AbstractModel
     }
 
     /**
+     * @return DateTime
+     */
+    public function getLatestHeartbeat(): ?DateTime
+    {
+        if ($this->created->getTimezone()->getName() !== $this->getTimezone()) {
+            $this->created->setTimezone(new DateTimeZone($this->getTimezone()));
+        }
+
+        return $this->latestHeartbeat;
+    }
+
+    /**
      * @param DateTime|null $latestHeartbeat
      *
      * @return Execution
@@ -266,6 +280,59 @@ class Execution extends AbstractModel
         $latestHeartbeat->setTimezone(new DateTimeZone('UTC'));
 
         $this->latestHeartbeat = $latestHeartbeat;
+
+        return $this;
+    }
+
+    /**
+     * @return Execution
+     */
+    public function resetLatestHeartbeat(): self
+    {
+        $this->latestHeartbeat = null;
+
+        return $this;
+    }
+
+    /**
+     * @return DateTime
+     */
+    public function getStarted(): ?DateTime
+    {
+        if ($this->created->getTimezone()->getName() !== $this->getTimezone()) {
+            $this->created->setTimezone(new DateTimeZone($this->getTimezone()));
+        }
+
+        return $this->started;
+    }
+
+    /**
+     * @param DateTime|null $started
+     *
+     * @return Execution
+     *
+     * @throws Exception
+     */
+    public function setStarted(DateTime $started = null): self
+    {
+        if (null === $started) {
+            $started = new DateTime('now', new DateTimeZone($this->getTimezone()));
+        }
+
+        // Fix Timezone because Doctrine assumes persistend DateTime Objects are always UTC
+        $started->setTimezone(new DateTimeZone('UTC'));
+
+        $this->started = $started;
+
+        return $this;
+    }
+
+    /**
+     * @return Execution
+     */
+    public function resetStarted(): self
+    {
+        $this->started = null;
 
         return $this;
     }

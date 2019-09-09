@@ -6,7 +6,6 @@ use Exception;
 use Helio\Panel\App;
 use Helio\Panel\Job\AbstractExecute;
 use Helio\Panel\Job\DispatchConfig;
-use Helio\Panel\Utility\JwtUtility;
 
 class Execute extends AbstractExecute
 {
@@ -18,12 +17,13 @@ class Execute extends AbstractExecute
     public function getDispatchConfig(): DispatchConfig
     {
         return (new DispatchConfig())
-            ->setImage('gitlab/gitlab-runner')
-            ->setEnvVariables([
-                'HELIO_JOBID' => $this->job->getId(),
-                'HELIO_TOKEN' => JwtUtility::generateToken(null, null, null, $this->job),
+            ->setImage('hub.helio.dev:4567/helio/runner/gitlab:latest')
+            ->setEnvVariables(array_merge($this->getCommonEnvVariables(), [
                 'GITLAB_TAGS' => $this->job->getConfig('gitlabTags'),
-            ]);
+                'GITLAB_TOKEN' => $this->job->getConfig('gitlabToken'),
+                'GITLAB_URL' => $this->job->getConfig('gitlabEndpoint'),
+                'GITLAB_RUNNER_NAME' => 'helio-runner-' . $this->job->getId(),
+            ]));
     }
 
     /**

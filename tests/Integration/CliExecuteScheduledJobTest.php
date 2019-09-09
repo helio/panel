@@ -39,7 +39,7 @@ class CliExecuteScheduledJobTest extends TestCase
         $this->assertEquals(0, $result->getStatusCode());
     }
 
-    public function testCommandDisplaysHelp()
+    public function testExecutionIsRunForDueJob()
     {
         $executions = $this->infrastructure->getRepository(Execution::class)->findBy(['job' => $this->job]);
         $this->assertCount(0, $executions);

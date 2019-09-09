@@ -164,6 +164,39 @@ class ApiJobTest extends TestCase
         ], $body);
     }
 
+    /**
+     * @throws Exception
+     */
+    public function testDeletRequestSetsJobToDeletingStatus()
+    {
+        $user = $this->createUser();
+        $job = $this->createJob($user, 'testDeletRequestSetsJobToDeletingStatus');
+        $tokenHeader = ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $user, null, $job)['token']];
+
+        $response = $this->runWebApp('DELETE', '/api/job', true, $tokenHeader, ['id' => $job->getId()]);
+        $this->assertEquals(StatusCode::HTTP_OK, $response->getStatusCode());
+        /** @var Job $jobFromDatabse */
+        $jobFromDatabse = $this->infrastructure->getRepository(Job::class)->find($job->getId());
+        $this->assertEquals(JobStatus::DELETING, $jobFromDatabse->getStatus());
+    }
+
+    /**
+     * @throws Exception
+     */
+    public function testCannotExecuteDeletingJob()
+    {
+        $user = $this->createUser();
+        $job = $this->createJob($user, 'testDeletRequestSetsJobToDeletingStatus');
+        $tokenHeader = ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $user, null, $job)['token']];
+
+        $response = $this->runWebApp('DELETE', '/api/job', true, $tokenHeader, ['id' => $job->getId()]);
+        $this->assertEquals(StatusCode::HTTP_OK, $response->getStatusCode());
+
+        $name = sprintf('%s-deletion', __METHOD__);
+        $response = $this->runWebApp('POST', sprintf('/api/job/%s/execute', $job->getId()), true, $tokenHeader, ['name' => $name]);
+        $this->assertEquals(StatusCode::HTTP_FORBIDDEN, $response->getStatusCode(), (string) $response->getBody());
+    }
+
     private function createUser(): User
     {
         $user = (new User())
@@ -185,6 +218,7 @@ class ApiJobTest extends TestCase
             ->setOwner($user)
             ->setName($name)
             ->setManagerToken('managertoken')
+            ->setClusterToken('ClusterToken')
             ->setInitManagerIp('1.2.3.55')
             ->setManagerNodes(['manager1.manager.example.com'])
             ->setCreated();

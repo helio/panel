@@ -7,6 +7,8 @@ use Helio\Panel\App;
 use Helio\Panel\Controller\Traits\ModelUserController;
 use Helio\Panel\Controller\Traits\TypeBrowserController;
 use Helio\Panel\Helper\LogHelper;
+use Helio\Panel\Job\JobStatus;
+use Helio\Panel\Job\JobType;
 use Helio\Panel\Model\Instance;
 use Helio\Panel\Model\Job;
 use Helio\Panel\Model\User;
@@ -171,6 +173,36 @@ class PanelController extends AbstractController
             'module' => 'admin',
             'adminActive' => 'active',
             'partialJs' => ['admin'],
+        ]);
+    }
+
+    /**
+     * @return ResponseInterface
+     *
+     * @throws Exception
+     *
+     * @Route("/admin/stats", methods={"GET"}, name="user.admin")
+     */
+    public function adminStatsAction(): ResponseInterface
+    {
+        if (!$this->user->isAdmin()) {
+            return $this->response->withRedirect('/panel', StatusCode::HTTP_FOUND);
+        }
+
+        $jobs = App::getDbHelper()->getRepository(Job::class)->findBy([
+            'status' => JobStatus::getAllButDeletedAndUnknownStatusCodes(),
+            'type' => JobType::getAllValidTypes(),
+        ],
+            ['created' => 'DESC'],
+            100);
+
+        return $this->render([
+            'jobs' => $jobs,
+            'user' => $this->user,
+            'title' => 'Admin Stats - Helio Panel',
+            'module' => 'adminStats',
+            'adminStatusActive' => 'active',
+            'partialJs' => ['adminStats'],
         ]);
     }
 

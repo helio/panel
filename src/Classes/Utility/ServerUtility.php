@@ -257,9 +257,7 @@ class ServerUtility extends AbstractUtility
      */
     public static function getLastExecutedShellCommand(int $offset = 0): string
     {
-        $index = count(self::$lastExecutedShellCommand) - $offset - 1;
-
-        return $index >= 0 ? self::$lastExecutedShellCommand[$index] : '';
+        return array_reverse(self::$lastExecutedShellCommand)[$offset] ?? '';
     }
 
     /**

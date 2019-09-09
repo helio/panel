@@ -18,6 +18,6 @@ class InstanceTest extends TestCase
     {
         $instance = new Instance();
         $instance->setCreated();
-        $this->assertEqualsWithDelta($instance->getTimezone(), $instance->getCreated()->getTimezone()->getName(), 1.0);
+        $this->assertEquals($instance->getTimezone(), $instance->getCreated()->getTimezone()->getName());
     }
 }

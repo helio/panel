@@ -66,7 +66,7 @@ class Job extends AbstractModel
     /**
      * @OA\Property(
      *     description="Let us know if you won't pay anything for your job (e.g. you're an Open Source project)",
-     *     format="boolean"
+     *     type="boolean"
      * )
      *
      * @var bool
@@ -78,7 +78,7 @@ class Job extends AbstractModel
     /**
      * @OA\Property(
      *     description="Specify how much CPUs this job ideally gets",
-     *     format="number"
+     *     type="number"
      * ),
      *
      * @var int
@@ -90,7 +90,7 @@ class Job extends AbstractModel
     /**
      * @OA\Property(
      *     description="Specify how much GPUs this job ideally gets",
-     *     format="number"
+     *     type="number"
      * ),
      *
      * @var int
@@ -102,7 +102,7 @@ class Job extends AbstractModel
     /**
      * @OA\Property(
      *     description="Specify in which location this job should run",
-     *     format="string",
+     *     type="string",
      *     example="europe-west:switzerland-zurich"
      * ),
      *
@@ -115,7 +115,7 @@ class Job extends AbstractModel
     /**
      * @OA\Property(
      *     description="A billing reference (e.g. your customer's order number)",
-     *     example="customer-project-1502-0B"
+     *     type="customer-project-1502-0B"
      * )
      *
      * @var string
@@ -127,7 +127,7 @@ class Job extends AbstractModel
     /**
      * @OA\Property(
      *     description="We terminate jobs automatically once they have reached the maximum budget set here",
-     *     format="number",
+     *     type="number",
      *     example="10000"
      * )
      *
@@ -147,7 +147,7 @@ class Job extends AbstractModel
     /**
      * @OA\Property(
      *     description="Cron Schedule to automatically execute the Job",
-     *     format="string",
+     *     type="string",
      *     example="30 6 * * *"
      * )
      *
@@ -159,8 +159,21 @@ class Job extends AbstractModel
 
     /**
      * @OA\Property(
+     *     description="Set this if you want to keep this job always ready, even after long idle time. Will affect costs.",
+     *     type="boolean",
+     *     default=false
+     * )
+     *
+     * @var bool
+     *
+     * @Column(type="boolean")
+     */
+    protected $persistent = false;
+
+    /**
+     * @OA\Property(
      *     description="Priority. The lower, the more urgent the execution.",
-     *     format="integer",
+     *     type="integer",
      *     example="100"
      * )
      *
@@ -458,6 +471,25 @@ class Job extends AbstractModel
     public function setAutoExecSchedule(string $autoExecSchedule): Job
     {
         $this->autoExecSchedule = $autoExecSchedule;
+
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isPersistent(): bool
+    {
+        return $this->persistent;
+    }
+
+    /**
+     * @param  bool $persistent
+     * @return Job
+     */
+    public function setPersistent(bool $persistent): Job
+    {
+        $this->persistent = $persistent;
 
         return $this;
     }
