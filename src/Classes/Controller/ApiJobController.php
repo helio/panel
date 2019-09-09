@@ -242,8 +242,11 @@ class ApiJobController extends AbstractController
             JobFactory::getInstanceOfJob($this->job)->stop($this->params);
 
             // first: set all services to absent. then, remove the managers
-            if (!OrchestratorFactory::getOrchestratorForInstance($this->instance, $this->job)->dispatchJob()
-                || !OrchestratorFactory::getOrchestratorForInstance($this->instance, $this->job)->removeManager()) {
+            $dispatchJob = OrchestratorFactory::getOrchestratorForInstance($this->instance, $this->job)->dispatchJob();
+            $removeManager = OrchestratorFactory::getOrchestratorForInstance($this->instance, $this->job)->removeManager();
+            if (!$dispatchJob
+                || !$removeManager) {
+                LogHelper::warn(sprintf('error delete job return value of orchestrator calls failed: dispatch: %b / removeManager: %b', $dispatchJob, $removeManager));
                 $this->job->setStatus(JobStatus::DELETING_ERROR);
             } else {
                 $this->job->setStatus(JobStatus::DELETING);
