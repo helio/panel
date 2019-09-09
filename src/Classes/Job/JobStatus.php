@@ -39,6 +39,7 @@ final class JobStatus
         'status-3' => 'Done',
         'status-9' => 'Deleted',
         'status-91' => 'Error during deletion; awaiting retry.',
+        'status-92' => 'Deleting',
         'status-99' => 'Deleting in progress',
     ];
 

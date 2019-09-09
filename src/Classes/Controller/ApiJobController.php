@@ -369,7 +369,6 @@ class ApiJobController extends AbstractController
      *
      * @Route("", methods={"GET"}, name="exec.job.status")
      *
-     * @throws Exception
      */
     public function jobStatusAction(): ResponseInterface
     {

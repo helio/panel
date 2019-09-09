@@ -97,6 +97,7 @@ class App extends \Slim\App
                             ->withHeader('Content-Type', 'application/json')
                             ->write(\GuzzleHttp\json_encode($t));
                     }
+                    LogHelper::err(sprintf('Error serving request: %s', $t->getMessage()), ['err' => $t]);
                     throw $t;
                 };
             };
