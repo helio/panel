@@ -165,11 +165,7 @@ class ApiJobController extends AbstractController
             NotificationUtility::notifyAdmin($str . ' by ' . $this->user->getEmail() . ', type: ' . $this->job->getType() . ', id: ' . $this->job->getId() . ', expected manager: manager-init-' . ServerUtility::getShortHashOfString($this->job->getId()));
         }
 
-        // if there is an error with the provisioning of the manager, don't fail immediatly but set the job to try again later
-        if (!OrchestratorFactory::getOrchestratorForInstance($this->instance, $this->job)->provisionManager()) {
-            $this->job->setStatus(JobStatus::INIT_ERROR);
-            $this->persistJob();
-        }
+        OrchestratorFactory::getOrchestratorForInstance($this->instance, $this->job)->provisionManager();
 
         return $this->render([
             'success' => true,
