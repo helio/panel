@@ -35,13 +35,29 @@ class CliMaintenanceRerunHangingExecutionTest extends TestCase
 
         $aDayAgo = (new \DateTime('now', ServerUtility::getTimezoneObject()))->sub(new \DateInterval('P1D'));
 
-        $this->user = (new User())->setEmail('email@test.cli')->setActive(true)->setCreated();
-        $this->job = (new Job())->setOwner($this->user)->setType(JobType::BUSYBOX)->setManagerNodes(['manager-blubb'])->setInitManagerIp('1.2.3.4')->setClusterToken('INITMANAGERTOKEN_BLAH')->setCreated($aDayAgo)->setLatestAction($aDayAgo)->setStatus(JobStatus::READY);
-        $this->execution = (new Execution())->setJob($this->job)->setCreated($aDayAgo)->setStatus(ExecutionStatus::READY);
-        $this->infrastructure->getEntityManager()->persist($this->user);
-        $this->infrastructure->getEntityManager()->persist($this->job);
-        $this->infrastructure->getEntityManager()->persist($this->execution);
-        $this->infrastructure->getEntityManager()->flush();
+        $this->user = (new User())
+            ->setEmail('email@test.cli')
+            ->setActive(true)
+            ->setCreated();
+        $this->job = (new Job())
+            ->setOwner($this->user)
+            ->setType(JobType::BUSYBOX)
+            ->setManagerNodes(['manager-blubb'])
+            ->setInitManagerIp('1.2.3.4')
+            ->setClusterToken('INITMANAGERTOKEN_BLAH')
+            ->setCreated($aDayAgo)
+            ->setLatestAction($aDayAgo)
+            ->setStatus(JobStatus::READY);
+        $this->execution = (new Execution())
+            ->setJob($this->job)
+            ->setCreated($aDayAgo)
+            ->setStatus(ExecutionStatus::READY);
+
+        $em = $this->infrastructure->getEntityManager();
+        $em->persist($this->user);
+        $em->persist($this->job);
+        $em->persist($this->execution);
+        $em->flush();
     }
 
     public function testCommandIsProperlySetup()
@@ -50,10 +66,6 @@ class CliMaintenanceRerunHangingExecutionTest extends TestCase
         $this->assertEquals(0, $result->getStatusCode());
     }
 
-    /**
-     * @throws \Doctrine\ORM\ORMException
-     * @throws \Doctrine\ORM\OptimisticLockException
-     */
     public function testCommandRerunsJob()
     {
         $result = $this->runCliApp(MaintenanceRerunHangingExecution::class);
@@ -65,10 +77,6 @@ class CliMaintenanceRerunHangingExecutionTest extends TestCase
         $this->assertEquals(ExecutionStatus::READY, $executionFromDb->getStatus());
     }
 
-    /**
-     * @throws \Doctrine\ORM\ORMException
-     * @throws \Doctrine\ORM\OptimisticLockException
-     */
     public function testCommandDoesNotRerunJobOnOlderGracePeriod()
     {
         $result = $this->runCliApp(MaintenanceRerunHangingExecution::class, ['gracePeriod' => 'P5D']);

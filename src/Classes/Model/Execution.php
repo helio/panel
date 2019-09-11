@@ -120,9 +120,6 @@ class Execution extends AbstractModel
      */
     protected $autoExecuted = false;
 
-    /**
-     * @return Job
-     */
     public function getJob(): ?Job
     {
         return $this->job;

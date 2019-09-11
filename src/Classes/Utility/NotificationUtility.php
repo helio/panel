@@ -3,7 +3,6 @@
 namespace Helio\Panel\Utility;
 
 use Exception;
-use GuzzleHttp\Exception\GuzzleException;
 use Helio\Panel\App;
 use Helio\Panel\Helper\LogHelper;
 use Helio\Panel\Model\User;
@@ -66,11 +65,6 @@ EOM;
         return self::sendMail($user->getEmail(), $subject . ' - Helio', $content);
     }
 
-    /**
-     * @param  string          $content
-     * @return bool
-     * @throws GuzzleException
-     */
     public static function notifyAdmin(string $content = ''): bool
     {
         try {
@@ -80,11 +74,6 @@ EOM;
         }
     }
 
-    /**
-     * @param  string          $content
-     * @return bool
-     * @throws GuzzleException
-     */
     public static function alertAdmin(string $content = ''): bool
     {
         try {
@@ -94,17 +83,11 @@ EOM;
         }
     }
 
-    /**
-     * @param  string $recepient
-     * @param  string $subject
-     * @param  string $content
-     * @return bool
-     */
-    protected static function sendMail(string $recepient, string $subject, string $content)
+    protected static function sendMail(string $recipient, string $subject, string $content)
     {
         $subject = str_replace("\n", '', $subject);
         $return = ServerUtility::isProd() ?
-            @mail($recepient,
+            @mail($recipient,
                 $subject,
                 $content,
                 'From: hello@idling.host',
@@ -112,14 +95,14 @@ EOM;
             ) : true;
 
         if ($return) {
-            LogHelper::info('Sent Mail to ' . $recepient);
+            LogHelper::info('Sent Mail to ' . $recipient);
         } else {
-            LogHelper::warn('Failed to sent Mail to ' . $recepient . '. Reason: ' . $return);
+            LogHelper::warn('Failed to sent Mail to ' . $recipient . '. Reason: ' . $return);
         }
 
         // write mail to PHPStorm Console
         if (PHP_SAPI === 'cli-server' && 'PROD' !== ServerUtility::get('SITE_ENV')) {
-            LogHelper::logToConsole("mail sent to $recepient:\n$subject\n\n$content");
+            LogHelper::logToConsole("mail sent to $recipient:\n$subject\n\n$content");
         }
 
         return $return;

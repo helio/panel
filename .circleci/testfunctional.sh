@@ -29,7 +29,7 @@ delete_job() {
           echo "Job never was deleted properly"
           exit 20;
       fi
-      STATUS=$(call_api "GET" "$2" "/api/job?id=$0" -s)
+      STATUS=$(call_api "GET" "$2" "/api/job?id=$1" -s)
       STATUS_CODE=$(echo "${STATUS}" | jq -r .status)
       if [[ 9 -eq ${STATUS_CODE} ]]; then
           echo " Job was deleted!"
