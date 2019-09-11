@@ -91,9 +91,9 @@ class MaintenanceRerunHangingExecution extends AbstractCommand
      *
      * @param DbHelper $dbHelper
      * @param $then
-     * @return mixed
+     * @return array
      */
-    protected function fetchHangingExpressions(DbHelper $dbHelper, \DateTime $then): mixed
+    protected function fetchHangingExpressions(DbHelper $dbHelper, \DateTime $then): array
     {
         $query = $dbHelper->getRepository(Execution::class)->createQueryBuilder('e');
         $query
