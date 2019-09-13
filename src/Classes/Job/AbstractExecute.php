@@ -110,8 +110,6 @@ abstract class AbstractExecute implements JobInterface, DispatchableInterface
                 App::getDbHelper()->persist($execution);
             }
         }
-        $this->job->setStatus(JobStatus::DELETING);
-        App::getDbHelper()->persist($this->job);
         App::getDbHelper()->flush();
 
         return true;
