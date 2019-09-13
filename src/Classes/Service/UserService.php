@@ -104,6 +104,8 @@ class UserService
         // catch Demo User
         if ('email@example.com' === $user->getEmail()) {
             $token = JwtUtility::generateToken('+5 minutes', $user)['token'];
+        } else {
+            $user = null;
         }
 
         return ['user' => $user, 'token' => $token];

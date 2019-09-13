@@ -37,7 +37,7 @@ class ApiAuthenticationController extends AbstractController
     public function loginAction(): ResponseInterface
     {
         try {
-            $contentType = $this->request->getContentType();
+            $contentType = $this->request->getMediaType();
             $body = $this->request->getBody();
             if ('application/json' !== $contentType || 0 === $body->getSize()) {
                 throw new \InvalidArgumentException('JSON body required');
