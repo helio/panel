@@ -3,6 +3,7 @@
 namespace Helio\Panel\Helper;
 
 use Doctrine\Common\Persistence\ObjectRepository;
+use Doctrine\Common\Proxy\AbstractProxyFactory;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityRepository;
@@ -96,7 +97,7 @@ class DbHelper implements HelperInterface
             Type::addType(PreferencesType::TypeName, PreferencesType::class);
 
             $configObject = Setup::createAnnotationMetadataConfiguration([realpath($this->getPathToModels())], !ServerUtility::isProd(), ServerUtility::getTmpPath());
-            $configObject->setAutoGenerateProxyClasses(!ServerUtility::isProd());
+            $configObject->setAutoGenerateProxyClasses(ServerUtility::isProd() ? AbstractProxyFactory::AUTOGENERATE_FILE_NOT_EXISTS : AbstractProxyFactory::AUTOGENERATE_ALWAYS);
             $configObject->addCustomNumericFunction('timestampdiff', TimestampDiff::class);
             if (!ServerUtility::isProd()) {
                 $configObject->setSQLLogger(new SQLLogger());
