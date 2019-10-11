@@ -64,9 +64,14 @@ class UserService
      *
      * Saving the demo user fails with a \InvalidArgumentException.
      *
+     * @param string $email
+     * @param bool $persistAndFlush
+     *
+     * @return User
+     *
+     * @throws GuzzleException
      * @throws ORMException
      * @throws OptimisticLockException
-     * @throws GuzzleException
      */
     public function create(string $email, bool $persistAndFlush = true): User
     {
@@ -100,13 +105,6 @@ class UserService
         }
 
         $token = null;
-
-        // catch Demo User
-        if ('email@example.com' === $user->getEmail()) {
-            $token = JwtUtility::generateToken('+5 minutes', $user)['token'];
-        } else {
-            $user = null;
-        }
 
         return ['user' => $user, 'token' => $token];
     }

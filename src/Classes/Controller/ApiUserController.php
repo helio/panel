@@ -146,6 +146,6 @@ class ApiUserController extends AbstractController
         $duration = (array_key_exists('eternal', $this->params) && (bool) $this->params['eternal']) ? 'sticky' : null;
         $token = JwtUtility::generateToken($duration, $this->user)['token'];
 
-        return $this->render(['message' => "<strong>Your Token is $token</strong> Safe it in your Password manager, it cannot be displayed ever again."]);
+        return $this->render(['message' => "<strong>Your Token is $token</strong> Save it in your Password manager, it cannot be displayed ever again."]);
     }
 }
