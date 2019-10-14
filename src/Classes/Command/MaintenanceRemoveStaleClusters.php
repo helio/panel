@@ -11,7 +11,6 @@ use Helio\Panel\Model\Execution;
 use Helio\Panel\Model\Instance;
 use Helio\Panel\Model\Job;
 use Helio\Panel\Orchestrator\OrchestratorFactory;
-use Helio\Panel\Utility\NotificationUtility;
 use Helio\Panel\Utility\ServerUtility;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -69,7 +68,7 @@ class MaintenanceRemoveStaleClusters extends AbstractCommand
                 App::getDbHelper()->flush();
 
                 if (!$job->getOwner()->getPreferences()->getNotifications()->isMuteAdmin()) {
-                    NotificationUtility::notifyAdmin('Cluster of Job ' . $job->getId() . ' is being removed due to too long idling time.');
+                    App::getNotificationUtility()::notifyAdmin('Cluster of Job ' . $job->getId() . ' is being removed due to too long idling time.');
                 }
             } catch (Exception $e) {
                 App::getLogger()->err(vsprintf('Error %s during cronjob cluster cleanup of job %s: %s', [$e->getCode(), $job->getId(), $e->getMessage()]));

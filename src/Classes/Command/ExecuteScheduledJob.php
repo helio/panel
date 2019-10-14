@@ -14,7 +14,6 @@ use Helio\Panel\Model\Execution;
 use Helio\Panel\Model\Instance;
 use Helio\Panel\Model\Job;
 use Helio\Panel\Orchestrator\OrchestratorFactory;
-use Helio\Panel\Utility\NotificationUtility;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
@@ -63,7 +62,7 @@ class ExecuteScheduledJob extends AbstractCommand
                     }
 
                     if (!$job->getOwner()->getPreferences()->getNotifications()->isMuteAdmin()) {
-                        NotificationUtility::notifyAdmin('New execution for job ' . $job->getId() . ' automatically created');
+                        App::getNotificationUtility()::notifyAdmin('New execution for job ' . $job->getId() . ' automatically created');
                     }
                 }
             } catch (Exception $e) {

@@ -7,10 +7,9 @@ use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\OptimisticLockException;
 use Doctrine\ORM\ORMException;
 use GuzzleHttp\Exception\GuzzleException;
+use Helio\Panel\App;
 use Helio\Panel\Helper\ZapierHelper;
 use Helio\Panel\Model\User;
-use Helio\Panel\Utility\JwtUtility;
-use Helio\Panel\Utility\NotificationUtility;
 use Monolog\Logger;
 use RuntimeException;
 
@@ -65,7 +64,7 @@ class UserService
      * Saving the demo user fails with a \InvalidArgumentException.
      *
      * @param string $email
-     * @param bool $persistAndFlush
+     * @param bool   $persistAndFlush
      *
      * @return User
      *
@@ -100,7 +99,7 @@ class UserService
             $user = $this->create($email);
         }
 
-        if (!NotificationUtility::sendConfirmationMail($user)) {
+        if (!App::getNotificationUtility()::sendConfirmationMail($user)) {
             throw new RuntimeException('Error during User Creation', 1545655919);
         }
 

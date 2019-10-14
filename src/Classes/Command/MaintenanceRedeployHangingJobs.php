@@ -11,7 +11,6 @@ use Helio\Panel\Job\JobStatus;
 use Helio\Panel\Model\Instance;
 use Helio\Panel\Model\Job;
 use Helio\Panel\Orchestrator\OrchestratorFactory;
-use Helio\Panel\Utility\NotificationUtility;
 use Helio\Panel\Utility\ServerUtility;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -64,7 +63,7 @@ class MaintenanceRedeployHangingJobs extends AbstractCommand
                     App::getDbHelper()->persist($job);
 
                     if (!$job->getOwner()->getPreferences()->getNotifications()->isMuteAdmin()) {
-                        NotificationUtility::notifyAdmin('New execution for job ' . $job->getId() . ' automatically created');
+                        App::getNotificationUtility()::notifyAdmin('New execution for job ' . $job->getId() . ' automatically created');
                     }
                 }
             } catch (Exception $e) {

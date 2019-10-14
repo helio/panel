@@ -12,7 +12,6 @@ use Helio\Panel\Model\Execution;
 use Helio\Panel\Model\Instance;
 use Helio\Panel\Model\Job;
 use Helio\Panel\Orchestrator\OrchestratorFactory;
-use Helio\Panel\Utility\NotificationUtility;
 use Helio\Panel\Utility\ServerUtility;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -65,7 +64,7 @@ class MaintenanceRerunHangingExecution extends AbstractCommand
                 OrchestratorFactory::getOrchestratorForInstance($dummyInstance, $execution->getJob())->dispatchJob();
 
                 if (!$execution->getJob()->getOwner()->getPreferences()->getNotifications()->isMuteAdmin()) {
-                    NotificationUtility::notifyAdmin('Hanging execution ' . $execution->getId() . ' has been reset');
+                    App::getNotificationUtility()::notifyAdmin('Hanging execution ' . $execution->getId() . ' has been reset');
                 }
 
                 $dbHelper->persist($execution);

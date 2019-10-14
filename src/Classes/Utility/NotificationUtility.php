@@ -40,13 +40,13 @@ EOM;
      */
     public static function sendConfirmationMail(User $user, string $linkLifetime = '+1 week'): bool
     {
-        $content = vsprintf(self::$confirmationMailContent, [
+        $content = vsprintf(static::$confirmationMailContent, [
             $user->getName(),
             ServerUtility::getBaseUrl() . 'confirm?signature=' .
             JwtUtility::generateToken($linkLifetime, $user)['token'],
         ]);
 
-        return self::sendMail($user->getEmail(), 'Welcome to Helio', $content);
+        return static::sendMail($user->getEmail(), 'Welcome to Helio', $content);
     }
 
     /**
@@ -57,18 +57,18 @@ EOM;
      */
     public static function notifyUser(User $user, string $subject, string $message): bool
     {
-        $content = vsprintf(self::$notificationMailTemplate, [
+        $content = vsprintf(static::$notificationMailTemplate, [
             $user->getName(),
             $message,
         ]);
 
-        return self::sendMail($user->getEmail(), $subject . ' - Helio', $content);
+        return static::sendMail($user->getEmail(), $subject . ' - Helio', $content);
     }
 
     public static function notifyAdmin(string $content = ''): bool
     {
         try {
-            return App::getSlackHelper()->sendNotification($content) || self::sendMail('team@helio.exchange', 'Admin Notification from Panel', $content);
+            return App::getSlackHelper()->sendNotification($content) || static::sendMail('team@helio.exchange', 'Admin Notification from Panel', $content);
         } catch (\Throwable $e) {
             return false;
         }
@@ -77,13 +77,13 @@ EOM;
     public static function alertAdmin(string $content = ''): bool
     {
         try {
-            return App::getSlackHelper()->sendAlert($content) || self::sendMail('team@helio.exchange', 'ADMIN ALERT from Panel', $content);
+            return App::getSlackHelper()->sendAlert($content) || static::sendMail('team@helio.exchange', 'ADMIN ALERT from Panel', $content);
         } catch (\Throwable $e) {
             return false;
         }
     }
 
-    protected static function sendMail(string $recipient, string $subject, string $content)
+    protected static function sendMail(string $recipient, string $subject, string $content): bool
     {
         $subject = str_replace("\n", '', $subject);
         $return = ServerUtility::isProd() ?

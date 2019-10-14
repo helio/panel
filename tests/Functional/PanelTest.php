@@ -6,6 +6,7 @@ use Exception;
 use GuzzleHttp\Psr7\Response;
 use Helio\Panel\Model\User;
 use Helio\Test\Infrastructure\Helper\ZapierHelper;
+use Helio\Test\Infrastructure\Utility\NotificationUtility;
 use Helio\Test\TestCase;
 use Slim\Http\StatusCode;
 
@@ -31,32 +32,22 @@ class PanelTest extends TestCase
     }
 
     /**
-     * Test that the index route returns a rendered response.
-     *
-     * @throws \Exception
-     */
-    public function testLoginGetRedirectedWithExampleUser(): void
-    {
-        ZapierHelper::setResponseStack([new Response(200, [], '{"success" => "true"}')]);
-        $response = $this->runWebApp('POST', '/user/login', true, null, ['email' => 'email@example.com']);
-
-        $this->assertEquals(302, $response->getStatusCode(), $response->getBody());
-        $this->assertCount(1, $response->getHeader('Location'));
-        $this->assertStringContainsString('confirm?signature', $response->getHeader('Location')[0]);
-    }
-
-    /**
      * @throws \Exception
      */
     public function testActivationLinkActivatesUser(): void
     {
         ZapierHelper::setResponseStack([new Response(200, [], '{"success" => "true"}')]);
         $response = $this->runWebApp('POST', '/user/login', true, null, ['email' => 'email@example.com']);
-        $this->assertEquals(302, $response->getStatusCode());
-        $this->assertCount(1, $response->getHeader('Location'));
-        $this->assertStringContainsString('/confirm', $response->getHeader('Location')[0]);
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertCount(0, $response->getHeader('Location'));
 
-        $confirmationUrl = $response->getHeader('Location')[0];
+        $confirmationMail = NotificationUtility::$mails[0];
+
+        $this->assertStringContainsString('/confirm', $confirmationMail['content']);
+
+        preg_match_all('/^\s+(https?):\/\/(.+)$/m', $confirmationMail['content'], $matches, PREG_SET_ORDER);
+
+        $confirmationUrl = sprintf('%s://%s', $matches[0][1], $matches[0][2]);
 
         $response = $this->runWebApp('GET', $confirmationUrl, true);
         $this->assertEquals(StatusCode::HTTP_FOUND, $response->getStatusCode());
@@ -75,11 +66,16 @@ class PanelTest extends TestCase
     {
         ZapierHelper::setResponseStack([new Response(200, [], '{"success" => "true"}')]);
         $response = $this->runWebApp('POST', '/user/login', true, null, ['email' => 'email@example.com'], null);
-        $this->assertEquals(302, $response->getStatusCode());
-        $this->assertCount(1, $response->getHeader('Location'));
-        $this->assertStringContainsString('/confirm', $response->getHeader('Location')[0]);
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertCount(0, $response->getHeader('Location'));
 
-        $confirmationUrl = $response->getHeader('Location')[0];
+        $confirmationMail = NotificationUtility::$mails[0];
+
+        $this->assertStringContainsString('/confirm', $confirmationMail['content']);
+
+        preg_match_all('/^\s+(https?):\/\/(.+)$/m', $confirmationMail['content'], $matches, PREG_SET_ORDER);
+
+        $confirmationUrl = sprintf('%s://%s', $matches[0][1], $matches[0][2]);
 
         $response = $this->runWebApp('GET', $confirmationUrl, true);
         $this->assertEquals(StatusCode::HTTP_FOUND, $response->getStatusCode());

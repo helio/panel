@@ -7,6 +7,7 @@ use Helio\Panel\Utility\MiddlewareForHttpUtility;
 use Helio\Test\Infrastructure\Helper\DbHelper;
 use Helio\Test\Infrastructure\Helper\LogHelper;
 use Helio\Test\Infrastructure\Helper\ZapierHelper;
+use Helio\Test\Infrastructure\Utility\NotificationUtility;
 
 class App extends \Helio\Panel\App
 {
@@ -25,6 +26,9 @@ class App extends \Helio\Panel\App
 
     /** @var ZapierHelper */
     protected static $zapierHelperClassName = ZapierHelper::class;
+
+    /** @var NotificationUtility */
+    protected static $notificationUtilityClassName = NotificationUtility::class;
 
     /** @var LogHelper */
     protected static $logHelperClassName = LogHelper::class;

@@ -6,6 +6,7 @@ use Ergy\Slim\Annotations\Router;
 use Exception;
 use Helio\Panel\Exception\HttpException;
 use Helio\Panel\Helper\SlackHelper;
+use Helio\Panel\Utility\NotificationUtility;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use RuntimeException;
@@ -57,6 +58,9 @@ class App extends \Slim\App
 
     /** @var SlackHelper */
     protected static $slackHelperClassName = SlackHelper::class;
+
+    /** @var string */
+    protected static $notificationUtilityClassName = NotificationUtility::class;
 
     /**
      * @param string|null $appName
@@ -146,6 +150,17 @@ class App extends \Slim\App
         $class = self::$className;
 
         return ($class::$zapierHelperClassName)::getInstance();
+    }
+
+    /**
+     * (kinda but not really returns the NotificationUtility. Kinda nice in PHP, but still quite shitty).
+     * @return NotificationUtility
+     */
+    public static function getNotificationUtility(): string
+    {
+        $class = self::$className;
+
+        return $class::$notificationUtilityClassName;
     }
 
     public static function getSlackHelper(): SlackHelper

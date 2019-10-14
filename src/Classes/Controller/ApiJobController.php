@@ -21,7 +21,6 @@ use Helio\Panel\Job\JobType;
 use Helio\Panel\Model\Execution;
 use Helio\Panel\Orchestrator\OrchestratorFactory;
 use Helio\Panel\Utility\JwtUtility;
-use Helio\Panel\Utility\NotificationUtility;
 use Helio\Panel\Utility\ServerUtility;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Http\StatusCode;
@@ -122,7 +121,7 @@ class ApiJobController extends AbstractController
         $runningJobsCount = $this->user->getRunningJobsCount();
         $runningJobsLimit = $this->user->getPreferences()->getLimits()->getRunningJobs();
         if ($runningJobsCount >= $runningJobsLimit) {
-            NotificationUtility::alertAdmin(sprintf('Running jobs limit (running: %d / limit: %d) reached for user %d / %d', $runningJobsCount, $runningJobsLimit, $this->user->getId(), $this->user->getEmail()));
+            App::getNotificationUtility()::alertAdmin(sprintf('Running jobs limit (running: %d / limit: %d) reached for user %d / %d', $runningJobsCount, $runningJobsLimit, $this->user->getId(), $this->user->getEmail()));
 
             return $this->render([
                 'success' => false,
@@ -133,7 +132,7 @@ class ApiJobController extends AbstractController
 
         // TODO: Remove this again once CPUs is implemented
         if (is_array($this->request->getParsedBody()) && array_key_exists('cpus', $this->request->getParsedBody())) {
-            NotificationUtility::alertAdmin('Job with specified CPUs created by ' . $this->user->getId() . ' -> ' . $this->user->getEmail());
+            App::getNotificationUtility()::alertAdmin('Job with specified CPUs created by ' . $this->user->getId() . ' -> ' . $this->user->getEmail());
         }
 
         if (!$this->job->getType()) {
@@ -162,7 +161,7 @@ class ApiJobController extends AbstractController
 
         if (!$this->user->getPreferences()->getNotifications()->isMuteAdmin()) {
             $str = $isNew ? 'New Job was created' : 'Job was updated';
-            NotificationUtility::notifyAdmin($str . ' by ' . $this->user->getEmail() . ', type: ' . $this->job->getType() . ', id: ' . $this->job->getId() . ', expected manager: manager-init-' . ServerUtility::getShortHashOfString($this->job->getId()));
+            App::getNotificationUtility()::notifyAdmin($str . ' by ' . $this->user->getEmail() . ', type: ' . $this->job->getType() . ', id: ' . $this->job->getId() . ', expected manager: manager-init-' . ServerUtility::getShortHashOfString($this->job->getId()));
         }
 
         OrchestratorFactory::getOrchestratorForInstance($this->instance, $this->job)->provisionManager();
@@ -587,7 +586,7 @@ class ApiJobController extends AbstractController
 
         if (array_key_exists('error', $body)) {
             // TODO: Remove this notification because it's only a debug help for Kevin
-            NotificationUtility::notifyAdmin('Error Callback received in Panel: ' . print_r($body, true));
+            App::getNotificationUtility()::notifyAdmin('Error Callback received in Panel: ' . print_r($body, true));
 
             LogHelper::warn('Error Callback received for job ' . $this->job->getId() . ' schedule retry...');
             switch ($this->job->getStatus()) {
@@ -643,10 +642,10 @@ class ApiJobController extends AbstractController
         if ($this->job->getInitManagerIp() && $this->job->getClusterToken() && $this->job->getManagerToken() && count($this->job->getManagerNodes()) > 0) {
             $this->job->setStatus(JobStatus::READY);
             if ($this->job->getOwner()->getPreferences()->getNotifications()->isEmailOnJobReady()) {
-                NotificationUtility::notifyUser($this->job->getOwner(), sprintf('Job %s (%d) ready', $this->job->getName(), $this->job->getId()), 'Your job with the id ' . $this->job->getId() . ' is now ready to be executed on Helio');
+                App::getNotificationUtility()::notifyUser($this->job->getOwner(), sprintf('Job %s (%d) ready', $this->job->getName(), $this->job->getId()), 'Your job with the id ' . $this->job->getId() . ' is now ready to be executed on Helio');
             }
             if (!$this->job->getOwner()->getPreferences()->getNotifications()->isMuteAdmin()) {
-                NotificationUtility::notifyAdmin('Job is now ready. By: ' . $this->job->getOwner()->getEmail() . ', type: ' . $this->job->getType() . ', id: ' . $this->job->getId() . ', expected manager: manager-init-' . ServerUtility::getShortHashOfString($this->job->getId()));
+                App::getNotificationUtility()::notifyAdmin('Job is now ready. By: ' . $this->job->getOwner()->getEmail() . ', type: ' . $this->job->getType() . ', id: ' . $this->job->getId() . ', expected manager: manager-init-' . ServerUtility::getShortHashOfString($this->job->getId()));
             }
         }
 
@@ -659,10 +658,10 @@ class ApiJobController extends AbstractController
                 LogHelper::err(sprintf('This is highly irregular: Manager for job %s was deleted without proper removal status', $this->job->getId()));
             }
             if ($this->job->getOwner()->getPreferences()->getNotifications()->isEmailOnJobDeleted()) {
-                NotificationUtility::notifyUser($this->job->getOwner(), sprintf('Job %s (%d) removed', $this->job->getName(), $this->job->getId()), 'Your job with the id ' . $this->job->getId() . ' is now completely removed from Helio');
+                App::getNotificationUtility()::notifyUser($this->job->getOwner(), sprintf('Job %s (%d) removed', $this->job->getName(), $this->job->getId()), 'Your job with the id ' . $this->job->getId() . ' is now completely removed from Helio');
             }
             if (!$this->job->getOwner()->getPreferences()->getNotifications()->isMuteAdmin()) {
-                NotificationUtility::notifyAdmin('Job was deleted by ' . $this->job->getOwner()->getEmail() . ', type: ' . $this->job->getType() . ', id: ' . $this->job->getId() . ', expected manager: manager-init-' . ServerUtility::getShortHashOfString($this->job->getId()));
+                App::getNotificationUtility()::notifyAdmin('Job was deleted by ' . $this->job->getOwner()->getEmail() . ', type: ' . $this->job->getType() . ', id: ' . $this->job->getId() . ', expected manager: manager-init-' . ServerUtility::getShortHashOfString($this->job->getId()));
             }
         }
 

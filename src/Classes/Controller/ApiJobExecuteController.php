@@ -2,11 +2,11 @@
 
 namespace Helio\Panel\Controller;
 
+use Helio\Panel\App;
 use Helio\Panel\Helper\ElasticHelper;
 use Helio\Panel\Model\Instance;
 use Helio\Panel\Request\Log;
 use Helio\Panel\Service\LogService;
-use Helio\Panel\Utility\NotificationUtility;
 use OpenApi\Annotations as OA;
 use Exception;
 use RuntimeException;
@@ -177,7 +177,7 @@ class ApiJobExecuteController extends AbstractController
             $runningExecutionsCount = $this->job->getRunningExecutionsCount();
             $runningExecutionsLimit = $this->user->getPreferences()->getLimits()->getRunningExecutions();
             if ($runningExecutionsCount >= $runningExecutionsLimit) {
-                NotificationUtility::alertAdmin(sprintf('Running executions limit (running: %d / limit: %d) reached for user %d at job %d', $runningExecutionsCount, $runningExecutionsLimit, $this->user->getId(), $this->job->getId()));
+                App::getNotificationUtility()::alertAdmin(sprintf('Running executions limit (running: %d / limit: %d) reached for user %d at job %d', $runningExecutionsCount, $runningExecutionsLimit, $this->user->getId(), $this->job->getId()));
 
                 return $this->render([
                     'success' => false,
@@ -211,7 +211,7 @@ class ApiJobExecuteController extends AbstractController
 
             if (!JobFactory::getDispatchConfigOfJob($this->job, $this->execution)->isExecutionStillAffordable()) {
                 //TODO: Return with an error here once the budget discussion is settled.
-                NotificationUtility::alertAdmin('Execution could not start for user: ' . $this->user->getId() . ' / job: ' . $this->job->getId() . ' because the budget was used up.');
+                App::getNotificationUtility()::alertAdmin('Execution could not start for user: ' . $this->user->getId() . ' / job: ' . $this->job->getId() . ' because the budget was used up.');
             }
 
             // if replica count has changed OR we have an enforcement (e.g. one replica per execution fixed), dispatch the job
@@ -387,7 +387,7 @@ class ApiJobExecuteController extends AbstractController
 
             if ($this->execution->isAutoExecuted()) {
                 if ($this->user->getPreferences()->getNotifications()->isEmailOnAutoscheduledExecutionEnded()) {
-                    NotificationUtility::notifyUser(
+                    App::getNotificationUtility()::notifyUser(
                         $this->job->getOwner(),
                         sprintf('Job %s (%d), Execution %s (%d) executed', $this->job->getName(), $this->job->getId(), $this->execution->getName(), $this->execution->getId()),
                         sprintf("Your Job %d with id %d was successfully executed\nThe results can now be used.", $this->job->getId(), $this->execution->getId())
@@ -395,7 +395,7 @@ class ApiJobExecuteController extends AbstractController
                 }
             } else {
                 if ($this->user->getPreferences()->getNotifications()->isEmailOnExecutionEnded()) {
-                    NotificationUtility::notifyUser(
+                    App::getNotificationUtility()::notifyUser(
                         $this->job->getOwner(),
                         sprintf('Job %s (%d), Execution %s (%d) executed', $this->job->getName(), $this->job->getId(), $this->execution->getName(), $this->execution->getId()),
                         sprintf("Your Job %d with id %d was successfully executed\nThe results can now be used.", $this->job->getId(), $this->execution->getId())

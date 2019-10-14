@@ -71,21 +71,6 @@ class ApiAuthenticationTest extends TestCase
     /**
      * @throws \Exception
      */
-    public function testApiLoginWithExampleUserGivesToken(): void
-    {
-        ZapierHelper::setResponseStack([new Response(200, [], '{"success" => "true"}')]);
-        $response = $this->runWebApp('POST', '/api/login', false, ['Content-Type' => 'application/json'], ['email' => 'email@example.com']);
-
-        $this->assertEquals(200, $response->getStatusCode(), $response->getBody());
-        $body = json_decode((string) $response->getBody(), true);
-        $this->assertEquals($body['user'], ['id' => 1]);
-        // JWTs always start with eyJ
-        $this->assertStringContainsString('eyJ', $body['token']);
-    }
-
-    /**
-     * @throws \Exception
-     */
     public function testApiLoginWithRandomUserGivesNoTokenAndNoUser(): void
     {
         ZapierHelper::setResponseStack([new Response(200, [], '{"success" => "true"}')]);
@@ -94,7 +79,7 @@ class ApiAuthenticationTest extends TestCase
         $this->assertEquals(200, $response->getStatusCode(), $response->getBody());
         $body = json_decode((string) $response->getBody(), true);
 
-        $this->assertNull($body['user']);
+        $this->assertArrayNotHasKey('user', $body);
         $this->assertNull($body['token']);
     }
 }

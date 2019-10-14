@@ -17,7 +17,6 @@ use Helio\Panel\Model\Instance;
 use Helio\Panel\Model\User;
 use Helio\Panel\Utility\CookieUtility;
 use Helio\Panel\Utility\JwtUtility;
-use Helio\Panel\Utility\NotificationUtility;
 use Helio\Panel\Utility\ServerUtility;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Http\StatusCode;
@@ -167,7 +166,7 @@ class DefaultController extends AbstractController
             App::getDbHelper()->merge($server);
             App::getDbHelper()->flush();
 
-            if (!NotificationUtility::sendConfirmationMail($user, '+15 minutes')) {
+            if (!App::getNotificationUtility()::sendConfirmationMail($user, '+15 minutes')) {
                 throw new RuntimeException('Couldn\'t send confirmation mail', 1531253400);
             }
         } catch (Exception $e) {
