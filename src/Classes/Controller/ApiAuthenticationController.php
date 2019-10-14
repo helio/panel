@@ -54,7 +54,7 @@ class ApiAuthenticationController extends AbstractController
 
         ['user' => $user, 'token' => $token] = $this->userService->login($email);
 
-        $this->render(['token' => $token]);
+        return $this->render(['token' => $token]);
     }
 
     protected function getReturnType(): string
