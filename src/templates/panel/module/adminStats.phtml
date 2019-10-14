@@ -16,6 +16,7 @@
             $jobAutoExecSchedule = $job->getAutoExecSchedule() ?: 'none';
             $jobPermanent = $job->isPersistent() ? 'yes' : 'no';
             $jobManagerIp = $job->getInitManagerIp();
+            $deprecatedManagers = (!!$job->getManager() || $job->getInitManagerIp()) ? 'DEPRECATED MANAGERS DETECTED<br />' : '';
             $userEmail = $job->getOwner()->getEmail();
             $jobToken = \Helio\Panel\Utility\JwtUtility::generateToken(null, null, null, $job)['token'];
             $userToken = \Helio\Panel\Utility\JwtUtility::generateToken(null, $job->getOwner())['token'];
@@ -74,7 +75,7 @@
         <div class="row">
             <div class="col-lg-12">
                 <h2>${jobName}</h2>
-                <p>
+                <p>$deprecatedManagers
                     Managers: ${jobManagers}<br />
                     InitManagerIp: ${jobManagerIp}
                 </p>

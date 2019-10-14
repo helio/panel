@@ -6,7 +6,9 @@ use Helio\Panel\Command\MaintenanceRedeployHangingJobs;
 use Helio\Panel\Job\JobStatus;
 use Helio\Panel\Job\JobType;
 use Helio\Panel\Model\Job;
+use Helio\Panel\Model\Manager;
 use Helio\Panel\Model\User;
+use Helio\Panel\Orchestrator\ManagerStatus;
 use Helio\Test\Infrastructure\Utility\ServerUtility;
 use Helio\Test\TestCase;
 
@@ -32,11 +34,13 @@ class CliMaintenanceRedeployHangingJobsTest extends TestCase
         parent::setUp();
 
         $anHourAgo = (new \DateTime('now', ServerUtility::getTimezoneObject()))->sub(new \DateInterval('PT1H'));
+        $managerOfDeletingJob = (new Manager())->setFqdn('manager-blubb')->setIp('1.2.3.4:9')->setWorkerToken('INITMANAGERTOKEN_BLAH')->setStatus(ManagerStatus::READY)->setManagerToken('TOKEN');
 
         $this->user = (new User())->setEmail('email@test.cli')->setActive(true)->setCreated();
         $this->jobInInitState = (new Job())->setOwner($this->user)->setType(JobType::BUSYBOX)->setCreated()->setLatestAction($anHourAgo)->setStatus(JobStatus::INIT);
-        $this->jobInDeletingState = (new Job())->setOwner($this->user)->setType(JobType::BUSYBOX)->setManagerNodes(['manager-blubb'])->setInitManagerIp('1.2.3.4')->setClusterToken('INITMANAGERTOKEN_BLAH')->setCreated()->setLatestAction($anHourAgo)->setStatus(JobStatus::DELETING);
+        $this->jobInDeletingState = (new Job())->setManager($managerOfDeletingJob)->setOwner($this->user)->setType(JobType::BUSYBOX)->setCreated()->setLatestAction($anHourAgo)->setStatus(JobStatus::DELETING);
         $this->infrastructure->getEntityManager()->persist($this->user);
+        $this->infrastructure->getEntityManager()->persist($managerOfDeletingJob);
         $this->infrastructure->getEntityManager()->persist($this->jobInInitState);
         $this->infrastructure->getEntityManager()->persist($this->jobInDeletingState);
         $this->infrastructure->getEntityManager()->flush();
@@ -61,7 +65,7 @@ class CliMaintenanceRedeployHangingJobsTest extends TestCase
         $result = $this->runCliApp(MaintenanceRedeployHangingJobs::class);
         $this->assertEquals(0, $result->getStatusCode());
         $this->assertStringContainsString('infrastructure::gce::create', ServerUtility::getLastExecutedShellCommand());
-        $this->assertStringContainsString(ServerUtility::getShortHashOfString($this->jobInInitState->getId()), ServerUtility::getLastExecutedShellCommand());
+        $this->assertStringContainsString('manager-', ServerUtility::getLastExecutedShellCommand());
 
         /** @var Job $jobInInitStateFromDb */
         $jobInInitStateFromDb = $this->infrastructure->getRepository(Job::class)->find($this->jobInInitState->getId());
@@ -80,7 +84,9 @@ class CliMaintenanceRedeployHangingJobsTest extends TestCase
 
         $result = $this->runCliApp(MaintenanceRedeployHangingJobs::class);
         $this->assertEquals(0, $result->getStatusCode());
-
+        $debug = ServerUtility::getLastExecutedShellCommand();
+        $debug1 = ServerUtility::getLastExecutedShellCommand(1);
+        $debug2 = ServerUtility::getLastExecutedShellCommand(2);
         $this->assertStringContainsString('helio::task::update', ServerUtility::getLastExecutedShellCommand(1));
         $this->assertStringContainsString('infrastructure::gce::delete', ServerUtility::getLastExecutedShellCommand());
         /** @var Job $jobInDeletingStateFromDb */

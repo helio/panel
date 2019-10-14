@@ -8,7 +8,9 @@ use Helio\Panel\Job\JobStatus;
 use Helio\Panel\Job\JobType;
 use Helio\Panel\Model\Execution;
 use Helio\Panel\Model\Job;
+use Helio\Panel\Model\Manager;
 use Helio\Panel\Model\User;
+use Helio\Panel\Orchestrator\ManagerStatus;
 use Helio\Test\Infrastructure\Utility\ServerUtility;
 use Helio\Test\TestCase;
 
@@ -42,9 +44,13 @@ class CliMaintenanceRerunHangingExecutionTest extends TestCase
         $this->job = (new Job())
             ->setOwner($this->user)
             ->setType(JobType::BUSYBOX)
-            ->setManagerNodes(['manager-blubb'])
-            ->setInitManagerIp('1.2.3.4')
-            ->setClusterToken('INITMANAGERTOKEN_BLAH')
+            ->setManager((new Manager())
+                ->setStatus(ManagerStatus::READY)
+                ->setManagerToken('TOKEN')
+                ->setFqdn('manager-blubb')
+                ->setIp('1.2.3.4')
+                ->setWorkerToken('INITMANAGERTOKEN_BLAH')
+            )
             ->setCreated($aDayAgo)
             ->setLatestAction($aDayAgo)
             ->setStatus(JobStatus::READY);

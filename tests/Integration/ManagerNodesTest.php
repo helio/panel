@@ -7,6 +7,7 @@ use Helio\Panel\Job\JobStatus;
 use Helio\Panel\Job\JobType;
 use Helio\Panel\Model\Job;
 use Helio\Panel\Model\Execution;
+use Helio\Panel\Model\Manager;
 use Helio\Panel\Model\User;
 use Helio\Panel\Utility\JwtUtility;
 use Helio\Test\Infrastructure\Helper\TestHelper;
@@ -71,12 +72,12 @@ class ManagerNodesTest extends TestCase
 
         $url = TestHelper::getCallbackUrlFromExecutedShellCommand();
 
-        $this->callbackDataInit = ['nodes' => 'manager-init-' . ServerUtility::getShortHashOfString($jobId) . '.example.com', 'swarm_token_manager' => 'blah:manager', 'swarm_token_worker' => 'blah:worker'];
+        $this->callbackDataInit = ['nodes' => 'manager-init-' . ServerUtility::getShortHashOfString($jobId) . '.example.com', 'swarm_token_manager' => 'blah:manager', 'swarm_token_worker' => 'blah:worker', 'manager_id' => 'ladida', 'manager_ip' => '1.2.3.4:884'];
         $this->callbackDataManagerIp = ['manager_ip' => '1.2.3.4:2345'];
         $this->callbackDataRedundancy = ['nodes' => [
             'manager-redundancy-' . ServerUtility::getShortHashOfString($jobId) . '-1.example.com',
             'manager-redundancy-' . ServerUtility::getShortHashOfString($jobId) . '-2.example.com',
-        ], 'docker_token' => 'blah'];
+        ], 'swarm_token_worker' => 'blah-worker'];
 
         // simulate provisioning call backs
         $response = $this->runWebApp('POST', $url, true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']], $this->callbackDataInit);
@@ -144,8 +145,8 @@ class ManagerNodesTest extends TestCase
 
         /** @var Job $job */
         $job = $this->jobRepository->find($jobId);
-        $this->assertCount(0, $job->getManagerNodes());
-        $this->assertStringContainsString('manager-init-' . ServerUtility::getShortHashOfString($jobId), ServerUtility::getLastExecutedShellCommand());
+        $this->assertNull($job->getManager());
+        $this->assertStringContainsString('manager-', ServerUtility::getLastExecutedShellCommand());
         $this->assertStringContainsString('user_id', ServerUtility::getLastExecutedShellCommand());
         $this->assertStringContainsString($this->user->getId(), ServerUtility::getLastExecutedShellCommand());
 
@@ -160,17 +161,9 @@ class ManagerNodesTest extends TestCase
         $this->assertEmpty(ServerUtility::getLastExecutedShellCommand());
         $this->runWebApp('POST', $url, true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']], $this->callbackDataManagerIp);
 
-        // TODO: Move these assertions below callbackDataRedundancy as soon as job is supposed to have redundant managers.
-        //$this->assertContains('blah:manager', ServerUtility::getLastExecutedShellCommand(1));
-        //$this->assertContains('manager-redundancy-' . ServerUtility::getShortHashOfString($jobId), ServerUtility::getLastExecutedShellCommand());
-        //$this->assertContains('1.2.3.4:2345', ServerUtility::getLastExecutedShellCommand());
-        //$this->assertContains('blah:worker', ServerUtility::getLastExecutedShellCommand());
-
-        //$this->runApp('POST', $url, true, null, $this->callbackDataRedundancy);
-
         $job = $this->jobRepository->find($jobId);
         $this->assertEquals(JobStatus::READY, $job->getStatus());
-        $this->assertCount(1, $job->getManagerNodes());
+        $this->assertInstanceOf(Manager::class, $job->getManager());
     }
 
     /**
@@ -194,7 +187,8 @@ class ManagerNodesTest extends TestCase
         $this->assertStringContainsString('helio::task::update', ServerUtility::getLastExecutedShellCommand(1));
         $this->assertStringContainsString('task_ids', ServerUtility::getLastExecutedShellCommand(1));
         $this->assertStringContainsString('[' . $executions[0]->getId() . ']', ServerUtility::getLastExecutedShellCommand(1));
-        $this->assertStringContainsString('manager-init-' . ServerUtility::getShortHashOfString($this->job->getId()) . '.example.com', ServerUtility::getLastExecutedShellCommand(1));
+        $this->assertStringContainsString('manager-', ServerUtility::getLastExecutedShellCommand(1));
+        $this->assertStringContainsString('.example.com', ServerUtility::getLastExecutedShellCommand(1));
     }
 
     /**

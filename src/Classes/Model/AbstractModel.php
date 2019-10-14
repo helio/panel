@@ -226,9 +226,9 @@ abstract class AbstractModel
     }
 
     /**
-     * @return int
+     * @return mixed
      */
-    public function getStatus(): int
+    public function getStatus()
     {
         return $this->status;
     }
@@ -312,5 +312,5 @@ abstract class AbstractModel
      */
 
     /** @noinspection ReturnTypeCanBeDeclaredInspection */
-    abstract public function setStatus(int $status);
+    abstract public function setStatus($status);
 }

@@ -52,8 +52,6 @@ class DbHelper implements HelperInterface
      * @return EntityManager
      *
      * @throws \Exception
-     *
-     * @deprecated should be replaced with proxy methods, only kept here for cli-config.php
      */
     public function get(): EntityManager
     {

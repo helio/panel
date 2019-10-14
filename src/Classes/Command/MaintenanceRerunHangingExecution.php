@@ -2,6 +2,7 @@
 
 namespace Helio\Panel\Command;
 
+use Exception;
 use Doctrine\DBAL\Types\Type;
 use Helio\Panel\App;
 use Helio\Panel\Execution\ExecutionStatus;
@@ -30,6 +31,12 @@ class MaintenanceRerunHangingExecution extends AbstractCommand
             ->setHelp('This task can be safely run every minute. It locks the execution internally.');
     }
 
+    /**
+     * @param  InputInterface  $input
+     * @param  OutputInterface $output
+     * @return int|null
+     * @throws Exception
+     */
     protected function execute(InputInterface $input, OutputInterface $output): ?int
     {
         $dbHelper = App::getDbHelper();

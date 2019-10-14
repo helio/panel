@@ -3,7 +3,10 @@
 namespace Helio\Panel\Orchestrator;
 
 use Exception;
+use Helio\Panel\Job\JobStatus;
+use Helio\Panel\Model\Manager;
 use Helio\Panel\Utility\ArrayUtility;
+use Helio\Panel\Utility\JwtUtility;
 use RuntimeException;
 use Helio\Panel\Helper\LogHelper;
 use Helio\Panel\Model\Instance;
@@ -32,15 +35,8 @@ class Choria implements OrchestratorInterface
      */
     private static $managerPrefix = 'manager';
 
-    /**
-     * @var int
-     */
-    private static $redundancyCount = 0;
-
-    private static $firstManagerCommand = 'mco playbook run infrastructure::gce::create --input \'{"node":"%s","callback":"$jobCallback","user_id":"%s","id":"$jobId"}\'';
-    private static $redundantManagersCommand = 'mco playbook run infrastructure::gce::create --input \'{"node":["%s"],"master_token":"%s","callback":"$jobCallback","user_id":"%s","id":"$jobId"\'';
-    private static $deleteInitManagerCommand = 'mco playbook run infrastructure::gce::delete --input \'{"node":"%s","callback":"$jobCallback","id":"$jobId"}\'';
-    private static $deleteRedundantManagersCommand = 'mco playbook run infrastructure::gce::delete --input \'{"node":["%s"],"master_token":"%s","callback":"$jobCallback","id":"$jobId"}\'';
+    private static $createManagerCommand = 'mco playbook run infrastructure::gce::create --input \'{"node":"%s","callback":"$jobCallback","user_id":"%s","id":"$jobId"}\'';
+    private static $deleteManagerCommand = 'mco playbook run infrastructure::gce::delete --input \'{"node":"%s","callback":"$jobCallback","id":"$jobId"}\'';
     private static $inventoryCommand = 'mco playbook run helio::tools::inventory --input \'{"fqdn":"$fqdn","callback":"$instanceCallback"}\'';
     private static $startComputeCommand = 'mco playbook run helio::cluster::node::start --input \'{"node_id":"%s","node_fqdn":"$fqdn","manager":"%s","callback":"$instanceCallback"}\'';
     private static $stopComputeCommand = 'mco playbook run helio::cluster::node::stop --input \'{"node_id":"%s","node_fqdn":"$fqdn","manager":"%s","callback":"$instanceCallback"}\'';
@@ -87,37 +83,48 @@ class Choria implements OrchestratorInterface
     }
 
     /**
-     * @param Job|null $job
-     *
      * @return bool
      */
-    public function dispatchJob(Job $job = null): bool
+    public function dispatchJob(): bool
     {
-        if ($job) {
-            LogHelper::addWarning('Deprecated call of ' . __METHOD__ . ' with set $job param. Pass it to the factory!');
-            $this->job = $job;
-        }
         if (!$this->job) {
             return false;
         }
-        if (!$this->job->getManagerNodes() || !$this->job->getClusterToken() || !$this->job->getInitManagerIp()) {
+
+        if (!($manager = $this->job->getManager()) && (!$this->job->getManagerNodes() || !$this->job->getClusterToken() || !$this->job->getInitManagerIp())) {
             LogHelper::warn('dispatchJob called on job ' . $this->job->getId() . ' that\'s not ready. Aborting.');
 
             return false;
         }
+        if (!$manager) {
+            LogHelper::debug('Deprecated Job ' . $this->job->getId() . ' updated to new manager persistance model');
+            $manager = (new Manager())
+                ->setFqdn($this->job->getManagerNodes()[0])
+                ->setWorkerToken($this->job->getClusterToken())
+                ->setIp($this->job->getInitManagerIp())
+                ->setManagerToken($this->job->getManagerToken())
+                ->setIdByChoria($this->job->getManagerID())
+                ->setStatus(ManagerStatus::READY);
+            $this->job->setManager($manager)
+                ->setManagerToken('')
+                ->setClusterToken('')
+                ->setInitManagerIp('')
+                ->setManagerID('')
+                ->setManagerNodes([]);
+        }
 
         ServerUtility::executeShellCommand($this->parseCommand(self::$dispatchCommand, false, [
-            $this->job->getManagerNodes()[0],
+            $manager->getFqdn(),
             ArrayUtility::modelsToStringOfIds($this->job->getExecutions()->toArray()),
         ]));
 
         if ($this->job->getActiveExecutionCount() > 0) {
             ServerUtility::executeShellCommand(
                 $this->parseCommand(self::$joinWorkersCommand, false, [
-                    $this->job->getClusterToken(),
-                    $this->job->getInitManagerIp(),
+                    $manager->getWorkerToken(),
+                    $manager->getIp(),
                     1,
-                    $this->job->getManagerID(),
+                    $manager->getId(),
                 ])
             );
         }
@@ -126,97 +133,73 @@ class Choria implements OrchestratorInterface
     }
 
     /**
-     * @param Job|null $job
-     *
-     * @return bool
+     * @param string $managerName
+     * @return string expected hostname of the new manager
      *
      * @throws Exception
      */
-    public function provisionManager(Job $job = null): bool
+    public function provisionManager(string $managerName = ''): string
     {
-        if ($job) {
-            LogHelper::addWarning('Deprecated call of ' . __METHOD__ . ' with set $job param. Pass it to the factory!');
-            $this->job = $job;
-        }
         if (!$this->job) {
             return false;
         }
-        $managerHash = ServerUtility::getShortHashOfString($this->job->getId());
 
         // we're good
-        if (count($this->job->getManagerNodes()) === (1 + self::$redundancyCount)) {
+        if ($this->job->getManager() && $this->job->getManager()->works() && JobStatus::READY_PAUSED !== $this->job->getStatus()) {
             return true;
         }
 
-        // we have to provision the init manager
-        if (0 === count($this->job->getManagerNodes())) {
-            $managerHostname = self::$managerPrefix . "-init-${managerHash}";
-
-            $command = self::$firstManagerCommand;
-            $params[] = $managerHostname;
-        } else {
-            // if no init manager exists, we cannot create redundancy managers
-            if (!$this->job->getInitManagerIp()) {
-                return false;
-            }
-
-            $redundancyNodes = [];
-
-            $i = self::$redundancyCount + 1;
-            while ($i <= self::$redundancyCount) {
-                $redundancyNodes[] = self::$managerPrefix . "-redundancy-${managerHash}-${i}";
-                --$i;
-            }
-
-            $command = self::$redundantManagersCommand;
-            $params[] = implode('\\",\\"', $redundancyNodes);
-            $params[] = $this->job->getManagerToken();
+        // TODO CB: Remove this once all active jobs switched to the normalised manager persistence model
+        if (!$this->job->getManager() && count($this->job->getManagerNodes())) {
+            $this->job->setManager(
+                (new Manager())
+                    ->setFqdn($this->job->getManagerNodes()[0])
+                    ->setIp($this->job->getInitManagerIp())
+                    ->setIdByChoria($this->job->getManagerID())
+                    ->setManagerToken($this->job->getManagerToken())
+                    ->setWorkerToken($this->job->getClusterToken())
+                    ->setStatus(ManagerStatus::READY)
+            )
+                ->setManagerToken('')
+                ->setClusterToken('')
+                ->setInitManagerIp('')
+                ->setManagerID('')
+                ->setManagerNodes([]);
         }
 
-        $params[] = $this->job->getOwner() ? $this->job->getOwner()->getId() : null;
+        $managerName = self::$managerPrefix . '-' . ($managerName ?: strtolower(ServerUtility::getRandomString(4)));
 
-        $result = ServerUtility::executeShellCommand($this->parseCommand($command, false, $params));
+        // provision the manager
+        ServerUtility::executeShellCommand($this->parseCommand(self::$createManagerCommand, false, [
+            $managerName,
+            $this->job->getOwner() ? $this->job->getOwner()->getId() : null,
+        ]));
 
-        return $result;
+        return $managerName;
     }
 
     /**
-     * @param Job|null $job
-     *
      * @return bool
      *
      * @throws Exception
      */
-    public function removeManager(Job $job = null): bool
+    public function removeManager(): bool
     {
-        if ($job) {
-            LogHelper::addWarning('Deprecated call of ' . __METHOD__ . ' with set $job param. Pass it to the factory!');
-            $this->job = $job;
-        }
         if (!$this->job) {
             return false;
         }
-        $result = true;
-        $managerHash = ServerUtility::getShortHashOfString($this->job->getId());
 
-        // remove redundant managers if existing
-        if (count($this->job->getManagerNodes()) > 1) {
-            foreach ($this->job->getManagerNodes() as $node) {
-                if (0 === strpos($node, self::$managerPrefix . "-redundancy-${managerHash}")) {
-                    $result = $result && ServerUtility::executeShellCommand($this->parseCommand(self::$deleteRedundantManagersCommand, true, [
-                            substr($node, 0, strlen(self::$managerPrefix . "-init-${managerHash}-1")),
-                            $this->job->getManagerToken(),
-                        ]));
-                }
+        /** @var Job $job */
+        foreach ($this->job->getManager()->getJobs() as $job) {
+            if ($job === $this->job || $job->getId() === $this->job->getId()) {
+                continue;
             }
+            // if there are other jobs than the current one, don't remove the manager.
+            return false;
         }
 
-        // lastly, delete redundant manager
-        $result = $result && ServerUtility::executeShellCommand($this->parseCommand(self::$deleteInitManagerCommand, false, [
-                self::$managerPrefix . "-init-${managerHash}",
-            ]));
-
-        return $result;
+        /* @var Manager $manager */
+        return ServerUtility::executeShellCommand($this->parseCommand(self::$deleteManagerCommand, false, [$this->job->getManager()->getHostname()]));
     }
 
     /**
@@ -247,8 +230,8 @@ class Choria implements OrchestratorInterface
 
     /**
      * @param string $command
-     * @param bool   $waitForResult
-     * @param array  $parameter
+     * @param bool $waitForResult
+     * @param array $parameter
      *
      * @return string
      */
@@ -256,8 +239,8 @@ class Choria implements OrchestratorInterface
     {
         $params = array_merge(
             [
-            self::$username, $this->instance->getOrchestratorCoordinator(),
-        ],
+                self::$username, $this->instance->getOrchestratorCoordinator(),
+            ],
             $parameter
         );
         ServerUtility::validateParams($params);

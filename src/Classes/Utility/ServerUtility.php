@@ -289,4 +289,14 @@ class ServerUtility extends AbstractUtility
 
         return $result;
     }
+
+    /**
+     * @param  int       $size
+     * @return string
+     * @throws Exception
+     */
+    public static function getRandomString(int $size = 16): string
+    {
+        return (new Base62())->encode(random_bytes($size));
+    }
 }

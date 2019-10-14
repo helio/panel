@@ -8,7 +8,9 @@ use Helio\Panel\Job\JobStatus;
 use Helio\Panel\Job\JobType;
 use Helio\Panel\Model\Execution;
 use Helio\Panel\Model\Job;
+use Helio\Panel\Model\Manager;
 use Helio\Panel\Model\User;
+use Helio\Panel\Orchestrator\ManagerStatus;
 use Helio\Panel\Utility\JwtUtility;
 use Helio\Test\Infrastructure\Utility\ServerUtility;
 use Helio\Test\TestCase;
@@ -79,17 +81,26 @@ class ApiExecutionTest extends TestCase
         return $user;
     }
 
+    /**
+     * @param  User      $user
+     * @param  string    $name
+     * @return Job
+     * @throws Exception
+     */
     private function createJob(User $user, $name = __CLASS__): Job
     {
         $job = (new Job())
             ->setType(JobType::BUSYBOX)
-            ->setStatus(JobStatus::READY)
             ->setOwner($user)
+            ->setManager((new Manager())
+                ->setStatus(ManagerStatus::READY)
+                ->setManagerToken('managertoken')
+                ->setWorkerToken('ClusterToken')
+                ->setIp('1.2.3.55')
+                ->setFqdn('manager1.manager.example.com')
+            )
+            ->setStatus(JobStatus::READY)
             ->setName($name)
-            ->setManagerToken('managertoken')
-            ->setClusterToken('ClusterToken')
-            ->setInitManagerIp('1.2.3.55')
-            ->setManagerNodes(['manager1.manager.example.com'])
             ->setCreated();
         $this->infrastructure->getEntityManager()->persist($job);
         $this->infrastructure->getEntityManager()->flush($job);

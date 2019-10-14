@@ -13,15 +13,15 @@ interface OrchestratorInterface
 
     public function getInventory();
 
-    public function dispatchJob(Job $job = null): bool;
+    public function dispatchJob(): bool;
 
     public function startComputing();
 
     public function stopComputing();
 
-    public function provisionManager(Job $job = null): bool;
+    public function provisionManager(string $managerName = ''): string;
 
-    public function removeManager(Job $job = null): bool;
+    public function removeManager(): bool;
 
     public function removeInstance();
 }

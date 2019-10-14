@@ -8,7 +8,9 @@ use Helio\Panel\Job\JobStatus;
 use Helio\Panel\Job\JobType;
 use Helio\Panel\Model\Execution;
 use Helio\Panel\Model\Job;
+use Helio\Panel\Model\Manager;
 use Helio\Panel\Model\User;
+use Helio\Panel\Orchestrator\ManagerStatus;
 use Helio\Panel\Utility\JwtUtility;
 use Helio\Test\Infrastructure\Helper\TestHelper;
 use Helio\Test\Infrastructure\Utility\ServerUtility;
@@ -37,9 +39,10 @@ class CliMaintenanceRemoveStaleClustersTest extends TestCase
         parent::setUp();
 
         $aDayAgo = (new \DateTime('now', ServerUtility::getTimezoneObject()))->sub(new \DateInterval('P1DT1H'));
+        $managerOfDeletingJob = (new Manager())->setFqdn('manager-blubb')->setIp('1.2.3.4:9')->setWorkerToken('INITMANAGERTOKEN_BLAH')->setStatus(ManagerStatus::READY)->setManagerToken('TOKEN');
 
         $this->user = (new User())->setEmail('email@test.cli')->setActive(true)->setCreated();
-        $this->job = (new Job())->setOwner($this->user)->setType(JobType::BUSYBOX)->setManagerNodes(['manager-blubb'])->setInitManagerIp('1.2.3.4')->setClusterToken('INITMANAGERTOKEN_BLAH')->setCreated($aDayAgo)->setLatestAction($aDayAgo)->setStatus(JobStatus::READY);
+        $this->job = (new Job())->setOwner($this->user)->setType(JobType::BUSYBOX)->setManager($managerOfDeletingJob)->setCreated($aDayAgo)->setLatestAction($aDayAgo)->setStatus(JobStatus::READY);
         $this->execution = (new Execution())->setJob($this->job)->setCreated($aDayAgo)->setStatus(ExecutionStatus::READY);
         $this->infrastructure->getEntityManager()->persist($this->user);
         $this->infrastructure->getEntityManager()->persist($this->job);
@@ -66,7 +69,7 @@ class CliMaintenanceRemoveStaleClustersTest extends TestCase
         $jobFromDb = $this->infrastructure->getRepository(Job::class)->find($this->job->getId());
         $this->assertEquals(JobStatus::READY_PAUSING, $jobFromDb->getStatus());
 
-        $response = $this->runWebApp('POST', TestHelper::getCallbackUrlFromExecutedShellCommand(), true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']], ['deleted' => true, 'nodes' => $this->job->getManagerNodes()]);
+        $response = $this->runWebApp('POST', TestHelper::getCallbackUrlFromExecutedShellCommand(), true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']], ['deleted' => true, 'nodes' => $this->job->getManager()->getFqdn()]);
         $this->assertEquals(StatusCode::HTTP_OK, $response->getStatusCode());
 
         /** @var Execution $jobFromDb */

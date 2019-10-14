@@ -152,7 +152,7 @@ class Execution extends AbstractModel
      *
      * @return $this|AbstractModel
      */
-    public function setStatus(int $status)
+    public function setStatus($status)
     {
         if (ExecutionStatus::isValidStatus($status)) {
             $this->status = $status;

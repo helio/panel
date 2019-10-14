@@ -9,8 +9,10 @@ use Helio\Panel\Job\JobType;
 use Helio\Panel\Model\Instance;
 use Helio\Panel\Model\Job;
 use Helio\Panel\Model\Execution;
+use Helio\Panel\Model\Manager;
 use Helio\Panel\Model\User;
 use Helio\Panel\Execution\ExecutionStatus;
+use Helio\Panel\Orchestrator\ManagerStatus;
 use Helio\Panel\Utility\ArrayUtility;
 use Helio\Panel\Utility\JwtUtility;
 use Helio\Test\Infrastructure\Utility\ServerUtility;
@@ -60,7 +62,7 @@ class AutoscalerTest extends TestCase
         $this->instance = (new Instance())->setName('testinstance')->setCreated()->setFqdn('testserver.example.com')->setStatus(InstanceStatus::RUNNING);
 
         $this->user = (new User())->setAdmin(1)->setName('testuser')->setCreated()->setEmail('test-autoscaler@example.com')->setActive(true)->addInstance($this->instance);
-        $this->job = (new Job())->setStatus(JobStatus::READY)->setType(JobType::ENERGY_PLUS_85)->setOwner($this->user)->setInitManagerIp('1.1.1.1')->setManagerNodes(['1', '2', '3']);
+        $this->job = (new Job())->setStatus(JobStatus::READY)->setType(JobType::ENERGY_PLUS_85)->setOwner($this->user)->setManager((new Manager())->setStatus(ManagerStatus::READY)->setManagerToken('TOKEN')->setWorkerToken('WT')->setIp('1.1.1.1')->setFqdn('1'));
         $this->user->addJob($this->job);
         $this->infrastructure->getEntityManager()->persist($this->user);
         $this->infrastructure->getEntityManager()->persist($this->job);
@@ -208,7 +210,7 @@ class AutoscalerTest extends TestCase
      */
     public function testReplicaDontIncreaseOnFixedJobType(): void
     {
-        $job = (new Job())->setInitManagerIp('1.1.1.1')->setManagerNodes(['1', '2', '3'])->setOwner($this->user)->setStatus(JobStatus::READY)->setType(JobType::INFINITEBOX);
+        $job = (new Job())->setManager((new Manager())->setIp('1.1.1.1')->setFqdn('1'))->setManager((new Manager())->setFqdn('2'))->setOwner($this->user)->setStatus(JobStatus::READY)->setType(JobType::INFINITEBOX);
         $this->infrastructure->getEntityManager()->persist($job);
         $this->infrastructure->getEntityManager()->flush();
         $result = $this->runWebApp('GET', '/api/admin/getJobHiera?jobid=' . $job->getId(), true, $this->headers);
@@ -257,6 +259,6 @@ class AutoscalerTest extends TestCase
         $job = $this->jobRepository->findOneByName('testing 1551430480');
 
         $this->assertStringContainsString('ssh', ServerUtility::getLastExecutedShellCommand());
-        $this->assertStringContainsString('manager-init-' . ServerUtility::getShortHashOfString($job->getId()), ServerUtility::getLastExecutedShellCommand());
+        $this->assertStringContainsString('manager-', ServerUtility::getLastExecutedShellCommand());
     }
 }

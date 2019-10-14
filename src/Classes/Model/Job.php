@@ -201,6 +201,7 @@ class Job extends AbstractModel
      * @var string
      *
      * @Column
+     * @deprecated
      */
     protected $initManagerIp = '';
 
@@ -208,6 +209,7 @@ class Job extends AbstractModel
      * @var string
      *
      * @Column
+     * @deprecated
      */
     protected $clusterToken = '';
 
@@ -215,6 +217,7 @@ class Job extends AbstractModel
      * @var string
      *
      * @Column
+     * @deprecated
      */
     protected $managerToken = '';
 
@@ -222,14 +225,23 @@ class Job extends AbstractModel
      * @var array<string>
      *
      * @Column(type="simple_array", nullable=TRUE)
+     * @deprecated
      */
     protected $managerNodes = [];
 
     /**
      * @var string
      * @Column(type="string")
+     * @deprecated
      */
     protected $managerID = '';
+
+    /**
+     * @var Manager
+     *
+     * @ManyToOne(targetEntity="Manager", inversedBy="jobs", cascade={"persist"})
+     */
+    protected $manager;
 
     /**
      * @var int
@@ -267,7 +279,7 @@ class Job extends AbstractModel
         $add = true;
         /** @var Job $job */
         foreach ($owner->getJobs() as $job) {
-            if ($job->getId() === $this->getId()) {
+            if ($job === $this || ($this->getId() && $job->getId() === $this->getId())) {
                 $add = false;
             }
         }
@@ -326,7 +338,7 @@ class Job extends AbstractModel
      *
      * @return Job
      */
-    public function setStatus(int $status): Job
+    public function setStatus($status): Job
     {
         if (JobStatus::isValidStatus($status)) {
             $this->status = $status;
@@ -555,6 +567,40 @@ class Job extends AbstractModel
         return $this->executions;
     }
 
+    /**
+     * @param Manager|null $manager
+     *
+     * @return Job
+     */
+    public function setManager(Manager $manager = null): Job
+    {
+        $this->manager = $manager;
+        if (null === $manager) {
+            return $this;
+        }
+
+        $add = true;
+        foreach ($manager->getJobs() as $job) {
+            if ($job === $this || ($this->getId() && $job->getId() === $this->getId())) {
+                $add = false;
+            }
+        }
+
+        if ($add) {
+            $manager->addJob($this);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Manager|null
+     */
+    public function getManager(): ?Manager
+    {
+        return $this->manager;
+    }
+
     public function getRunningExecutionsCount(): int
     {
         $criteria = Criteria::create()->where(Criteria::expr()->in('status', ExecutionStatus::getRunningStatusCodes()));
@@ -579,6 +625,7 @@ class Job extends AbstractModel
      * @param string $managerNode
      *
      * @return Job
+     * @deprecated
      */
     public function addManagerNode(string $managerNode): Job
     {
@@ -593,6 +640,7 @@ class Job extends AbstractModel
      * @param string $nodeToRemove
      *
      * @return Job
+     * @deprecated
      */
     public function removeManagerNode(string $nodeToRemove): Job
     {
@@ -612,6 +660,7 @@ class Job extends AbstractModel
 
     /**
      * @return array
+     * @deprecated
      */
     public function getManagerNodes(): array
     {
@@ -622,6 +671,7 @@ class Job extends AbstractModel
      * @param array $managerNodes
      *
      * @return Job
+     * @deprecated
      */
     public function setManagerNodes(array $managerNodes): Job
     {
@@ -632,6 +682,7 @@ class Job extends AbstractModel
 
     /**
      * @return string
+     * @deprecated
      */
     public function getInitManagerIp(): string
     {
@@ -642,6 +693,7 @@ class Job extends AbstractModel
      * @param string $initManagerIp
      *
      * @return Job
+     * @deprecated
      */
     public function setInitManagerIp(string $initManagerIp): Job
     {
@@ -652,6 +704,7 @@ class Job extends AbstractModel
 
     /**
      * @return string
+     * @deprecated
      */
     public function getClusterToken(): string
     {
@@ -662,6 +715,7 @@ class Job extends AbstractModel
      * @param string $clusterToken
      *
      * @return Job
+     * @deprecated
      */
     public function setClusterToken(string $clusterToken): Job
     {
@@ -672,6 +726,7 @@ class Job extends AbstractModel
 
     /**
      * @return string
+     * @deprecated
      */
     public function getManagerToken(): string
     {
@@ -682,6 +737,7 @@ class Job extends AbstractModel
      * @param string $managerToken
      *
      * @return Job
+     * @deprecated
      */
     public function setManagerToken(string $managerToken): Job
     {
@@ -703,6 +759,8 @@ class Job extends AbstractModel
     /**
      * @param  string $managerID
      * @return Job
+     *
+     * @deprecated
      */
     public function setManagerID(string $managerID): Job
     {
@@ -713,6 +771,7 @@ class Job extends AbstractModel
 
     /**
      * @return string
+     * @deprecated
      */
     public function getManagerID(): string
     {

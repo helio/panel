@@ -6,6 +6,8 @@ use Exception;
 use GuzzleHttp\Exception\GuzzleException;
 use Helio\Panel\Exception\HttpException;
 use Helio\Panel\Helper\ElasticHelper;
+use Helio\Panel\Model\Manager;
+use Helio\Panel\Orchestrator\ManagerStatus;
 use Helio\Panel\Request\Log;
 use Helio\Panel\Service\LogService;
 use OpenApi\Annotations as OA;
@@ -120,6 +122,9 @@ class ApiJobController extends AbstractController
     {
         $runningJobsCount = $this->user->getRunningJobsCount();
         $runningJobsLimit = $this->user->getPreferences()->getLimits()->getRunningJobs();
+        $jobTypeRestriction = $this->user->getPreferences()->getLimits()->getJobTypes();
+        $managerNodeRestriction = $this->user->getPreferences()->getLimits()->getManagerNodes();
+
         if ($runningJobsCount >= $runningJobsLimit) {
             App::getNotificationUtility()::alertAdmin(sprintf('Running jobs limit (running: %d / limit: %d) reached for user %d / %d', $runningJobsCount, $runningJobsLimit, $this->user->getId(), $this->user->getEmail()));
 
@@ -147,6 +152,16 @@ class ApiJobController extends AbstractController
             $this->job->setType($this->params['type']);
         }
 
+        // check if user is allowed to create job type
+        if ($jobTypeRestriction && !in_array($this->job->getType(), $jobTypeRestriction, true)) {
+            App::getNotificationUtility()::alertAdmin(sprintf('Job type restriction on type %s hit by user %d / %d', $this->job->getType(), $this->user->getId(), $this->user->getEmail()));
+
+            return $this->render([
+                'success' => false,
+                'message' => 'Job Type not allowed for user',
+            ], StatusCode::HTTP_NOT_ACCEPTABLE);
+        }
+
         $this->optionalParameterCheck([
             'name' => FILTER_SANITIZE_STRING,
             'location' => FILTER_SANITIZE_STRING,
@@ -164,7 +179,37 @@ class ApiJobController extends AbstractController
             App::getNotificationUtility()::notifyAdmin($str . ' by ' . $this->user->getEmail() . ', type: ' . $this->job->getType() . ', id: ' . $this->job->getId() . ', expected manager: manager-init-' . ServerUtility::getShortHashOfString($this->job->getId()));
         }
 
-        OrchestratorFactory::getOrchestratorForInstance($this->instance, $this->job)->provisionManager();
+        if ($managerNodeRestriction) {
+            $managers = App::getDbHelper()->getRepository(Manager::class)->findBy(['fqdn' => $managerNodeRestriction]);
+            /** @var Manager $manager */
+            foreach ($managers as $manager) {
+                if ($manager->works()) {
+                    $this->job->setManager($manager);
+                    break;
+                }
+            }
+
+            if (!$this->job->getManager()) {
+                $this->job->setStatus(JobStatus::INIT_ERROR);
+                $this->persistJob();
+                return $this->render([
+                    'success' => false,
+                    'message' => 'Tried to create a job without available manager. This either means that you have no permission or that no usable manager exists at all.',
+                ], StatusCode::HTTP_NOT_ACCEPTABLE);
+            }
+
+            $this->job->setStatus(JobStatus::READY);
+            if ($this->job->getOwner()->getPreferences()->getNotifications()->isEmailOnJobReady()) {
+                App::getNotificationUtility()::notifyUser($this->job->getOwner(), sprintf('Job %s (%d) ready', $this->job->getName(), $this->job->getId()), 'Your job with the id ' . $this->job->getId() . ' is now ready to be executed on Helio');
+            }
+            if (!$this->job->getOwner()->getPreferences()->getNotifications()->isMuteAdmin()) {
+                App::getNotificationUtility()::notifyAdmin('Job is now ready. By: ' . $this->job->getOwner()->getEmail() . ', type: ' . $this->job->getType() . ', id: ' . $this->job->getId() . ', expected manager: manager-init-' . ServerUtility::getShortHashOfString($this->job->getId()));
+            }
+
+            $this->persistJob();
+        } else {
+            OrchestratorFactory::getOrchestratorForInstance($this->instance, $this->job)->provisionManager();
+        }
 
         return $this->render([
             'success' => true,
@@ -571,7 +616,6 @@ class ApiJobController extends AbstractController
      * @return ResponseInterface
      *
      * @throws Exception
-     * @throws GuzzleException
      *
      * @Route("/callback", methods={"POST", "GET"}, "name="job.callback")
      */
@@ -607,39 +651,36 @@ class ApiJobController extends AbstractController
             $nodes = is_array($body['nodes']) ? $body['nodes'] : [$body['nodes']];
             foreach ($nodes as $node) {
                 if (array_key_exists('deleted', $body)) {
-                    $this->job->removeManagerNode($node);
+                    /** @var Manager $manager */
+                    $manager = App::getDbHelper()->getRepository(Manager::class)->findOneBy(['fqdn' => $node]);
+                    if ($manager) {
+                        $this->job->setManager();
+                        $manager->setStatus(ManagerStatus::REMOVED);
+                    } else {
+                        $this->job->removeManagerNode($node);
+                    }
                 } else {
-                    $this->job->addManagerNode($node);
+                    $manager = (new Manager())
+                        ->setFqdn($node)
+                        ->setIdByChoria($body['manager_id'] ?? '')
+                        ->setStatus(ManagerStatus::READY)
+                        ->setWorkerToken($body['swarm_token_worker'])
+                        ->setManagerToken($body['swarm_token_manager'] ?? '')
+                        ->setIp($body['manager_ip'] ?? '');
+                    $this->job->setManager($manager);
                 }
             }
-        }
-
-        // remember swarm token
-        if (array_key_exists('swarm_token_worker', $body)) {
-            $this->job->setClusterToken($body['swarm_token_worker']);
-        }
-        if (array_key_exists('swarm_token_manager', $body)) {
-            $this->job->setManagerToken($body['swarm_token_manager']);
-        }
-        if (array_key_exists('manager_id', $body)) {
-            $this->job->setManagerID($body['manager_id']);
-        }
-
-        // get manager IP
-        if (array_key_exists('manager_ip', $body)) {
-            $this->job->setInitManagerIp($body['manager_ip']);
         }
 
         $this->persistJob();
 
         // provision missing redundancy nodes if necessary
-        if (!array_key_exists('deleted', $body) && $this->job->getInitManagerIp()) {
+        if (!array_key_exists('deleted', $body) && $this->job->getManager()->getIp()) {
             OrchestratorFactory::getOrchestratorForInstance($this->instance, $this->job)->provisionManager();
         }
 
         // finalize
-        // TODO: set redundancy to >= 3 again if needed
-        if ($this->job->getInitManagerIp() && $this->job->getClusterToken() && $this->job->getManagerToken() && count($this->job->getManagerNodes()) > 0) {
+        if ($this->job->getManager() || $this->job->getInitManagerIp() && $this->job->getClusterToken() && $this->job->getManagerToken() && count($this->job->getManagerNodes()) > 0) {
             $this->job->setStatus(JobStatus::READY);
             if ($this->job->getOwner()->getPreferences()->getNotifications()->isEmailOnJobReady()) {
                 App::getNotificationUtility()::notifyUser($this->job->getOwner(), sprintf('Job %s (%d) ready', $this->job->getName(), $this->job->getId()), 'Your job with the id ' . $this->job->getId() . ' is now ready to be executed on Helio');
@@ -649,7 +690,7 @@ class ApiJobController extends AbstractController
             }
         }
 
-        if (array_key_exists('deleted', $body) && 0 === count($this->job->getManagerNodes())) {
+        if (array_key_exists('deleted', $body) && !$this->job->getManager() && 0 === count($this->job->getManagerNodes())) {
             if (JobStatus::DELETING === $this->job->getStatus()) {
                 $this->job->setStatus(JobStatus::DELETED);
             } elseif (JobStatus::READY_PAUSING === $this->job->getStatus()) {
@@ -699,12 +740,13 @@ class ApiJobController extends AbstractController
             return $this->render(['success' => false, 'message' => 'Job not found'], StatusCode::HTTP_NOT_FOUND);
         }
 
+        $manager = $this->job->getManager();
         $config = [
             'classes' => ['role::base', 'profile::docker'],
             'profile::docker::manager' => true,
             'profile::docker::manager_init' => true,
-            'profile::docker::manager_ip' => $this->job->getInitManagerIp(),
-            'profile::docker::token' => $this->job->getClusterToken(),
+            'profile::docker::manager_ip' => $manager ? $manager->getIp() : $this->job->getInitManagerIp(),
+            'profile::docker::token' => $manager ? $manager->getWorkerToken() : $this->job->getClusterToken(),
         ];
 
         return $this

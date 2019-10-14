@@ -330,7 +330,7 @@ class User extends AbstractModel implements \JsonSerializable
      *
      * @return User
      */
-    public function setStatus(int $status): User
+    public function setStatus($status): User
     {
         $this->status = $status;
 

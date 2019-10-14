@@ -8,8 +8,10 @@ use Helio\Panel\Job\JobStatus;
 use Helio\Panel\Job\JobType;
 use Helio\Panel\Model\Execution;
 use Helio\Panel\Model\Job;
+use Helio\Panel\Model\Manager;
 use Helio\Panel\Model\Preferences\UserPreferences;
 use Helio\Panel\Model\User;
+use Helio\Panel\Orchestrator\ManagerStatus;
 use Helio\Panel\Utility\JwtUtility;
 use Helio\Test\Infrastructure\Orchestrator\OrchestratorFactory;
 use Helio\Test\TestCase;
@@ -116,6 +118,9 @@ class ApiJobTest extends TestCase
         $body = json_decode((string) $response->getBody(), true);
         // notification is not interesting for the below equals check
         unset($body['notification']);
+        $body['limits'] = array_filter($body['limits'], function ($key) {
+            return in_array($key, ['running_jobs', 'running_executions']);
+        }, ARRAY_FILTER_USE_KEY);
 
         $this->assertEquals([
             'success' => false,
@@ -153,6 +158,9 @@ class ApiJobTest extends TestCase
         $body = json_decode((string) $response->getBody(), true);
         // notification is not interesting for the below equals check
         unset($body['notification']);
+        $body['limits'] = array_filter($body['limits'], function ($key) {
+            return in_array($key, ['running_jobs', 'running_executions']);
+        }, ARRAY_FILTER_USE_KEY);
 
         $this->assertEquals([
             'success' => false,
@@ -197,8 +205,13 @@ class ApiJobTest extends TestCase
         $this->assertEquals(StatusCode::HTTP_FORBIDDEN, $response->getStatusCode(), (string) $response->getBody());
     }
 
+    /**
+     * @return User
+     * @throws Exception
+     */
     private function createUser(): User
     {
+        /** @var User $user */
         $user = (new User())
             ->setAdmin(1)
             ->setName('testuser')
@@ -210,17 +223,28 @@ class ApiJobTest extends TestCase
         return $user;
     }
 
+    /**
+     * @param  User   $user
+     * @param  string $name
+     * @return Job
+     *
+     * @throws Exception
+     */
     private function createJob(User $user, $name = __CLASS__): Job
     {
+        /** @var Job $job */
         $job = (new Job())
             ->setType(JobType::BUSYBOX)
             ->setStatus(JobStatus::READY)
             ->setOwner($user)
             ->setName($name)
-            ->setManagerToken('managertoken')
-            ->setClusterToken('ClusterToken')
-            ->setInitManagerIp('1.2.3.55')
-            ->setManagerNodes(['manager1.manager.example.com'])
+            ->setManager((new Manager())
+                ->setStatus(ManagerStatus::READY)
+                ->setManagerToken('managertoken')
+                ->setWorkerToken('ClusterToken')
+                ->setIdByChoria('nodeId')
+                ->setIp('1.2.3.55')
+                ->setFqdn('manager1.manager.example.com'))
             ->setCreated();
         $this->infrastructure->getEntityManager()->persist($job);
         $this->infrastructure->getEntityManager()->flush($job);
@@ -228,11 +252,18 @@ class ApiJobTest extends TestCase
         return $job;
     }
 
-    private function createExecution(Job $execution, $name = __CLASS__): Execution
+    /**
+     * @param  Job       $job
+     * @param  string    $name
+     * @return Execution
+     * @throws Exception
+     */
+    private function createExecution(Job $job, $name = __CLASS__): Execution
     {
+        /** @var Execution $execution */
         $execution = (new Execution())
             ->setStatus(ExecutionStatus::RUNNING)
-            ->setJob($execution)
+            ->setJob($job)
             ->setName($name)
             ->setCreated();
         $this->infrastructure->getEntityManager()->persist($execution);

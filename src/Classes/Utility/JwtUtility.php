@@ -26,7 +26,7 @@ class JwtUtility extends AbstractUtility
     public static function generateToken(string $duration = null, User $user = null, Instance $instance = null, Job $job = null): array
     {
         $now = new DateTime('now', ServerUtility::getTimezoneObject());
-        $jti = (new Base62())->encode(random_bytes(16));
+        $jti = ServerUtility::getRandomString();
         $payload = [
             'iat' => $now->getTimestamp(),
             'jti' => $jti,
@@ -89,4 +89,5 @@ class JwtUtility extends AbstractUtility
 
         return forward_static_call_array([self::class, 'generateToken'], $params);
     }
+
 }
