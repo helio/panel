@@ -6,7 +6,6 @@ use Exception;
 use Helio\Panel\Job\JobStatus;
 use Helio\Panel\Model\Manager;
 use Helio\Panel\Utility\ArrayUtility;
-use Helio\Panel\Utility\JwtUtility;
 use RuntimeException;
 use Helio\Panel\Helper\LogHelper;
 use Helio\Panel\Model\Instance;
@@ -33,7 +32,7 @@ class Choria implements OrchestratorInterface
     /**
      * @var string
      */
-    private static $managerPrefix = 'manager';
+    private static $managerPrefix = 'manager-init';
 
     private static $createManagerCommand = 'mco playbook run infrastructure::gce::create --input \'{"node":"%s","callback":"$jobCallback","user_id":"%s","id":"$jobId"}\'';
     private static $deleteManagerCommand = 'mco playbook run infrastructure::gce::delete --input \'{"node":"%s","callback":"$jobCallback","id":"$jobId"}\'';
@@ -133,7 +132,7 @@ class Choria implements OrchestratorInterface
     }
 
     /**
-     * @param string $managerName
+     * @param  string $managerName
      * @return string expected hostname of the new manager
      *
      * @throws Exception
@@ -141,19 +140,21 @@ class Choria implements OrchestratorInterface
     public function provisionManager(string $managerName = ''): string
     {
         if (!$this->job) {
-            return false;
+            throw new \InvalidArgumentException('job is required');
         }
 
         // we're good
         if ($this->job->getManager() && $this->job->getManager()->works() && JobStatus::READY_PAUSED !== $this->job->getStatus()) {
-            return true;
+            return $this->job->getManager()->getName();
         }
 
         // TODO CB: Remove this once all active jobs switched to the normalised manager persistence model
         if (!$this->job->getManager() && count($this->job->getManagerNodes())) {
+            $fqdn = $this->job->getManagerNodes()[0];
             $this->job->setManager(
                 (new Manager())
-                    ->setFqdn($this->job->getManagerNodes()[0])
+                    ->setName(explode('.', $fqdn)[0])
+                    ->setFqdn($fqdn)
                     ->setIp($this->job->getInitManagerIp())
                     ->setIdByChoria($this->job->getManagerID())
                     ->setManagerToken($this->job->getManagerToken())
@@ -199,7 +200,7 @@ class Choria implements OrchestratorInterface
         }
 
         /* @var Manager $manager */
-        return ServerUtility::executeShellCommand($this->parseCommand(self::$deleteManagerCommand, false, [$this->job->getManager()->getHostname()]));
+        return ServerUtility::executeShellCommand($this->parseCommand(self::$deleteManagerCommand, false, [$this->job->getManager()->getName()]));
     }
 
     /**
@@ -230,8 +231,8 @@ class Choria implements OrchestratorInterface
 
     /**
      * @param string $command
-     * @param bool $waitForResult
-     * @param array $parameter
+     * @param bool   $waitForResult
+     * @param array  $parameter
      *
      * @return string
      */

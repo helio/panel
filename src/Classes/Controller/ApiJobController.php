@@ -6,6 +6,7 @@ use Exception;
 use GuzzleHttp\Exception\GuzzleException;
 use Helio\Panel\Exception\HttpException;
 use Helio\Panel\Helper\ElasticHelper;
+use Helio\Panel\Model\Job;
 use Helio\Panel\Model\Manager;
 use Helio\Panel\Orchestrator\ManagerStatus;
 use Helio\Panel\Request\Log;
@@ -192,23 +193,21 @@ class ApiJobController extends AbstractController
             if (!$this->job->getManager()) {
                 $this->job->setStatus(JobStatus::INIT_ERROR);
                 $this->persistJob();
+
                 return $this->render([
                     'success' => false,
                     'message' => 'Tried to create a job without available manager. This either means that you have no permission or that no usable manager exists at all.',
                 ], StatusCode::HTTP_NOT_ACCEPTABLE);
             }
 
-            $this->job->setStatus(JobStatus::READY);
-            if ($this->job->getOwner()->getPreferences()->getNotifications()->isEmailOnJobReady()) {
-                App::getNotificationUtility()::notifyUser($this->job->getOwner(), sprintf('Job %s (%d) ready', $this->job->getName(), $this->job->getId()), 'Your job with the id ' . $this->job->getId() . ' is now ready to be executed on Helio');
-            }
-            if (!$this->job->getOwner()->getPreferences()->getNotifications()->isMuteAdmin()) {
-                App::getNotificationUtility()::notifyAdmin('Job is now ready. By: ' . $this->job->getOwner()->getEmail() . ', type: ' . $this->job->getType() . ', id: ' . $this->job->getId() . ', expected manager: manager-init-' . ServerUtility::getShortHashOfString($this->job->getId()));
-            }
+            $this->setJobReady($this->job, $this->job->getManager()->getName());
 
             $this->persistJob();
         } else {
-            OrchestratorFactory::getOrchestratorForInstance($this->instance, $this->job)->provisionManager();
+            $managerName = OrchestratorFactory::getOrchestratorForInstance($this->instance, $this->job)->provisionManager();
+            if ($this->job->getManager()) {
+                $this->job->getManager()->setName($managerName);
+            }
         }
 
         return $this->render([
@@ -676,18 +675,15 @@ class ApiJobController extends AbstractController
 
         // provision missing redundancy nodes if necessary
         if (!array_key_exists('deleted', $body) && $this->job->getManager()->getIp()) {
-            OrchestratorFactory::getOrchestratorForInstance($this->instance, $this->job)->provisionManager();
+            $managerName = OrchestratorFactory::getOrchestratorForInstance($this->instance, $this->job)->provisionManager();
+            if ($this->job->getManager()) {
+                $this->job->getManager()->setName($managerName);
+            }
         }
 
         // finalize
         if ($this->job->getManager() || $this->job->getInitManagerIp() && $this->job->getClusterToken() && $this->job->getManagerToken() && count($this->job->getManagerNodes()) > 0) {
-            $this->job->setStatus(JobStatus::READY);
-            if ($this->job->getOwner()->getPreferences()->getNotifications()->isEmailOnJobReady()) {
-                App::getNotificationUtility()::notifyUser($this->job->getOwner(), sprintf('Job %s (%d) ready', $this->job->getName(), $this->job->getId()), 'Your job with the id ' . $this->job->getId() . ' is now ready to be executed on Helio');
-            }
-            if (!$this->job->getOwner()->getPreferences()->getNotifications()->isMuteAdmin()) {
-                App::getNotificationUtility()::notifyAdmin('Job is now ready. By: ' . $this->job->getOwner()->getEmail() . ', type: ' . $this->job->getType() . ', id: ' . $this->job->getId() . ', expected manager: manager-init-' . ServerUtility::getShortHashOfString($this->job->getId()));
-            }
+            $this->setJobReady($this->job, $this->job->getManager()->getName());
         }
 
         if (array_key_exists('deleted', $body) && !$this->job->getManager() && 0 === count($this->job->getManagerNodes())) {
@@ -780,5 +776,28 @@ class ApiJobController extends AbstractController
         }
 
         return $this->render(['message' => 'no access to job'], StatusCode::HTTP_UNAUTHORIZED);
+    }
+
+    protected function setJobReady(Job $job, string $managerName): void
+    {
+        $job->setStatus(JobStatus::READY);
+        if ($job->getOwner()->getPreferences()->getNotifications()->isEmailOnJobReady()) {
+            App::getNotificationUtility()::notifyUser(
+                $job->getOwner(),
+                sprintf('Job %s (%d) ready', $job->getName(), $job->getId()),
+                sprintf('Your job with the id %s is now ready to be executed on Helio', $job->getId())
+            );
+        }
+        if (!$job->getOwner()->getPreferences()->getNotifications()->isMuteAdmin()) {
+            App::getNotificationUtility()::notifyAdmin(
+                sprintf(
+                    'Job is now ready. By: %s, type: %s, id: %s, expected manager: %s',
+                    $job->getOwner()->getEmail(),
+                    $job->getType(),
+                    $job->getId(),
+                    $managerName
+                )
+            );
+        }
     }
 }

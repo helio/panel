@@ -170,7 +170,10 @@ class ApiJobExecuteController extends AbstractController
             }
 
             if (JobStatus::READY_PAUSED === $this->job->getStatus()) {
-                OrchestratorFactory::getOrchestratorForInstance($this->instance, $this->job)->provisionManager();
+                $managerName = OrchestratorFactory::getOrchestratorForInstance($this->instance, $this->job)->provisionManager();
+                if ($this->job->getManager()) {
+                    $this->job->getManager()->setName($managerName);
+                }
                 $this->persistJob();
             }
 

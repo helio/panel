@@ -65,7 +65,7 @@ class CliMaintenanceRedeployHangingJobsTest extends TestCase
         $result = $this->runCliApp(MaintenanceRedeployHangingJobs::class);
         $this->assertEquals(0, $result->getStatusCode());
         $this->assertStringContainsString('infrastructure::gce::create', ServerUtility::getLastExecutedShellCommand());
-        $this->assertStringContainsString('manager-', ServerUtility::getLastExecutedShellCommand());
+        $this->assertStringContainsString('manager-init-', ServerUtility::getLastExecutedShellCommand());
 
         /** @var Job $jobInInitStateFromDb */
         $jobInInitStateFromDb = $this->infrastructure->getRepository(Job::class)->find($this->jobInInitState->getId());

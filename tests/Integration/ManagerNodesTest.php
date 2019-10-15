@@ -146,7 +146,7 @@ class ManagerNodesTest extends TestCase
         /** @var Job $job */
         $job = $this->jobRepository->find($jobId);
         $this->assertNull($job->getManager());
-        $this->assertStringContainsString('manager-', ServerUtility::getLastExecutedShellCommand());
+        $this->assertStringContainsString('manager-init-', ServerUtility::getLastExecutedShellCommand());
         $this->assertStringContainsString('user_id', ServerUtility::getLastExecutedShellCommand());
         $this->assertStringContainsString($this->user->getId(), ServerUtility::getLastExecutedShellCommand());
 
@@ -187,7 +187,7 @@ class ManagerNodesTest extends TestCase
         $this->assertStringContainsString('helio::task::update', ServerUtility::getLastExecutedShellCommand(1));
         $this->assertStringContainsString('task_ids', ServerUtility::getLastExecutedShellCommand(1));
         $this->assertStringContainsString('[' . $executions[0]->getId() . ']', ServerUtility::getLastExecutedShellCommand(1));
-        $this->assertStringContainsString('manager-', ServerUtility::getLastExecutedShellCommand(1));
+        $this->assertStringContainsString('manager-redundancy', ServerUtility::getLastExecutedShellCommand(1));
         $this->assertStringContainsString('.example.com', ServerUtility::getLastExecutedShellCommand(1));
     }
 

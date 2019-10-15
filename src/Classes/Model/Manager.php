@@ -145,11 +145,6 @@ class Manager extends AbstractModel
         return $this->fqdn;
     }
 
-    public function getHostname(): string
-    {
-        return explode('.', $this->getFqdn())[0];
-    }
-
     /**
      * @param  string  $fqdn
      * @return Manager
@@ -157,6 +152,7 @@ class Manager extends AbstractModel
     public function setFqdn(string $fqdn): Manager
     {
         $this->fqdn = $fqdn;
+        $this->setName(explode('.', $this->getFqdn())[0]);
 
         return $this;
     }

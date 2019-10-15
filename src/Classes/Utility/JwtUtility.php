@@ -9,7 +9,6 @@ use Helio\Panel\App;
 use Helio\Panel\Model\Instance;
 use Helio\Panel\Model\Job;
 use Helio\Panel\Model\User;
-use Tuupola\Base62;
 
 class JwtUtility extends AbstractUtility
 {
@@ -89,5 +88,4 @@ class JwtUtility extends AbstractUtility
 
         return forward_static_call_array([self::class, 'generateToken'], $params);
     }
-
 }

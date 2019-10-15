@@ -259,6 +259,6 @@ class AutoscalerTest extends TestCase
         $job = $this->jobRepository->findOneByName('testing 1551430480');
 
         $this->assertStringContainsString('ssh', ServerUtility::getLastExecutedShellCommand());
-        $this->assertStringContainsString('manager-', ServerUtility::getLastExecutedShellCommand());
+        $this->assertStringContainsString('manager-init-', ServerUtility::getLastExecutedShellCommand());
     }
 }
