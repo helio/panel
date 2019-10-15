@@ -268,18 +268,18 @@ class Instance extends AbstractModel
         return $this;
     }
 
-    /**
-     * @param int $status
-     *
-     * @return Instance $this
-     */
-    public function setStatus($status): Instance
+    public function setStatus(int $status): Instance
     {
         if (InstanceStatus::isValidStatus($status)) {
             $this->status = $status;
         }
 
         return $this;
+    }
+
+    public function getStatus(): int
+    {
+        return $this->status;
     }
 
     /**

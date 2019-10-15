@@ -48,9 +48,9 @@ class Job extends AbstractModel
     protected $config = '';
 
     /**
-     * @var string
+     * @var int
      *
-     * @Column
+     * @Column(type="integer")
      */
     protected $status = JobStatus::UNKNOWN;
 
@@ -333,18 +333,18 @@ class Job extends AbstractModel
         return $this;
     }
 
-    /**
-     * @param int $status
-     *
-     * @return Job
-     */
-    public function setStatus($status): Job
+    public function setStatus(int $status): Job
     {
         if (JobStatus::isValidStatus($status)) {
             $this->status = $status;
         }
 
         return $this;
+    }
+
+    public function getStatus(): int
+    {
+        return $this->status;
     }
 
     /**

@@ -115,12 +115,7 @@ class Manager extends AbstractModel
         return $this;
     }
 
-    /**
-     * @param string $status
-     *
-     * @return $this|AbstractModel
-     */
-    public function setStatus($status)
+    public function setStatus(string $status): self
     {
         if (ManagerStatus::isValidStatus($status)) {
             $this->status = $status;

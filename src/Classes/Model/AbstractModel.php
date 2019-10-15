@@ -69,13 +69,6 @@ abstract class AbstractModel
     protected $hidden = false;
 
     /**
-     * @var int
-     *
-     * @Column(type="integer")
-     */
-    protected $status = 0;
-
-    /**
      * @var string
      *
      * @Column(type="text")
@@ -226,14 +219,6 @@ abstract class AbstractModel
     }
 
     /**
-     * @return mixed
-     */
-    public function getStatus()
-    {
-        return $this->status;
-    }
-
-    /**
      * @return string
      */
     public function getTimezone(): string
@@ -304,13 +289,4 @@ abstract class AbstractModel
 
         return $this;
     }
-
-    /**
-     * @param int $status
-     *
-     * @return $this
-     */
-
-    /** @noinspection ReturnTypeCanBeDeclaredInspection */
-    abstract public function setStatus($status);
 }

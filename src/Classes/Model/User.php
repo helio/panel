@@ -25,6 +25,13 @@ use Helio\Panel\Utility\ServerUtility;
 class User extends AbstractModel implements \JsonSerializable
 {
     /**
+     * @var int
+     *
+     * @Column(type="integer")
+     */
+    protected $status = 0;
+
+    /**
      * @var string
      *
      * @Column
@@ -325,16 +332,16 @@ class User extends AbstractModel implements \JsonSerializable
         return $this;
     }
 
-    /**
-     * @param int $status
-     *
-     * @return User
-     */
-    public function setStatus($status): User
+    public function setStatus(int $status): User
     {
         $this->status = $status;
 
         return $this;
+    }
+
+    public function getStatus(): int
+    {
+        return $this->status;
     }
 
     /**

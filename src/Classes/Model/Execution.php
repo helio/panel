@@ -147,18 +147,18 @@ class Execution extends AbstractModel
         return $this;
     }
 
-    /**
-     * @param int $status
-     *
-     * @return $this|AbstractModel
-     */
-    public function setStatus($status)
+    public function setStatus(int $status): self
     {
         if (ExecutionStatus::isValidStatus($status)) {
             $this->status = $status;
         }
 
         return $this;
+    }
+
+    public function getStatus(): int
+    {
+        return $this->status;
     }
 
     /**
