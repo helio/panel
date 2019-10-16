@@ -643,6 +643,8 @@ class ApiJobController extends AbstractController
                     throw new HttpException(StatusCode::HTTP_NOT_ACCEPTABLE, 'Error Callback received for Job with undetermined status');
                     break;
             }
+            $this->persistJob();
+            return $this->render(['success' => true, 'message' => 'Error recorded. Thanks.']);
         }
 
         // remember manager nodes.
