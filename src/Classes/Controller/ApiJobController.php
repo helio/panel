@@ -646,12 +646,13 @@ class ApiJobController extends AbstractController
         }
 
         // remember manager nodes.
+        // TODO CB: Fix this. $body['nodes'] should actually be a full array with all the tokens etc. for every managernode
         if (array_key_exists('nodes', $body)) {
             $nodes = is_array($body['nodes']) ? $body['nodes'] : [$body['nodes']];
             foreach ($nodes as $node) {
+                $manager = App::getDbHelper()->getRepository(Manager::class)->findOneBy(['fqdn' => $node]);
                 if (array_key_exists('deleted', $body)) {
                     /** @var Manager $manager */
-                    $manager = App::getDbHelper()->getRepository(Manager::class)->findOneBy(['fqdn' => $node]);
                     if ($manager) {
                         $this->job->setManager();
                         $manager->setStatus(ManagerStatus::REMOVED);
@@ -659,11 +660,13 @@ class ApiJobController extends AbstractController
                         $this->job->removeManagerNode($node);
                     }
                 } else {
-                    $manager = (new Manager())
-                        ->setFqdn($node)
+                    if (!$manager) {
+                        $manager = new Manager();
+                    }
+                    $manager->setFqdn($node)
                         ->setIdByChoria($body['manager_id'] ?? '')
                         ->setStatus(ManagerStatus::READY)
-                        ->setWorkerToken($body['swarm_token_worker'])
+                        ->setWorkerToken($body['swarm_token_worker'] ?? '')
                         ->setManagerToken($body['swarm_token_manager'] ?? '')
                         ->setIp($body['manager_ip'] ?? '');
                     $this->job->setManager($manager);
