@@ -31,9 +31,9 @@ class Manager extends AbstractModel
     protected $status = ManagerStatus::UNKNOWN;
 
     /**
-     * @var array<Job>
+     * @var Job[]
      *
-     * @OneToMany(targetEntity="Job", mappedBy="managers")
+     * @OneToMany(targetEntity="Job", mappedBy="manager")
      */
     protected $jobs;
 
