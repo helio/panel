@@ -644,6 +644,7 @@ class ApiJobController extends AbstractController
                     break;
             }
             $this->persistJob();
+
             return $this->render(['success' => true, 'message' => 'Error recorded. Thanks.']);
         }
 

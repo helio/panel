@@ -190,6 +190,10 @@ class Choria implements OrchestratorInterface
             return false;
         }
 
+        if (!$this->job->getManager()) {
+            return false;
+        }
+
         /** @var Job $job */
         foreach ($this->job->getManager()->getJobs() as $job) {
             if ($job === $this->job || $job->getId() === $this->job->getId()) {
