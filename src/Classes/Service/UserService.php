@@ -17,6 +17,8 @@ use RuntimeException;
 
 class UserService
 {
+    const BLENDER_MANAGER_NODE = 'manager-init-2rrahd.europe-west6-a.c.clusters-242906.internal';
+
     /**
      * @var EntityRepository
      */
@@ -86,6 +88,7 @@ class UserService
             $prefs = $user->getPreferences();
             $limits = $prefs->getLimits();
             $limits->setJobTypes([JobType::BLENDER]);
+            $limits->setManagerNodes([self::BLENDER_MANAGER_NODE]);
             $prefs->setLimits($limits);
             $user->setPreferences($prefs);
         }
