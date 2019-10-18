@@ -653,46 +653,24 @@ class ApiJobController extends AbstractController
         if (array_key_exists('nodes', $body)) {
             $nodes = is_array($body['nodes']) ? $body['nodes'] : [$body['nodes']];
             foreach ($nodes as $node) {
-                $manager = App::getDbHelper()->getRepository(Manager::class)->findOneBy(['fqdn' => $node]);
                 if (array_key_exists('deleted', $body)) {
-                    /** @var Manager $manager */
-                    if ($manager) {
-                        $this->job->setManager();
-                        $manager->setStatus(ManagerStatus::REMOVED);
-                    } else {
-                        $this->job->removeManagerNode($node);
-                    }
+                    $this->handleDeleteManagerNode($node);
                 } else {
-                    if (!$manager) {
-                        $manager = new Manager();
-                    }
-                    $manager->setFqdn($node)
-                        ->setIdByChoria($body['manager_id'] ?? '')
-                        ->setStatus(ManagerStatus::READY)
-                        ->setWorkerToken($body['swarm_token_worker'] ?? '')
-                        ->setManagerToken($body['swarm_token_manager'] ?? '')
-                        ->setIp($body['manager_ip'] ?? '');
-                    $this->job->setManager($manager);
+                    $this->handleAddManagerNode($node, $body);
                 }
             }
         }
 
-        $this->persistJob();
-
-        // provision missing redundancy nodes if necessary
-        if (!array_key_exists('deleted', $body) && $this->job->getManager()->getIp()) {
-            $managerName = OrchestratorFactory::getOrchestratorForInstance($this->instance, $this->job)->provisionManager();
-            if ($this->job->getManager()) {
-                $this->job->getManager()->setName($managerName);
-            }
-        }
-
         // finalize
-        if ($this->job->getManager() || $this->job->getInitManagerIp() && $this->job->getClusterToken() && $this->job->getManagerToken() && count($this->job->getManagerNodes()) > 0) {
+        $hasDeprecatedWorkingManager = $this->job->getInitManagerIp() &&
+            $this->job->getClusterToken() &&
+            $this->job->getManagerToken() &&
+            count($this->job->getManagerNodes()) > 0;
+        if ($this->job->getManager() && $this->job->getManager()->works() || $hasDeprecatedWorkingManager) {
             $this->setJobReady($this->job, $this->job->getManager()->getName());
         }
 
-        if (array_key_exists('deleted', $body) && !$this->job->getManager() && 0 === count($this->job->getManagerNodes())) {
+        if (array_key_exists('deleted', $body) && (!$this->job->getManager() || !$this->job->getManager()->works()) && !$this->job->shouldBeMigratedToManager()) {
             if (JobStatus::DELETING === $this->job->getStatus()) {
                 $this->job->setStatus(JobStatus::DELETED);
             } elseif (JobStatus::READY_PAUSING === $this->job->getStatus()) {
@@ -805,5 +783,51 @@ class ApiJobController extends AbstractController
                 )
             );
         }
+    }
+
+    protected function handleDeleteManagerNode(string $node): void
+    {
+        if ($this->job->shouldBeMigratedToManager()) {
+            $this->job->removeManagerNode($node);
+
+            return;
+        }
+
+        /** @var Manager|null $manager */
+        $manager = App::getDbHelper()->getRepository(Manager::class)->findOneBy(['name' => $node]);
+
+        if ($manager) {
+            $manager->setStatus(ManagerStatus::REMOVED);
+            $this->persistManager($manager);
+
+            return;
+        }
+
+        LogHelper::err('No manager found', ['jobID' => $this->job->getId(), 'node' => $node]);
+    }
+
+    protected function handleAddManagerNode(string $node, array $data): void
+    {
+        /** @var Manager|null $manager */
+        $manager = App::getDbHelper()->getRepository(Manager::class)->findOneBy(['fqdn' => $node]);
+
+        if (!$manager) {
+            $manager = new Manager();
+        }
+        $manager->setFqdn($node)
+            ->setIdByChoria($data['manager_id'] ?? '')
+            ->setStatus(ManagerStatus::READY)
+            ->setWorkerToken($data['swarm_token_worker'] ?? '')
+            ->setManagerToken($data['swarm_token_manager'] ?? '')
+            ->setIp($data['manager_ip'] ?? '');
+
+        $this->job->setManager($manager);
+        $this->persistManager($manager);
+    }
+
+    protected function persistManager(Manager $manager): void
+    {
+        App::getDbHelper()->persist($manager);
+        App::getDbHelper()->flush($manager);
     }
 }

@@ -659,6 +659,16 @@ class Job extends AbstractModel
     }
 
     /**
+     * Indicates whether this job is still using the "old" way of handling managers.
+     *
+     * @return bool
+     */
+    public function shouldBeMigratedToManager(): bool
+    {
+        return count($this->getManagerNodes()) > 0;
+    }
+
+    /**
      * @return array
      * @deprecated
      */

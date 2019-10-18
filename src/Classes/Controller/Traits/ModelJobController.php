@@ -5,7 +5,9 @@ namespace Helio\Panel\Controller\Traits;
 use Ergy\Slim\Annotations\RouteInfo;
 use Exception;
 use Helio\Panel\App;
+use Helio\Panel\Exception\HttpException;
 use Helio\Panel\Model\Job;
+use Slim\Http\StatusCode;
 
 /**
  * Trait JobController.
@@ -43,6 +45,9 @@ trait ModelJobController
         $jobId = filter_var($this->params['jobid'] ?? ('jobid' === $this->getIdAlias() ? (array_key_exists('id', $this->params) ? $this->params['id'] : 0) : 0), FILTER_SANITIZE_NUMBER_INT);
         if ($jobId > 0) {
             $this->job = App::getDbHelper()->getRepository(Job::class)->find($jobId);
+            if (!$this->job) {
+                throw new HttpException(StatusCode::HTTP_NOT_FOUND, 'Job not found');
+            }
 
             return true;
         }

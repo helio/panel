@@ -175,17 +175,17 @@ class ApiJobTest extends TestCase
     /**
      * @throws Exception
      */
-    public function testDeletRequestSetsJobToDeletingStatus()
+    public function testDeleteRequestSetsJobToDeletingStatus()
     {
         $user = $this->createUser();
-        $job = $this->createJob($user, 'testDeletRequestSetsJobToDeletingStatus');
+        $job = $this->createJob($user, 'testDeleteRequestSetsJobToDeletingStatus');
         $tokenHeader = ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $user, null, $job)['token']];
 
         $response = $this->runWebApp('DELETE', '/api/job', true, $tokenHeader, ['id' => $job->getId()]);
         $this->assertEquals(StatusCode::HTTP_OK, $response->getStatusCode());
-        /** @var Job $jobFromDatabse */
-        $jobFromDatabse = $this->infrastructure->getRepository(Job::class)->find($job->getId());
-        $this->assertEquals(JobStatus::DELETING, $jobFromDatabse->getStatus());
+        /** @var Job $jobFromDatabase */
+        $jobFromDatabase = $this->infrastructure->getRepository(Job::class)->find($job->getId());
+        $this->assertEquals(JobStatus::DELETING, $jobFromDatabase->getStatus());
     }
 
     /**
@@ -194,7 +194,7 @@ class ApiJobTest extends TestCase
     public function testCannotExecuteDeletingJob()
     {
         $user = $this->createUser();
-        $job = $this->createJob($user, 'testDeletRequestSetsJobToDeletingStatus');
+        $job = $this->createJob($user, 'testCannotExecuteDeletingJob');
         $tokenHeader = ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $user, null, $job)['token']];
 
         $response = $this->runWebApp('DELETE', '/api/job', true, $tokenHeader, ['id' => $job->getId()]);
@@ -203,6 +203,40 @@ class ApiJobTest extends TestCase
         $name = sprintf('%s-deletion', __METHOD__);
         $response = $this->runWebApp('POST', sprintf('/api/job/%s/execute', $job->getId()), true, $tokenHeader, ['name' => $name]);
         $this->assertEquals(StatusCode::HTTP_FORBIDDEN, $response->getStatusCode(), (string) $response->getBody());
+    }
+
+    public function testCallbackDeleteNodeSetsJobToDeletedStatus()
+    {
+        $user = $this->createUser();
+        $manager = $this->createManager('testCallbackDeleteNodeSetsJobToDeletedStatus');
+        $job = $this->createJob($user, 'testCallbackDeleteNodeSetsJobToDeletedStatus');
+        $job->setManager($manager);
+        $tokenHeader = ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $user, null, $job)['token']];
+
+        $response = $this->runWebApp('DELETE', '/api/job', true, $tokenHeader, ['id' => $job->getId()]);
+        $this->assertEquals(StatusCode::HTTP_OK, $response->getStatusCode());
+
+        /** @var Job $jobFromDatabase */
+        $jobFromDatabase = $this->infrastructure->getRepository(Job::class)->find($job->getId());
+        $this->assertEquals(JobStatus::DELETING, $jobFromDatabase->getStatus());
+
+        /** @var Manager $managerFromDB */
+        $managerFromDB = $this->infrastructure->getRepository(Manager::class)->find($manager->getId());
+        $this->assertEquals(ManagerStatus::READY, $managerFromDB->getStatus());
+
+        $response = $this->runWebApp('POST', sprintf('/api/job/callback?id=%s', $job->getId()), true, $tokenHeader, [
+            'nodes' => $manager->getName(),
+            'deleted' => 1,
+        ]);
+        $this->assertEquals(StatusCode::HTTP_OK, $response->getStatusCode());
+
+        /** @var Job $jobFromDatabase */
+        $jobFromDatabase = $this->infrastructure->getRepository(Job::class)->find($job->getId());
+        $this->assertEquals(JobStatus::DELETED, $jobFromDatabase->getStatus());
+
+        /** @var Manager $managerFromDB */
+        $managerFromDB = $this->infrastructure->getRepository(Manager::class)->find($manager->getId());
+        $this->assertEquals(ManagerStatus::REMOVED, $managerFromDB->getStatus());
     }
 
     /**
@@ -250,6 +284,22 @@ class ApiJobTest extends TestCase
         $this->infrastructure->getEntityManager()->flush($job);
 
         return $job;
+    }
+
+    private function createManager($name = __CLASS__): Manager
+    {
+        $manager = (new Manager())
+            ->setName($name)
+            ->setStatus(ManagerStatus::READY)
+            ->setFqdn($name . '.example')
+            ->setManagerToken('sometoken')
+            ->setWorkerToken('someworkertoken')
+            ->setIp('127.0.0.1')
+            ->setCreated();
+        $this->infrastructure->getEntityManager()->persist($manager);
+        $this->infrastructure->getEntityManager()->flush($manager);
+
+        return $manager;
     }
 
     /**

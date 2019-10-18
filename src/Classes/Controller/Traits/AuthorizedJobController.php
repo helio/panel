@@ -19,6 +19,7 @@ trait AuthorizedJobController
             ($this->user->isAdmin() || $this->user->getId() === $this->job->getOwner()->getId())) {
             return;
         }
+
         throw new HttpException(StatusCode::HTTP_FORBIDDEN, 'Insufficient permissions');
     }
 }
