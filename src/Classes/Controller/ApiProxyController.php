@@ -154,7 +154,7 @@ class ApiProxyController extends AbstractController
             'Request-Id' => $this->container->get('requestId'),
         ];
         foreach (['Content-Type', 'Content-Length', 'Content-Range', 'X-Upload-Content-Type', 'X-Upload-Content-Length'] as $headerName) {
-            if ($request->hasHeader($headerName)) {
+            if ($request->hasHeader($headerName) && strlen($request->getHeader($headerName)[0])) {
                 $headers[$headerName] = $request->getHeader($headerName);
             }
         }
