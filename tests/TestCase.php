@@ -77,6 +77,7 @@ class TestCase extends \PHPUnit\Framework\TestCase
         $_SERVER['REMOTE_ADDR'] = '127.0.0.1';
         $_SERVER['SITE_ENV'] = 'TEST';
         $_SERVER['ELASTIC_HOST'] = 'elastic.neverland.global';
+        $_SERVER['KOALA_FARM_ORIGIN'] = 'https://localhost:3000';
 
         // re-init Zapier helper to make sure no Responses are left in the stack etc.
         ZapierHelper::reset();
