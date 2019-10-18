@@ -117,7 +117,6 @@ class ApiJobController extends AbstractController
      * @Route("", methods={"POST"}, name="job.add")
      *
      * @throws Exception
-     * @throws GuzzleException
      */
     public function addJobAction(): ResponseInterface
     {

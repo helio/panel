@@ -42,6 +42,7 @@ EOM;
     {
         $content = vsprintf(static::$confirmationMailContent, [
             $user->getName(),
+            // FIXME(mw): allow to use a different base URL (koala.farm case)
             ServerUtility::getBaseUrl() . 'confirm?signature=' .
             JwtUtility::generateToken($linkLifetime, $user)['token'],
         ]);

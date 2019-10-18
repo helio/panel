@@ -120,13 +120,13 @@ class MiddlewareForHttpUtility extends AbstractUtility
         $app->add(new CorsMiddleware([
             'logger' => LogHelper::getInstance('cors'),
             'origin' => ['*'],
-            'headers.allow' => ['Authorization', 'If-Match', 'If-Unmodified-Since', 'Content-Type'],
+            'headers.allow' => ['Authorization', 'If-Match', 'If-Unmodified-Since', 'Content-Type', 'X-Upload-Content-Type', 'X-Upload-Content-Length', 'Content-Range'],
             'headers.expose' => ['Authorization', 'Etag'],
             'credentials' => true,
             'cache' => 60,
             'error' => function (Request $request, Response $response) {
                 if ('application/json' === mb_strtolower($request->getContentType())) {
-                    return $response->withJson(['status' => 'cors  error'], StatusCode::HTTP_UNAUTHORIZED);
+                    return $response->withJson(['status' => 'cors error'], StatusCode::HTTP_UNAUTHORIZED);
                 }
 
                 return $response->write('<html lang="en"><head><title>Error</title></head><body><p><strong>Status:</strong>cors  error</p></body>')->withStatus(StatusCode::HTTP_UNAUTHORIZED);
@@ -142,6 +142,8 @@ class MiddlewareForHttpUtility extends AbstractUtility
             if (!$requestId) {
                 $requestId = Uuid::uuid4()->toString();
             }
+            App::getApp()->getContainer()['requestId'] = $requestId;
+
             LogHelper::pushProcessorToAllInstances(function (array $record) use ($requestId): array {
                 $record['extra']['requestId'] = $requestId;
 

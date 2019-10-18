@@ -5,6 +5,7 @@
 namespace Helio\Panel\Model;
 
 use Doctrine\Common\Collections\Criteria;
+use Doctrine\ORM\Mapping as ORM;
 use Exception;
 use DateTime;
 use DateTimeZone;
@@ -86,6 +87,13 @@ class User extends AbstractModel implements \JsonSerializable
      * @OneToMany(targetEntity="Job", mappedBy="owner", cascade={"persist"})
      */
     protected $jobs = [];
+
+    /**
+     * @var string
+     *
+     * @Column
+     */
+    protected $origin = '';
 
     /**
      * User constructor.
@@ -175,6 +183,18 @@ class User extends AbstractModel implements \JsonSerializable
     public function setAdmin(bool $admin): User
     {
         $this->admin = $admin;
+
+        return $this;
+    }
+
+    public function getOrigin(): string
+    {
+        return $this->origin;
+    }
+
+    public function setOrigin(string $origin): self
+    {
+        $this->origin = $origin;
 
         return $this;
     }

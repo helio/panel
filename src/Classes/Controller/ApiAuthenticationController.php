@@ -52,7 +52,8 @@ class ApiAuthenticationController extends AbstractController
             return $this->render(['success' => false, 'error' => $e->getMessage()], StatusCode::HTTP_BAD_REQUEST);
         }
 
-        ['user' => $user, 'token' => $token] = $this->userService->login($email);
+        $origin = $this->request->hasHeader('Origin') ? $this->request->getHeader('Origin')[0] : '';
+        ['user' => $user, 'token' => $token] = $this->userService->login($email, $origin);
 
         return $this->render(['token' => $token]);
     }

@@ -9,7 +9,9 @@ use Doctrine\ORM\ORMException;
 use GuzzleHttp\Exception\GuzzleException;
 use Helio\Panel\App;
 use Helio\Panel\Helper\ZapierHelper;
+use Helio\Panel\Job\JobType;
 use Helio\Panel\Model\User;
+use Helio\Panel\Utility\ServerUtility;
 use Monolog\Logger;
 use RuntimeException;
 
@@ -64,6 +66,7 @@ class UserService
      * Saving the demo user fails with a \InvalidArgumentException.
      *
      * @param string $email
+     * @param string $origin
      * @param bool   $persistAndFlush
      *
      * @return User
@@ -72,11 +75,20 @@ class UserService
      * @throws ORMException
      * @throws OptimisticLockException
      */
-    public function create(string $email, bool $persistAndFlush = true): User
+    public function create(string $email, string $origin, bool $persistAndFlush = true): User
     {
         $user = new User();
         $user->setEmail($email);
+        $user->setOrigin($origin);
         $user->setCreated();
+
+        if ($origin === ServerUtility::get('KOALA_FARM_ORIGIN')) {
+            $prefs = $user->getPreferences();
+            $limits = $prefs->getLimits();
+            $limits->setJobTypes([JobType::BLENDER]);
+            $prefs->setLimits($limits);
+            $user->setPreferences($prefs);
+        }
 
         // TODO: ugly, but depends how it's used. Should find a better way.
         if ($persistAndFlush) {
@@ -92,11 +104,11 @@ class UserService
         return $user;
     }
 
-    public function login(string $email): array
+    public function login(string $email, string $origin): array
     {
         $user = $this->findUserByEmail($email);
         if (!$user) {
-            $user = $this->create($email);
+            $user = $this->create($email, $origin);
         }
 
         if (!App::getNotificationUtility()::sendConfirmationMail($user)) {

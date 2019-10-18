@@ -12,7 +12,7 @@ use RuntimeException;
  *     title="Job Type",
  *     type="string",
  *     description="The type of the job",
- *     enum = {"docker", "ep85", "busybox", "gitlab"}
+ *     enum = {"docker", "ep85", "busybox", "gitlab", "blender"}
  * )
  */
 final class JobType
@@ -22,6 +22,7 @@ final class JobType
     public const DOCKER = 'docker';
     public const BUSYBOX = 'busybox';
     public const INFINITEBOX = 'infinitebox';
+    public const BLENDER = 'blender';
     public const UNKNOWN = '';
 
     /**
@@ -31,7 +32,7 @@ final class JobType
 
     public function __construct()
     {
-        throw new RuntimeException('Cannot instanciate ' . __CLASS__);
+        throw new RuntimeException('Cannot instantiate ' . __CLASS__);
     }
 
     public static function isValidType(string $type): bool
@@ -46,6 +47,7 @@ final class JobType
             self::DOCKER,
             self::BUSYBOX,
             self::INFINITEBOX,
+            self::BLENDER,
         ];
     }
 
@@ -62,6 +64,7 @@ final class JobType
                 self::DOCKER => 'fa fa-bolt',
                 self::BUSYBOX => 'fa fa-clock-o',
                 self::INFINITEBOX => 'fa fa-clock-o',
+                self::BLENDER => 'fa fa-blender',
             ];
 
             return $map[$type] ?? "fa fa-$type";

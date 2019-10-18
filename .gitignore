@@ -10,7 +10,7 @@
 # project files
 /www/pf
 
-/cnf/google-auth.json
+/cnf/google-auth*.json
 /.panel.env
 
 /.php_cs.cache

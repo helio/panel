@@ -103,7 +103,8 @@ class DefaultController extends AbstractController
         // normal user process
         $this->requiredParameterCheck(['email' => FILTER_SANITIZE_EMAIL]);
 
-        ['user' => $user, 'token' => $token] = $this->userService->login($this->params['email']);
+        $origin = $this->request->hasHeader('Origin') ? $this->request->getHeader('Origin')[0] : '';
+        ['user' => $user, 'token' => $token] = $this->userService->login($this->params['email'], $origin);
         if ($token) {
             return $this->response->withRedirect(ServerUtility::getBaseUrl() . 'confirm?signature=' . JwtUtility::generateToken('+5 minutes', $user)['token']);
         }
@@ -159,7 +160,8 @@ class DefaultController extends AbstractController
                 return $this->json(['success' => true, 'reason' => 'User already confirmed'], StatusCode::HTTP_REQUESTED_RANGE_NOT_SATISFIABLE);
             }
 
-            $user = $this->userService->create($this->params['email'], false);
+            $origin = $this->request->hasHeader('Origin') ? $this->request->getHeader('Origin')[0] : '';
+            $user = $this->userService->create($this->params['email'], $origin, false);
 
             $server->setOwner($user);
             App::getDbHelper()->persist($user);
