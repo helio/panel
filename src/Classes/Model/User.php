@@ -5,7 +5,6 @@
 namespace Helio\Panel\Model;
 
 use Doctrine\Common\Collections\Criteria;
-use Doctrine\ORM\Mapping as ORM;
 use Exception;
 use DateTime;
 use DateTimeZone;

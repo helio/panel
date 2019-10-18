@@ -168,8 +168,8 @@ class ApiProxyController extends AbstractController
             [
                 'headers' => $headers,
                 'body' => $request->getBody(),
-                'query' => array_filter($query, function($k) {
-                    return $k != 'token';
+                'query' => array_filter($query, function ($k) {
+                    return 'token' != $k;
                 }, ARRAY_FILTER_USE_KEY),
             ]
         );
@@ -195,6 +195,7 @@ class ApiProxyController extends AbstractController
             'base_uri' => $baseUri,
             'timeout' => 120,
             'http_errors' => false,
+            'proxy' => ServerUtility::getProxySettings(),
         ]);
     }
 

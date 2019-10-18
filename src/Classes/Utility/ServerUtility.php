@@ -114,6 +114,14 @@ class ServerUtility extends AbstractUtility
         throw new RuntimeException('please set the ENV Variable ' . $name, 1530357047);
     }
 
+    public static function getProxySettings(): array
+    {
+        return [
+            'https' => self::get('https_proxy'),
+            'http' => self::get('http_proxy'),
+        ];
+    }
+
     /**
      * @return string
      */

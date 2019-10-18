@@ -6,6 +6,7 @@ use Google\Auth\OAuth2;
 use Google\Auth\Middleware\ScopedAccessTokenMiddleware;
 use GuzzleHttp\Client;
 use GuzzleHttp\HandlerStack;
+use Helio\Panel\Utility\ServerUtility;
 use Psr\Http\Message\ResponseInterface;
 use GuzzleHttp\Exception\GuzzleException;
 
@@ -78,6 +79,7 @@ class GoogleIapHelper implements HelperInterface
             'handler' => $stack,
             'base_uri' => $baseUrl,
             'auth' => 'scoped',
+            'proxy' => ServerUtility::getProxySettings(),
         ]);
 
         // Make an authenticated HTTP Request

@@ -3,7 +3,6 @@
 namespace Helio\Panel\Controller;
 
 use Exception;
-use GuzzleHttp\Exception\GuzzleException;
 use Helio\Panel\Exception\HttpException;
 use Helio\Panel\Helper\ElasticHelper;
 use Helio\Panel\Model\Job;
