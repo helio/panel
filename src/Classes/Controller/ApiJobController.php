@@ -669,7 +669,7 @@ class ApiJobController extends AbstractController
                 if (array_key_exists('deleted', $body)) {
                     $this->handleDeleteManagerNode($node);
                 } else {
-                    $this->handleAddManagerNode($node, $body);
+                    $this->handleUpdateManagerNode($node, $body);
                 }
             }
         }
@@ -809,19 +809,10 @@ class ApiJobController extends AbstractController
         LogHelper::err('No manager found', ['jobID' => $this->job->getId(), 'node' => $node]);
     }
 
-    protected function handleAddManagerNode(string $node, array $data): void
+    protected function handleUpdateManagerNode(string $node, array $data): void
     {
-        /** @var Manager|null $manager */
-        $manager = App::getDbHelper()->getRepository(Manager::class)->findOneBy(['fqdn' => $node]);
+        $manager = $this->job->getManager();
 
-        if (!$manager) {
-            App::getLogger()->err('No job found for node given in callback. Creating new', [
-                'node' => $node,
-                'jobID' => $this->job->getId(),
-            ]);
-            $manager = (new Manager())
-                ->setName(explode('.', $node)[0]);
-        }
         $manager->setFqdn($node)
             ->setIdByChoria($data['manager_id'] ?? '')
             ->setStatus(ManagerStatus::READY)
@@ -829,7 +820,6 @@ class ApiJobController extends AbstractController
             ->setManagerToken($data['swarm_token_manager'] ?? '')
             ->setIp($data['manager_ip'] ?? '');
 
-        $this->job->setManager($manager);
         $this->persistManager($manager);
     }
 
