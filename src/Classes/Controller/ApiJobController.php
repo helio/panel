@@ -206,6 +206,7 @@ class ApiJobController extends AbstractController
             $manager = Manager::createManager();
             $this->job->setManager($manager);
             $this->persistManager($manager);
+            $this->persistJob();
 
             OrchestratorFactory::getOrchestratorForInstance($this->instance, $this->job)->provisionManager();
         }
