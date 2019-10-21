@@ -157,7 +157,6 @@ class ApiJobExecuteController extends AbstractController
      * @return ResponseInterface
      *
      * @Route("", methods={"POST", "PUT", "DELETE"}, name="job.exec")
-     * @throws \GuzzleHttp\Exception\GuzzleException
      */
     public function execAction(): ResponseInterface
     {
@@ -192,15 +191,15 @@ class ApiJobExecuteController extends AbstractController
             // run and stop have the same interface, thus we can reuse the code
             $command = 'run';
             if ('DELETE' === $this->request->getMethod()) {
-                if (null === $this->execution->getId()) {
+                if (null === $this->execution) {
                     return $this->render(['success' => false, 'message' => 'Execution not found'], StatusCode::HTTP_NOT_FOUND);
                 }
 
                 $command = 'stop';
             } else {
-                $this->execution
+                $this->execution = (new Execution())
+                    ->setStatus(ExecutionStatus::UNKNOWN)
                     ->setJob($this->job)
-                    ->setCreated()
                     ->setName(array_key_exists('name', $this->params) ? $this->params['name'] : 'automatically created')->setJob($this->job)
                     ->setCreated();
                 $this->persistExecution();
@@ -312,8 +311,8 @@ class ApiJobExecuteController extends AbstractController
      */
     public function executionStatusAction(): ResponseInterface
     {
-        if (null === $this->execution->getId()) {
-            return $this->render(['error' => 'no execution specified'], StatusCode::HTTP_NOT_FOUND);
+        if (null === $this->execution) {
+            return $this->render(['error' => 'no execution found'], StatusCode::HTTP_NOT_FOUND);
         }
 
         return $this->render([
@@ -377,39 +376,39 @@ class ApiJobExecuteController extends AbstractController
      */
     public function submitresultAction(): ResponseInterface
     {
-        if ('__NEW' !== $this->execution->getName()) {
-            /* @var Execution $execution */
-            $this->execution->setStatus(ExecutionStatus::DONE)->setLatestHeartbeat();
-
-            $this->execution->setStats((string) $this->request->getBody());
-            $this->persistExecution();
-
-            OrchestratorFactory::getOrchestratorForInstance(new Instance(), $this->job)->dispatchJob();
-            $this->job->setBudgetUsed(JobFactory::getDispatchConfigOfJob($this->job, $this->execution)->getExecutionEstimates()['cost'] + $this->job->getBudgetUsed());
-            $this->persistJob();
-
-            if ($this->execution->isAutoExecuted()) {
-                if ($this->user->getPreferences()->getNotifications()->isEmailOnAutoscheduledExecutionEnded()) {
-                    App::getNotificationUtility()::notifyUser(
-                        $this->job->getOwner(),
-                        sprintf('Job %s (%d), Execution %s (%d) executed', $this->job->getName(), $this->job->getId(), $this->execution->getName(), $this->execution->getId()),
-                        sprintf("Your Job %d with id %d was successfully executed\nThe results can now be used.", $this->job->getId(), $this->execution->getId())
-                    );
-                }
-            } else {
-                if ($this->user->getPreferences()->getNotifications()->isEmailOnExecutionEnded()) {
-                    App::getNotificationUtility()::notifyUser(
-                        $this->job->getOwner(),
-                        sprintf('Job %s (%d), Execution %s (%d) executed', $this->job->getName(), $this->job->getId(), $this->execution->getName(), $this->execution->getId()),
-                        sprintf("Your Job %d with id %d was successfully executed\nThe results can now be used.", $this->job->getId(), $this->execution->getId())
-                    );
-                }
-            }
-
-            return $this->render(['success' => true, 'message' => 'Job marked as done']);
+        if (null === $this->execution) {
+            return $this->render(['success' => false, 'message' => 'Execution not found'], StatusCode::HTTP_NOT_FOUND);
         }
 
-        return $this->response->withStatus(StatusCode::HTTP_NOT_FOUND);
+        /* @var Execution $execution */
+        $this->execution->setStatus(ExecutionStatus::DONE)->setLatestHeartbeat();
+
+        $this->execution->setStats((string) $this->request->getBody());
+        $this->persistExecution();
+
+        OrchestratorFactory::getOrchestratorForInstance(new Instance(), $this->job)->dispatchJob();
+        $this->job->setBudgetUsed(JobFactory::getDispatchConfigOfJob($this->job, $this->execution)->getExecutionEstimates()['cost'] + $this->job->getBudgetUsed());
+        $this->persistJob();
+
+        if ($this->execution->isAutoExecuted()) {
+            if ($this->user->getPreferences()->getNotifications()->isEmailOnAutoscheduledExecutionEnded()) {
+                App::getNotificationUtility()::notifyUser(
+                    $this->job->getOwner(),
+                    sprintf('Job %s (%d), Execution %s (%d) executed', $this->job->getName(), $this->job->getId(), $this->execution->getName(), $this->execution->getId()),
+                    sprintf("Your Job %d with id %d was successfully executed\nThe results can now be used.", $this->job->getId(), $this->execution->getId())
+                );
+            }
+        } else {
+            if ($this->user->getPreferences()->getNotifications()->isEmailOnExecutionEnded()) {
+                App::getNotificationUtility()::notifyUser(
+                    $this->job->getOwner(),
+                    sprintf('Job %s (%d), Execution %s (%d) executed', $this->job->getName(), $this->job->getId(), $this->execution->getName(), $this->execution->getId()),
+                    sprintf("Your Job %d with id %d was successfully executed\nThe results can now be used.", $this->job->getId(), $this->execution->getId())
+                );
+            }
+        }
+
+        return $this->render(['success' => true, 'message' => 'Job marked as done']);
     }
 
     /**
@@ -426,8 +425,8 @@ class ApiJobExecuteController extends AbstractController
             if (!JobStatus::isValidActiveStatus($this->job->getStatus())) {
                 throw new RuntimeException('job not ready');
             }
-            if (null === $this->execution->getId()) {
-                return $this->render(['error' => 'no execution specified'], StatusCode::HTTP_NOT_FOUND);
+            if (null === $this->execution) {
+                return $this->render(['error' => 'no execution found'], StatusCode::HTTP_NOT_FOUND);
             }
 
             return JobFactory::getInstanceOfJob($this->job, $this->execution)->$method($this->params, $this->response, $this->request);
@@ -474,8 +473,8 @@ class ApiJobExecuteController extends AbstractController
     public function heartbeatAction(): ResponseInterface
     {
         try {
-            if (null === $this->execution->getId()) {
-                return $this->render(['error' => 'unknown execution', 'params' => $this->params, 'execution' => $this->execution], StatusCode::HTTP_NOT_FOUND);
+            if (null === $this->execution) {
+                return $this->render(['error' => 'no execution found', 'params' => $this->params, 'execution' => $this->execution], StatusCode::HTTP_NOT_FOUND);
             }
 
             // if the job is not currently running, mark it so
@@ -563,8 +562,8 @@ class ApiJobExecuteController extends AbstractController
      */
     public function logsAction(): ResponseInterface
     {
-        if (null === $this->execution->getId()) {
-            return $this->render(['error' => 'no execution specified'], StatusCode::HTTP_NOT_FOUND);
+        if (null === $this->execution) {
+            return $this->render(['error' => 'no execution found'], StatusCode::HTTP_NOT_FOUND);
         }
 
         /** @var Job $job */
@@ -586,8 +585,8 @@ class ApiJobExecuteController extends AbstractController
      */
     public function uploadAction(): ResponseInterface
     {
-        if (null === $this->execution->getId()) {
-            return $this->render(['error' => 'no execution specified'], StatusCode::HTTP_NOT_FOUND);
+        if (null === $this->execution) {
+            return $this->render(['error' => 'no execution found'], StatusCode::HTTP_NOT_FOUND);
         }
 
         /** @var UploadedFileInterface $uploadedFile */
@@ -611,8 +610,8 @@ class ApiJobExecuteController extends AbstractController
      */
     public function downloadAction(int $job, string $file): ResponseInterface
     {
-        if (null === $this->execution->getId()) {
-            return $this->render(['error' => 'no execution specified'], StatusCode::HTTP_NOT_FOUND);
+        if (null === $this->execution) {
+            return $this->render(['error' => 'no execution found'], StatusCode::HTTP_NOT_FOUND);
         }
 
         return ExecUtility::downloadFile(ExecUtility::getJobDataFolder($this->job) . $file, $this->response);

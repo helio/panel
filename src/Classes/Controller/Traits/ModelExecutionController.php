@@ -7,7 +7,6 @@ use Exception;
 use Helio\Panel\App;
 use Helio\Panel\Exception\HttpException;
 use Helio\Panel\Model\Execution;
-use Helio\Panel\Execution\ExecutionStatus;
 use Slim\Http\StatusCode;
 
 trait ModelExecutionController
@@ -37,31 +36,7 @@ trait ModelExecutionController
         if ($executionId > 0) {
             // TODO(michael): probably resolving it via $this->job (via the association) would be better.
             $this->execution = App::getDbHelper()->getRepository(Execution::class)->findOneBy(['id' => $executionId, 'job' => $this->job->getId()]);
-
-            return;
         }
-
-        $this->execution = (new Execution())
-            ->setStatus(ExecutionStatus::UNKNOWN)
-            ->setName('___NEW');
-
-        return;
-    }
-
-    /**
-     * @throws Exception
-     */
-    public function validateExecutionIsSet(): void
-    {
-        if ($this->execution) {
-            if ('___NEW' !== $this->execution->getName()) {
-                $this->persistExecution();
-            }
-
-            return;
-        }
-
-        throw new HttpException(StatusCode::HTTP_NOT_FOUND, 'No execution found');
     }
 
     /**

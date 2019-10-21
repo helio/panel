@@ -274,8 +274,11 @@ class ManagerNodesTest extends TestCase
         );
         $this->assertEquals(StatusCode::HTTP_OK, $response->getStatusCode());
 
+        $body = \GuzzleHttp\json_decode((string) $response->getBody(), true);
+        $this->assertArrayHasKey('id', $body);
+
         $response = $this->runWebApp('POST',
-            '/api/job/' . $this->job->getId() . '/execute/submitresult',
+            '/api/job/' . $this->job->getId() . '/execute/submitresult?id=' . $body['id'],
             true,
             ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']],
             ['result' => 42]
