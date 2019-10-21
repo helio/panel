@@ -283,8 +283,20 @@ class ApiJobController extends AbstractController
             OrchestratorFactory::getOrchestratorForInstance($this->instance, $this->job)->removeManager();
 
             $this->job->setStatus(JobStatus::DELETING);
+
+            $runningExecutions = $this->job->getExecutions()->filter(
+                function (Execution $e) {
+                    return !ExecutionStatus::isFinishedExecution($e->getStatus());
+                }
+            );
+            foreach ($runningExecutions as $execution) {
+                $execution->setStatus(ExecutionStatus::TERMINATED);
+                $execution->setLatestAction();
+                App::getDbHelper()->persist($execution);
+            }
         }
         $this->persistJob();
+        App::getDbHelper()->flush();
 
         return $this->render(['success' => true, 'message' => 'Job scheduled for removal.', 'removed' => JobStatus::DELETED === $this->job->getStatus()]);
     }

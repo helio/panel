@@ -149,7 +149,7 @@ class ApiJobTest extends TestCase
 
         $header = ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $user)['token']];
         for ($i = 0; $i < $limits->getRunningExecutions(); ++$i) {
-            $this->createExecution($job, sprintf('%s-%s', __METHOD__, $i));
+            $this->createExecution($job, sprintf('%s-%s', __METHOD__, $i), ExecutionStatus::RUNNING);
         }
         $name = sprintf('%s-exceeded', __METHOD__);
         $response = $this->runWebApp('POST', sprintf('/api/job/%s/execute', $job->getId()), true, $header, ['name' => $name]);
@@ -186,6 +186,41 @@ class ApiJobTest extends TestCase
         /** @var Job $jobFromDatabase */
         $jobFromDatabase = $this->infrastructure->getRepository(Job::class)->find($job->getId());
         $this->assertEquals(JobStatus::DELETING, $jobFromDatabase->getStatus());
+    }
+
+    public function testDeleteSetsExecutionsToTerminated()
+    {
+        $user = $this->createUser();
+        $job = $this->createJob($user, 'testDeleteSetsExecutionsToTerminated');
+
+        $unknownExecution = $this->createExecution($job, 'testDeleteSetsExecutionsToTerminated#unknown', ExecutionStatus::UNKNOWN);
+        $readyExecution = $this->createExecution($job, 'testDeleteSetsExecutionsToTerminated#ready', ExecutionStatus::READY);
+        $runningExecution = $this->createExecution($job, 'testDeleteSetsExecutionsToTerminated#running', ExecutionStatus::RUNNING);
+        $doneExecution = $this->createExecution($job, 'testDeleteSetsExecutionsToTerminated#done', ExecutionStatus::DONE);
+        $stoppedExecution = $this->createExecution($job, 'testDeleteSetsExecutionsToTerminated#stopped', ExecutionStatus::STOPPED);
+        $terminatedExecution = $this->createExecution($job, 'testDeleteSetsExecutionsToTerminated#terminated', ExecutionStatus::TERMINATED);
+        $executions = [
+            $unknownExecution->getId() => ExecutionStatus::TERMINATED,
+            $readyExecution->getId() => ExecutionStatus::TERMINATED,
+            $runningExecution->getId() => ExecutionStatus::TERMINATED,
+            $doneExecution->getId() => ExecutionStatus::DONE,
+            $stoppedExecution->getId() => ExecutionStatus::STOPPED,
+            $terminatedExecution->getId() => ExecutionStatus::TERMINATED,
+        ];
+
+        $tokenHeader = ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $user, null, $job)['token']];
+
+        $response = $this->runWebApp('DELETE', '/api/job', true, $tokenHeader, ['id' => $job->getId()]);
+        $this->assertEquals(StatusCode::HTTP_OK, $response->getStatusCode());
+        /** @var Job $jobFromDatabase */
+        $jobFromDatabase = $this->infrastructure->getRepository(Job::class)->find($job->getId());
+        $this->assertEquals(JobStatus::DELETING, $jobFromDatabase->getStatus());
+
+        foreach ($executions as $id => $expectedCode) {
+            /** @var Execution $fromDb */
+            $fromDb = $this->infrastructure->getRepository(Execution::class)->find($id);
+            $this->assertEquals($expectedCode, $fromDb->getStatus());
+        }
     }
 
     /**
@@ -303,16 +338,17 @@ class ApiJobTest extends TestCase
     }
 
     /**
-     * @param  Job       $job
-     * @param  string    $name
+     * @param Job $job
+     * @param string $name
+     * @param int    $status
      * @return Execution
      * @throws Exception
      */
-    private function createExecution(Job $job, $name = __CLASS__): Execution
+    private function createExecution(Job $job, $name = __CLASS__, int $status = ExecutionStatus::RUNNING): Execution
     {
         /** @var Execution $execution */
         $execution = (new Execution())
-            ->setStatus(ExecutionStatus::RUNNING)
+            ->setStatus($status)
             ->setJob($job)
             ->setName($name)
             ->setCreated();

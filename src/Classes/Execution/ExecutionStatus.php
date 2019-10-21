@@ -35,7 +35,7 @@ final class ExecutionStatus
 
     public function __construct()
     {
-        throw new RuntimeException('Cannot instanciate ' . __CLASS__);
+        throw new RuntimeException('Cannot instantiate ' . __CLASS__);
     }
 
     public static function isValidStatus(int $status): bool
@@ -63,6 +63,11 @@ final class ExecutionStatus
     {
         return self::TERMINATED === $status
             || self::DONE === $status;
+    }
+
+    public static function isFinishedExecution(int $status): bool
+    {
+        return static::isNotRequiredToRunAnymore($status) || self::STOPPED === $status;
     }
 
     public static function getLabel(int $status): string
