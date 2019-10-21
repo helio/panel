@@ -19,7 +19,7 @@ interface OrchestratorInterface
 
     public function stopComputing();
 
-    public function provisionManager(string $managerName = ''): string;
+    public function provisionManager(): void;
 
     public function removeManager(): bool;
 

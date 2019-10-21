@@ -113,12 +113,9 @@ class Choria implements OrchestratorInterface
     }
 
     /**
-     * @param  string $managerName
-     * @return string expected hostname of the new manager
-     *
      * @throws Exception
      */
-    public function provisionManager(string $managerName = ''): string
+    public function provisionManager(): void
     {
         if (!$this->job) {
             throw new \InvalidArgumentException('job is required');
@@ -131,7 +128,7 @@ class Choria implements OrchestratorInterface
 
         // we're good
         if ($manager && $manager->works() && JobStatus::READY_PAUSED !== $this->job->getStatus()) {
-            return $manager->getName();
+            return;
         }
 
         // provision the manager
@@ -139,8 +136,6 @@ class Choria implements OrchestratorInterface
             $manager->getName(),
             $this->job->getOwner() ? $this->job->getOwner()->getId() : null,
         ]));
-
-        return $managerName;
     }
 
     /**
