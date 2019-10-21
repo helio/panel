@@ -90,11 +90,14 @@ class Choria implements OrchestratorInterface
             return false;
         }
 
-        if (!($manager = $this->job->getManager()) && (!$this->job->getManagerNodes() || !$this->job->getClusterToken() || !$this->job->getInitManagerIp())) {
+        $manager = $this->job->getManager();
+
+        if (!$manager && (!$this->job->getManagerNodes() || !$this->job->getClusterToken() || !$this->job->getInitManagerIp())) {
             LogHelper::warn('dispatchJob called on job ' . $this->job->getId() . ' that\'s not ready. Aborting.');
 
             return false;
         }
+
         if (!$manager) {
             LogHelper::debug('Deprecated Job ' . $this->job->getId() . ' updated to new manager persistance model');
             $manager = (new Manager())
@@ -123,7 +126,7 @@ class Choria implements OrchestratorInterface
                     $manager->getWorkerToken(),
                     $manager->getIp(),
                     1,
-                    $manager->getId(),
+                    $manager->getIdByChoria(),
                 ])
             );
         }
@@ -143,13 +146,14 @@ class Choria implements OrchestratorInterface
             throw new \InvalidArgumentException('job is required');
         }
 
+        $manager = $this->job->getManager();
         // we're good
-        if ($this->job->getManager() && $this->job->getManager()->works() && JobStatus::READY_PAUSED !== $this->job->getStatus()) {
-            return $this->job->getManager()->getName();
+        if ($manager && $manager->works() && JobStatus::READY_PAUSED !== $this->job->getStatus()) {
+            return $manager->getName();
         }
 
         // TODO CB: Remove this once all active jobs switched to the normalised manager persistence model
-        if (!$this->job->getManager() && count($this->job->getManagerNodes())) {
+        if (!$manager && count($this->job->getManagerNodes())) {
             $fqdn = $this->job->getManagerNodes()[0];
             $this->job->setManager(
                 (new Manager())
