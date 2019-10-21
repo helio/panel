@@ -104,34 +104,6 @@ class ManagerNodesTest extends TestCase
     /**
      * @throws \Exception
      */
-    public function testOnlyOneManagerNodesGetInitializedOnNewJob(): void
-    {
-        $response = $this->runWebApp(
-            'POST',
-            '/api/job',
-            true,
-            ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token'], 'Content-Type' => 'application/json'],
-            ['type' => JobType::GITLAB_RUNNER, 'name' => $this->getName()]
-        );
-        $this->assertEquals(StatusCode::HTTP_OK, $response->getStatusCode());
-
-        $result = json_decode((string) $response->getBody(), true);
-        $this->assertArrayHasKey('id', $result, 'no ID of new job returned');
-
-        $response = $this->runWebApp('POST',
-            '/api/job',
-            true,
-            ['Authorization' => 'Bearer ' . $result['token'], 'Content-Type' => 'application/json'],
-            ['id' => $result['id'], 'name' => 'testing 1551430509']
-        );
-        $this->assertEquals(StatusCode::HTTP_OK, $response->getStatusCode());
-
-        $this->assertNotNull($this->jobRepository->findOneBy(['name' => 'testing 1551430509'])->getManagerNodes(), 'init node not ready, must not call to create redundant manager nodes yet');
-    }
-
-    /**
-     * @throws \Exception
-     */
     public function testRedundantManagersGetSetupOnCallbackCall(): void
     {
         $response = $this->runWebApp(
@@ -145,7 +117,7 @@ class ManagerNodesTest extends TestCase
 
         /** @var Job $job */
         $job = $this->jobRepository->find($jobId);
-        $this->assertNull($job->getManager());
+        $this->assertFalse($job->getManager()->works());
         $this->assertStringContainsString('manager-init-', ServerUtility::getLastExecutedShellCommand());
         $this->assertStringContainsString('user_id', ServerUtility::getLastExecutedShellCommand());
         $this->assertStringContainsString($this->user->getId(), ServerUtility::getLastExecutedShellCommand());

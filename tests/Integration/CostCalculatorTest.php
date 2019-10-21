@@ -6,7 +6,9 @@ use Exception;
 use Helio\Panel\Job\JobStatus;
 use Helio\Panel\Job\JobType;
 use Helio\Panel\Model\Job;
+use Helio\Panel\Model\Manager;
 use Helio\Panel\Model\User;
+use Helio\Panel\Orchestrator\ManagerStatus;
 use Helio\Panel\Utility\JwtUtility;
 use Helio\Test\Infrastructure\Utility\ServerUtility;
 use Helio\Test\TestCase;
@@ -46,12 +48,22 @@ class CostCalculatorTest extends TestCase
      */
     public function testEstimatesAreBasicallyCorrect(): void
     {
-        $job = (new Job())->setType(JobType::BUSYBOX)->setOwner($this->user)->setStatus(JobStatus::READY)->setBudget(10);
+        $manager = Manager::createManager()
+            ->setStatus(ManagerStatus::READY);
+        $job = (new Job())
+            ->setManager($manager)
+            ->setType(JobType::BUSYBOX)
+            ->setOwner($this->user)
+            ->setStatus(JobStatus::READY)
+            ->setBudget(10);
+
         $this->infrastructure->getEntityManager()->persist($job);
         $this->infrastructure->getEntityManager()->flush();
+
         $tokenHeader = ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']];
-        $result = json_decode($this->runWebApp('POST', '/api/job/' . $job->getId() . '/execute', true, $tokenHeader)->getBody(), true);
-        $this->assertArrayHasKey('estimates', $result);
+        $response = $this->runWebApp('POST', '/api/job/' . $job->getId() . '/execute', true, $tokenHeader);
+        $result = json_decode($response->getBody(), true);
+        $this->assertArrayHasKey('estimates', $result, print_r($result, true));
 
         $this->assertEquals(1030, $result['estimates']['duration']);
 
@@ -70,7 +82,15 @@ class CostCalculatorTest extends TestCase
      */
     public function testEstimatesAreCorrectWithCustomLimit(): void
     {
-        $job = (new Job())->setType(JobType::BUSYBOX)->setOwner($this->user)->setStatus(JobStatus::READY)->setBudget(10);
+        $manager = Manager::createManager()
+            ->setStatus(ManagerStatus::READY);
+        $job = (new Job())
+            ->setManager($manager)
+            ->setType(JobType::BUSYBOX)
+            ->setOwner($this->user)
+            ->setStatus(JobStatus::READY)
+            ->setBudget(10);
+
         $this->infrastructure->getEntityManager()->persist($job);
         $this->infrastructure->getEntityManager()->flush();
         $tokenHeader = ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $this->user)['token']];

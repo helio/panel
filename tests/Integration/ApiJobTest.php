@@ -301,20 +301,23 @@ class ApiJobTest extends TestCase
      */
     private function createJob(User $user, $name = __CLASS__): Job
     {
-        /** @var Job $job */
+        $manager = (new Manager())
+            ->setName('testname')
+            ->setStatus(ManagerStatus::READY)
+            ->setManagerToken('managertoken')
+            ->setWorkerToken('ClusterToken')
+            ->setIdByChoria('nodeId')
+            ->setIp('1.2.3.55')
+            ->setFqdn('manager1.manager.example.com');
+
         $job = (new Job())
             ->setType(JobType::BUSYBOX)
             ->setStatus(JobStatus::READY)
             ->setOwner($user)
             ->setName($name)
-            ->setManager((new Manager())
-                ->setStatus(ManagerStatus::READY)
-                ->setManagerToken('managertoken')
-                ->setWorkerToken('ClusterToken')
-                ->setIdByChoria('nodeId')
-                ->setIp('1.2.3.55')
-                ->setFqdn('manager1.manager.example.com'))
+            ->setManager($manager)
             ->setCreated();
+
         $this->infrastructure->getEntityManager()->persist($job);
         $this->infrastructure->getEntityManager()->flush($job);
 
@@ -338,9 +341,9 @@ class ApiJobTest extends TestCase
     }
 
     /**
-     * @param Job $job
-     * @param string $name
-     * @param int    $status
+     * @param  Job       $job
+     * @param  string    $name
+     * @param  int       $status
      * @return Execution
      * @throws Exception
      */

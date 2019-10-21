@@ -15,6 +15,7 @@ use Helio\Panel\Model\User;
 use Helio\Panel\Utility\MiddlewareForHttpUtility;
 use Helio\Test\Infrastructure\App;
 use Helio\Test\Infrastructure\Helper\DbHelper;
+use Helio\Test\Infrastructure\Helper\LogHelper;
 use Helio\Test\Infrastructure\Helper\ZapierHelper;
 use Helio\Test\Infrastructure\Orchestrator\OrchestratorFactory;
 use Helio\Test\Infrastructure\Utility\ServerUtility;
@@ -219,7 +220,13 @@ class TestCase extends \PHPUnit\Framework\TestCase
 
         $app->getContainer()['request'] = $request;
 
-        return $app->run(true);
+        $res = $app->run(true);
+
+        if (500 === $res->getStatusCode()) {
+            LogHelper::warn('internal server error', ['body' => $res->getBody()->getContents()]);
+        }
+
+        return $res;
     }
 
     /**

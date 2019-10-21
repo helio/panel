@@ -7,6 +7,7 @@ namespace Helio\Panel\Model;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Helio\Panel\Orchestrator\ManagerStatus;
+use Helio\Panel\Utility\ServerUtility;
 use OpenApi\Annotations as OA;
 use Doctrine\ORM\Mapping\Entity;
 use Doctrine\ORM\Mapping\Table;
@@ -23,6 +24,11 @@ use Doctrine\ORM\Mapping\OneToMany;
  **/
 class Manager extends AbstractModel
 {
+    /**
+     * @var string
+     */
+    private static $namePrefix = 'manager-init';
+
     /**
      * @var string
      *
@@ -76,6 +82,20 @@ class Manager extends AbstractModel
     {
         parent::__construct();
         $this->jobs = new ArrayCollection();
+    }
+
+    /**
+     * @return Manager
+     * @throws \Exception
+     */
+    public static function createManager(): self
+    {
+        $name = sprintf('%s-%s', self::$namePrefix, strtolower(ServerUtility::getRandomString(4)));
+        $manager = (new self())
+            ->setName($name)
+            ->setCreated();
+
+        return $manager;
     }
 
     /**

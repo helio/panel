@@ -29,11 +29,6 @@ class Choria implements OrchestratorInterface
      */
     private static $username = 'panel';
 
-    /**
-     * @var string
-     */
-    private static $managerPrefix = 'manager-init';
-
     private static $createManagerCommand = 'mco playbook run infrastructure::gce::create --input \'{"node":"%s","callback":"$jobCallback","user_id":"%s","id":"$jobId"}\'';
     private static $deleteManagerCommand = 'mco playbook run infrastructure::gce::delete --input \'{"node":"%s","callback":"$jobCallback","id":"$jobId"}\'';
     private static $inventoryCommand = 'mco playbook run helio::tools::inventory --input \'{"fqdn":"$fqdn","callback":"$instanceCallback"}\'';
@@ -92,27 +87,10 @@ class Choria implements OrchestratorInterface
 
         $manager = $this->job->getManager();
 
-        if (!$manager && (!$this->job->getManagerNodes() || !$this->job->getClusterToken() || !$this->job->getInitManagerIp())) {
-            LogHelper::warn('dispatchJob called on job ' . $this->job->getId() . ' that\'s not ready. Aborting.');
+        if (!ManagerStatus::isValidActiveStatus($manager->getStatus())) {
+            LogHelper::err('dispatchJob called on job ' . $this->job->getId() . ' that\'s not ready. Aborting.');
 
             return false;
-        }
-
-        if (!$manager) {
-            LogHelper::debug('Deprecated Job ' . $this->job->getId() . ' updated to new manager persistance model');
-            $manager = (new Manager())
-                ->setFqdn($this->job->getManagerNodes()[0])
-                ->setWorkerToken($this->job->getClusterToken())
-                ->setIp($this->job->getInitManagerIp())
-                ->setManagerToken($this->job->getManagerToken())
-                ->setIdByChoria($this->job->getManagerID())
-                ->setStatus(ManagerStatus::READY);
-            $this->job->setManager($manager)
-                ->setManagerToken('')
-                ->setClusterToken('')
-                ->setInitManagerIp('')
-                ->setManagerID('')
-                ->setManagerNodes([]);
         }
 
         ServerUtility::executeShellCommand($this->parseCommand(self::$dispatchCommand, false, [
@@ -147,36 +125,18 @@ class Choria implements OrchestratorInterface
         }
 
         $manager = $this->job->getManager();
+        if (!$manager) {
+            throw new \Exception('This should not happen! Manager is required.');
+        }
+
         // we're good
         if ($manager && $manager->works() && JobStatus::READY_PAUSED !== $this->job->getStatus()) {
             return $manager->getName();
         }
 
-        // TODO CB: Remove this once all active jobs switched to the normalised manager persistence model
-        if (!$manager && count($this->job->getManagerNodes())) {
-            $fqdn = $this->job->getManagerNodes()[0];
-            $this->job->setManager(
-                (new Manager())
-                    ->setName(explode('.', $fqdn)[0])
-                    ->setFqdn($fqdn)
-                    ->setIp($this->job->getInitManagerIp())
-                    ->setIdByChoria($this->job->getManagerID())
-                    ->setManagerToken($this->job->getManagerToken())
-                    ->setWorkerToken($this->job->getClusterToken())
-                    ->setStatus(ManagerStatus::READY)
-            )
-                ->setManagerToken('')
-                ->setClusterToken('')
-                ->setInitManagerIp('')
-                ->setManagerID('')
-                ->setManagerNodes([]);
-        }
-
-        $managerName = self::$managerPrefix . '-' . ($managerName ?: strtolower(ServerUtility::getRandomString(4)));
-
         // provision the manager
         ServerUtility::executeShellCommand($this->parseCommand(self::$createManagerCommand, false, [
-            $managerName,
+            $manager->getName(),
             $this->job->getOwner() ? $this->job->getOwner()->getId() : null,
         ]));
 

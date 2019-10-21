@@ -34,11 +34,30 @@ class CliMaintenanceRedeployHangingJobsTest extends TestCase
         parent::setUp();
 
         $anHourAgo = (new \DateTime('now', ServerUtility::getTimezoneObject()))->sub(new \DateInterval('PT1H'));
-        $managerOfDeletingJob = (new Manager())->setFqdn('manager-blubb')->setIp('1.2.3.4:9')->setWorkerToken('INITMANAGERTOKEN_BLAH')->setStatus(ManagerStatus::READY)->setManagerToken('TOKEN');
+        $managerOfInitJob = Manager::createManager();
+
+        $managerOfDeletingJob = Manager::createManager()
+            ->setFqdn('manager-blubb')
+            ->setIp('1.2.3.4:9')
+            ->setWorkerToken('INITMANAGERTOKEN_BLAH')
+            ->setStatus(ManagerStatus::READY)
+            ->setManagerToken('TOKEN');
 
         $this->user = (new User())->setEmail('email@test.cli')->setActive(true)->setCreated();
-        $this->jobInInitState = (new Job())->setOwner($this->user)->setType(JobType::BUSYBOX)->setCreated()->setLatestAction($anHourAgo)->setStatus(JobStatus::INIT);
-        $this->jobInDeletingState = (new Job())->setManager($managerOfDeletingJob)->setOwner($this->user)->setType(JobType::BUSYBOX)->setCreated()->setLatestAction($anHourAgo)->setStatus(JobStatus::DELETING);
+        $this->jobInInitState = (new Job())
+            ->setOwner($this->user)
+            ->setManager($managerOfInitJob)
+            ->setType(JobType::BUSYBOX)
+            ->setCreated()
+            ->setLatestAction($anHourAgo)
+            ->setStatus(JobStatus::INIT);
+        $this->jobInDeletingState = (new Job())
+            ->setManager($managerOfDeletingJob)
+            ->setOwner($this->user)
+            ->setType(JobType::BUSYBOX)
+            ->setCreated()
+            ->setLatestAction($anHourAgo)
+            ->setStatus(JobStatus::DELETING);
         $this->infrastructure->getEntityManager()->persist($this->user);
         $this->infrastructure->getEntityManager()->persist($managerOfDeletingJob);
         $this->infrastructure->getEntityManager()->persist($this->jobInInitState);

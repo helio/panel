@@ -194,18 +194,20 @@ class ApiJobController extends AbstractController
 
                 return $this->render([
                     'success' => false,
-                    'message' => 'Tried to create a job without available manager. This either means that you have no permission or that no usable manager exists at all.',
+                    'message' => 'Tried to create a job without available manager. ' .
+                        'This either means that you have no permission or that no usable manager exists at all.',
                 ], StatusCode::HTTP_NOT_ACCEPTABLE);
             }
 
-            $this->setJobReady($this->job, $this->job->getManager()->getName());
+            $this->setJobReadyAndNotify($this->job, $this->job->getManager()->getName());
 
             $this->persistJob();
         } else {
-            $managerName = OrchestratorFactory::getOrchestratorForInstance($this->instance, $this->job)->provisionManager();
-            if ($this->job->getManager()) {
-                $this->job->getManager()->setName($managerName);
-            }
+            $manager = Manager::createManager();
+            $this->job->setManager($manager);
+            $this->persistManager($manager);
+
+            OrchestratorFactory::getOrchestratorForInstance($this->instance, $this->job)->provisionManager();
         }
 
         return $this->render([
@@ -672,15 +674,11 @@ class ApiJobController extends AbstractController
         }
 
         // finalize
-        $hasDeprecatedWorkingManager = $this->job->getInitManagerIp() &&
-            $this->job->getClusterToken() &&
-            $this->job->getManagerToken() &&
-            count($this->job->getManagerNodes()) > 0;
-        if ($this->job->getManager() && $this->job->getManager()->works() || $hasDeprecatedWorkingManager) {
-            $this->setJobReady($this->job, $this->job->getManager()->getName());
+        if ($this->job->getManager() && $this->job->getManager()->works()) {
+            $this->setJobReadyAndNotify($this->job, $this->job->getManager()->getName());
         }
 
-        if (array_key_exists('deleted', $body) && (!$this->job->getManager() || !$this->job->getManager()->works()) && !$this->job->shouldBeMigratedToManager()) {
+        if (array_key_exists('deleted', $body) && !$this->job->getManager()->works()) {
             if (JobStatus::DELETING === $this->job->getStatus()) {
                 $this->job->setStatus(JobStatus::DELETED);
             } elseif (JobStatus::READY_PAUSING === $this->job->getStatus()) {
@@ -735,8 +733,8 @@ class ApiJobController extends AbstractController
             'classes' => ['role::base', 'profile::docker'],
             'profile::docker::manager' => true,
             'profile::docker::manager_init' => true,
-            'profile::docker::manager_ip' => $manager ? $manager->getIp() : $this->job->getInitManagerIp(),
-            'profile::docker::token' => $manager ? $manager->getWorkerToken() : $this->job->getClusterToken(),
+            'profile::docker::manager_ip' => $manager->getIp(),
+            'profile::docker::token' => $manager->getWorkerToken(),
         ];
 
         return $this
@@ -772,7 +770,7 @@ class ApiJobController extends AbstractController
         return $this->render(['message' => 'no access to job'], StatusCode::HTTP_UNAUTHORIZED);
     }
 
-    protected function setJobReady(Job $job, string $managerName): void
+    protected function setJobReadyAndNotify(Job $job, string $managerName): void
     {
         $job->setStatus(JobStatus::READY);
         if ($job->getOwner()->getPreferences()->getNotifications()->isEmailOnJobReady()) {
@@ -797,12 +795,6 @@ class ApiJobController extends AbstractController
 
     protected function handleDeleteManagerNode(string $node): void
     {
-        if ($this->job->shouldBeMigratedToManager()) {
-            $this->job->removeManagerNode($node);
-
-            return;
-        }
-
         /** @var Manager|null $manager */
         $manager = App::getDbHelper()->getRepository(Manager::class)->findOneBy(['name' => $node]);
 
@@ -822,7 +814,12 @@ class ApiJobController extends AbstractController
         $manager = App::getDbHelper()->getRepository(Manager::class)->findOneBy(['fqdn' => $node]);
 
         if (!$manager) {
-            $manager = new Manager();
+            App::getLogger()->err('No job found for node given in callback. Creating new', [
+                'node' => $node,
+                'jobID' => $this->job->getId(),
+            ]);
+            $manager = (new Manager())
+                ->setName(explode('.', $node)[0]);
         }
         $manager->setFqdn($node)
             ->setIdByChoria($data['manager_id'] ?? '')

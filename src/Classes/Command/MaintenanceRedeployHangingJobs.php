@@ -48,10 +48,7 @@ class MaintenanceRedeployHangingJobs extends AbstractCommand
                 if ($this->waitingPeriodOver($job, $input->getArgument('gracePeriod'))) {
                     switch ($job->getStatus()) {
                         case JobStatus::INIT_ERROR:
-                            $managerName = OrchestratorFactory::getOrchestratorForInstance($dummyInstance, $job)->provisionManager();
-                            if ($job->getManager()) {
-                                $job->getManager()->setName($managerName);
-                            }
+                            OrchestratorFactory::getOrchestratorForInstance($dummyInstance, $job)->provisionManager();
 
                             $job->setStatus(JobStatus::INIT);
                             break;
