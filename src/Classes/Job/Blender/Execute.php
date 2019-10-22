@@ -65,6 +65,7 @@ class Execute extends \Helio\Panel\Job\Docker\Execute
         $env['STORAGE_CREDENTIALS'] = $this->storageCredentials;
         // engine is hardcoded for now, as we don't support any other engine.
         $env['BLENDER_ENGINE'] = 'CYCLES';
+        $env['RENDER_SCRIPT_PATH'] = '/docker-blender/render.py';
 
         // pass user id for access control on GCS bucket objects
         $env['HELIO_USER_ID'] = $this->job->getOwner()->getId();
