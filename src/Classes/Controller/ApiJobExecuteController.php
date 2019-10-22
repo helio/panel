@@ -377,6 +377,10 @@ class ApiJobExecuteController extends AbstractController
             return $this->render(['success' => false, 'message' => 'Execution not found'], StatusCode::HTTP_NOT_FOUND);
         }
 
+        if (ExecutionStatus::isNotRequiredToRunAnymore($this->execution->getStatus())) {
+            return $this->render(['error' => 'Execution already done'], StatusCode::HTTP_BAD_REQUEST);
+        }
+
         /* @var Execution $execution */
         $this->execution->setStatus(ExecutionStatus::DONE)->setLatestHeartbeat();
 
