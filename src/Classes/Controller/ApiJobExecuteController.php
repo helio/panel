@@ -4,6 +4,7 @@ namespace Helio\Panel\Controller;
 
 use Helio\Panel\App;
 use Helio\Panel\Helper\ElasticHelper;
+use Helio\Panel\Helper\LogHelper;
 use Helio\Panel\Model\Instance;
 use Helio\Panel\Request\Log;
 use Helio\Panel\Service\LogService;
@@ -168,8 +169,9 @@ class ApiJobExecuteController extends AbstractController
                 ], StatusCode::HTTP_FORBIDDEN);
             }
 
+            $orchestrator = OrchestratorFactory::getOrchestratorForInstance($this->instance, $this->job);
             if (JobStatus::READY_PAUSED === $this->job->getStatus()) {
-                OrchestratorFactory::getOrchestratorForInstance($this->instance, $this->job)->provisionManager();
+                $orchestrator->provisionManager();
                 $this->persistJob();
             }
 
@@ -202,22 +204,38 @@ class ApiJobExecuteController extends AbstractController
                 $this->persistExecution();
             }
 
+            $dispatchable = JobFactory::getDispatchConfigOfJob($this->job, $this->execution);
+            $dispatchConfig = $dispatchable->getDispatchConfig();
+
             // run the job and check if the replicas have changed
             // TODO: Fix this ugly mess and cleanup DispatchConfig all together
-            $previousReplicaCount = JobFactory::getDispatchConfigOfJob($this->job, $this->execution)->getDispatchConfig()->getReplicaCountForJob($this->job);
+            $previousReplicaCount = $dispatchConfig->getReplicaCountForJob($this->job);
             JobFactory::getInstanceOfJob($this->job, $this->execution)->$command(json_decode((string) $this->request->getBody(), true) ?: []);
-            $newReplicaCount = JobFactory::getDispatchConfigOfJob($this->job, $this->execution)->getDispatchConfig()->getReplicaCountForJob($this->job);
+            $newReplicaCount = $dispatchConfig->getReplicaCountForJob($this->job);
 
-            if (!JobFactory::getDispatchConfigOfJob($this->job, $this->execution)->isExecutionStillAffordable()) {
+            if (!$dispatchable->isExecutionStillAffordable()) {
                 //TODO: Return with an error here once the budget discussion is settled.
                 App::getNotificationUtility()::alertAdmin('Execution could not start for user: ' . $this->user->getId() . ' / job: ' . $this->job->getId() . ' because the budget was used up.');
             }
 
             // if replica count has changed OR we have an enforcement (e.g. one replica per execution fixed), dispatch the job
-            if ($previousReplicaCount !== $newReplicaCount || JobFactory::getDispatchConfigOfJob($this->job, $this->execution)->getDispatchConfig()->getFixedReplicaCount()) {
-                OrchestratorFactory::getOrchestratorForInstance($this->instance, $this->job)->dispatchJob();
+            if ($previousReplicaCount !== $newReplicaCount || $dispatchConfig->getFixedReplicaCount()) {
+                $orchestrator->dispatchJob();
                 $this->persistExecution();
                 $this->persistJob();
+            }
+
+            // inform orchestrator about the current list of jobs
+            $jobIDsOnManager = $this->job
+                ->getManager()
+                ->getJobs()
+                ->map(function (Job $job) {
+                    return $job->getId();
+                })
+                ->toArray();
+
+            if (count(array_unique($jobIDsOnManager)) > 1) {
+                $orchestrator->updateJob($jobIDsOnManager);
             }
 
             $result = [
@@ -225,13 +243,19 @@ class ApiJobExecuteController extends AbstractController
                 'id' => $this->execution->getId(),
             ];
             if ('run' === $command) {
-                $result['estimates'] = JobFactory::getDispatchConfigOfJob($this->job, $this->execution)->getExecutionEstimates();
+                $result['estimates'] = $dispatchable->getExecutionEstimates();
             } else {
                 $this->persistJob();
             }
 
             return $this->render($result);
         } catch (\Throwable $e) {
+            LogHelper::err($e->getMessage(), [
+                'stack' => $e->getTrace(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+
             return $this->render(['success' => false, 'message' => $e->getMessage()], StatusCode::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -320,6 +344,7 @@ class ApiJobExecuteController extends AbstractController
             'latestHeartbeat' => $this->execution->getLatestHeartbeat(),
             'message' => 'The Status of your execution is ' . ExecutionStatus::getLabel($this->execution->getStatus()),
             'status' => $this->execution->getStatus(),
+            'finished' => ExecutionStatus::isNotRequiredToRunAnymore($this->execution->getStatus()),
             'estimates' => JobFactory::getDispatchConfigOfJob($this->job, $this->execution)->getExecutionEstimates(),
         ]);
     }

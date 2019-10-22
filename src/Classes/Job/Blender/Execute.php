@@ -39,7 +39,7 @@ class Execute extends \Helio\Panel\Job\Docker\Execute
             'email' => ServerUtility::get('BLENDER_DOCKER_REGISTRY_EMAIL'),
         ];
         $this->storageBucketName = ServerUtility::get('BLENDER_STORAGE_BUCKET_NAME');
-        $this->storageCredentials = str_replace("\n", "", file_get_contents(ServerUtility::get('BLENDER_STORAGE_CREDENTIALS_JSON_PATH')));
+        $this->storageCredentials = str_replace("\n", '', file_get_contents(ServerUtility::get('BLENDER_STORAGE_CREDENTIALS_JSON_PATH')));
     }
 
     /**

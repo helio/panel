@@ -39,6 +39,7 @@ class Choria implements OrchestratorInterface
     private static $getRunnerIdCommand = 'mco playbook run helio::cluster::node::getid --input \'{"node_fqdn":"$fqdn","callback":"$instanceCallback"}\'';
     private static $dispatchCommand = 'mco playbook run helio::task::update --input \'{"cluster_address":"%s","task_ids":"[%s]"}\'';
     private static $joinWorkersCommand = 'mco playbook run helio::queue --input \'{"cluster_join_token":"%s","cluster_join_address":"%s","cluster_join_count":"%s","manager_id":"%s"}\'';
+    private static $updateJobCommand = 'mco playbook run helio::job::update --input \'{"node":"%s","ids":"%s","user_id":"%s"}\'';
 
     /**
      * Choria constructor.
@@ -112,6 +113,29 @@ class Choria implements OrchestratorInterface
         return true;
     }
 
+    public function updateJob(array $jobIDs): void
+    {
+        if (!$this->job) {
+            throw new \InvalidArgumentException('job is required');
+        }
+
+        $manager = $this->job->getManager();
+        if (!$manager) {
+            throw new \Exception('This should not happen! Manager is required.');
+        }
+
+        // we're good
+        if (!$manager->works()) {
+            throw new \Exception('This should not happen! Manager must work.');
+        }
+
+        ServerUtility::executeShellCommand($this->parseCommand(self::$updateJobCommand, false, [
+            $manager->getName(),
+            implode(',', $jobIDs),
+            $this->job->getOwner() ? $this->job->getOwner()->getId() : null,
+        ]));
+    }
+
     /**
      * @throws Exception
      */
@@ -127,7 +151,7 @@ class Choria implements OrchestratorInterface
         }
 
         // we're good
-        if ($manager && $manager->works() && JobStatus::READY_PAUSED !== $this->job->getStatus()) {
+        if ($manager->works() && JobStatus::READY_PAUSED !== $this->job->getStatus()) {
             return;
         }
 

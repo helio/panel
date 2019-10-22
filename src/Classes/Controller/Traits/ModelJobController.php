@@ -23,6 +23,18 @@ trait ModelJobController
     protected $job;
 
     /**
+     * TODO(mw): unfugly me by removing those nice traits.
+     * @var Job[] if & jobID param is CSV, this field is used
+     */
+    protected $jobs = null;
+
+    /**
+     * TODO(mw): unfugly me by removing those nice traits.
+     * @var bool whether jobID as CSV value is allowed
+     */
+    protected $jobIdCSVAllowed = false;
+
+    /**
      * @param RouteInfo $route
      *
      * @return bool
@@ -42,9 +54,32 @@ trait ModelJobController
 
         // otherwise, setup job from param
         $this->setupParams($route);
-        $jobId = filter_var($this->params['jobid'] ?? ('jobid' === $this->getIdAlias() ? (array_key_exists('id', $this->params) ? $this->params['id'] : 0) : 0), FILTER_SANITIZE_NUMBER_INT);
-        if ($jobId > 0) {
-            $this->job = App::getDbHelper()->getRepository(Job::class)->find($jobId);
+
+        $jobId = null;
+        foreach (['jobid', 'id'] as $param) {
+            if (array_key_exists($param, $this->params)) {
+                $jobId = $this->params[$param];
+                break;
+            }
+        }
+        if (null !== $jobId) {
+            $jobRepository = App::getDbHelper()->getRepository(Job::class);
+
+            if (false !== strpos($jobId, ',') && $this->jobIdCSVAllowed) {
+                $ids = explode(',', $jobId);
+                $this->jobs = $jobRepository->findBy([
+                   'id' => array_map(function (string $id) {
+                       return filter_var($id, FILTER_SANITIZE_NUMBER_INT);
+                   }, $ids),
+                ]);
+                if (!count($this->jobs)) {
+                    throw new HttpException(StatusCode::HTTP_NOT_FOUND, 'No jobs found');
+                }
+
+                return true;
+            }
+            $jobId = filter_var($jobId, FILTER_SANITIZE_NUMBER_INT);
+            $this->job = $jobRepository->find($jobId);
             if (!$this->job) {
                 throw new HttpException(StatusCode::HTTP_NOT_FOUND, 'Job not found');
             }

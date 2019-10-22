@@ -214,6 +214,7 @@ abstract class AbstractExecute implements JobInterface, DispatchableInterface
         return array_merge($this->job->getConfig('env', []), [
             'HELIO_JOBID' => $this->job->getId(),
             'HELIO_TOKEN' => JwtUtility::generateToken(null, null, null, $this->job)['token'],
+            'STATUS_URL' => ServerUtility::getBaseUrl() . ExecUtility::getExecUrl($this->job, '', $this->execution),
             'REPORT_URL' => ServerUtility::getBaseUrl() . ExecUtility::getExecUrl($this->job, 'submitresult', $this->execution),
             'HEARTBEAT_URL' => ServerUtility::getBaseUrl() . ExecUtility::getExecUrl($this->job, 'heartbeat', $this->execution),
         ]);

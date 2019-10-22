@@ -180,7 +180,6 @@ class ApiJobController extends AbstractController
 
         if ($managerNodeRestriction) {
             $managers = App::getDbHelper()->getRepository(Manager::class)->findBy(['fqdn' => $managerNodeRestriction]);
-            /** @var Manager $manager */
             foreach ($managers as $manager) {
                 if ($manager->works()) {
                     $this->job->setManager($manager);

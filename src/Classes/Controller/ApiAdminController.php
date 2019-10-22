@@ -5,6 +5,7 @@ namespace Helio\Panel\Controller;
 use Exception;
 use Helio\Panel\Controller\Traits\ModelInstanceController;
 use Helio\Panel\Controller\Traits\ModelJobController;
+use Helio\Panel\Helper\LogHelper;
 use Helio\Panel\Utility\JwtUtility;
 use RuntimeException;
 use DateTime;
@@ -13,7 +14,6 @@ use Helio\Panel\App;
 use Helio\Panel\Controller\Traits\AuthorizedAdminController;
 use Helio\Panel\Controller\Traits\TypeDynamicController;
 use Helio\Panel\Job\JobStatus;
-use Helio\Panel\Job\JobType;
 use Helio\Panel\Model\Job;
 use Helio\Panel\Model\Execution;
 use Helio\Panel\Job\JobFactory;
@@ -50,6 +50,7 @@ class ApiAdminController extends AbstractController
      */
     public function __construct()
     {
+        $this->jobIdCSVAllowed = true;
         $this->setMode('api');
     }
 
@@ -171,6 +172,9 @@ class ApiAdminController extends AbstractController
     public function execAction(): ResponseInterface
     {
         try {
+            if (!$this->job) {
+                return $this->render(['success' => false, 'message' => 'job not found'], StatusCode::HTTP_NOT_FOUND);
+            }
             if (!JobStatus::isValidActiveStatus($this->job->getStatus())) {
                 throw new RuntimeException('job not ready');
             }
@@ -253,89 +257,45 @@ class ApiAdminController extends AbstractController
      */
     public function jobConfigForPuppetAction(): ResponseInterface
     {
-        if (!$this->job->getId() || !JobType::isValidType($this->job->getType())) {
-            return $this->render([], StatusCode::HTTP_NOT_ACCEPTABLE);
+        if (!$this->job && !count($this->jobs)) {
+            return $this->render(['success' => false, 'message' => 'job not found'], StatusCode::HTTP_NOT_FOUND);
         }
+        $jobs = $this->jobs;
+        if ($this->job) {
+            $jobs = [$this->job];
+        }
+
+        $registry = null;
 
         $services = [];
-        /** @var Execution $execution */
-        foreach ($this->job->getExecutions() as $execution) {
-            // prepare and reset vars
-            $serviceprefix = $this->job->getType() . '-' . $this->job->getId();
-            $servicename = $serviceprefix . '-' . $execution->getId();
-            $services[$servicename]['service_name'] = $servicename;
-            $executionEnv = [];
-            $yamlEnv = [];
-            $env = [];
-
-            // catch done or not-yet-ready executions
-            if (ExecutionStatus::isNotRequiredToRunAnymore($execution->getStatus())) {
-                $services[$servicename]['ensure'] = 'absent';
-                continue;
+        foreach ($jobs as $job) {
+            /** @var Execution $execution */
+            foreach ($job->getExecutions() as $execution) {
+                $service = $this->generateExecutionHiera($job, $execution);
+                $services[$service['service_name']] = $service;
             }
 
-            $dcfjt = JobFactory::getDispatchConfigOfJob($this->job, $execution)->getDispatchConfig();
-            if ($dcfjt->getEnvVariables()) {
-                foreach ($dcfjt->getEnvVariables() as $key => $value) {
-                    // it might be due to json array and object mixup, that value is still an array
-                    if (is_array($value)) {
-                        foreach ($value as $subkey => $subvalue) {
-                            $env[strtoupper($subkey)] = $subvalue;
-                        }
-                    } else {
-                        $env[strtoupper($key)] = $value;
-                    }
-                }
-            }
+            // set job registry
+            // this is slightly ugly now that we can have executions/services of different jobs. In theory each job
+            // could have a different registry. If that's the case we'll error out.
+            $dispatchConfig = JobFactory::getDispatchConfigOfJob($job)->getDispatchConfig();
+            $jobRegistry = $dispatchConfig->getRegistry();
 
-            // merge Yaml Config
-            if ($execution->getConfig('env')) {
-                foreach ($execution->getConfig('env') as $key => $value) {
-                    // it might be due to json array and object mixup, that value is still an array
-                    if (is_array($value)) {
-                        foreach ($value as $subkey => $subvalue) {
-                            $executionEnv[strtoupper($subkey)] = $subvalue;
-                        }
-                    } else {
-                        $executionEnv[strtoupper($key)] = $value;
-                    }
-                }
-                /** @noinspection SlowArrayOperationsInLoopInspection */
-                $executionEnv = array_merge($env, $executionEnv);
-            } else {
-                $executionEnv = $env;
-            }
-            /** @noinspection SlowArrayOperationsInLoopInspection */
-            $executionEnv = array_merge(['HELIO_JOBID' => $this->job->getId(), 'HELIO_USERID' => $this->job->getOwner()->getId(), 'HELIO_EXECUTIONID' => $execution->getId()], $executionEnv);
+            if ($registry && $registry !== $jobRegistry) {
+                LogHelper::err('registry different for list of supplied jobs', [
+                    'registry' => $registry,
+                    'jobRegistry' => $jobRegistry,
+                    'jobid' => $this->request->getParams(['id', 'jobid']),
+                ]);
 
-            foreach ($executionEnv as $item => $value) {
-                // remove newlines because they cause yaml to parse them in a herein unwanted way
-                $escapedVal = str_replace(["\n", "\r"], ['\n', '\r'], $value);
-                $yamlEnv[] = escapeshellarg("$item=$escapedVal");
-            }
-
-            // compose service config
-            $services[$servicename] = [
-                'service_name' => $servicename,
-                'image' => $dcfjt->getImage() ?: 'hello-world',
-                'replicas' => $dcfjt->getReplicaCountForJob($this->job),
-                'env' => $yamlEnv,
-            ];
-
-            // set args if present
-            $args = $execution->getConfig('args') ?: $dcfjt->getArgs();
-            if ($args) {
-                $services[$servicename]['args'] = implode(' ', $args);
+                return $this->render(['error' => 'different registry of supplied jobs'], StatusCode::HTTP_BAD_REQUEST);
+            } elseif ($jobRegistry) {
+                $registry = $jobRegistry;
             }
         }
 
-        // compose resulting yaml
-        $result = [];
-
-        $dcfj = JobFactory::getDispatchConfigOfJob($this->job)->getDispatchConfig();
-
-        if ($dcfj->getRegistry()) {
-            $result['profile::docker::private_registry'] = $dcfj->getRegistry();
+        if ($registry) {
+            $result['profile::docker::private_registry'] = $registry;
         }
 
         $result['profile::docker::clusters'] = $services;
@@ -343,5 +303,75 @@ class ApiAdminController extends AbstractController
         return $this
             ->setReturnType('yaml')
             ->render($result);
+    }
+
+    private function generateExecutionHiera(Job $job, Execution $execution): array
+    {
+        $servicePrefix = $job->getType() . '-' . $job->getId();
+        $serviceName = $servicePrefix . '-' . $execution->getId();
+
+        $service = [
+            'service_name' => $serviceName,
+        ];
+
+        $yamlEnv = [];
+        $env = [];
+
+        // catch done or not-yet-ready executions
+        if (ExecutionStatus::isNotRequiredToRunAnymore($execution->getStatus())) {
+            $service['ensure'] = 'absent';
+
+            return $service;
+        }
+
+        $dispatchConfig = JobFactory::getDispatchConfigOfJob($job, $execution)->getDispatchConfig();
+        if ($dispatchConfig->getEnvVariables()) {
+            foreach ($dispatchConfig->getEnvVariables() as $key => $value) {
+                // it might be due to json array and object mixup, that value is still an array
+                if (is_array($value)) {
+                    foreach ($value as $subKey => $subValue) {
+                        $env[strtoupper($subKey)] = $subValue;
+                    }
+                } else {
+                    $env[strtoupper($key)] = $value;
+                }
+            }
+        }
+
+        // merge Yaml Config
+        if ($execution->getConfig('env')) {
+            foreach ($execution->getConfig('env') as $key => $value) {
+                // it might be due to json array and object mixup, that value is still an array
+                if (is_array($value)) {
+                    foreach ($value as $subKey => $subValue) {
+                        $env[strtoupper($subKey)] = $subValue;
+                    }
+                } else {
+                    $env[strtoupper($key)] = $value;
+                }
+            }
+        }
+
+        $env['HELIO_JOBID'] = $job->getId();
+        $env['HELIO_USERID'] = $job->getOwner()->getId();
+        $env['HELIO_EXECUTIONID'] = $execution->getId();
+
+        foreach ($env as $item => $value) {
+            // remove newlines because they cause yaml to parse them in a herein unwanted way
+            $escapedVal = str_replace(["\n", "\r"], ['\n', '\r'], $value);
+            $yamlEnv[] = escapeshellarg("$item=$escapedVal");
+        }
+
+        // set args if present
+        $args = $execution->getConfig('args') ?: $dispatchConfig->getArgs();
+        if ($args) {
+            $service['args'] = implode(' ', $args);
+        }
+
+        $service['image'] = $dispatchConfig->getImage() ?: 'hello-world';
+        $service['replicas'] = $dispatchConfig->getReplicaCountForJob($job);
+        $service['env'] = $yamlEnv;
+
+        return $service;
     }
 }

@@ -49,7 +49,13 @@ class CostCalculatorTest extends TestCase
     public function testEstimatesAreBasicallyCorrect(): void
     {
         $manager = Manager::createManager()
-            ->setStatus(ManagerStatus::READY);
+            ->setStatus(ManagerStatus::READY)
+            ->setName('test')
+            ->setFqdn('test.fqdn')
+            ->setWorkerToken('sometoken')
+            ->setManagerToken('somemanagertoken')
+            ->setIp('127.0.0.1');
+
         $job = (new Job())
             ->setManager($manager)
             ->setType(JobType::BUSYBOX)
@@ -83,7 +89,12 @@ class CostCalculatorTest extends TestCase
     public function testEstimatesAreCorrectWithCustomLimit(): void
     {
         $manager = Manager::createManager()
-            ->setStatus(ManagerStatus::READY);
+            ->setStatus(ManagerStatus::READY)
+            ->setName('test')
+            ->setFqdn('test.fqdn')
+            ->setWorkerToken('sometoken')
+            ->setManagerToken('somemanagertoken')
+            ->setIp('127.0.0.1');
         $job = (new Job())
             ->setManager($manager)
             ->setType(JobType::BUSYBOX)

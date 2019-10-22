@@ -15,6 +15,8 @@ interface OrchestratorInterface
 
     public function dispatchJob(): bool;
 
+    public function updateJob(array $jobIDs): void;
+
     public function startComputing();
 
     public function stopComputing();
