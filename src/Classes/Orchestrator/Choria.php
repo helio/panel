@@ -36,7 +36,7 @@ class Choria implements OrchestratorInterface
     private static $stopComputeCommand = 'mco playbook run helio::cluster::node::stop --input \'{"node_id":"%s","node_fqdn":"$fqdn","manager":"%s","callback":"$instanceCallback"}\'';
     private static $removeNodeCommand = 'mco playbook run helio::cluster::node::cleanup --input \'{"node_id":"%s","node_fqdn":"$fqdn","manager":"%s","callback":"$instanceCallback"}\'';
     private static $inspectCommand = 'mco playbook run helio::cluster::node::inspect --input \'{"node_fqdn":"$fqdn","callback":"$instanceCallback"}\'';
-    private static $getRunnderIdCommand = 'mco playbook run helio::cluster::node::getid --input \'{"node_fqdn":"$fqdn","callback":"$instanceCallback"}\'';
+    private static $getRunnerIdCommand = 'mco playbook run helio::cluster::node::getid --input \'{"node_fqdn":"$fqdn","callback":"$instanceCallback"}\'';
     private static $dispatchCommand = 'mco playbook run helio::task::update --input \'{"cluster_address":"%s","task_ids":"[%s]"}\'';
     private static $joinWorkersCommand = 'mco playbook run helio::queue --input \'{"cluster_join_token":"%s","cluster_join_address":"%s","cluster_join_count":"%s","manager_id":"%s"}\'';
 
@@ -187,7 +187,7 @@ class Choria implements OrchestratorInterface
     protected function ensureRunnerIdIsSet(): void
     {
         if (!$this->instance->getRunnerId()) {
-            ServerUtility::executeShellCommand($this->parseCommand(self::$getRunnderIdCommand));
+            ServerUtility::executeShellCommand($this->parseCommand(self::$getRunnerIdCommand));
             throw new RuntimeException('Instance ID not set');
         }
     }

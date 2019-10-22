@@ -474,6 +474,10 @@ class ApiJobExecuteController extends AbstractController
                 return $this->render(['error' => 'no execution found', 'params' => $this->params, 'execution' => $this->execution], StatusCode::HTTP_NOT_FOUND);
             }
 
+            if (ExecutionStatus::isNotRequiredToRunAnymore($this->execution->getStatus())) {
+                return $this->render(['error' => 'Execution already done'], StatusCode::HTTP_BAD_REQUEST);
+            }
+
             // if the job is not currently running, mark it so
             if (!ExecutionStatus::isRunning($this->execution->getStatus())) {
                 $this->execution->setStatus(ExecutionStatus::RUNNING)->setStarted();
