@@ -229,6 +229,9 @@ class ApiJobExecuteController extends AbstractController
             $jobIDsOnManager = $this->job
                 ->getManager()
                 ->getJobs()
+                ->filter(function (Job $job) {
+                    return JobStatus::isValidActiveStatus($job->getStatus());
+                })
                 ->map(function (Job $job) {
                     return $job->getId();
                 })
