@@ -17,7 +17,7 @@ use RuntimeException;
 
 class UserService
 {
-    const BLENDER_MANAGER_NODE = 'manager-init-2rrahd.europe-west6-a.c.clusters-242906.internal';
+    const BLENDER_MANAGER_NODE = 'manager-init-4kb1gy.europe-west6-a.c.clusters-242906.internal';
 
     /**
      * @var EntityRepository
