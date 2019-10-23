@@ -157,7 +157,7 @@ class Choria implements OrchestratorInterface
 
         // provision the manager
         ServerUtility::executeShellCommand($this->parseCommand(self::$createManagerCommand, false, [
-            $manager->getName(),
+            $manager->getFqdn(),
             $this->job->getOwner() ? $this->job->getOwner()->getId() : null,
         ]));
     }
