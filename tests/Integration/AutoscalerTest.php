@@ -59,10 +59,33 @@ class AutoscalerTest extends TestCase
     {
         parent::setUp();
         ServerUtility::resetLastExecutedCommand();
-        $this->instance = (new Instance())->setName('testinstance')->setCreated()->setFqdn('testserver.example.com')->setStatus(InstanceStatus::RUNNING);
+        $this->instance = (new Instance())
+            ->setName('testinstance')
+            ->setCreated()
+            ->setFqdn('testserver.example.com')
+            ->setStatus(InstanceStatus::RUNNING);
 
-        $this->user = (new User())->setAdmin(1)->setName('testuser')->setCreated()->setEmail('test-autoscaler@example.com')->setActive(true)->addInstance($this->instance);
-        $this->job = (new Job())->setStatus(JobStatus::READY)->setType(JobType::ENERGY_PLUS_85)->setOwner($this->user)->setManager((new Manager())->setStatus(ManagerStatus::READY)->setManagerToken('TOKEN')->setWorkerToken('WT')->setIp('1.1.1.1')->setFqdn('1'));
+        $this->user = (new User())
+            ->setAdmin(1)
+            ->setName('testuser')
+            ->setCreated()
+            ->setEmail('test-autoscaler@example.com')
+            ->setActive(true)
+            ->addInstance($this->instance);
+
+        $manager = (new Manager())
+            ->setStatus(ManagerStatus::READY)
+            ->setName('manager-init-test')
+            ->setManagerToken('TOKEN')
+            ->setWorkerToken('WT')
+            ->setIp('1.1.1.1')
+            ->setFqdn('manager-init-test.foo.example.com');
+
+        $this->job = (new Job())
+            ->setStatus(JobStatus::READY)
+            ->setType(JobType::ENERGY_PLUS_85)
+            ->setOwner($this->user)
+            ->setManager($manager);
         $this->user->addJob($this->job);
         $this->infrastructure->getEntityManager()->persist($this->user);
         $this->infrastructure->getEntityManager()->persist($this->job);
