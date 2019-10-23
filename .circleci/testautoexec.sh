@@ -3,12 +3,12 @@
 ##########
 # Guards and Variables
 BASE_URL=${1:-https://panel.idling.host}
-ID=${2:-2672}
+ID=${2:-10144}
 TOKEN=${3:-${TESTUSER_TOKEN}}
 if [[ -z "${TOKEN}" ]]; then echo "Error: Token not set" && exit 1; fi
 
 ##########
-# Create the Job and wait for its successful provisioning
+# Get job status
 STATUS=$(curl -fsSL -X GET -H "Authorization: Bearer ${TOKEN}" "${BASE_URL}/api/job?id=${ID}")
 if [[ -z "${STATUS}" ]]; then echo "Error: Status not valid" && exit 2; fi
 
