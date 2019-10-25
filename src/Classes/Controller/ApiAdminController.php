@@ -253,6 +253,39 @@ class ApiAdminController extends AbstractController
     /**
      * @return ResponseInterface
      *
+     * @Route("/workerwakeup", methods={"POST"}, name="admin.workerWakeup")
+     * @throws Exception
+     */
+    public function workerWakeupCallbackAction(): ResponseInterface
+    {
+        $body = $this->request->getParsedBody();
+        if (!array_key_exists('labels', $body)) {
+            return $this->render(['success' => false, 'message' => 'the workerwakeup cannot work without labels'], StatusCode::HTTP_NOT_FOUND);
+        }
+
+        $jobs = App::getDbHelper()->getRepository(Job::class)->findBy(['labels' => $body['labels']]);
+
+        $foundManagers = [];
+
+        /** @var Job $job */
+        foreach ($jobs as $job) {
+            if ($job->getActiveExecutionCount() > 0 && $job->getManager()->works()) {
+                $foundManagers[] = $job->getManager()->getFqdn();
+                OrchestratorFactory::getOrchestratorForInstance((new Instance()), $job)->dispatchJob();
+            }
+        }
+
+        LogHelper::info('triggered dispatch job', [
+           'found_managers' => $foundManagers,
+           'labels' => $body['labels'],
+        ]);
+
+        return $this->render(['found_managers' => $foundManagers]);
+    }
+
+    /**
+     * @return ResponseInterface
+     *
      * @Route("/getJobHiera", methods={"GET"}, name="admin.getJobHiera")
      */
     public function jobConfigForPuppetAction(): ResponseInterface

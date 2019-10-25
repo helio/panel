@@ -213,6 +213,13 @@ class Job extends AbstractModel
     private $numberOfActiveExecutions;
 
     /**
+     * @var string[]
+     *
+     * @Column(type="simple_array", nullable=TRUE)
+     */
+    protected $labels = [];
+
+    /**
      * Job constructor.
      *
      * @throws Exception
@@ -591,5 +598,56 @@ class Job extends AbstractModel
         return count(array_filter($this->getExecutions()->toArray(), function (Execution $execution) {
             return ExecutionStatus::isValidPendingStatus($execution->getStatus()) || ExecutionStatus::isRunning($execution->getStatus());
         }));
+    }
+
+    /**
+     * @param string $label
+     *
+     * @return Job
+     */
+    public function addLabel(string $label): self
+    {
+        if (!in_array($label, $this->labels, true)) {
+            $this->labels[] = $label;
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param string $labelToRemove
+     *
+     * @return Job
+     */
+    public function removeLabel(string $labelToRemove): self
+    {
+        $this->setLabels(array_filter($this->getLabels(), function ($label) use ($labelToRemove) {
+            if (trim($label) === trim($labelToRemove)) {
+                return false;
+            }
+
+            return true;
+        }));
+
+        return $this;
+    }
+
+    /**
+     * @return string[]
+     */
+    public function getLabels(): array
+    {
+        return $this->labels;
+    }
+
+    /**
+     * @param  string[] $labels
+     * @return Job
+     */
+    public function setLabels(array $labels): self
+    {
+        $this->labels = $labels;
+
+        return $this;
     }
 }

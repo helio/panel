@@ -240,40 +240,6 @@ class ApiJobTest extends TestCase
         $this->assertEquals(StatusCode::HTTP_FORBIDDEN, $response->getStatusCode(), (string) $response->getBody());
     }
 
-    public function testCallbackDeleteNodeSetsJobToDeletedStatus()
-    {
-        $user = $this->createUser();
-        $manager = $this->createManager('testCallbackDeleteNodeSetsJobToDeletedStatus');
-        $job = $this->createJob($user, 'testCallbackDeleteNodeSetsJobToDeletedStatus');
-        $job->setManager($manager);
-        $tokenHeader = ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $user, null, $job)['token']];
-
-        $response = $this->runWebApp('DELETE', '/api/job', true, $tokenHeader, ['id' => $job->getId()]);
-        $this->assertEquals(StatusCode::HTTP_OK, $response->getStatusCode());
-
-        /** @var Job $jobFromDatabase */
-        $jobFromDatabase = $this->infrastructure->getRepository(Job::class)->find($job->getId());
-        $this->assertEquals(JobStatus::DELETING, $jobFromDatabase->getStatus());
-
-        /** @var Manager $managerFromDB */
-        $managerFromDB = $this->infrastructure->getRepository(Manager::class)->find($manager->getId());
-        $this->assertEquals(ManagerStatus::READY, $managerFromDB->getStatus());
-
-        $response = $this->runWebApp('POST', sprintf('/api/job/callback?id=%s', $job->getId()), true, $tokenHeader, [
-            'nodes' => $manager->getName(),
-            'deleted' => 1,
-        ]);
-        $this->assertEquals(StatusCode::HTTP_OK, $response->getStatusCode());
-
-        /** @var Job $jobFromDatabase */
-        $jobFromDatabase = $this->infrastructure->getRepository(Job::class)->find($job->getId());
-        $this->assertEquals(JobStatus::DELETED, $jobFromDatabase->getStatus());
-
-        /** @var Manager $managerFromDB */
-        $managerFromDB = $this->infrastructure->getRepository(Manager::class)->find($manager->getId());
-        $this->assertEquals(ManagerStatus::REMOVED, $managerFromDB->getStatus());
-    }
-
     /**
      * @return User
      * @throws Exception
