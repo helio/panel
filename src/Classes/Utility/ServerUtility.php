@@ -116,9 +116,15 @@ class ServerUtility extends AbstractUtility
 
     public static function getProxySettings(): array
     {
+        $https = self::get('https_proxy', '');
+        $http = self::get('http_proxy', '');
+        if (!$https && !$http) {
+            return [];
+        }
+
         return [
-            'https' => self::get('https_proxy'),
-            'http' => self::get('http_proxy'),
+            'https' => $https,
+            'http' => $http,
         ];
     }
 

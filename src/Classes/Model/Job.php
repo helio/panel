@@ -33,7 +33,8 @@ class Job extends AbstractModel
      *     description="Job type specific configuration",
      *     oneOf={
      *         @OA\Schema(ref="#/components/schemas/docker"),
-     *         @OA\Schema(ref="#/components/schemas/gitlab")
+     *         @OA\Schema(ref="#/components/schemas/gitlab"),
+     *         @OA\Schema(ref="#/components/schemas/blender")
      *     },
      *     @OA\Discriminator(
      *         propertyName="type"

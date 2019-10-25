@@ -7,6 +7,7 @@ use Helio\Panel\App;
 use Helio\Panel\Controller\Traits\ModelUserController;
 use Helio\Panel\Controller\Traits\ModelParametrizedController;
 use Helio\Panel\Controller\Traits\TypeApiController;
+use Helio\Panel\Job\JobFactory;
 use Helio\Panel\Job\JobStatus;
 use Helio\Panel\Model\Instance;
 use Helio\Panel\Model\Job;
@@ -64,6 +65,8 @@ class ApiUserController extends AbstractController
         $limit = (int) ($this->params['limit'] ?? 10);
         $offset = (int) ($this->params['offset'] ?? 0);
         $includeTerminated = (bool) ($this->params['deleted'] ?? 0);
+        $returnHTML = (bool) ($this->params['html'] ?? true);
+        $type = $this->params['type'] ?? null;
         $order = explode(' ', filter_var($this->params['orderby'] ?? 'created DESC', FILTER_SANITIZE_STRING));
         $orderBy = [$order[0] => $order[1]];
         $searchCriteria = ['owner' => $this->user];
@@ -72,24 +75,68 @@ class ApiUserController extends AbstractController
         if (!$includeTerminated) {
             $searchCriteria['status'] = JobStatus::getAllButDeletedAndUnknownStatusCodes();
         }
+        if ($type) {
+            $searchCriteria['type'] = $type;
+        }
 
-        $jobs = [];
-        foreach (App::getDbHelper()->getRepository(Job::class)->findBy($searchCriteria, $orderBy, $limit, $offset) as $job) {
-            /* @var Job $job */
-            $jobs[] = [
+        $jobRepository = App::getDbHelper()->getRepository(Job::class);
+        $jobs = $jobRepository->findBy($searchCriteria, $orderBy, $limit, $offset);
+
+        $jobs = array_map(function (Job $job) use ($returnHTML) {
+            $executions = $job->getExecutions();
+            $totalExecutions = $executions->count();
+            $openExecutions = 0;
+            $runningExecutions = 0;
+
+            $executions = $executions->map(function(Execution $execution) use($job, &$openExecutions, &$runningExecutions) {
+                $status = $execution->getStatus();
+                if (ExecutionStatus::isRunning($status)) {
+                    $runningExecutions++;
+                }
+                if (ExecutionStatus::isValidPendingStatus($status)) {
+                    $openExecutions++;
+                }
+                return [
+                    'id' => $execution->getId(),
+                    'priority' => $execution->getPriority(),
+                    'results' => $execution->getStats(),
+                    'latestHeartbeat' => $execution->getLatestHeartbeat(),
+                    'status' => $execution->getStatus(),
+                    'finished' => ExecutionStatus::isNotRequiredToRunAnymore($execution->getStatus()),
+                    'estimates' => JobFactory::getDispatchConfigOfJob($job, $execution)->getExecutionEstimates(),
+                ];
+            });
+
+            $data = [
                 'id' => $job->getId(),
-                'html' => $this->fetchPartial('listItemJob', [
+                'name' => $job->getName(),
+                'config' => $job->getConfig(),
+                'billingReference' => $job->getBillingReference(),
+                'budget' => $job->getBudget(),
+                'type' => $job->getType(),
+                'priority' => $job->getPriority(),
+                'created' => $job->getCreated()->getTimestamp(),
+                'autoExecSchedule' => $job->getAutoExecSchedule(),
+                'location' => $job->getLocation(),
+                'cpus' => $job->getCpus(),
+                'gpus' => $job->getGpus(),
+                'status' => $job->getStatus(),
+                'executions' => $executions->toArray(),
+                'total_executions' => $totalExecutions,
+                'open_executions' => $openExecutions,
+                'running_executions' => $runningExecutions,
+            ];
+            if (!$returnHTML) {
+                $data['html'] = $this->fetchPartial('listItemJob', [
                     'job' => $job,
                     'user' => $this->user,
                     'files' => array_filter(scandir(ExecUtility::getJobDataFolder($job), SCANDIR_SORT_ASCENDING), function (string $item) {
                         return 0 !== strpos($item, '.') && strpos($item, '.tar.gz') > 0;
                     }),
-                ]),
-                'executions' => App::getDbHelper()->getRepository(Execution::class)->count(['job' => $job]),
-                'open_executions' => App::getDbHelper()->getRepository(Execution::class)->count(['job' => $job, 'status' => ExecutionStatus::READY]),
-                'running_executions' => App::getDbHelper()->getRepository(Execution::class)->count(['job' => $job, 'status' => ExecutionStatus::RUNNING]),
-            ];
-        }
+                ]);
+            }
+            return $data;
+        }, $jobs);
 
         return $this->render(['items' => $jobs]);
     }
