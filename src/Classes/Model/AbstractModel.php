@@ -251,7 +251,11 @@ abstract class AbstractModel
     public function getConfig(string $option = '', $default = '')
     {
         if ($option) {
+            if (!strlen($this->config)) {
+                return $default;
+            }
             $decodedConfig = \GuzzleHttp\json_decode($this->config, true);
+
             return ArrayUtility::getFirstByDotNotation([$decodedConfig], [$option]) ?? $default;
         }
 

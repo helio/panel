@@ -88,14 +88,15 @@ class ApiUserController extends AbstractController
             $openExecutions = 0;
             $runningExecutions = 0;
 
-            $executions = $executions->map(function(Execution $execution) use($job, &$openExecutions, &$runningExecutions) {
+            $executions = $executions->map(function (Execution $execution) use ($job, &$openExecutions, &$runningExecutions) {
                 $status = $execution->getStatus();
                 if (ExecutionStatus::isRunning($status)) {
-                    $runningExecutions++;
+                    ++$runningExecutions;
                 }
                 if (ExecutionStatus::isValidPendingStatus($status)) {
-                    $openExecutions++;
+                    ++$openExecutions;
                 }
+
                 return [
                     'id' => $execution->getId(),
                     'priority' => $execution->getPriority(),
@@ -135,6 +136,7 @@ class ApiUserController extends AbstractController
                     }),
                 ]);
             }
+
             return $data;
         }, $jobs);
 
