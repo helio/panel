@@ -64,7 +64,8 @@ abstract class AbstractExecute implements JobInterface, DispatchableInterface
             ->setIsCharity($jobObject['isCharity'] ?? '' === 'on')
             ->setPersistent($jobObject['persistent'] ?? '' === 'on')
             ->setConfig($jobObject['config'] ?? '')
-            ->setAutoExecSchedule($jobObject['autoExecSchedule'] ?? '');
+            ->setAutoExecSchedule($jobObject['autoExecSchedule'] ?? '')
+            ->setLabels($jobObject['labels'] ?? []);
 
         // only set status if not set yet. If a job is updated the status should not change.
         if (JobStatus::UNKNOWN === $this->job->getStatus()) {

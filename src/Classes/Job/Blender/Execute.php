@@ -42,6 +42,13 @@ class Execute extends \Helio\Panel\Job\Docker\Execute
         $this->storageCredentials = str_replace("\n", '', file_get_contents(ServerUtility::get('BLENDER_STORAGE_CREDENTIALS_JSON_PATH')));
     }
 
+    public function create(array $jobObject): bool
+    {
+        $jobObject['labels'] = ['render'];
+
+        return parent::create($jobObject);
+    }
+
     /**
      * @return DispatchConfig
      *
