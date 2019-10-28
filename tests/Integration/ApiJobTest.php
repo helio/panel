@@ -13,23 +13,13 @@ use Helio\Panel\Model\Preferences\UserPreferences;
 use Helio\Panel\Model\User;
 use Helio\Panel\Orchestrator\ManagerStatus;
 use Helio\Panel\Utility\JwtUtility;
-use Helio\Test\Infrastructure\Orchestrator\OrchestratorFactory;
+use Helio\Test\Infrastructure\Utility\NotificationUtility;
+use Helio\Test\Infrastructure\Utility\ServerUtility;
 use Helio\Test\TestCase;
 use Slim\Http\StatusCode;
 
 class ApiJobTest extends TestCase
 {
-    public function tearDown(): void
-    {
-        parent::tearDown();
-
-        // N.B. when you remove jobs/users, you need to reset the instances of orchestrator singleton cache
-        // otherwise following tests create new jobs with the same ID, instance cache thinks it knows them still,
-        // but the object is actually gone already.
-        // Singletons are evil.
-        OrchestratorFactory::resetInstances();
-    }
-
     /**
      * @throws Exception
      */
@@ -37,11 +27,25 @@ class ApiJobTest extends TestCase
     {
         $job = $this->createJob($this->createUser(), 'ApiJobTest');
 
-        $statusResult = $this->runWebApp('GET', '/api/job/isready?jobid=' . $job->getId(), true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, null, null, $job)['token']]);
+        $statusResult = $this->runWebApp(
+            'GET',
+            '/api/job/isready?jobid=' . $job->getId(),
+            true,
+            ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, null, null, $job)['token']]
+        );
         $this->assertEquals(StatusCode::HTTP_OK, $statusResult->getStatusCode());
 
-        $statusResult = $this->runWebApp('GET', '/api/job/isready?id=' . $job->getId(), true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, null, null, $job)['token']]);
-        $this->assertEquals(StatusCode::HTTP_OK, $statusResult->getStatusCode(), 'on the job api, the parameter "id" should be synonym to "jobid".');
+        $statusResult = $this->runWebApp(
+            'GET',
+            '/api/job/isready?id=' . $job->getId(),
+            true,
+            ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, null, null, $job)['token']]
+        );
+        $this->assertEquals(
+            StatusCode::HTTP_OK,
+            $statusResult->getStatusCode(),
+            'on the job api, the parameter "id" should be synonym to "jobid".'
+        );
     }
 
     /**
@@ -67,7 +71,13 @@ class ApiJobTest extends TestCase
         $this->infrastructure->getEntityManager()->persist($exec);
         $this->infrastructure->getEntityManager()->flush();
 
-        $statusResult = $this->runWebApp('GET', '/api/job/isdone?id=' . $job->getId(), true, $header, ['billingReference' => $executionId]);
+        $statusResult = $this->runWebApp(
+            'GET',
+            '/api/job/isdone?id=' . $job->getId(),
+            true,
+            $header,
+            ['billingReference' => $executionId]
+        );
         $this->assertEquals(StatusCode::HTTP_OK, $statusResult->getStatusCode());
     }
 
@@ -80,7 +90,13 @@ class ApiJobTest extends TestCase
         $job = $this->createJob($user, 'ApiJobTest');
 
         $header = ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $user)['token']];
-        $updateResponse = $this->runWebApp('POST', '/api/job', true, $header, ['name' => 'testJobCreationAndUpdateWorks', 'type' => 'docker', 'id' => $job->getId()]);
+        $updateResponse = $this->runWebApp(
+            'POST',
+            '/api/job',
+            true,
+            $header,
+            ['name' => 'testJobCreationAndUpdateWorks', 'type' => 'docker', 'id' => $job->getId()]
+        );
         $this->assertEquals(StatusCode::HTTP_OK, $updateResponse->getStatusCode());
         $body = json_decode((string) $updateResponse->getBody(), true);
         $this->assertArrayHasKey('id', $body);
@@ -118,18 +134,29 @@ class ApiJobTest extends TestCase
         $body = json_decode((string) $response->getBody(), true);
         // notification is not interesting for the below equals check
         unset($body['notification']);
-        $body['limits'] = array_filter($body['limits'], function ($key) {
-            return in_array($key, ['running_jobs', 'running_executions']);
-        }, ARRAY_FILTER_USE_KEY);
+        $body['limits'] = array_filter(
+            $body['limits'],
+            function ($key) {
+                return in_array($key, ['running_jobs', 'running_executions']);
+            },
+            ARRAY_FILTER_USE_KEY
+        );
 
-        $this->assertEquals([
-            'success' => false,
-            'message' => sprintf('Limit of running jobs reached. Amount running: %s / Limit: %s. Please contact helio support if you have any questions.', $runningJobsLimit, $runningJobsLimit),
-            'limits' => [
-                'running_jobs' => 1,
-                'running_executions' => 10,
+        $this->assertEquals(
+            [
+                'success' => false,
+                'message' => sprintf(
+                    'Limit of running jobs reached. Amount running: %s / Limit: %s. Please contact helio support if you have any questions.',
+                    $runningJobsLimit,
+                    $runningJobsLimit
+                ),
+                'limits' => [
+                    'running_jobs' => 1,
+                    'running_executions' => 10,
+                ],
             ],
-        ], $body);
+            $body
+        );
     }
 
     /**
@@ -152,24 +179,41 @@ class ApiJobTest extends TestCase
             $this->createExecution($job, sprintf('%s-%s', __METHOD__, $i), ExecutionStatus::RUNNING);
         }
         $name = sprintf('%s-exceeded', __METHOD__);
-        $response = $this->runWebApp('POST', sprintf('/api/job/%s/execute', $job->getId()), true, $header, ['name' => $name]);
+        $response = $this->runWebApp(
+            'POST',
+            sprintf('/api/job/%s/execute', $job->getId()),
+            true,
+            $header,
+            ['name' => $name]
+        );
         $this->assertEquals(StatusCode::HTTP_FORBIDDEN, $response->getStatusCode(), (string) $response->getBody());
 
         $body = json_decode((string) $response->getBody(), true);
         // notification is not interesting for the below equals check
         unset($body['notification']);
-        $body['limits'] = array_filter($body['limits'], function ($key) {
-            return in_array($key, ['running_jobs', 'running_executions']);
-        }, ARRAY_FILTER_USE_KEY);
+        $body['limits'] = array_filter(
+            $body['limits'],
+            function ($key) {
+                return in_array($key, ['running_jobs', 'running_executions']);
+            },
+            ARRAY_FILTER_USE_KEY
+        );
 
-        $this->assertEquals([
-            'success' => false,
-            'message' => sprintf('Limit of running executions reached. Amount running: %s / Limit: %s. Please contact helio support if you have any questions.', $runningExecutionsLimit, $runningExecutionsLimit),
-            'limits' => [
-                'running_jobs' => 5,
-                'running_executions' => 1,
+        $this->assertEquals(
+            [
+                'success' => false,
+                'message' => sprintf(
+                    'Limit of running executions reached. Amount running: %s / Limit: %s. Please contact helio support if you have any questions.',
+                    $runningExecutionsLimit,
+                    $runningExecutionsLimit
+                ),
+                'limits' => [
+                    'running_jobs' => 5,
+                    'running_executions' => 1,
+                ],
             ],
-        ], $body);
+            $body
+        );
     }
 
     /**
@@ -193,12 +237,36 @@ class ApiJobTest extends TestCase
         $user = $this->createUser();
         $job = $this->createJob($user, 'testDeleteSetsExecutionsToTerminated');
 
-        $unknownExecution = $this->createExecution($job, 'testDeleteSetsExecutionsToTerminated#unknown', ExecutionStatus::UNKNOWN);
-        $readyExecution = $this->createExecution($job, 'testDeleteSetsExecutionsToTerminated#ready', ExecutionStatus::READY);
-        $runningExecution = $this->createExecution($job, 'testDeleteSetsExecutionsToTerminated#running', ExecutionStatus::RUNNING);
-        $doneExecution = $this->createExecution($job, 'testDeleteSetsExecutionsToTerminated#done', ExecutionStatus::DONE);
-        $stoppedExecution = $this->createExecution($job, 'testDeleteSetsExecutionsToTerminated#stopped', ExecutionStatus::STOPPED);
-        $terminatedExecution = $this->createExecution($job, 'testDeleteSetsExecutionsToTerminated#terminated', ExecutionStatus::TERMINATED);
+        $unknownExecution = $this->createExecution(
+            $job,
+            'testDeleteSetsExecutionsToTerminated#unknown',
+            ExecutionStatus::UNKNOWN
+        );
+        $readyExecution = $this->createExecution(
+            $job,
+            'testDeleteSetsExecutionsToTerminated#ready',
+            ExecutionStatus::READY
+        );
+        $runningExecution = $this->createExecution(
+            $job,
+            'testDeleteSetsExecutionsToTerminated#running',
+            ExecutionStatus::RUNNING
+        );
+        $doneExecution = $this->createExecution(
+            $job,
+            'testDeleteSetsExecutionsToTerminated#done',
+            ExecutionStatus::DONE
+        );
+        $stoppedExecution = $this->createExecution(
+            $job,
+            'testDeleteSetsExecutionsToTerminated#stopped',
+            ExecutionStatus::STOPPED
+        );
+        $terminatedExecution = $this->createExecution(
+            $job,
+            'testDeleteSetsExecutionsToTerminated#terminated',
+            ExecutionStatus::TERMINATED
+        );
         $executions = [
             $unknownExecution->getId() => ExecutionStatus::TERMINATED,
             $readyExecution->getId() => ExecutionStatus::TERMINATED,
@@ -236,22 +304,195 @@ class ApiJobTest extends TestCase
         $this->assertEquals(StatusCode::HTTP_OK, $response->getStatusCode());
 
         $name = sprintf('%s-deletion', __METHOD__);
-        $response = $this->runWebApp('POST', sprintf('/api/job/%s/execute', $job->getId()), true, $tokenHeader, ['name' => $name]);
+        $response = $this->runWebApp(
+            'POST',
+            sprintf('/api/job/%s/execute', $job->getId()),
+            true,
+            $tokenHeader,
+            ['name' => $name]
+        );
         $this->assertEquals(StatusCode::HTTP_FORBIDDEN, $response->getStatusCode(), (string) $response->getBody());
     }
 
+    public function testSendJobReadyNotification()
+    {
+        $user = $this->createUser();
+        $job = $this->createJob($user, 'testSendJobReadyNotification', JobStatus::INIT);
+        $tokenHeader = ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $user, null, $job)['token']];
+
+        $response = $this->runWebApp('POST', sprintf('/api/job/callback?id=%s', $job->getId()), true, $tokenHeader, []);
+        $this->assertEquals(StatusCode::HTTP_OK, $response->getStatusCode());
+
+        $this->assertCount(2, NotificationUtility::$mails);
+
+        $userNotification = NotificationUtility::$mails[0];
+        $adminNotification = NotificationUtility::$mails[1];
+
+        $this->assertEquals(
+            [
+                'recipient' => 'test-autoscaler@example.com',
+                'subject' => 'Job testSendJobReadyNotification (1) ready - Helio',
+                'content' => "Hi testuser\n This is an automated notification from Helio.\n \n Your job with the id 1 is now ready to be executed on Helio",
+                'from' => 'hello@idling.host',
+            ],
+            $userNotification
+        );
+        $this->assertEquals([
+            'recipient' => 'team@helio.exchange',
+            'subject' => 'Admin Notification from Panel',
+            'content' => 'Job is now ready. By: test-autoscaler@example.com, type: busybox, id: 1, expected manager: manager1',
+            'from' => 'hello@idling.host',
+        ], $adminNotification);
+    }
+
+    public function testSendJobRemovedNotification()
+    {
+        $user = $this->createUser();
+        $job = $this->createJob($user, 'testSendJobRemovedNotification', JobStatus::DELETING);
+
+        $tokenHeader = ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $user, null, $job)['token']];
+
+        $response = $this->runWebApp('POST', sprintf('/api/job/callback?id=%s', $job->getId()), true, $tokenHeader, [
+            'nodes' => [$job->getManager()->getName()],
+            'deleted' => '1',
+        ]);
+        $this->assertEquals(StatusCode::HTTP_OK, $response->getStatusCode());
+
+        $this->assertCount(1, NotificationUtility::$mails);
+
+        $adminNotification = NotificationUtility::$mails[0];
+
+        $this->assertEquals([
+            'recipient' => 'team@helio.exchange',
+            'subject' => 'Admin Notification from Panel',
+            'content' => 'Job was deleted by test-autoscaler@example.com, type: busybox, id: 1, expected manager: manager-init-356a192b',
+            'from' => 'hello@idling.host',
+        ], $adminNotification);
+    }
+
+    public function testSendExecutionDoneNotification()
+    {
+        $user = $this->createUser();
+        $job = $this->createJob($user, 'testSendExecutionDoneNotification', JobStatus::READY);
+        $execution = $this->createExecution($job, 'testSendExecutionDoneNotification');
+        $tokenHeader = ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $user, null, $job)['token']];
+
+        $response = $this->runWebApp('POST', sprintf('/api/job/%s/execute/submitresult?id=%s', $job->getId(), $execution->getId()), true, $tokenHeader, []);
+        $this->assertEquals(StatusCode::HTTP_OK, $response->getStatusCode());
+
+        $this->assertCount(1, NotificationUtility::$mails);
+
+        $userNotification = NotificationUtility::$mails[0];
+
+        $this->assertEquals(
+            [
+                'recipient' => 'test-autoscaler@example.com',
+                'subject' => 'Job testSendExecutionDoneNotification (1), Execution testSendExecutionDoneNotification (1) executed - Helio',
+                'content' => "Hi testuser\n This is an automated notification from Helio.\n \n Your Job 1 with id 1 was successfully executed\nThe results can now be used.",
+                'from' => 'hello@idling.host',
+            ],
+            $userNotification
+        );
+    }
+
+    public function testDontSendKoalaFarmJobReadyNotification()
+    {
+        $user = $this->createUser(function (User $user) {
+            $user->setOrigin(ServerUtility::get('KOALA_FARM_ORIGIN'));
+        });
+
+        $job = $this->createJob($user, 'testDontSendKoalaFarmJobReadyNotification', JobStatus::INIT);
+        $tokenHeader = ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $user, null, $job)['token']];
+
+        $response = $this->runWebApp('POST', sprintf('/api/job/callback?id=%s', $job->getId()), true, $tokenHeader, []);
+        $this->assertEquals(StatusCode::HTTP_OK, $response->getStatusCode());
+
+        $this->assertCount(1, NotificationUtility::$mails);
+
+        $adminNotification = NotificationUtility::$mails[0];
+
+        $this->assertEquals([
+            'recipient' => 'team@helio.exchange',
+            'subject' => 'Admin Notification from Panel',
+            'content' => 'Job is now ready. By: test-autoscaler@example.com, type: busybox, id: 1, expected manager: manager1',
+            'from' => 'hello@idling.host',
+        ], $adminNotification);
+    }
+
+    public function testDontSendKoalaFarmJobRemovedNotification()
+    {
+        $user = $this->createUser(function (User $user) {
+            $user->setOrigin(ServerUtility::get('KOALA_FARM_ORIGIN'));
+        });
+        $job = $this->createJob($user, 'testDontSendKoalaFarmJobRemovedNotification', JobStatus::DELETING);
+
+        $tokenHeader = ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $user, null, $job)['token']];
+
+        $response = $this->runWebApp('POST', sprintf('/api/job/callback?id=%s', $job->getId()), true, $tokenHeader, [
+            'nodes' => [$job->getManager()->getName()],
+            'deleted' => '1',
+        ]);
+        $this->assertEquals(StatusCode::HTTP_OK, $response->getStatusCode());
+
+        $this->assertCount(1, NotificationUtility::$mails);
+
+        $adminNotification = NotificationUtility::$mails[0];
+
+        $this->assertEquals([
+            'recipient' => 'team@helio.exchange',
+            'subject' => 'Admin Notification from Panel',
+            'content' => 'Job was deleted by test-autoscaler@example.com, type: busybox, id: 1, expected manager: manager-init-356a192b',
+            'from' => 'hello@idling.host',
+        ], $adminNotification);
+    }
+
+    public function testSendKoalaFarmExecutionDoneNotification()
+    {
+        $user = $this->createUser(function (User $user) {
+            $user->setOrigin(ServerUtility::get('KOALA_FARM_ORIGIN'));
+        });
+
+        $job = $this->createJob($user, 'testSendKoalaFarmExecutionDoneNotification', JobStatus::READY);
+        $execution = $this->createExecution($job, 'testSendKoalaFarmExecutionDoneNotification');
+        $tokenHeader = ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $user, null, $job)['token']];
+
+        $response = $this->runWebApp('POST', sprintf('/api/job/%s/execute/submitresult?id=%s', $job->getId(), $execution->getId()), true, $tokenHeader, []);
+        $this->assertEquals(StatusCode::HTTP_OK, $response->getStatusCode());
+
+        $this->assertCount(1, NotificationUtility::$mails);
+
+        $userNotification = NotificationUtility::$mails[0];
+
+        $this->assertEquals(
+            [
+                'recipient' => 'test-autoscaler@example.com',
+                'subject' => 'Rendering completed! - Koala Farm',
+                'content' => "Hi testuser\n Thanks for using Koala farm!\n \n A new render completed successfully! Please visit http://localhost:3000 to download the results.",
+                'from' => 'hello@koala.farm',
+            ],
+            $userNotification
+        );
+    }
+
     /**
+     * @param  callable  $options optional changes to the provided user object before persisting
      * @return User
      * @throws Exception
      */
-    private function createUser(): User
+    private function createUser(?callable $options = null): User
     {
         /** @var User $user */
         $user = (new User())
             ->setAdmin(1)
             ->setName('testuser')
-            ->setEmail('test-autoscaler@example.com'
+            ->setEmail(
+                'test-autoscaler@example.com'
             )->setActive(true)->setCreated();
+
+        if ($options) {
+            $options($user);
+        }
+
         $this->infrastructure->getEntityManager()->persist($user);
         $this->infrastructure->getEntityManager()->flush($user);
 
@@ -261,11 +502,12 @@ class ApiJobTest extends TestCase
     /**
      * @param  User   $user
      * @param  string $name
+     * @param  int    $status
      * @return Job
      *
      * @throws Exception
      */
-    private function createJob(User $user, $name = __CLASS__): Job
+    private function createJob(User $user, string $name = __CLASS__, int $status = JobStatus::READY): Job
     {
         $manager = (new Manager())
             ->setName('testname')
@@ -278,7 +520,7 @@ class ApiJobTest extends TestCase
 
         $job = (new Job())
             ->setType(JobType::BUSYBOX)
-            ->setStatus(JobStatus::READY)
+            ->setStatus($status)
             ->setOwner($user)
             ->setName($name)
             ->setManager($manager)

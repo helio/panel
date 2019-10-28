@@ -79,6 +79,11 @@ class ServerUtility extends AbstractUtility
         return PHP_SAPI === 'cli-server' && SITE_ENV === 'DEV';
     }
 
+    public static function isTestEnv(): bool
+    {
+        return 'TEST' === self::get('SITE_ENV');
+    }
+
     /**
      * @param string     $name
      * @param mixed|null $default

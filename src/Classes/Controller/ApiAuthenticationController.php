@@ -53,7 +53,7 @@ class ApiAuthenticationController extends AbstractController
         }
 
         $origin = $this->request->hasHeader('Origin') ? $this->request->getHeader('Origin')[0] : '';
-        ['user' => $user, 'token' => $token] = $this->userService->login($email, $origin);
+        ['token' => $token] = $this->userService->login($email, $origin);
 
         return $this->render(['token' => $token]);
     }

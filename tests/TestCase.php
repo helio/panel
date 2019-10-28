@@ -18,6 +18,7 @@ use Helio\Test\Infrastructure\Helper\DbHelper;
 use Helio\Test\Infrastructure\Helper\LogHelper;
 use Helio\Test\Infrastructure\Helper\ZapierHelper;
 use Helio\Test\Infrastructure\Orchestrator\OrchestratorFactory;
+use Helio\Test\Infrastructure\Utility\NotificationUtility;
 use Helio\Test\Infrastructure\Utility\ServerUtility;
 use Monolog\Logger;
 use Psr\Http\Message\ResponseInterface;
@@ -78,7 +79,7 @@ class TestCase extends \PHPUnit\Framework\TestCase
         $_SERVER['REMOTE_ADDR'] = '127.0.0.1';
         $_SERVER['SITE_ENV'] = 'TEST';
         $_SERVER['ELASTIC_HOST'] = 'elastic.neverland.global';
-        $_SERVER['KOALA_FARM_ORIGIN'] = 'https://localhost:3000';
+        $_SERVER['KOALA_FARM_ORIGIN'] = 'http://localhost:3000';
 
         // re-init Zapier helper to make sure no Responses are left in the stack etc.
         ZapierHelper::reset();
@@ -126,6 +127,9 @@ class TestCase extends \PHPUnit\Framework\TestCase
         // but the object is actually gone already.
         // Singletons are evil.
         OrchestratorFactory::resetInstances();
+
+        // Reset sent mails
+        NotificationUtility::$mails = [];
     }
 
     /**

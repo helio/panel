@@ -74,12 +74,12 @@ class ApiAuthenticationTest extends TestCase
     public function testApiLoginWithRandomUserGivesNoTokenAndNoUser(): void
     {
         ZapierHelper::setResponseStack([new Response(200, [], '{"success" => "true"}')]);
-        $response = $this->runWebApp('POST', '/api/login', false, ['Content-Type' => 'application/json'], ['email' => 'someone@example.com']);
+        $response = $this->runWebApp('POST', '/api/login', false, ['Accept' => 'application/json', 'Content-Type' => 'application/json'], ['email' => 'someone@example.com']);
 
         $this->assertEquals(200, $response->getStatusCode(), $response->getBody());
         $body = json_decode((string) $response->getBody(), true);
 
-        $this->assertArrayNotHasKey('user', $body);
+        $this->assertArrayNotHasKey('user', $body, print_r($body, true));
         $this->assertNull($body['token']);
     }
 }

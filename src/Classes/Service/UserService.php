@@ -11,6 +11,8 @@ use Helio\Panel\App;
 use Helio\Panel\Helper\ZapierHelper;
 use Helio\Panel\Job\JobType;
 use Helio\Panel\Model\User;
+use Helio\Panel\Product\Helio;
+use Helio\Panel\Product\KoalaFarm;
 use Helio\Panel\Utility\ServerUtility;
 use Monolog\Logger;
 use RuntimeException;
@@ -84,11 +86,20 @@ class UserService
         $user->setOrigin($origin);
         $user->setCreated();
 
-        if ($origin === ServerUtility::get('KOALA_FARM_ORIGIN')) {
+        if ($origin === ServerUtility::get('KOALA_FARM_ORIGIN', '')) {
             $prefs = $user->getPreferences();
+
+            $notifications = $prefs->getNotifications();
+            $notifications->setEmailOnExecutionStarted(false);
+            $notifications->setEmailOnJobDeleted(false);
+            $notifications->setEmailOnJobReady(false);
+            $notifications->setEmailOnAutoscheduledExecutionEnded(false);
+
             $limits = $prefs->getLimits();
             $limits->setJobTypes([JobType::BLENDER]);
             $limits->setManagerNodes([self::BLENDER_MANAGER_NODE]);
+
+            $prefs->setNotifications($notifications);
             $prefs->setLimits($limits);
             $user->setPreferences($prefs);
         }
@@ -114,10 +125,17 @@ class UserService
             $user = $this->create($email, $origin);
         }
 
-        if (!App::getNotificationUtility()::sendConfirmationMail($user)) {
+        $product = new Helio();
+        if ($origin === ServerUtility::get('KOALA_FARM_ORIGIN', '')) {
+            $product = new KoalaFarm();
+        }
+
+        if (!App::getNotificationUtility()::sendConfirmationMail($user, $product)) {
             throw new RuntimeException('Error during User Creation', 1545655919);
         }
 
+        // TODO(mw): this is a leftover from having an example user which automatically responded with a token.
+        //           can be removed, but needs a check with consumers if it's somehow used somewhere.
         $token = null;
 
         return ['user' => $user, 'token' => $token];

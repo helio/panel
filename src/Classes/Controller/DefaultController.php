@@ -3,6 +3,7 @@
 namespace Helio\Panel\Controller;
 
 use Exception;
+use Helio\Panel\Product\Helio;
 use Helio\Panel\Service\UserService;
 use InvalidArgumentException;
 use RuntimeException;
@@ -168,7 +169,9 @@ class DefaultController extends AbstractController
             App::getDbHelper()->merge($server);
             App::getDbHelper()->flush();
 
-            if (!App::getNotificationUtility()::sendConfirmationMail($user, '+15 minutes')) {
+            $product = new Helio();
+
+            if (!App::getNotificationUtility()::sendConfirmationMail($user, $product, '+15 minutes')) {
                 throw new RuntimeException('Couldn\'t send confirmation mail', 1531253400);
             }
         } catch (Exception $e) {

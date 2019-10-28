@@ -53,10 +53,25 @@ class PanelTest extends TestCase
         $this->assertEquals(StatusCode::HTTP_FOUND, $response->getStatusCode());
         $this->assertStringContainsString('/panel', $response->getHeaderLine('location'));
         $response = $this->runWebApp('GET', $response->getHeaderLine('location'), true, null, null, $response->getHeaderLine('set-cookie'));
+        $this->assertEquals(200, $response->getStatusCode());
 
         /** @var User $user */
         $user = $this->userRepository->findOneByEmail('email@example.com');
         $this->assertTrue($user->isActive());
+    }
+
+    /**
+     * @throws \Exception
+     */
+    public function testActivationLinkContainsKoalaFarmURL(): void
+    {
+        ZapierHelper::setResponseStack([new Response(200, [], '{"success" => "true"}')]);
+        $response = $this->runWebApp('POST', '/api/login', true, ['Origin' => 'http://localhost:3000', 'Content-Type' => 'application/json'], ['email' => 'email@example.com']);
+        $this->assertEquals(200, $response->getStatusCode());
+
+        $confirmationMail = NotificationUtility::$mails[0];
+
+        $this->assertStringContainsString('http://localhost:3000#token=', $confirmationMail['content']);
     }
 
     /**

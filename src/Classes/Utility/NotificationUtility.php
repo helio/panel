@@ -6,64 +6,66 @@ use Exception;
 use Helio\Panel\App;
 use Helio\Panel\Helper\LogHelper;
 use Helio\Panel\Model\User;
+use Helio\Panel\Product\Product;
 
-/**
- * Class MailUtility.
- */
 class NotificationUtility extends AbstractUtility
 {
     /**
-     * @var string
-     */
-    protected static $confirmationMailContent = <<<EOM
-    Hi %s 
-    Welcome to helio. Please klick this link to log in:
-    %s
-EOM;
-    /**
-     * @var string
-     */
-    protected static $notificationMailTemplate = <<<EOM
-    Hi %s 
-    This is an automated notification from the Helio platform.
-    
-    %s
-EOM;
-
-    /**
-     * @param User   $user
-     * @param string $linkLifetime
+     * @param User    $user
+     * @param Product $product
+     * @param string  $linkLifetime
      *
      * @return bool
      *
      * @throws Exception
      */
-    public static function sendConfirmationMail(User $user, string $linkLifetime = '+1 week'): bool
+    public static function sendConfirmationMail(User $user, Product $product, string $linkLifetime = '+1 week'): bool
     {
-        $content = vsprintf(static::$confirmationMailContent, [
-            $user->getName(),
-            // FIXME(mw): allow to use a different base URL (koala.farm case)
-            ServerUtility::getBaseUrl() . 'confirm?signature=' .
-            JwtUtility::generateToken($linkLifetime, $user)['token'],
+        $token = JwtUtility::generateToken($linkLifetime, $user)['token'];
+        $content = self::replaceParams($product->confirmationMailContent(), [
+            'username' => $user->getName(),
+            'product' => $product->title(),
+            'link' => sprintf($product->confirmURL(), $token),
+        ]);
+        $subject = self::replaceParams('Welcome to {{product}}', [
+            'product' => $product->title(),
         ]);
 
-        return static::sendMail($user->getEmail(), 'Welcome to Helio', $content);
+        return static::sendMail($user->getEmail(), $subject, $content, $product->emailSender());
     }
 
     /**
-     * @param  User   $user
-     * @param  string $subject
-     * @param  string $message
+     * @param User    $user
+     * @param Product $product
+     * @param string  $templateName
+     * @param array   $params
+     *
      * @return bool
      */
-    public static function notifyUser(User $user, string $subject, string $message): bool
+    public static function notifyUser(User $user, Product $product, string $templateName, array $params): bool
     {
-        $content = vsprintf(static::$notificationMailTemplate, [
-            $user->getName(),
-            $message,
+        try {
+            $template = $product->notificationMessage($templateName);
+        } catch (\InvalidArgumentException $e) {
+            LogHelper::info("template name ${templateName} not supported for product", ['product title' => $product->title()]);
+
+            return false;
+        }
+
+        $params = array_merge([
+            'product' => $product->title(),
+            'baseURL' => $product->baseURL(),
+            'username' => $user->getName(),
+        ], $params);
+        $message = self::replaceParams($template['message'], $params);
+        $subject = self::replaceParams($template['subject'], $params);
+        $content = self::replaceParams($product->notificationMailTemplate(), [
+            'username' => $user->getName(),
+            'product' => $product->title(),
+            'message' => $message,
         ]);
 
-        return static::sendMail($user->getEmail(), $subject . ' - Helio', $content);
+        return static::sendMail($user->getEmail(), $subject . ' - ' . $product->title(), $content, $product->emailSender());
     }
 
     public static function notifyAdmin(string $content = ''): bool
@@ -84,15 +86,16 @@ EOM;
         }
     }
 
-    protected static function sendMail(string $recipient, string $subject, string $content): bool
+    protected static function sendMail(string $recipient, string $subject, string $content, string $from = 'hello@idling.host'): bool
     {
-        $subject = str_replace("\n", '', $subject);
+        $subject = self::trimNewline($subject);
+        $content = self::trimRepeatedWhitespace($content);
         $return = ServerUtility::isProd() ?
             @mail($recipient,
                 $subject,
                 $content,
-                'From: hello@idling.host',
-                '-f hello@idling.host'
+                'From: ' . $from,
+                '-f ' . $from
             ) : true;
 
         if ($return) {
@@ -101,11 +104,54 @@ EOM;
             LogHelper::warn('Failed to sent Mail to ' . $recipient . '. Reason: ' . $return);
         }
 
-        // write mail to PHPStorm Console
+        // write mail to stdout
         if (PHP_SAPI === 'cli-server' && 'PROD' !== ServerUtility::get('SITE_ENV')) {
             LogHelper::logToConsole("mail sent to $recipient:\n$subject\n\n$content");
         }
 
         return $return;
+    }
+
+    protected static function replaceParams(string $template, array $params): string
+    {
+        $matches = [];
+        preg_match_all('/{{(\w+)}}/m', $template, $matches, PREG_SET_ORDER);
+        if (count($matches) > count($params)) {
+            LogHelper::err('found more matches than params', [
+                'matches' => $matches,
+                'params' => $params,
+                'template' => $template,
+            ]);
+            throw new \InvalidArgumentException('params amount must be at least the size of found matches');
+        }
+        foreach ($matches as $match) {
+            if (!isset($params[$match[1]])) {
+                LogHelper::err('missing param found in template', [
+                    'matches' => $matches,
+                    'params' => $params,
+                    'template' => $template,
+                ]);
+                throw new \InvalidArgumentException('all params need to be supplied');
+            }
+
+            $template = str_replace('{{' . $match[1] . '}}', $params[$match[1]], $template);
+        }
+
+        return $template;
+    }
+
+    protected static function trimNewline(string $str): string
+    {
+        return str_replace("\n", '', $str);
+    }
+
+    protected static function trimRepeatedWhitespace(string $str): string
+    {
+        $str = preg_replace('/ {2,}/m', ' ', $str);
+        if (false === $str) {
+            throw new \Exception(preg_last_error());
+        }
+
+        return trim($str);
     }
 }

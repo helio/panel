@@ -16,6 +16,9 @@ use Doctrine\ORM\Mapping\OneToMany;
 use Doctrine\Common\Collections\ArrayCollection;
 use Helio\Panel\Job\JobStatus;
 use Helio\Panel\Model\Preferences\UserPreferences;
+use Helio\Panel\Product\Helio;
+use Helio\Panel\Product\KoalaFarm;
+use Helio\Panel\Product\Product;
 use Helio\Panel\Utility\ArrayUtility;
 use Helio\Panel\Utility\ServerUtility;
 
@@ -375,5 +378,10 @@ class User extends AbstractModel implements \JsonSerializable
         return [
             'id' => $this->getId(),
         ];
+    }
+
+    public function getProduct(): Product
+    {
+        return $this->origin === ServerUtility::get('KOALA_FARM_ORIGIN', '') ? new KoalaFarm() : new Helio();
     }
 }

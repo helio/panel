@@ -421,19 +421,11 @@ class ApiJobExecuteController extends AbstractController
 
         if ($this->execution->isAutoExecuted()) {
             if ($this->user->getPreferences()->getNotifications()->isEmailOnAutoscheduledExecutionEnded()) {
-                App::getNotificationUtility()::notifyUser(
-                    $this->job->getOwner(),
-                    sprintf('Job %s (%d), Execution %s (%d) executed', $this->job->getName(), $this->job->getId(), $this->execution->getName(), $this->execution->getId()),
-                    sprintf("Your Job %d with id %d was successfully executed\nThe results can now be used.", $this->job->getId(), $this->execution->getId())
-                );
+                App::getNotificationUtility()::notifyUser($this->job->getOwner(), $this->job->getOwner()->getProduct(), 'executionDone', ['name' => $this->job->getName(), 'id' => $this->job->getId(), 'executionId' => $this->execution->getId(), 'executionName' => $this->execution->getName()]);
             }
         } else {
             if ($this->user->getPreferences()->getNotifications()->isEmailOnExecutionEnded()) {
-                App::getNotificationUtility()::notifyUser(
-                    $this->job->getOwner(),
-                    sprintf('Job %s (%d), Execution %s (%d) executed', $this->job->getName(), $this->job->getId(), $this->execution->getName(), $this->execution->getId()),
-                    sprintf("Your Job %d with id %d was successfully executed\nThe results can now be used.", $this->job->getId(), $this->execution->getId())
-                );
+                App::getNotificationUtility()::notifyUser($this->job->getOwner(), $this->job->getOwner()->getProduct(), 'executionDone', ['name' => $this->job->getName(), 'id' => $this->job->getId(), 'executionId' => $this->execution->getId(), 'executionName' => $this->execution->getName()]);
             }
         }
 

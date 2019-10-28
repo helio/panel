@@ -687,7 +687,7 @@ class ApiJobController extends AbstractController
                 LogHelper::err(sprintf('This is highly irregular: Manager for job %s was deleted without proper removal status', $this->job->getId()));
             }
             if ($this->job->getOwner()->getPreferences()->getNotifications()->isEmailOnJobDeleted()) {
-                App::getNotificationUtility()::notifyUser($this->job->getOwner(), sprintf('Job %s (%d) removed', $this->job->getName(), $this->job->getId()), 'Your job with the id ' . $this->job->getId() . ' is now completely removed from Helio');
+                App::getNotificationUtility()::notifyUser($this->job->getOwner(), $this->job->getOwner()->getProduct(), 'jobRemoved', ['name' => $this->job->getName(), 'id' => $this->job->getId()]);
             }
             if (!$this->job->getOwner()->getPreferences()->getNotifications()->isMuteAdmin()) {
                 App::getNotificationUtility()::notifyAdmin('Job was deleted by ' . $this->job->getOwner()->getEmail() . ', type: ' . $this->job->getType() . ', id: ' . $this->job->getId() . ', expected manager: manager-init-' . ServerUtility::getShortHashOfString($this->job->getId()));
@@ -774,11 +774,7 @@ class ApiJobController extends AbstractController
     {
         $job->setStatus(JobStatus::READY);
         if ($job->getOwner()->getPreferences()->getNotifications()->isEmailOnJobReady()) {
-            App::getNotificationUtility()::notifyUser(
-                $job->getOwner(),
-                sprintf('Job %s (%d) ready', $job->getName(), $job->getId()),
-                sprintf('Your job with the id %s is now ready to be executed on Helio', $job->getId())
-            );
+            App::getNotificationUtility()::notifyUser($job->getOwner(), $job->getOwner()->getProduct(), 'jobReady', ['name' => $this->job->getName(), 'id' => $this->job->getId()]);
         }
         if (!$job->getOwner()->getPreferences()->getNotifications()->isMuteAdmin()) {
             App::getNotificationUtility()::notifyAdmin(
