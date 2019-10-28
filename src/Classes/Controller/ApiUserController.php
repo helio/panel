@@ -33,6 +33,19 @@ class ApiUserController extends AbstractController
     /**
      * @return ResponseInterface
      *
+     * @Route("", methods={"GET"}, name="user.get")
+     */
+    public function getUserAction(): ResponseInterface
+    {
+        return $this->render([
+            'name' => $this->user->getName(),
+            'email' => $this->user->getEmail(),
+        ]);
+    }
+
+    /**
+     * @return ResponseInterface
+     *
      * @Route("/instancelist", methods={"GET"}, name="user.serverlist")
      *
      * @throws Exception

@@ -19,6 +19,26 @@ class ApiUserTest extends TestCase
     /**
      * @throws \Exception
      */
+    public function testUserProfile(): void
+    {
+        $user = new User();
+        $user->setName('test');
+        $user->setEmail('email@example.org');
+
+        $this->infrastructure->import($user);
+
+        $response = $this->runWebApp('GET', '/api/user', true, ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $user)['token']]);
+
+        $this->assertEquals(200, $response->getStatusCode());
+        $body = json_decode((string) $response->getBody(), true);
+
+        $this->assertEquals($user->getName(), $body['name']);
+        $this->assertEquals($user->getEmail(), $body['email']);
+    }
+
+    /**
+     * @throws \Exception
+     */
     public function testUserJobListDisplaysJobs(): void
     {
         $user = new User();
