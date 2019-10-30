@@ -30,7 +30,7 @@ class Choria implements OrchestratorInterface
     private static $username = 'panel';
 
     private static $createManagerCommand = 'mco playbook run infrastructure::gce::create --input \'{"node":"%s","callback":"$jobCallback","user_id":"%s","id":"$jobId"}\'';
-    private static $deleteManagerCommand = 'mco playbook run infrastructure::gce::delete --input \'{"node":"%s","callback":"$jobCallback","id":"$jobId"}\'';
+    private static $deleteManagerCommand = 'mco playbook run infrastructure::gce::delete --input \'{"node":"%s","fqdn":"%s","callback":"$jobCallback","id":"$jobId"}\'';
     private static $inventoryCommand = 'mco playbook run helio::tools::inventory --input \'{"fqdn":"$fqdn","callback":"$instanceCallback"}\'';
     private static $startComputeCommand = 'mco playbook run helio::cluster::node::start --input \'{"node_id":"%s","node_fqdn":"$fqdn","manager":"%s","callback":"$instanceCallback"}\'';
     private static $stopComputeCommand = 'mco playbook run helio::cluster::node::stop --input \'{"node_id":"%s","node_fqdn":"$fqdn","manager":"%s","callback":"$instanceCallback"}\'';
@@ -173,12 +173,13 @@ class Choria implements OrchestratorInterface
             return false;
         }
 
-        if (!$this->job->getManager()) {
+        $manager = $this->job->getManager();
+        if (!$manager) {
             return false;
         }
 
         /** @var Job $job */
-        foreach ($this->job->getManager()->getJobs() as $job) {
+        foreach ($manager->getJobs() as $job) {
             if ($job === $this->job || $job->getId() === $this->job->getId()) {
                 continue;
             }
@@ -187,7 +188,7 @@ class Choria implements OrchestratorInterface
         }
 
         /* @var Manager $manager */
-        return ServerUtility::executeShellCommand($this->parseCommand(self::$deleteManagerCommand, false, [$this->job->getManager()->getName()]));
+        return ServerUtility::executeShellCommand($this->parseCommand(self::$deleteManagerCommand, false, [$manager->getName(), $manager->getFqdn()]));
     }
 
     /**
