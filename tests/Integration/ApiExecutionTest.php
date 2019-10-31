@@ -161,11 +161,15 @@ class ApiExecutionTest extends TestCase
         $this->assertStringContainsString('helio::task::update', ServerUtility::getLastExecutedShellCommand(1));
         $this->assertStringContainsString('helio::queue', ServerUtility::getLastExecutedShellCommand());
 
-        $command = ServerUtility::getLastExecutedShellCommand(2);
+        $command = str_replace('\\"', '"', ServerUtility::getLastExecutedShellCommand(2));
         $matches = [];
         preg_match("/--input '([^']+)'/", $command, $matches);
         $this->assertNotEmpty($matches);
-        $servicesCalled = json_decode($matches[1], true);
+        $input = json_decode($matches[1], true);
+        $this->assertArrayHasKey('services', $input);
+        $this->assertArrayHasKey('node', $input);
+        $this->assertEquals('manager1.manager.example.com', $input['node']);
+        $servicesCalled = $input['services'];
         $this->assertCount(2, $servicesCalled);
 
         $this->assertEquals(0, $servicesCalled[0]['scale']);

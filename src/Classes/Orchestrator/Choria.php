@@ -42,7 +42,7 @@ class Choria implements OrchestratorInterface
     private static $dispatchCommand = 'mco playbook run helio::task::update --input \'{"cluster_address":"%s","task_ids":"[%s]"}\'';
     private static $joinWorkersCommand = 'mco playbook run helio::queue --input \'{"cluster_join_token":"%s","cluster_join_address":"%s","cluster_join_count":"%s","manager_id":"%s"}\'';
     private static $updateJobCommand = 'mco playbook run helio::job::update --input \'{"node":"%s","ids":"%s","user_id":"%s"}\'';
-    private static $serviceScaleCommand = 'mco playbook run helio::cluster::services::scale --input \'{{serviceScaleArray}}\'';
+    private static $serviceScaleCommand = 'mco playbook run helio::cluster::services::scale --input \'{"node":"%s","services":{{serviceScaleArray}}}\'';
 
     /**
      * Choria constructor.
@@ -228,7 +228,7 @@ class Choria implements OrchestratorInterface
             ];
         }
 
-        $command = $this->parseCommand(self::$serviceScaleCommand, false, [$this->instance->getRunnerId()]);
+        $command = $this->parseCommand(self::$serviceScaleCommand, false, [$this->job->getManager()->getFqdn()]);
 
         return ServerUtility::executeShellCommand(str_replace('{{serviceScaleArray}}', json_encode($executionReplicasArray), $command));
     }

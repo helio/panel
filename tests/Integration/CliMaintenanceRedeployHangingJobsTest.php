@@ -103,9 +103,7 @@ class CliMaintenanceRedeployHangingJobsTest extends TestCase
 
         $result = $this->runCliApp(MaintenanceRedeployHangingJobs::class);
         $this->assertEquals(0, $result->getStatusCode());
-        $debug = ServerUtility::getLastExecutedShellCommand();
-        $debug1 = ServerUtility::getLastExecutedShellCommand(1);
-        $debug2 = ServerUtility::getLastExecutedShellCommand(2);
+
         $this->assertStringContainsString('helio::task::update', ServerUtility::getLastExecutedShellCommand(1));
         $this->assertStringContainsString('infrastructure::gce::delete', ServerUtility::getLastExecutedShellCommand());
         /** @var Job $jobInDeletingStateFromDb */
