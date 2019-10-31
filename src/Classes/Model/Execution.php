@@ -62,6 +62,13 @@ class Execution extends AbstractModel
     protected $priority = 100;
 
     /**
+     * @var int Count of replicas the execution shall have. When in doubt, keep it null
+     *
+     * @Column(nullable=TRUE)
+     */
+    protected $replicas;
+
+    /**
      * @OA\Property(
      *     description="Estimated Runtime on ideal Hardware in Seconds; 0 means the execution won't terminate itself.",
      *     type="integer",
@@ -135,7 +142,7 @@ class Execution extends AbstractModel
         $add = true;
         /** @var Job $job */
         foreach ($job->getExecutions() as $execution) {
-            if ($execution->getId() === $this->getId()) {
+            if ($execution === $this || (null !== $this->getId() && $execution->getId() === $this->getId())) {
                 $add = false;
             }
         }
@@ -177,6 +184,36 @@ class Execution extends AbstractModel
     public function setPriority(int $priority): Execution
     {
         $this->priority = $priority;
+
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getReplicas(): ?int
+    {
+        return $this->replicas;
+    }
+
+    /**
+     * @param int $replicas
+     *
+     * @return Execution
+     */
+    public function setReplicas(int $replicas): Execution
+    {
+        $this->replicas = $replicas;
+
+        return $this;
+    }
+
+    /**
+     * @return Execution
+     */
+    public function resetReplicas(): Execution
+    {
+        $this->replicas = null;
 
         return $this;
     }
@@ -332,5 +369,12 @@ class Execution extends AbstractModel
         $this->started = null;
 
         return $this;
+    }
+
+    public function getServiceName(): string
+    {
+        $job = $this->getJob();
+
+        return $job->getType() . '-' . $job->getId() . '-' . $this->getId();
     }
 }

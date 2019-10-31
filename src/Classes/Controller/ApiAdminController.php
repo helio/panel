@@ -340,11 +340,8 @@ class ApiAdminController extends AbstractController
 
     private function generateExecutionHiera(Job $job, Execution $execution): array
     {
-        $servicePrefix = $job->getType() . '-' . $job->getId();
-        $serviceName = $servicePrefix . '-' . $execution->getId();
-
         $service = [
-            'service_name' => $serviceName,
+            'service_name' => $execution->getServiceName(),
         ];
 
         $yamlEnv = [];
@@ -402,7 +399,7 @@ class ApiAdminController extends AbstractController
         }
 
         $service['image'] = $dispatchConfig->getImage() ?: 'hello-world';
-        $service['replicas'] = $dispatchConfig->getReplicaCountForJob($job);
+        $service['replicas'] = $execution->getReplicas() ?? $dispatchConfig->getReplicaCountForJob($job);
         $service['env'] = $yamlEnv;
 
         return $service;

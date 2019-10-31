@@ -3,7 +3,9 @@
 namespace Helio\Panel\Orchestrator;
 
 use Exception;
+use Helio\Panel\Job\JobFactory;
 use Helio\Panel\Job\JobStatus;
+use Helio\Panel\Model\Execution;
 use Helio\Panel\Model\Manager;
 use Helio\Panel\Utility\ArrayUtility;
 use RuntimeException;
@@ -29,17 +31,18 @@ class Choria implements OrchestratorInterface
      */
     private static $username = 'panel';
 
-    private static $createManagerCommand = 'mco playbook run infrastructure::gce::create --input \'{"node":"%s","callback":"$jobCallback","user_id":"%s","id":"$jobId"}\'';
-    private static $deleteManagerCommand = 'mco playbook run infrastructure::gce::delete --input \'{"node":"%s","fqdn":"%s","callback":"$jobCallback","id":"$jobId"}\'';
-    private static $inventoryCommand = 'mco playbook run helio::tools::inventory --input \'{"fqdn":"$fqdn","callback":"$instanceCallback"}\'';
-    private static $startComputeCommand = 'mco playbook run helio::cluster::node::start --input \'{"node_id":"%s","node_fqdn":"$fqdn","manager":"%s","callback":"$instanceCallback"}\'';
-    private static $stopComputeCommand = 'mco playbook run helio::cluster::node::stop --input \'{"node_id":"%s","node_fqdn":"$fqdn","manager":"%s","callback":"$instanceCallback"}\'';
-    private static $removeNodeCommand = 'mco playbook run helio::cluster::node::cleanup --input \'{"node_id":"%s","node_fqdn":"$fqdn","manager":"%s","callback":"$instanceCallback"}\'';
-    private static $inspectCommand = 'mco playbook run helio::cluster::node::inspect --input \'{"node_fqdn":"$fqdn","callback":"$instanceCallback"}\'';
-    private static $getRunnerIdCommand = 'mco playbook run helio::cluster::node::getid --input \'{"node_fqdn":"$fqdn","callback":"$instanceCallback"}\'';
+    private static $createManagerCommand = 'mco playbook run infrastructure::gce::create --input \'{"node":"%s","callback":"{{jobCallback}}","user_id":"%s","id":"{{jobId}}"}\'';
+    private static $deleteManagerCommand = 'mco playbook run infrastructure::gce::delete --input \'{"node":"%s","fqdn":"%s","callback":"{{jobCallback}}","id":"{{jobId}}"}\'';
+    private static $inventoryCommand = 'mco playbook run helio::tools::inventory --input \'{"fqdn":"{{fqdn}}","callback":"{{instanceCallback}}"}\'';
+    private static $startComputeCommand = 'mco playbook run helio::cluster::node::start --input \'{"node_id":"%s","node_fqdn":"{{fqdn}}","manager":"%s","callback":"{{instanceCallback}}"}\'';
+    private static $stopComputeCommand = 'mco playbook run helio::cluster::node::stop --input \'{"node_id":"%s","node_fqdn":"{{fqdn}}","manager":"%s","callback":"{{instanceCallback}}"}\'';
+    private static $removeNodeCommand = 'mco playbook run helio::cluster::node::cleanup --input \'{"node_id":"%s","node_fqdn":"{{fqdn}}","manager":"%s","callback":"{{instanceCallback}}"}\'';
+    private static $inspectCommand = 'mco playbook run helio::cluster::node::inspect --input \'{"node_fqdn":"{{fqdn}}","callback":"{{instanceCallback}}"}\'';
+    private static $getRunnerIdCommand = 'mco playbook run helio::cluster::node::getid --input \'{"node_fqdn":"{{fqdn}}","callback":"{{instanceCallback}}"}\'';
     private static $dispatchCommand = 'mco playbook run helio::task::update --input \'{"cluster_address":"%s","task_ids":"[%s]"}\'';
     private static $joinWorkersCommand = 'mco playbook run helio::queue --input \'{"cluster_join_token":"%s","cluster_join_address":"%s","cluster_join_count":"%s","manager_id":"%s"}\'';
     private static $updateJobCommand = 'mco playbook run helio::job::update --input \'{"node":"%s","ids":"%s","user_id":"%s"}\'';
+    private static $serviceScaleCommand = 'mco playbook run helio::cluster::services::scale --input \'{{serviceScaleArray}}\'';
 
     /**
      * Choria constructor.
@@ -113,6 +116,10 @@ class Choria implements OrchestratorInterface
         return true;
     }
 
+    /**
+     * @param  array     $jobIDs
+     * @throws Exception
+     */
     public function updateJob(array $jobIDs): void
     {
         if (!$this->job) {
@@ -209,6 +216,23 @@ class Choria implements OrchestratorInterface
         return ServerUtility::executeShellCommand($this->parseCommand(self::$removeNodeCommand, false, [$this->instance->getRunnerId()]));
     }
 
+    public function dispatchReplicas(array $executionsWithNewReplicaCount)
+    {
+        $executionReplicasArray = [];
+        /** @var Execution $execution */
+        foreach ($executionsWithNewReplicaCount as $execution) {
+            $replica = $execution->getReplicas() ?? JobFactory::getDispatchConfigOfJob($this->job, $execution)->getDispatchConfig()->getReplicaCountForJob($this->job);
+            $executionReplicasArray[] = [
+                'service' => $execution->getServiceName(),
+                'scale' => $replica,
+            ];
+        }
+
+        $command = $this->parseCommand(self::$serviceScaleCommand, false, [$this->instance->getRunnerId()]);
+
+        return ServerUtility::executeShellCommand(str_replace('{{serviceScaleArray}}', json_encode($executionReplicasArray), $command));
+    }
+
     protected function ensureRunnerIdIsSet(): void
     {
         if (!$this->instance->getRunnerId()) {
@@ -237,11 +261,11 @@ class Choria implements OrchestratorInterface
         $command = str_replace(
             [
                 '"',
-                '$fqdn',
-                '$instanceCallback',
-                '$jobCallback',
-                '$jobId',
-                '$instanceId',
+                '{{fqdn}}',
+                '{{instanceCallback}}',
+                '{{jobCallback}}',
+                '{{jobId}}',
+                '{{instanceId}}',
             ],
             [
                 '\\"',

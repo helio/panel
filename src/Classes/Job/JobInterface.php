@@ -40,6 +40,14 @@ interface JobInterface
     public function run(array $config);
 
     /**
+     * Call when an execution is finshed. Will throw if no exection was passed to constructor.
+     *
+     * @param  string $stats
+     * @return mixed
+     */
+    public function executionDone(string $stats);
+
+    /**
      * @param array             $params
      * @param ResponseInterface $response
      *

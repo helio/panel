@@ -68,8 +68,121 @@ class ApiExecutionTest extends TestCase
         $this->assertEquals(42, $stats['result']);
     }
 
+    /**
+     * @throws \Doctrine\ORM\ORMException
+     * @throws \Doctrine\ORM\OptimisticLockException
+     */
+    public function testOverflowExecutionScalesToZeroOnJobWithMaxActiveServices(): void
+    {
+        $user = $this->createUser();
+        $job = $this->createJob($user, JobType::BLENDER);
+
+        for ($i = 4; $i > 0; --$i) {
+            $this->createExecutionViaApi($job, $user);
+        }
+
+        $executionsFromDb = $this->infrastructure->getRepository(Execution::class)->findBy(['job' => $job]);
+
+        $this->assertCount(4, $executionsFromDb);
+
+        $this->assertEquals(1, $executionsFromDb[0]->getReplicas());
+        $this->assertEquals(1, $executionsFromDb[1]->getReplicas());
+        $this->assertEquals(1, $executionsFromDb[2]->getReplicas());
+        $this->assertEquals(0, $executionsFromDb[3]->getReplicas());
+    }
+
+    /**
+     * @throws \Doctrine\ORM\ORMException
+     * @throws \Doctrine\ORM\OptimisticLockException
+     */
+    public function testReplicasIsNullOnJobWithoutReplicaMagic(): void
+    {
+        $user = $this->createUser();
+        $job = $this->createJob($user);
+        $this->createExecutionViaApi($job, $user);
+
+        $executionsFromDb = $this->infrastructure->getRepository(Execution::class)->findBy(['job' => $job]);
+
+        $this->assertCount(1, $executionsFromDb);
+        $this->assertEquals(null, $executionsFromDb[0]->getReplicas());
+    }
+
+    /**
+     * @throws \Doctrine\ORM\ORMException
+     * @throws \Doctrine\ORM\OptimisticLockException
+     * @throws Exception
+     */
+    public function testSubmitresultAdjustsReplicaCountOnFollowingJobs(): void
+    {
+        $user = $this->createUser();
+        $job = $this->createJob($user, JobType::BLENDER);
+
+        for ($i = 4; $i > 0; --$i) {
+            $this->createExecutionViaApi($job, $user);
+        }
+
+        $executionsFromDb = $this->infrastructure->getRepository(Execution::class)->findBy(['job' => $job]);
+        $this->assertCount(4, $executionsFromDb);
+
+        $header = ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $user, null, $job)['token']];
+
+        $response = $this->runWebApp('POST', sprintf('/api/job/%s/execute/submitresult', $job->getId()), true, $header, ['id' => $executionsFromDb[0]->getId(), 'result' => 42]);
+        $this->assertEquals(StatusCode::HTTP_OK, $response->getStatusCode(), (string) $response->getBody());
+
+        $this->assertEquals(0, $executionsFromDb[0]->getReplicas());
+        $this->assertEquals(1, $executionsFromDb[1]->getReplicas());
+        $this->assertEquals(1, $executionsFromDb[2]->getReplicas());
+        $this->assertEquals(1, $executionsFromDb[3]->getReplicas());
+    }
+
+    /**
+     * @throws \Doctrine\ORM\ORMException
+     * @throws \Doctrine\ORM\OptimisticLockException
+     * @throws Exception
+     */
+    public function testSubmitresultSendsScaleCommandIfApplicable(): void
+    {
+        $user = $this->createUser();
+        $job = $this->createJob($user, JobType::BLENDER);
+
+        for ($i = 4; $i > 0; --$i) {
+            $this->createExecutionViaApi($job, $user);
+        }
+
+        $executionsFromDb = $this->infrastructure->getRepository(Execution::class)->findBy(['job' => $job]);
+        $this->assertCount(4, $executionsFromDb);
+
+        $header = ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $user, null, $job)['token']];
+
+        $response = $this->runWebApp('POST', sprintf('/api/job/%s/execute/submitresult', $job->getId()), true, $header, ['id' => $executionsFromDb[0]->getId(), 'result' => 42]);
+        $this->assertEquals(StatusCode::HTTP_OK, $response->getStatusCode(), (string) $response->getBody());
+
+        $this->assertStringContainsString('helio::cluster::services::scale', ServerUtility::getLastExecutedShellCommand(2));
+        $this->assertStringContainsString('helio::task::update', ServerUtility::getLastExecutedShellCommand(1));
+        $this->assertStringContainsString('helio::queue', ServerUtility::getLastExecutedShellCommand());
+
+        $command = ServerUtility::getLastExecutedShellCommand(2);
+        $matches = [];
+        preg_match("/--input '([^']+)'/", $command, $matches);
+        $this->assertNotEmpty($matches);
+        $servicesCalled = json_decode($matches[1], true);
+        $this->assertCount(2, $servicesCalled);
+
+        $this->assertEquals(0, $servicesCalled[0]['scale']);
+        $this->assertEquals('blender-' . $job->getId() . '-' . $executionsFromDb[0]->getId(), $servicesCalled[0]['service']);
+        $this->assertEquals(1, $servicesCalled[1]['scale']);
+        $this->assertEquals('blender-' . $job->getId() . '-' . $executionsFromDb[3]->getId(), $servicesCalled[1]['service']);
+    }
+
+    /**
+     * @return User
+     * @throws \Doctrine\ORM\ORMException
+     * @throws \Doctrine\ORM\OptimisticLockException
+     * @throws Exception
+     */
     private function createUser(): User
     {
+        /** @var User $user */
         $user = (new User())
             ->setAdmin(1)
             ->setName('testuser')
@@ -82,15 +195,19 @@ class ApiExecutionTest extends TestCase
     }
 
     /**
-     * @param  User      $user
-     * @param  string    $name
+     * @param  User                                  $user
+     * @param  string                                $type
+     * @param  string                                $name
      * @return Job
+     * @throws \Doctrine\ORM\ORMException
+     * @throws \Doctrine\ORM\OptimisticLockException
      * @throws Exception
      */
-    private function createJob(User $user, $name = __CLASS__): Job
+    private function createJob(User $user, $type = JobType::BUSYBOX, $name = __CLASS__): Job
     {
+        /** @var Job $job */
         $job = (new Job())
-            ->setType(JobType::BUSYBOX)
+            ->setType($type)
             ->setOwner($user)
             ->setManager((new Manager())
                 ->setStatus(ManagerStatus::READY)
@@ -100,24 +217,33 @@ class ApiExecutionTest extends TestCase
                 ->setFqdn('manager1.manager.example.com')
             )
             ->setStatus(JobStatus::READY)
-            ->setName($name)
-            ->setCreated();
+            ->setCreated()
+            ->setName($name);
         $this->infrastructure->getEntityManager()->persist($job);
         $this->infrastructure->getEntityManager()->flush($job);
 
         return $job;
     }
 
-    private function createExecution(Job $execution, $name = __CLASS__): Execution
+    private function createExecution(Job $job, $name = __CLASS__): Execution
     {
         $execution = (new Execution())
             ->setStatus(ExecutionStatus::READY)
-            ->setJob($execution)
+            ->setJob($job)
             ->setName($name)
             ->setCreated();
         $this->infrastructure->getEntityManager()->persist($execution);
         $this->infrastructure->getEntityManager()->flush($execution);
 
         return $execution;
+    }
+
+    private function createExecutionViaApi(Job $job, User $user): Execution
+    {
+        $header = ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $user, null, $job)['token']];
+        $response = $this->runWebApp('POST', sprintf('/api/job/%s/execute', $job->getId()), true, $header);
+        $this->assertEquals(StatusCode::HTTP_OK, $response->getStatusCode(), (string) $response->getBody());
+
+        return $this->infrastructure->getRepository(Execution::class)->find(json_decode((string) $response->getBody(), true)['id']);
     }
 }

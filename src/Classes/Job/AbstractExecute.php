@@ -8,6 +8,7 @@ use Exception;
 use DateTime;
 use Helio\Panel\App;
 use Helio\Panel\Helper\DbHelper;
+use Helio\Panel\Helper\LogHelper;
 use Helio\Panel\Model\Job;
 use Helio\Panel\Model\Execution;
 use Helio\Panel\Execution\ExecutionStatus;
@@ -116,6 +117,23 @@ abstract class AbstractExecute implements JobInterface, DispatchableInterface
         return true;
     }
 
+    /**
+     * @param  string    $stats
+     * @return bool
+     * @throws Exception
+     */
+    public function executionDone(string $stats): bool
+    {
+        /* @var Execution $execution */
+        $this->execution->setStatus(ExecutionStatus::DONE)->setLatestHeartbeat();
+        $this->execution->setStats($stats);
+
+        App::getDbHelper()->persist($this->execution);
+        App::getDbHelper()->flush();
+
+        return true;
+    }
+
     public function getnextinqueue(array $params, ResponseInterface $response): ResponseInterface
     {
         $executions = App::getDbHelper()->getRepository(Execution::class)->findBy(['job' => $this->job, 'status' => ExecutionStatus::READY], ['priority' => 'ASC', 'created' => 'ASC'], 5);
@@ -133,6 +151,10 @@ abstract class AbstractExecute implements JobInterface, DispatchableInterface
             } catch (OptimisticLockException $e) {
                 // trying next execution if the current one was modified in the meantime
             }
+        }
+
+        if (!empty($executions)) {
+            LogHelper::warn('Executions found for nextinqueue but none executed. Might be a lock problem.', $executions);
         }
 
         return $response->withStatus(StatusCode::HTTP_NOT_FOUND);

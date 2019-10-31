@@ -26,4 +26,6 @@ interface OrchestratorInterface
     public function removeManager(): bool;
 
     public function removeInstance();
+
+    public function dispatchReplicas(array $executionsWithNewReplicaCount);
 }

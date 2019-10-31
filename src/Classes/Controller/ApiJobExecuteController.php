@@ -209,9 +209,9 @@ class ApiJobExecuteController extends AbstractController
 
             // run the job and check if the replicas have changed
             // TODO: Fix this ugly mess and cleanup DispatchConfig all together
-            $previousReplicaCount = $dispatchConfig->getReplicaCountForJob($this->job);
+            $previousReplicaCount = $this->execution->getReplicas() ?? $dispatchConfig->getReplicaCountForJob($this->job);
             JobFactory::getInstanceOfJob($this->job, $this->execution)->$command(json_decode((string) $this->request->getBody(), true) ?: []);
-            $newReplicaCount = $dispatchConfig->getReplicaCountForJob($this->job);
+            $newReplicaCount = $this->execution->getReplicas() ?? $dispatchConfig->getReplicaCountForJob($this->job);
 
             if (!$dispatchable->isExecutionStillAffordable()) {
                 //TODO: Return with an error here once the budget discussion is settled.
@@ -409,11 +409,7 @@ class ApiJobExecuteController extends AbstractController
             return $this->render(['error' => 'Execution already done'], StatusCode::HTTP_BAD_REQUEST);
         }
 
-        /* @var Execution $execution */
-        $this->execution->setStatus(ExecutionStatus::DONE)->setLatestHeartbeat();
-
-        $this->execution->setStats((string) $this->request->getBody());
-        $this->persistExecution();
+        JobFactory::getInstanceOfJob($this->job, $this->execution)->executionDone((string) $this->request->getBody());
 
         OrchestratorFactory::getOrchestratorForInstance(new Instance(), $this->job)->dispatchJob();
         $this->job->setBudgetUsed(JobFactory::getDispatchConfigOfJob($this->job, $this->execution)->getExecutionEstimates()['cost'] + $this->job->getBudgetUsed());

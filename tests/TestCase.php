@@ -80,6 +80,14 @@ class TestCase extends \PHPUnit\Framework\TestCase
         $_SERVER['SITE_ENV'] = 'TEST';
         $_SERVER['ELASTIC_HOST'] = 'elastic.neverland.global';
         $_SERVER['KOALA_FARM_ORIGIN'] = 'http://localhost:3000';
+        $_SERVER['BLENDER_PARALLEL_REPLICA_COUNT'] = 3;
+        $_SERVER['BLENDER_DOCKER_IMAGE'] = 'blender';
+        $_SERVER['BLENDER_DOCKER_REGISTRY_SERVER'] = 'registry.org';
+        $_SERVER['BLENDER_DOCKER_REGISTRY_USERNAME'] = 'user';
+        $_SERVER['BLENDER_DOCKER_REGISTRY_PASSWORD'] = 'password';
+        $_SERVER['BLENDER_DOCKER_REGISTRY_EMAIL'] = 'email@example.com';
+        $_SERVER['BLENDER_STORAGE_BUCKET_NAME'] = 'bucket';
+        $_SERVER['BLENDER_STORAGE_CREDENTIALS_JSON_PATH'] = __DIR__ . '/infrastructure/dummy.json';
 
         // re-init Zapier helper to make sure no Responses are left in the stack etc.
         ZapierHelper::reset();

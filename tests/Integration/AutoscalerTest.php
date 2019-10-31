@@ -13,12 +13,12 @@ use Helio\Panel\Model\Manager;
 use Helio\Panel\Model\User;
 use Helio\Panel\Execution\ExecutionStatus;
 use Helio\Panel\Orchestrator\ManagerStatus;
-use Helio\Panel\Utility\ArrayUtility;
 use Helio\Panel\Utility\JwtUtility;
+use Helio\Test\Infrastructure\Helper\YamlHelper;
 use Helio\Test\Infrastructure\Utility\ServerUtility;
 use Helio\Test\TestCase;
 use Psr\Http\Message\ResponseInterface;
-use Symfony\Component\Yaml\Yaml;
+use Slim\Http\StatusCode;
 
 class AutoscalerTest extends TestCase
 {
@@ -57,8 +57,10 @@ class AutoscalerTest extends TestCase
      */
     public function setUp(): void
     {
+        $_SERVER['BLENDER_PARALLEL_REPLICA_COUNT'] = 3;
+
         parent::setUp();
-        ServerUtility::resetLastExecutedCommand();
+
         $this->instance = (new Instance())
             ->setName('testinstance')
             ->setCreated()
@@ -106,41 +108,6 @@ class AutoscalerTest extends TestCase
     }
 
     /**
-     * @param ResponseInterface $response
-     * @param string            $key
-     *
-     * @return mixed|string
-     */
-    protected function findValueOfKeyInHiera(ResponseInterface $response, string $key)
-    {
-        $hiera = Yaml::parse((string) $response->getBody());
-
-        return ArrayUtility::getFirstByDotNotation([$hiera], ['profile::docker::clusters.' . $key]);
-    }
-
-    /**
-     * @param ResponseInterface $response
-     * @param string            $key
-     * @param string            $name
-     *
-     * @return mixed|string
-     */
-    protected function findEnvElementOfArrayInHiera(ResponseInterface $response, string $key, string $name)
-    {
-        $hiera = Yaml::parse((string) $response->getBody());
-        foreach (ArrayUtility::getFirstByDotNotation([$hiera], ['profile::docker::clusters.' . $key], []) as $env) {
-            if (false !== strpos($env, $name)) {
-                $matches = [];
-                preg_match("/$name=\s*([^'$]+)/", (string) $response->getBody(), $matches);
-
-                return $matches[1];
-            }
-        }
-
-        return '';
-    }
-
-    /**
      * @throws \Exception
      */
     public function testNoReplicasOnEmptyJob(): void
@@ -152,7 +119,7 @@ class AutoscalerTest extends TestCase
         $result = $this->exec();
 
         $this->assertEquals(200, $result->getStatusCode());
-        $replicas = $this->findValueOfKeyInHiera($result, $this->job->getType() . '-' . $this->job->getId() . '-' . $execution->getId() . '.replicas');
+        $replicas = YamlHelper::findValueOfKeyInHiera($result, $this->job->getType() . '-' . $this->job->getId() . '-' . $execution->getId() . '.replicas');
         $this->assertEquals(0, $replicas);
     }
 
@@ -168,7 +135,36 @@ class AutoscalerTest extends TestCase
         $result = $this->exec();
 
         $this->assertEquals(200, $result->getStatusCode());
-        $this->assertEquals(1, $this->findValueOfKeyInHiera($result, $this->job->getType() . '-' . $this->job->getId() . '-' . $execution->getId() . '.replicas'));
+        $this->assertEquals(1, YamlHelper::findValueOfKeyInHiera($result, $this->job->getType() . '-' . $this->job->getId() . '-' . $execution->getId() . '.replicas'));
+    }
+
+    public function testOneExecutionScalesToOneOnJobWithMaxActiveServices(): void
+    {
+        $this->job->setType(JobType::BLENDER);
+        $execution = (new Execution())->setJob($this->job)->setStatus(ExecutionStatus::READY);
+        $this->infrastructure->getEntityManager()->persist($this->job);
+        $this->infrastructure->getEntityManager()->persist($execution);
+        $this->infrastructure->getEntityManager()->flush();
+
+        $result = $this->exec();
+        $this->assertEquals(StatusCode::HTTP_OK, $result->getStatusCode());
+        $this->assertEquals(1, YamlHelper::findValueOfKeyInHiera($result, $this->job->getType() . '-' . $this->job->getId() . '-' . $execution->getId() . '.replicas'));
+    }
+
+    public function testFourthExecutionScalesToZeroOnJobWithMaxActiveServices(): void
+    {
+        $this->job->setType(JobType::BLENDER);
+        $execution1 = (new Execution())->setJob($this->job)->setStatus(ExecutionStatus::READY)->setReplicas(1);
+        $execution2 = (new Execution())->setJob($this->job)->setStatus(ExecutionStatus::READY)->setReplicas(0);
+        $this->infrastructure->getEntityManager()->persist($this->job);
+        $this->infrastructure->getEntityManager()->persist($execution1);
+        $this->infrastructure->getEntityManager()->persist($execution2);
+        $this->infrastructure->getEntityManager()->flush();
+
+        $result = $this->exec();
+        $this->assertEquals(StatusCode::HTTP_OK, $result->getStatusCode());
+        $this->assertEquals(1, YamlHelper::findValueOfKeyInHiera($result, $this->job->getType() . '-' . $this->job->getId() . '-' . $execution1->getId() . '.replicas'));
+        $this->assertEquals(0, YamlHelper::findValueOfKeyInHiera($result, $this->job->getType() . '-' . $this->job->getId() . '-' . $execution2->getId() . '.replicas'));
     }
 
     /**
@@ -187,9 +183,9 @@ class AutoscalerTest extends TestCase
         $this->assertEquals(200, $result->getStatusCode());
 
         $envPath = $this->job->getType() . '-' . $this->job->getId() . '-' . $execution->getId() . '.env';
-        $this->assertEquals($this->job->getId(), $this->findEnvElementOfArrayInHiera($result, $envPath, 'HELIO_JOBID'));
-        $this->assertEquals($execution->getId(), $this->findEnvElementOfArrayInHiera($result, $envPath, 'HELIO_EXECUTIONID'));
-        $this->assertEquals($this->job->getOwner()->getId(), $this->findEnvElementOfArrayInHiera($result, $envPath, 'HELIO_USERID'));
+        $this->assertEquals($this->job->getId(), YamlHelper::findEnvElementOfArrayInHiera($result, $envPath, 'HELIO_JOBID'));
+        $this->assertEquals($execution->getId(), YamlHelper::findEnvElementOfArrayInHiera($result, $envPath, 'HELIO_EXECUTIONID'));
+        $this->assertEquals($this->job->getOwner()->getId(), YamlHelper::findEnvElementOfArrayInHiera($result, $envPath, 'HELIO_USERID'));
     }
 
     /**
@@ -206,7 +202,7 @@ class AutoscalerTest extends TestCase
         $result = $this->exec();
 
         $this->assertEquals(200, $result->getStatusCode());
-        $this->assertStringContainsString('sleep', $this->findValueOfKeyInHiera($result, $this->job->getType() . '-' . $this->job->getId() . '-' . $execution->getId() . '.args'));
+        $this->assertStringContainsString('sleep', YamlHelper::findValueOfKeyInHiera($result, $this->job->getType() . '-' . $this->job->getId() . '-' . $execution->getId() . '.args'));
     }
 
     /**
@@ -225,7 +221,7 @@ class AutoscalerTest extends TestCase
         $result = $this->exec();
 
         $this->assertEquals(200, $result->getStatusCode());
-        $this->assertEquals(2, $this->findValueOfKeyInHiera($result, $this->job->getType() . '-' . $this->job->getId() . '-' . $execution->getId() . '.replicas'));
+        $this->assertEquals(2, YamlHelper::findValueOfKeyInHiera($result, $this->job->getType() . '-' . $this->job->getId() . '-' . $execution->getId() . '.replicas'));
     }
 
     /**
@@ -248,7 +244,7 @@ class AutoscalerTest extends TestCase
 
         $result = $this->runWebApp('GET', '/api/admin/getJobHiera?jobid=' . $job->getId(), true, $this->headers);
         $this->assertEquals(200, $result->getStatusCode());
-        $this->assertEquals(1, $this->findValueOfKeyInHiera($result, $job->getType() . '-' . $job->getId() . '-' . $execution1->getId() . '.replicas'));
+        $this->assertEquals(1, YamlHelper::findValueOfKeyInHiera($result, $job->getType() . '-' . $job->getId() . '-' . $execution1->getId() . '.replicas'));
 
         // second execution
         $execution2 = (new Execution())->setJob($job)->setStatus(ExecutionStatus::READY);
@@ -258,7 +254,7 @@ class AutoscalerTest extends TestCase
 
         $result = $this->runWebApp('GET', '/api/admin/getJobHiera?jobid=' . $job->getId(), true, $this->headers);
         $this->assertEquals(200, $result->getStatusCode());
-        $this->assertEquals(1, $this->findValueOfKeyInHiera($result, $job->getType() . '-' . $job->getId() . '-' . $execution1->getId() . '.replicas'));
+        $this->assertEquals(1, YamlHelper::findValueOfKeyInHiera($result, $job->getType() . '-' . $job->getId() . '-' . $execution1->getId() . '.replicas'));
 
         $execution1->setStatus(ExecutionStatus::DONE);
         $execution2->setStatus(ExecutionStatus::DONE);
@@ -268,7 +264,7 @@ class AutoscalerTest extends TestCase
 
         $result = $this->runWebApp('GET', '/api/admin/getJobHiera?jobid=' . $job->getId(), true, $this->headers);
         $this->assertEquals(200, $result->getStatusCode());
-        $this->assertEquals('absent', $this->findValueOfKeyInHiera($result, $job->getType() . '-' . $job->getId() . '-' . $execution1->getId() . '.ensure'));
+        $this->assertEquals('absent', YamlHelper::findValueOfKeyInHiera($result, $job->getType() . '-' . $job->getId() . '-' . $execution1->getId() . '.ensure'));
     }
 
     /**
