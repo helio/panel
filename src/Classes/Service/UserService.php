@@ -98,6 +98,7 @@ class UserService
             $limits = $prefs->getLimits();
             $limits->setJobTypes([JobType::BLENDER]);
             $limits->setManagerNodes([self::BLENDER_MANAGER_NODE]);
+            $limits->setRunningExecutions(1000);
 
             $prefs->setNotifications($notifications);
             $prefs->setLimits($limits);
