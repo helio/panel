@@ -90,6 +90,8 @@ class Execute extends \Helio\Panel\Job\Docker\Execute
         }
 
         $this->execution->setReplicas(0);
+        App::getDbHelper()->persist($this->execution);
+
         $executionRepository = App::getDbHelper()->getRepository(Execution::class);
         $executions = $executionRepository->findBy(['job' => $this->job, 'status' => ExecutionStatus::READY, 'replicas' => 0], ['priority' => 'ASC', 'created' => 'ASC'], 5);
         /** @var Execution $execution */
@@ -98,16 +100,19 @@ class Execute extends \Helio\Panel\Job\Docker\Execute
                 /** @var Execution $lockedExecution */
                 $lockedExecution = $executionRepository->find($execution->getId(), LockMode::OPTIMISTIC, $execution->getVersion());
                 $lockedExecution->setReplicas(1);
-                App::getDbHelper()->persist($this->execution);
                 App::getDbHelper()->persist($execution);
                 App::getDbHelper()->flush();
 
                 // scale services accordingly
                 return OrchestratorFactory::getOrchestratorForInstance(new Instance(), $this->job)->dispatchReplicas([$this->execution, $lockedExecution]);
             } catch (OptimisticLockException $e) {
+                LogHelper::warn('exception when trying to lock execution', ['message' => $e->getMessage(), 'execution' => $execution->getId(), 'job' => $execution->getJob()->getId(), 'execution version' => $execution->getVersion()]);
                 // trying next execution if the current one was modified in the meantime
             }
         }
+
+        // ensure flush in case it reaches here.
+        App::getDbHelper()->flush();
 
         if (!empty($executions)) {
             LogHelper::warn('Executions that need scale-up found but not scaled up. Lock problem?', $executions);
