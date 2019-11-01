@@ -195,7 +195,6 @@ class ApiProxyController extends AbstractController
             'base_uri' => $baseUri,
             'connect_timeout' => 30,
             'read_timeout' => 500,
-            'stream' => true,
             'timeout' => 300,
             'http_errors' => false,
             'proxy' => ServerUtility::getProxySettings(),
