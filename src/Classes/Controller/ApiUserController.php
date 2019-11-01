@@ -100,14 +100,18 @@ class ApiUserController extends AbstractController
             $totalExecutions = $executions->count();
             $openExecutions = 0;
             $runningExecutions = 0;
+            $doneExecutions = 0;
 
-            $executions = $executions->map(function (Execution $execution) use ($job, &$openExecutions, &$runningExecutions) {
+            $executions = $executions->map(function (Execution $execution) use ($job, &$openExecutions, &$runningExecutions, &$doneExecutions) {
                 $status = $execution->getStatus();
                 if (ExecutionStatus::isRunning($status)) {
                     ++$runningExecutions;
                 }
                 if (ExecutionStatus::isValidPendingStatus($status)) {
                     ++$openExecutions;
+                }
+                if (ExecutionStatus::isNotRequiredToRunAnymore($status)) {
+                    ++$doneExecutions;
                 }
 
                 return [
@@ -139,6 +143,7 @@ class ApiUserController extends AbstractController
                 'total_executions' => $totalExecutions,
                 'open_executions' => $openExecutions,
                 'running_executions' => $runningExecutions,
+                'done_executions' => $doneExecutions,
             ];
             if (!$returnHTML) {
                 $data['html'] = $this->fetchPartial('listItemJob', [
