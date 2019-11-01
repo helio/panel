@@ -274,6 +274,8 @@ class ApiJobController extends AbstractController
             return $this->render(['success' => false, 'message' => 'Job not found'], StatusCode::HTTP_NOT_FOUND);
         }
 
+        $orchestrator = OrchestratorFactory::getOrchestratorForInstance($this->instance, $this->job);
+
         if (!JobType::isValidType($this->job->getType())) {
             $this->job->setHidden(true)->setStatus(JobStatus::DELETED);
         } else {
@@ -281,8 +283,8 @@ class ApiJobController extends AbstractController
             JobFactory::getInstanceOfJob($this->job)->stop($this->params);
 
             // first: set all services to absent. then, remove the managers
-            OrchestratorFactory::getOrchestratorForInstance($this->instance, $this->job)->dispatchJob();
-            OrchestratorFactory::getOrchestratorForInstance($this->instance, $this->job)->removeManager();
+            $orchestrator->dispatchJob();
+            $orchestrator->removeManager();
 
             $this->job->setStatus(JobStatus::DELETING);
 
@@ -299,6 +301,14 @@ class ApiJobController extends AbstractController
         }
         $this->persistJob();
         App::getDbHelper()->flush();
+
+        // inform orchestrator about the current list of jobs
+        $jobIDsOnManager = $this->job
+            ->getManager()->getActiveJobIds();
+
+        if (count(array_unique($jobIDsOnManager)) > 1) {
+            $orchestrator->updateJob($jobIDsOnManager);
+        }
 
         return $this->render(['success' => true, 'message' => 'Job scheduled for removal.', 'removed' => JobStatus::DELETED === $this->job->getStatus()]);
     }

@@ -64,7 +64,12 @@ final class JobStatus
 
     public static function isValidActiveStatus(int $status): bool
     {
-        return self::READY === $status || self::READY_PAUSED === $status;
+        return in_array($status, self::getActiveStatus());
+    }
+
+    public static function getActiveStatus(): array
+    {
+        return [self::READY, self::READY_PAUSED];
     }
 
     public static function getLabel(int $status): string

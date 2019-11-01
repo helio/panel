@@ -6,6 +6,8 @@ namespace Helio\Panel\Model;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\Common\Collections\Criteria;
+use Helio\Panel\Job\JobStatus;
 use Helio\Panel\Orchestrator\ManagerStatus;
 use Helio\Panel\Utility\ServerUtility;
 use OpenApi\Annotations as OA;
@@ -117,6 +119,19 @@ class Manager extends AbstractModel
     public function getJobs(): Collection
     {
         return $this->jobs;
+    }
+
+    public function getActiveJobIds(): array
+    {
+        $c = Criteria::create()
+            ->where(Criteria::expr()->in('status', JobStatus::getActiveStatus()));
+
+        return $this->jobs
+            ->matching($c)
+            ->map(function (Job $job) {
+                return $job->getId();
+            })
+            ->toArray();
     }
 
     /**

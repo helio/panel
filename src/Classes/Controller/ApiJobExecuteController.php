@@ -227,15 +227,7 @@ class ApiJobExecuteController extends AbstractController
 
             // inform orchestrator about the current list of jobs
             $jobIDsOnManager = $this->job
-                ->getManager()
-                ->getJobs()
-                ->filter(function (Job $job) {
-                    return JobStatus::isValidActiveStatus($job->getStatus());
-                })
-                ->map(function (Job $job) {
-                    return $job->getId();
-                })
-                ->toArray();
+                ->getManager()->getActiveJobIds();
 
             if (count(array_unique($jobIDsOnManager)) > 1) {
                 $orchestrator->updateJob($jobIDsOnManager);
