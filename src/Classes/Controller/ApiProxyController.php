@@ -193,7 +193,10 @@ class ApiProxyController extends AbstractController
 
         return new Client([
             'base_uri' => $baseUri,
-            'timeout' => 120,
+            'connect_timeout' => 30,
+            'read_timeout' => 500,
+            'stream' => true,
+            'timeout' => 300,
             'http_errors' => false,
             'proxy' => ServerUtility::getProxySettings(),
         ]);

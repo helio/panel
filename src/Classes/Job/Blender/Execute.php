@@ -88,11 +88,12 @@ class Execute extends \Helio\Panel\Job\Docker\Execute
         if (!parent::executionDone($stats)) {
             return false;
         }
+        $dbHelper = App::getDbHelper();
 
         $this->execution->setReplicas(0);
-        App::getDbHelper()->persist($this->execution);
+        $dbHelper->persist($this->execution);
 
-        $executionRepository = App::getDbHelper()->getRepository(Execution::class);
+        $executionRepository = $dbHelper->getRepository(Execution::class);
         $executions = $executionRepository->findBy(['job' => $this->job, 'status' => ExecutionStatus::READY, 'replicas' => 0], ['priority' => 'ASC', 'created' => 'ASC'], 5);
         /** @var Execution $execution */
         foreach ($executions as $execution) {
@@ -100,8 +101,8 @@ class Execute extends \Helio\Panel\Job\Docker\Execute
                 /** @var Execution $lockedExecution */
                 $lockedExecution = $executionRepository->find($execution->getId(), LockMode::OPTIMISTIC, $execution->getVersion());
                 $lockedExecution->setReplicas(1);
-                App::getDbHelper()->persist($execution);
-                App::getDbHelper()->flush();
+                $dbHelper->persist($execution);
+                $dbHelper->flush();
 
                 // scale services accordingly
                 return OrchestratorFactory::getOrchestratorForInstance(new Instance(), $this->job)->dispatchReplicas([$this->execution, $lockedExecution]);
@@ -112,7 +113,7 @@ class Execute extends \Helio\Panel\Job\Docker\Execute
         }
 
         // ensure flush in case it reaches here.
-        App::getDbHelper()->flush();
+        $dbHelper->flush();
 
         if (!empty($executions)) {
             LogHelper::warn('Executions that need scale-up found but not scaled up. Lock problem?', $executions);
