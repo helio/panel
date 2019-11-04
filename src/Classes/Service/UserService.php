@@ -90,10 +90,12 @@ class UserService
             $prefs = $user->getPreferences();
 
             $notifications = $prefs->getNotifications();
-            $notifications->setEmailOnExecutionStarted(false);
             $notifications->setEmailOnJobDeleted(false);
             $notifications->setEmailOnJobReady(false);
+            $notifications->setEmailOnExecutionStarted(false);
+            $notifications->setEmailOnExecutionEnded(false);
             $notifications->setEmailOnAutoscheduledExecutionEnded(false);
+            $notifications->setEmailOnAllExecutionsEnded(true);
 
             $limits = $prefs->getLimits();
             $limits->setJobTypes([JobType::BLENDER]);

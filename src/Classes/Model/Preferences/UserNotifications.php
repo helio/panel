@@ -10,24 +10,28 @@ class UserNotifications implements \JsonSerializable
     private const DEFAULT_EMAIL_ON_EXECUTION_STARTED = false;
     private const DEFAULT_EMAIL_ON_EXECUTION_ENDED = true;
     private const DEFAULT_EMAIL_ON_AUTOSCHEDULED_EXECUTION_ENDED = true;
+    private const DEFAULT_EMAIL_ON_ALL_EXECUTIONS_ENDED = false;
 
     /** @var bool */
-    protected $muteAdmin = false;
+    protected $muteAdmin;
 
     /** @var bool */
-    protected $emailOnJobReady = true;
+    protected $emailOnJobReady;
 
     /** @var bool */
-    protected $emailOnJobDeleted = false;
+    protected $emailOnJobDeleted;
 
     /** @var bool */
-    protected $emailOnExecutionStarted = false;
+    protected $emailOnExecutionStarted;
 
     /** @var bool */
-    protected $emailOnExecutionEnded = true;
+    protected $emailOnExecutionEnded;
 
     /** @var bool */
-    protected $emailOnAutoscheduledExecutionEnded = true;
+    protected $emailOnAutoscheduledExecutionEnded;
+
+    /** @var bool */
+    private $emailOnAllExecutionsEnded;
 
     public function __construct(array $notifications = [])
     {
@@ -37,20 +41,14 @@ class UserNotifications implements \JsonSerializable
         $this->emailOnExecutionStarted = $notifications['email_on_execution_started'] ?? self::DEFAULT_EMAIL_ON_EXECUTION_STARTED;
         $this->emailOnExecutionEnded = $notifications['email_on_execution_ended'] ?? self::DEFAULT_EMAIL_ON_EXECUTION_ENDED;
         $this->emailOnAutoscheduledExecutionEnded = $notifications['email_on_autoscheduled_execution_ended'] ?? self::DEFAULT_EMAIL_ON_AUTOSCHEDULED_EXECUTION_ENDED;
+        $this->emailOnAllExecutionsEnded = $notifications['email_on_all_executions_ended'] ?? self::DEFAULT_EMAIL_ON_ALL_EXECUTIONS_ENDED;
     }
 
-    /**
-     * @return bool
-     */
     public function isMuteAdmin(): bool
     {
         return $this->muteAdmin;
     }
 
-    /**
-     * @param  bool              $muteAdmin
-     * @return UserNotifications
-     */
     public function setMuteAdmin(bool $muteAdmin): UserNotifications
     {
         $this->muteAdmin = $muteAdmin;
@@ -58,18 +56,11 @@ class UserNotifications implements \JsonSerializable
         return $this;
     }
 
-    /**
-     * @return bool
-     */
     public function isEmailOnJobReady(): bool
     {
         return $this->emailOnJobReady;
     }
 
-    /**
-     * @param  bool              $emailOnJobReady
-     * @return UserNotifications
-     */
     public function setEmailOnJobReady(bool $emailOnJobReady): UserNotifications
     {
         $this->emailOnJobReady = $emailOnJobReady;
@@ -77,18 +68,11 @@ class UserNotifications implements \JsonSerializable
         return $this;
     }
 
-    /**
-     * @return bool
-     */
     public function isEmailOnJobDeleted(): bool
     {
         return $this->emailOnJobDeleted;
     }
 
-    /**
-     * @param  bool              $emailOnJobDeleted
-     * @return UserNotifications
-     */
     public function setEmailOnJobDeleted(bool $emailOnJobDeleted): UserNotifications
     {
         $this->emailOnJobDeleted = $emailOnJobDeleted;
@@ -96,18 +80,11 @@ class UserNotifications implements \JsonSerializable
         return $this;
     }
 
-    /**
-     * @return bool
-     */
     public function isEmailOnExecutionStarted(): bool
     {
         return $this->emailOnExecutionStarted;
     }
 
-    /**
-     * @param  bool              $emailOnExecutionStarted
-     * @return UserNotifications
-     */
     public function setEmailOnExecutionStarted(bool $emailOnExecutionStarted): UserNotifications
     {
         $this->emailOnExecutionStarted = $emailOnExecutionStarted;
@@ -115,18 +92,11 @@ class UserNotifications implements \JsonSerializable
         return $this;
     }
 
-    /**
-     * @return bool
-     */
     public function isEmailOnExecutionEnded(): bool
     {
         return $this->emailOnExecutionEnded;
     }
 
-    /**
-     * @param  bool              $emailOnExecutionEnded
-     * @return UserNotifications
-     */
     public function setEmailOnExecutionEnded(bool $emailOnExecutionEnded): UserNotifications
     {
         $this->emailOnExecutionEnded = $emailOnExecutionEnded;
@@ -134,21 +104,26 @@ class UserNotifications implements \JsonSerializable
         return $this;
     }
 
-    /**
-     * @return bool
-     */
     public function isEmailOnAutoscheduledExecutionEnded(): bool
     {
         return $this->emailOnAutoscheduledExecutionEnded;
     }
 
-    /**
-     * @param  bool              $emailOnAutoscheduledExecutionEnded
-     * @return UserNotifications
-     */
     public function setEmailOnAutoscheduledExecutionEnded(bool $emailOnAutoscheduledExecutionEnded): UserNotifications
     {
         $this->emailOnAutoscheduledExecutionEnded = $emailOnAutoscheduledExecutionEnded;
+
+        return $this;
+    }
+
+    public function isEmailOnAllExecutionsEnded(): bool
+    {
+        return $this->emailOnAllExecutionsEnded;
+    }
+
+    public function setEmailOnAllExecutionsEnded(bool $emailOnAllExecutionsEnded): UserNotifications
+    {
+        $this->emailOnAllExecutionsEnded = $emailOnAllExecutionsEnded;
 
         return $this;
     }
@@ -169,6 +144,7 @@ class UserNotifications implements \JsonSerializable
             'email_on_execution_started' => $this->emailOnExecutionStarted,
             'email_on_execution_ended' => $this->emailOnExecutionEnded,
             'email_on_autoscheduled_execution_ended' => $this->emailOnAutoscheduledExecutionEnded,
+            'email_on_all_executions_ended' => $this->emailOnAllExecutionsEnded,
         ];
     }
 }

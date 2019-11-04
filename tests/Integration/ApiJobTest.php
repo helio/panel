@@ -9,6 +9,7 @@ use Helio\Panel\Job\JobType;
 use Helio\Panel\Model\Execution;
 use Helio\Panel\Model\Job;
 use Helio\Panel\Model\Manager;
+use Helio\Panel\Model\Preferences\UserNotifications;
 use Helio\Panel\Model\Preferences\UserPreferences;
 use Helio\Panel\Model\User;
 use Helio\Panel\Orchestrator\ManagerStatus;
@@ -450,6 +451,12 @@ class ApiJobTest extends TestCase
     {
         $user = $this->createUser(function (User $user) {
             $user->setOrigin(ServerUtility::get('KOALA_FARM_ORIGIN'));
+            $notifications = (new UserNotifications())
+                ->setEmailOnAllExecutionsEnded(true);
+            $preferences = new UserPreferences();
+            $preferences->setNotifications($notifications);
+
+            $user->setPreferences($preferences);
         });
 
         $job = $this->createJob($user, 'testSendKoalaFarmExecutionDoneNotification', JobStatus::READY);

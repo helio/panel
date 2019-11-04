@@ -417,6 +417,13 @@ class ApiJobExecuteController extends AbstractController
             }
         }
 
+        $totalCount = $this->job->getExecutions()->count();
+        $notDoneCount = $this->job->getActiveExecutionCount();
+
+        if ($totalCount > 0 && 0 === $notDoneCount && $this->user->getPreferences()->getNotifications()->isEmailOnAllExecutionsEnded()) {
+            App::getNotificationUtility()::notifyUser($this->job->getOwner(), $this->job->getOwner()->getProduct(), 'allExecutionsDone', ['name' => $this->job->getName(), 'id' => $this->job->getId()]);
+        }
+
         return $this->render(['success' => true, 'message' => 'Job marked as done']);
     }
 

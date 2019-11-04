@@ -20,7 +20,7 @@ EOM;
 EOM;
 
     private const notifications = [
-        'executionDone' => [
+        'allExecutionsDone' => [
             'subject' => 'Rendering completed!',
             'message' => 'A new render completed successfully! Please visit {{baseURL}} to download the results.',
         ],

@@ -38,6 +38,10 @@ EOM;
             'subject' => 'Job {{name}} ({{id}}), Execution {{executionName}} ({{executionId}}) executed',
             'message' => "Your Job {{id}} with id {{executionId}} was successfully executed\nThe results can now be used.",
         ],
+        'allExecutionsDone' => [
+            'subject' => 'Job {{name}} ({{id}}), All executions executed',
+            'message' => "Your Job {{id}} was successfully executed\nThe results can now be used.",
+        ],
     ];
 
     public function baseURL(): string
