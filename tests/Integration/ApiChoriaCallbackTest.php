@@ -7,6 +7,7 @@ use Helio\Panel\Execution\ExecutionStatus;
 use Helio\Panel\Job\JobStatus;
 use Helio\Panel\Job\JobType;
 use Helio\Panel\Model\Execution;
+use Helio\Panel\Model\Instance;
 use Helio\Panel\Model\Job;
 use Helio\Panel\Model\Manager;
 use Helio\Panel\Model\User;
@@ -97,6 +98,56 @@ class ApiChoriaCallbackTest extends TestCase
     /**
      * @throws Exception
      */
+    public function testCallbackWorkerCleanupUsesInstance()
+    {
+        $user = $this->createAdmin();
+        $instance = $this->createInstance('foo.example.org');
+
+        $tokenHeader = ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $user, $instance)['token']];
+
+        $response = $this->runWebApp('POST', '/api/admin/workercleanup', true, $tokenHeader, [
+            'node_fqdn' => $instance->getFqdn(),
+        ]);
+        $this->assertEquals(StatusCode::HTTP_OK, $response->getStatusCode());
+
+        $this->assertStringContainsString('helio::cluster::node::cleanup', ServerUtility::getLastExecutedShellCommand());
+    }
+
+    /**
+     * @throws Exception
+     */
+    public function testCallbackWorkerCleanupCreatesDummyInstanceIfNoInstanceExists()
+    {
+        $user = $this->createAdmin();
+
+        $tokenHeader = ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $user)['token']];
+
+        $response = $this->runWebApp('POST', '/api/admin/workercleanup', true, $tokenHeader, [
+            'node_fqdn' => 'testing.example.org',
+        ]);
+        $this->assertEquals(StatusCode::HTTP_OK, $response->getStatusCode());
+
+        $this->assertStringContainsString('helio::cluster::node::cleanup', ServerUtility::getLastExecutedShellCommand());
+    }
+
+    /**
+     * @throws Exception
+     */
+    public function testCallbackWorkerCleanupBadRequestOnWrongBody()
+    {
+        $user = $this->createAdmin();
+
+        $tokenHeader = ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $user)['token']];
+
+        $response = $this->runWebApp('POST', '/api/admin/workercleanup', true, $tokenHeader, [
+            'foo' => 'bar',
+        ]);
+        $this->assertEquals(StatusCode::HTTP_BAD_REQUEST, $response->getStatusCode());
+    }
+
+    /**
+     * @throws Exception
+     */
     public function testCallbackDeleteNodeSetsJobToDeletedStatus()
     {
         $user = $this->createAdmin();
@@ -148,7 +199,7 @@ class ApiChoriaCallbackTest extends TestCase
         return $user;
     }
 
-    private function createJob(User $user, Manager $manager = null, $name = __CLASS__, array $labels = []): Job
+    private function createJob(User $user, Manager $manager = null, string $name = __CLASS__, array $labels = []): Job
     {
         $manager = $manager ?? $this->createManager($name);
 
@@ -167,7 +218,20 @@ class ApiChoriaCallbackTest extends TestCase
         return $job;
     }
 
-    private function createManager($name = __CLASS__): Manager
+    private function createInstance(string $fqdn, string $name = __CLASS__): Instance
+    {
+        $instance = (new Instance())
+            ->setName($name)
+            ->setFqdn($fqdn)
+            ->setCreated();
+
+        $this->infrastructure->getEntityManager()->persist($instance);
+        $this->infrastructure->getEntityManager()->flush($instance);
+
+        return $instance;
+    }
+
+    private function createManager(string $name = __CLASS__): Manager
     {
         $manager = (new Manager())
             ->setName($name)
@@ -190,7 +254,7 @@ class ApiChoriaCallbackTest extends TestCase
      * @return Execution
      * @throws Exception
      */
-    private function createExecution(Job $job, $name = __CLASS__, int $status = ExecutionStatus::RUNNING): Execution
+    private function createExecution(Job $job, string $name = __CLASS__, int $status = ExecutionStatus::RUNNING): Execution
     {
         /** @var Execution $execution */
         $execution = (new Execution())

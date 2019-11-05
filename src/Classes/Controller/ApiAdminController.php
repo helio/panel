@@ -286,6 +286,35 @@ class ApiAdminController extends AbstractController
     /**
      * @return ResponseInterface
      *
+     * @Route("/workercleanup", methods={"POST"}, name="admin.workerCleanup")
+     * @throws Exception
+     */
+    public function workerCleanupCallbackAction(): ResponseInterface
+    {
+        $body = $this->request->getParsedBody();
+        if (!array_key_exists('node_fqdn', $body)) {
+            return $this->render(['success' => false, 'message' => 'node_fqdn is required'], StatusCode::HTTP_BAD_REQUEST);
+        }
+
+        $fqdn = $body['node_fqdn'];
+
+        $instanceRepository = App::getDbHelper()->getRepository(Instance::class);
+        /** @var Instance|null $instance */
+        $instance = $instanceRepository->findOneBy(['fqdn' => $fqdn]);
+        if (!$instance) {
+            LogHelper::warn('unable to find instance to clean up. Simulating a node to be able to continue.', ['fqdn' => $fqdn]);
+            $instance = (new Instance())->setFqdn($fqdn);
+        }
+
+        $orchestrator = OrchestratorFactory::getOrchestratorForInstance($instance);
+        $orchestrator->nodeCleanup();
+
+        return $this->render(['success' => true, 'instance' => ['id' => $instance->getId(), 'fqdn' => $instance->getFqdn()]]);
+    }
+
+    /**
+     * @return ResponseInterface
+     *
      * @Route("/getJobHiera", methods={"GET"}, name="admin.getJobHiera")
      */
     public function jobConfigForPuppetAction(): ResponseInterface

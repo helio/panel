@@ -9,23 +9,25 @@ interface OrchestratorInterface
 {
     public function __construct(Instance $server, Job $job = null);
 
-    public function inspect();
+    public function inspect(): ?string;
 
-    public function getInventory();
+    public function getInventory(): ?string;
 
     public function dispatchJob(): bool;
 
     public function updateJob(array $jobIDs): void;
 
-    public function startComputing();
+    public function startComputing(): ?string;
 
-    public function stopComputing();
+    public function stopComputing(): ?string;
 
     public function provisionManager(): void;
 
     public function removeManager(): bool;
 
-    public function removeInstance();
+    public function removeInstance(): ?string;
 
-    public function dispatchReplicas(array $executionsWithNewReplicaCount);
+    public function dispatchReplicas(array $executionsWithNewReplicaCount): ?string;
+
+    public function nodeCleanup(): ?string;
 }

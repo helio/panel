@@ -43,6 +43,7 @@ class Choria implements OrchestratorInterface
     private static $joinWorkersCommand = 'mco playbook run helio::queue --input \'{"cluster_join_token":"%s","cluster_join_address":"%s","cluster_join_count":"%s","manager_id":"%s"}\'';
     private static $updateJobCommand = 'mco playbook run helio::job::update --input \'{"node":"%s","ids":"%s","user_id":"%s"}\'';
     private static $serviceScaleCommand = 'mco playbook run helio::cluster::services::scale --input \'{"node":"%s","services":{{serviceScaleArray}}}\'';
+    private static $nodeCleanupCommand = 'mco playbook run helio::cluster::node::cleanup --input \'{"node_fqdn":"{{fqdn}}"}\'';
 
     /**
      * Choria constructor.
@@ -59,7 +60,7 @@ class Choria implements OrchestratorInterface
     /**
      * @return mixed
      */
-    public function getInventory()
+    public function getInventory(): ?string
     {
         return ServerUtility::executeShellCommand($this->parseCommand(self::$inventoryCommand));
     }
@@ -67,7 +68,7 @@ class Choria implements OrchestratorInterface
     /**
      * @return mixed
      */
-    public function startComputing()
+    public function startComputing(): ?string
     {
         return ServerUtility::executeShellCommand($this->parseCommand(self::$startComputeCommand));
     }
@@ -75,7 +76,7 @@ class Choria implements OrchestratorInterface
     /**
      * @return mixed
      */
-    public function stopComputing()
+    public function stopComputing(): ?string
     {
         return ServerUtility::executeShellCommand($this->parseCommand(self::$stopComputeCommand));
     }
@@ -201,7 +202,7 @@ class Choria implements OrchestratorInterface
     /**
      * @return string|null
      */
-    public function inspect()
+    public function inspect(): ?string
     {
         return ServerUtility::executeShellCommand($this->parseCommand(self::$inspectCommand, true));
     }
@@ -209,14 +210,14 @@ class Choria implements OrchestratorInterface
     /**
      * @return string|null
      */
-    public function removeInstance()
+    public function removeInstance(): ?string
     {
         $this->ensureRunnerIdIsSet();
 
         return ServerUtility::executeShellCommand($this->parseCommand(self::$removeNodeCommand, false, [$this->instance->getRunnerId()]));
     }
 
-    public function dispatchReplicas(array $executionsWithNewReplicaCount)
+    public function dispatchReplicas(array $executionsWithNewReplicaCount): ?string
     {
         $executionReplicasArray = [];
         /** @var Execution $execution */
@@ -231,6 +232,13 @@ class Choria implements OrchestratorInterface
         $command = $this->parseCommand(self::$serviceScaleCommand, false, [$this->job->getManager()->getFqdn()]);
 
         return ServerUtility::executeShellCommand(str_replace('{{serviceScaleArray}}', json_encode($executionReplicasArray), $command));
+    }
+
+    public function nodeCleanup(): ?string
+    {
+        $command = $this->parseCommand(self::$nodeCleanupCommand, false);
+
+        return ServerUtility::executeShellCommand($command);
     }
 
     protected function ensureRunnerIdIsSet(): void
@@ -271,8 +279,8 @@ class Choria implements OrchestratorInterface
                 '\\"',
                 $this->instance->getFqdn(),
                 ServerUtility::getBaseUrl() . 'api/instance/callback?instanceid=' . $this->instance->getId(),
-                ServerUtility::getBaseUrl() . 'api/job/callback?jobid=' . $this->job->getId(),
-                $this->job->getId(),
+                $this->job ? ServerUtility::getBaseUrl() . 'api/job/callback?jobid=' . $this->job->getId() : '',
+                $this->job ? $this->job->getId() : '',
                 $this->instance->getId(),
             ],
             $command
