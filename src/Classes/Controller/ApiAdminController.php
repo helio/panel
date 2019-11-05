@@ -297,6 +297,9 @@ class ApiAdminController extends AbstractController
         }
 
         $fqdn = $body['node_fqdn'];
+        if (0 === strlen($fqdn)) {
+            return $this->render(['success' => false, 'message' => 'node_fqdn supplied but is empty'], StatusCode::HTTP_BAD_REQUEST);
+        }
 
         $instanceRepository = App::getDbHelper()->getRepository(Instance::class);
         /** @var Instance|null $instance */
