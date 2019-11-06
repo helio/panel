@@ -75,7 +75,7 @@ class ApiExecutionTest extends TestCase
     public function testOverflowExecutionScalesToZeroOnJobWithMaxActiveServices(): void
     {
         $user = $this->createUser();
-        $job = $this->createJob($user, JobType::BLENDER);
+        $job = $this->createJob($user, JobType::BLENDER, 'testOverflowExecutionScalesToZeroOnJobWithMaxActiveServices', ['render']);
 
         for ($i = 4; $i > 0; --$i) {
             $this->createExecutionViaApi($job, $user);
@@ -86,8 +86,8 @@ class ApiExecutionTest extends TestCase
         $this->assertCount(4, $executionsFromDb);
 
         $this->assertEquals(1, $executionsFromDb[0]->getReplicas());
-        $this->assertEquals(1, $executionsFromDb[1]->getReplicas());
-        $this->assertEquals(1, $executionsFromDb[2]->getReplicas());
+        $this->assertEquals(0, $executionsFromDb[1]->getReplicas());
+        $this->assertEquals(0, $executionsFromDb[2]->getReplicas());
         $this->assertEquals(0, $executionsFromDb[3]->getReplicas());
     }
 
@@ -115,7 +115,7 @@ class ApiExecutionTest extends TestCase
     public function testSubmitresultAdjustsReplicaCountOnFollowingJobs(): void
     {
         $user = $this->createUser();
-        $job = $this->createJob($user, JobType::BLENDER);
+        $job = $this->createJob($user, JobType::BLENDER, 'testSubmitresultAdjustsReplicaCountOnFollowingJobs', ['render']);
 
         for ($i = 4; $i > 0; --$i) {
             $this->createExecutionViaApi($job, $user);
@@ -131,8 +131,8 @@ class ApiExecutionTest extends TestCase
 
         $this->assertEquals(0, $executionsFromDb[0]->getReplicas());
         $this->assertEquals(1, $executionsFromDb[1]->getReplicas());
-        $this->assertEquals(1, $executionsFromDb[2]->getReplicas());
-        $this->assertEquals(1, $executionsFromDb[3]->getReplicas());
+        $this->assertEquals(0, $executionsFromDb[2]->getReplicas());
+        $this->assertEquals(0, $executionsFromDb[3]->getReplicas());
     }
 
     /**
@@ -143,7 +143,7 @@ class ApiExecutionTest extends TestCase
     public function testSubmitresultSendsScaleCommandIfApplicable(): void
     {
         $user = $this->createUser();
-        $job = $this->createJob($user, JobType::BLENDER);
+        $job = $this->createJob($user, JobType::BLENDER, 'testSubmitresultSendsScaleCommandIfApplicable', ['render']);
 
         for ($i = 4; $i > 0; --$i) {
             $this->createExecutionViaApi($job, $user);
@@ -157,11 +157,11 @@ class ApiExecutionTest extends TestCase
         $response = $this->runWebApp('POST', sprintf('/api/job/%s/execute/submitresult', $job->getId()), true, $header, ['id' => $executionsFromDb[0]->getId(), 'result' => 42]);
         $this->assertEquals(StatusCode::HTTP_OK, $response->getStatusCode(), (string) $response->getBody());
 
-        $this->assertStringContainsString('helio::cluster::services::scale', ServerUtility::getLastExecutedShellCommand(2));
-        $this->assertStringContainsString('helio::task::update', ServerUtility::getLastExecutedShellCommand(1));
-        $this->assertStringContainsString('helio::queue', ServerUtility::getLastExecutedShellCommand());
+        $this->assertStringContainsString('helio::cluster::services::scale', ServerUtility::getLastExecutedShellCommand(1));
+        $this->assertStringContainsString('helio::cluster::services::remove', ServerUtility::getLastExecutedShellCommand(0));
 
-        $command = str_replace('\\"', '"', ServerUtility::getLastExecutedShellCommand(2));
+        $command = str_replace('\\"', '"', ServerUtility::getLastExecutedShellCommand(1));
+
         $matches = [];
         preg_match("/--input '([^']+)'/", $command, $matches);
         $this->assertNotEmpty($matches);
@@ -170,12 +170,10 @@ class ApiExecutionTest extends TestCase
         $this->assertArrayHasKey('node', $input);
         $this->assertEquals('manager1.manager.example.com', $input['node']);
         $servicesCalled = $input['services'];
-        $this->assertCount(2, $servicesCalled);
+        $this->assertCount(1, $servicesCalled);
 
-        $this->assertEquals(0, $servicesCalled[0]['scale']);
-        $this->assertEquals('blender-' . $job->getId() . '-' . $executionsFromDb[0]->getId(), $servicesCalled[0]['service']);
-        $this->assertEquals(1, $servicesCalled[1]['scale']);
-        $this->assertEquals('blender-' . $job->getId() . '-' . $executionsFromDb[3]->getId(), $servicesCalled[1]['service']);
+        $this->assertEquals(1, $servicesCalled[0]['scale']);
+        $this->assertEquals('blender-' . $job->getId() . '-' . $executionsFromDb[1]->getId(), $servicesCalled[0]['service']);
     }
 
     /**
@@ -202,12 +200,13 @@ class ApiExecutionTest extends TestCase
      * @param  User                                  $user
      * @param  string                                $type
      * @param  string                                $name
+     * @param  array                                 $labels
      * @return Job
      * @throws \Doctrine\ORM\ORMException
      * @throws \Doctrine\ORM\OptimisticLockException
      * @throws Exception
      */
-    private function createJob(User $user, $type = JobType::BUSYBOX, $name = __CLASS__): Job
+    private function createJob(User $user, string $type = JobType::BUSYBOX, string $name = __CLASS__, array $labels = []): Job
     {
         /** @var Job $job */
         $job = (new Job())
@@ -220,6 +219,7 @@ class ApiExecutionTest extends TestCase
                 ->setIp('1.2.3.55')
                 ->setFqdn('manager1.manager.example.com')
             )
+            ->setLabels($labels)
             ->setStatus(JobStatus::READY)
             ->setCreated()
             ->setName($name);

@@ -43,6 +43,7 @@ class Choria implements OrchestratorInterface
     private static $joinWorkersCommand = 'mco playbook run helio::queue --input \'{"cluster_join_token":"%s","cluster_join_address":"%s","cluster_join_count":"%s","manager_id":"%s"}\'';
     private static $updateJobCommand = 'mco playbook run helio::job::update --input \'{"node":"%s","ids":"%s","user_id":"%s"}\'';
     private static $serviceScaleCommand = 'mco playbook run helio::cluster::services::scale --input \'{"node":"%s","services":{{serviceScaleArray}}}\'';
+    private static $serviceRemoveCommand = 'mco playbook run helio::cluster::services::remove --input \'{"node":"%s","services":{{serviceRemoveArray}}}\'';
     private static $nodeCleanupCommand = 'mco playbook run helio::cluster::node::cleanup --input \'{"node_fqdn":"{{fqdn}}"}\'';
 
     /**
@@ -230,6 +231,16 @@ class Choria implements OrchestratorInterface
         }
 
         $command = str_replace('{{serviceScaleArray}}', json_encode($executionReplicasArray), self::$serviceScaleCommand);
+        $command = $this->parseCommand($command, false, [$this->job->getManager()->getFqdn()]);
+
+        return ServerUtility::executeShellCommand($command);
+    }
+
+    public function removeExecution(Execution $execution): string
+    {
+        $servicesArray = [$execution->getServiceName()];
+
+        $command = str_replace('{{serviceRemoveArray}}', json_encode($servicesArray), self::$serviceRemoveCommand);
         $command = $this->parseCommand($command, false, [$this->job->getManager()->getFqdn()]);
 
         return ServerUtility::executeShellCommand($command);

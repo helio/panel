@@ -80,7 +80,6 @@ class TestCase extends \PHPUnit\Framework\TestCase
         $_SERVER['SITE_ENV'] = 'TEST';
         $_SERVER['ELASTIC_HOST'] = 'elastic.neverland.global';
         $_SERVER['KOALA_FARM_ORIGIN'] = 'http://localhost:3000';
-        $_SERVER['BLENDER_PARALLEL_REPLICA_COUNT'] = 3;
         $_SERVER['BLENDER_DOCKER_IMAGE'] = 'blender';
         $_SERVER['BLENDER_DOCKER_REGISTRY_SERVER'] = 'registry.org';
         $_SERVER['BLENDER_DOCKER_REGISTRY_USERNAME'] = 'user';

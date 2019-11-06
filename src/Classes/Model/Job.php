@@ -24,7 +24,8 @@ use Helio\Panel\Execution\ExecutionStatus;
  *     title="Job model"
  * )
  *
- * @Entity @Table(name="job")
+ * @Entity(repositoryClass="Helio\Panel\Repositories\JobRepository")
+ * @Table(name="job")
  **/
 class Job extends AbstractModel
 {
@@ -570,9 +571,18 @@ class Job extends AbstractModel
         return $this->manager;
     }
 
-    public function getRunningExecutionsCount(): int
+    public function getReadyAndRunningExecutionsCount(): int
     {
         $criteria = Criteria::create()->where(Criteria::expr()->in('status', ExecutionStatus::getRunningStatusCodes()));
+
+        return $this->executions->matching($criteria)->count();
+    }
+
+    public function getStartedExecutionsCount(): int
+    {
+        $criteria = Criteria::create()
+            ->where(Criteria::expr()->in('status', ExecutionStatus::getRunningStatusCodes()))
+            ->andWhere(Criteria::expr()->eq('replicas', 1));
 
         return $this->executions->matching($criteria)->count();
     }

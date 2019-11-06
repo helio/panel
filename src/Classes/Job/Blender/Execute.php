@@ -2,17 +2,14 @@
 
 namespace Helio\Panel\Job\Blender;
 
-use Doctrine\DBAL\LockMode;
-use Doctrine\ORM\OptimisticLockException;
 use Exception;
 use Helio\Panel\App;
-use Helio\Panel\Execution\ExecutionStatus;
-use Helio\Panel\Helper\LogHelper;
 use Helio\Panel\Job\DispatchConfig;
 use Helio\Panel\Model\Execution;
-use Helio\Panel\Model\Instance;
 use Helio\Panel\Model\Job;
-use Helio\Panel\Orchestrator\OrchestratorFactory;
+use Helio\Panel\Repositories\ExecutionRepository;
+use Helio\Panel\Repositories\JobRepository;
+use Helio\Panel\Service\ExecutionService;
 use Helio\Panel\Utility\ServerUtility;
 
 class Execute extends \Helio\Panel\Job\Docker\Execute
@@ -68,11 +65,15 @@ class Execute extends \Helio\Panel\Job\Docker\Execute
         parent::run($config);
 
         $replicas = 1;
-        $count = App::getDbHelper()->getRepository(Execution::class)->count([
-            'job' => $this->job,
-            'replicas' => 1,
-        ]);
-        if ($count >= ServerUtility::get('BLENDER_PARALLEL_REPLICA_COUNT', 5)) {
+        /** @var JobRepository $jobRepository */
+        $jobRepository = App::getDbHelper()->getRepository(Job::class);
+
+        // sliding window:
+        // we set the replica count for only one execution to 1. Whenever a new worker gets created
+        // another execution gets a replica of 1. When an execution finishes, the next execution gets replica of 1.
+        // As soon as all executions of this job are done, find executions which still need to run in other jobs and update replica count there.
+        $runningExecution = $jobRepository->getExecutionCountHavingReplicas($this->job->getLabels());
+        if ($runningExecution >= 1) {
             $replicas = 0;
         }
         $this->execution->setReplicas($replicas);
@@ -93,31 +94,16 @@ class Execute extends \Helio\Panel\Job\Docker\Execute
         $this->execution->setReplicas(0);
         $dbHelper->persist($this->execution);
 
+        /** @var ExecutionRepository $executionRepository */
         $executionRepository = $dbHelper->getRepository(Execution::class);
-        $executions = $executionRepository->findBy(['job' => $this->job, 'status' => ExecutionStatus::READY, 'replicas' => 0], ['priority' => 'ASC', 'created' => 'ASC'], 5);
-        /** @var Execution $execution */
-        foreach ($executions as $execution) {
-            try {
-                /** @var Execution $lockedExecution */
-                $lockedExecution = $executionRepository->find($execution->getId(), LockMode::OPTIMISTIC, $execution->getVersion());
-                $lockedExecution->setReplicas(1);
-                $dbHelper->persist($execution);
-                $dbHelper->flush();
+        $executionsService = new ExecutionService($executionRepository);
 
-                // scale services accordingly
-                return OrchestratorFactory::getOrchestratorForInstance(new Instance(), $this->job)->dispatchReplicas([$this->execution, $lockedExecution]);
-            } catch (OptimisticLockException $e) {
-                LogHelper::warn('exception when trying to lock execution', ['message' => $e->getMessage(), 'execution' => $execution->getId(), 'job' => $execution->getJob()->getId(), 'execution version' => $execution->getVersion()]);
-                // trying next execution if the current one was modified in the meantime
-            }
+        if ($executionsService->setNextExecutionActive($this->job)) {
+            return true;
         }
 
         // ensure flush in case it reaches here.
         $dbHelper->flush();
-
-        if (!empty($executions)) {
-            LogHelper::warn('Executions that need scale-up found but not scaled up. Lock problem?', $executions);
-        }
 
         return true;
     }

@@ -4,6 +4,7 @@
 
 namespace Helio\Panel\Model;
 
+use Doctrine\ORM\Mapping\Index;
 use Exception;
 use DateTime;
 use DateTimeZone;
@@ -21,7 +22,8 @@ use Helio\Panel\Execution\ExecutionStatus;
  *     title="Execution model"
  * )
  *
- * @Entity @Table(name="execution")
+ * @Entity(repositoryClass="Helio\Panel\Repositories\ExecutionRepository")
+ * @Table(name="execution",indexes={@Index(name="job_id_replicas_idx", columns={"job_id","replicas"})})
  **/
 class Execution extends AbstractModel
 {

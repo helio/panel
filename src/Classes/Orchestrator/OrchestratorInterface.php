@@ -2,6 +2,7 @@
 
 namespace Helio\Panel\Orchestrator;
 
+use Helio\Panel\Model\Execution;
 use Helio\Panel\Model\Instance;
 use Helio\Panel\Model\Job;
 
@@ -28,6 +29,8 @@ interface OrchestratorInterface
     public function removeInstance(): ?string;
 
     public function dispatchReplicas(array $executionsWithNewReplicaCount): ?string;
+
+    public function removeExecution(Execution $execution): string;
 
     public function nodeCleanup(): ?string;
 }

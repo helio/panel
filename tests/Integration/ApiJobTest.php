@@ -464,7 +464,7 @@ class ApiJobTest extends TestCase
         $tokenHeader = ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $user, null, $job)['token']];
 
         $response = $this->runWebApp('POST', sprintf('/api/job/%s/execute/submitresult?id=%s', $job->getId(), $execution->getId()), true, $tokenHeader, []);
-        $this->assertEquals(StatusCode::HTTP_OK, $response->getStatusCode());
+        $this->assertEquals(StatusCode::HTTP_OK, $response->getStatusCode(), $response->getBody()->getContents());
 
         $this->assertCount(1, NotificationUtility::$mails);
 
@@ -479,6 +479,59 @@ class ApiJobTest extends TestCase
             ],
             $userNotification
         );
+    }
+
+    public function testSetReplicaOneInitially()
+    {
+        $repository = $this->infrastructure->getRepository(Execution::class);
+
+        $user = $this->createUser(function (User $user) {
+            $user->setOrigin(ServerUtility::get('KOALA_FARM_ORIGIN'));
+        });
+        $tokenHeader = ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $user)['token']];
+
+        $job = $this->createJob(
+            $user,
+            'testSetReplicaOneInitially',
+            JobStatus::READY,
+            function (Job $job) {
+                $job->setLabels(['render']);
+                $job->setType(JobType::BLENDER);
+            }
+        );
+
+        $response = $this->runWebApp('POST', sprintf('/api/job/%s/execute', $job->getId()), true, $tokenHeader, [
+            'name' => 'testSetReplicaOneInitially',
+        ]);
+        $this->assertEquals(StatusCode::HTTP_OK, $response->getStatusCode());
+
+        $body = json_decode((string) $response->getBody(), true);
+
+        $this->assertEquals(1, $repository->find($body['id'])->getReplicas());
+    }
+
+    public function testSlidingWindowDoesNotAffectOtherJobTypes()
+    {
+        $repository = $this->infrastructure->getRepository(Execution::class);
+
+        $user = $this->createUser(function (User $user) {
+        });
+        $tokenHeader = ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $user)['token']];
+
+        $job = $this->createJob(
+            $user,
+            'testSlidingWindowDoesNotAffectOtherJobTypes',
+            JobStatus::READY
+        );
+
+        $response = $this->runWebApp('POST', sprintf('/api/job/%s/execute', $job->getId()), true, $tokenHeader, [
+            'name' => 'testSlidingWindowDoesNotAffectOtherJobTypes',
+        ]);
+        $this->assertEquals(StatusCode::HTTP_OK, $response->getStatusCode());
+
+        $body = json_decode((string) $response->getBody(), true);
+
+        $this->assertEquals(null, $repository->find($body['id'])->getReplicas());
     }
 
     /**
@@ -506,15 +559,7 @@ class ApiJobTest extends TestCase
         return $user;
     }
 
-    /**
-     * @param  User   $user
-     * @param  string $name
-     * @param  int    $status
-     * @return Job
-     *
-     * @throws Exception
-     */
-    private function createJob(User $user, string $name = __CLASS__, int $status = JobStatus::READY): Job
+    private function createJob(User $user, string $name = __CLASS__, int $status = JobStatus::READY, ?callable $options = null): Job
     {
         $manager = (new Manager())
             ->setName('testname')
@@ -533,26 +578,14 @@ class ApiJobTest extends TestCase
             ->setManager($manager)
             ->setCreated();
 
+        if ($options) {
+            $options($job);
+        }
+
         $this->infrastructure->getEntityManager()->persist($job);
         $this->infrastructure->getEntityManager()->flush($job);
 
         return $job;
-    }
-
-    private function createManager($name = __CLASS__): Manager
-    {
-        $manager = (new Manager())
-            ->setName($name)
-            ->setStatus(ManagerStatus::READY)
-            ->setFqdn($name . '.example')
-            ->setManagerToken('sometoken')
-            ->setWorkerToken('someworkertoken')
-            ->setIp('127.0.0.1')
-            ->setCreated();
-        $this->infrastructure->getEntityManager()->persist($manager);
-        $this->infrastructure->getEntityManager()->flush($manager);
-
-        return $manager;
     }
 
     /**

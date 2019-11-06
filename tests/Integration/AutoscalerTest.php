@@ -57,8 +57,6 @@ class AutoscalerTest extends TestCase
      */
     public function setUp(): void
     {
-        $_SERVER['BLENDER_PARALLEL_REPLICA_COUNT'] = 3;
-
         parent::setUp();
 
         $this->instance = (new Instance())
