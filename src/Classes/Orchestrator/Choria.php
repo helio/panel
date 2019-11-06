@@ -229,9 +229,10 @@ class Choria implements OrchestratorInterface
             ];
         }
 
-        $command = $this->parseCommand(self::$serviceScaleCommand, false, [$this->job->getManager()->getFqdn()]);
+        $command = str_replace('{{serviceScaleArray}}', json_encode($executionReplicasArray), self::$serviceScaleCommand);
+        $command = $this->parseCommand($command, false, [$this->job->getManager()->getFqdn()]);
 
-        return ServerUtility::executeShellCommand(str_replace('{{serviceScaleArray}}', json_encode($executionReplicasArray), $command));
+        return ServerUtility::executeShellCommand($command);
     }
 
     public function nodeCleanup(): ?string
