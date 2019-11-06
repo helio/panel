@@ -16,6 +16,7 @@ use Helio\Panel\Orchestrator\OrchestratorFactory;
 use Helio\Panel\Utility\ServerUtility;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
 class MaintenanceRerunHangingExecution extends AbstractCommand
@@ -26,6 +27,7 @@ class MaintenanceRerunHangingExecution extends AbstractCommand
     protected function configure(): void
     {
         $this->addArgument('gracePeriod', InputArgument::OPTIONAL, 'DateInterval: How long the command should wait before rerunning', $this->defaultGracePeriod);
+        $this->addOption('dry-run', null, InputOption::VALUE_NONE, 'Just fetch executions and print them, do not run commands');
         $this->setName('app:maintenance-rerun-hanging-executions')
             ->setDescription('Runs a hanging execution again.')
             ->setHelp('This task can be safely run every minute. It locks the execution internally.');
@@ -55,6 +57,7 @@ class MaintenanceRerunHangingExecution extends AbstractCommand
         }
 
         $logger = App::getLogger();
+        $dispatchedJobs = [];
 
         /** @var Execution $execution */
         foreach ($executions as $execution) {
@@ -67,10 +70,19 @@ class MaintenanceRerunHangingExecution extends AbstractCommand
                     'job status' => JobStatus::getLabel($job->getStatus()),
                 ]);
 
-                $execution->resetStarted()->resetLatestHeartbeat()->setStatus(ExecutionStatus::READY);
-                OrchestratorFactory::getOrchestratorForInstance($dummyInstance, $execution->getJob())->dispatchJob();
+                if ($input->getOption('dry-run')) {
+                    $logger->info('dry-run - not running anything');
+                    continue;
+                }
 
-                if (!$execution->getJob()->getOwner()->getPreferences()->getNotifications()->isMuteAdmin()) {
+                $execution->resetStarted()->resetLatestHeartbeat()->setStatus(ExecutionStatus::READY);
+
+                if (!isset($dispatchedJobs[$job->getId()])) {
+                    OrchestratorFactory::getOrchestratorForInstance($dummyInstance, $job)->dispatchJob();
+                    $dispatchedJobs[$job->getId()] = true;
+                }
+
+                if (!$job->getOwner()->getPreferences()->getNotifications()->isMuteAdmin()) {
                     App::getNotificationUtility()::notifyAdmin('Hanging execution ' . $execution->getId() . ' has been reset');
                 }
 
