@@ -6,8 +6,6 @@ use Exception;
 use Helio\Panel\Controller\Traits\ModelInstanceController;
 use Helio\Panel\Controller\Traits\ModelJobController;
 use Helio\Panel\Helper\LogHelper;
-use Helio\Panel\Repositories\ExecutionRepository;
-use Helio\Panel\Service\ExecutionService;
 use Helio\Panel\Utility\JwtUtility;
 use RuntimeException;
 use DateTime;
@@ -269,33 +267,27 @@ class ApiAdminController extends AbstractController
 
         $jobs = $dbHelper->getRepository(Job::class)->findBy(['labels' => $body['labels']], ['priority' => 'ASC', 'created' => 'ASC']);
 
-        $foundManagers = [];
-
-        /** @var ExecutionRepository $executionRepository */
-        $executionRepository = $dbHelper->getRepository(Execution::class);
-        $executionService = new ExecutionService($executionRepository);
-
         /** @var Job $job */
         foreach ($jobs as $job) {
-            // FIXME: verify what to execute here. Do we need to dispatchJob on all found jobs? probably not.
             if ($job->getActiveExecutionCount() > 0 && $job->getManager()->works()) {
                 $foundManagers[] = $job->getManager()->getFqdn();
 
                 OrchestratorFactory::getOrchestratorForInstance((new Instance()), $job)->dispatchJob();
 
-                // sliding window: increase number of running executions
-                if (1 === count($foundManagers)) {
-                    $executionService->setNextExecutionActive($job);
-                }
+                LogHelper::info('triggered dispatch job', [
+                    'found_managers' => $foundManagers,
+                    'labels' => $body['labels'],
+                ]);
+
+                return $this->render(['found_managers' => $foundManagers]);
             }
         }
 
-        LogHelper::info('triggered dispatch job', [
-            'found_managers' => $foundManagers,
+        LogHelper::err('did not trigger dispatch job on any worker', [
             'labels' => $body['labels'],
         ]);
 
-        return $this->render(['found_managers' => $foundManagers]);
+        return $this->render(['found_managers' => null, 'labels' => $body['labels']]);
     }
 
     /**

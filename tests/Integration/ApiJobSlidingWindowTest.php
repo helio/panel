@@ -124,10 +124,23 @@ class ApiJobSlidingWindowTest extends TestCase
      */
     public function testSlidingWindow()
     {
-        // ----------- Step 1: New worker has been created. We have now 1 worker running -> 1 execution has replica to 1
+        // ----------- Step 1: New worker has been created. We have now 1 worker running but not yet assigned to cluster.
         $response = $this->runWebApp('POST', '/api/admin/workerwakeup', true,
             $this->tokenHeader, [
             'labels' => ['render'],
+        ]);
+        $this->assertEquals(StatusCode::HTTP_OK, $response->getStatusCode());
+
+        $this->assertEquals(0, $this->repository->find($this->doneExec->getId())->getReplicas());
+        $this->assertEquals(0, $this->repository->find($this->exec1->getId())->getReplicas());
+        $this->assertEquals(0, $this->repository->find($this->exec2->getId())->getReplicas());
+        $this->assertEquals(0, $this->repository->find($this->exec3->getId())->getReplicas());
+        $this->assertEquals(0, $this->repository->find($this->nextExec->getId())->getReplicas());
+
+        // ----------- Step 1.1: Worker assign to cluster
+        $response = $this->runWebApp('POST', sprintf('/api/job/callback?id=%s', $this->jobToRun->getId()), true, $this->tokenHeader, [
+            'action' => 'joincluster',
+            'manager_fqdn' => $this->jobToRun->getManager()->getFqdn(),
         ]);
         $this->assertEquals(StatusCode::HTTP_OK, $response->getStatusCode());
 
@@ -141,6 +154,12 @@ class ApiJobSlidingWindowTest extends TestCase
         $response = $this->runWebApp('POST', '/api/admin/workerwakeup', true,
             $this->tokenHeader, [
             'labels' => ['render'],
+        ]);
+        $this->assertEquals(StatusCode::HTTP_OK, $response->getStatusCode());
+
+        $response = $this->runWebApp('POST', sprintf('/api/job/callback?id=%s', $this->jobToRun->getId()), true, $this->tokenHeader, [
+            'action' => 'joincluster',
+            'manager_fqdn' => $this->jobToRun->getManager()->getFqdn(),
         ]);
         $this->assertEquals(StatusCode::HTTP_OK, $response->getStatusCode());
 

@@ -8,7 +8,9 @@ use Helio\Panel\Helper\ElasticHelper;
 use Helio\Panel\Model\Job;
 use Helio\Panel\Model\Manager;
 use Helio\Panel\Orchestrator\ManagerStatus;
+use Helio\Panel\Repositories\ExecutionRepository;
 use Helio\Panel\Request\Log;
+use Helio\Panel\Service\ExecutionService;
 use Helio\Panel\Service\LogService;
 use OpenApi\Annotations as OA;
 use Helio\Panel\App;
@@ -668,6 +670,21 @@ class ApiJobController extends AbstractController
             $this->persistJob();
 
             return $this->render(['success' => true, 'message' => 'Error recorded. Thanks.']);
+        }
+
+        if (array_key_exists('action', $body)) {
+            switch ($body['action']) {
+                case 'joincluster':
+                    LogHelper::info('new worker in cluster. Setting next execution active', [
+                        'job' => $this->job->getId(),
+                        'manager_fqdn' => $body['manager_fqdn'],
+                    ]);
+                    /** @var ExecutionRepository $executionRepository */
+                    $executionRepository = App::getDbHelper()->getRepository(Execution::class);
+                    $executionService = new ExecutionService($executionRepository);
+                    $executionService->setNextExecutionActive($this->job);
+                    break;
+            }
         }
 
         // remember manager nodes.
