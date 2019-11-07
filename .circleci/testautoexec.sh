@@ -3,7 +3,7 @@
 ##########
 # Guards and Variables
 BASE_URL=${1:-https://panel.idling.host}
-ID=${2:-10144}
+ID=${2:-10563}
 TOKEN=${3:-${TESTUSER_TOKEN}}
 if [[ -z "${TOKEN}" ]]; then echo "Error: Token not set" && exit 1; fi
 
