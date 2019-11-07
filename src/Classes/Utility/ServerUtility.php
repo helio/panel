@@ -38,6 +38,11 @@ class ServerUtility extends AbstractUtility
      */
     public static function getBaseUrl(): string
     {
+        $baseUrl = self::get('BASE_URL', '');
+        if ('' !== $baseUrl) {
+            return $baseUrl;
+        }
+
         $protocol = 'http' . (self::isSecure() ? 's' : '');
 
         return $protocol . '://' . self::get('HTTP_HOST') . '/';

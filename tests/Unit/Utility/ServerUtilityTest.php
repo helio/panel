@@ -18,6 +18,9 @@ class ServerUtilityTest extends TestCase
         $this->assertEquals('http://test.com/', ServerUtility::getBaseUrl());
         $_SERVER['HTTPS'] = 'ON';
         $this->assertEquals('https://test.com/', ServerUtility::getBaseUrl());
+
+        $_SERVER['BASE_URL'] = 'https://baseurl.example.com';
+        $this->assertEquals('https://baseurl.example.com', ServerUtility::getBaseUrl());
     }
 
     public function testSanitizerOfAutosignThrowsWhenInvalidCharacterInFqdn(): void
