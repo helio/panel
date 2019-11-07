@@ -140,7 +140,7 @@ class ApiJobSlidingWindowTest extends TestCase
         // ----------- Step 1.1: Worker assign to cluster
         $response = $this->runWebApp('POST', sprintf('/api/job/callback?id=%s', $this->jobToRun->getId()), true, $this->tokenHeader, [
             'action' => 'joincluster',
-            'manager_fqdn' => $this->jobToRun->getManager()->getFqdn(),
+            'manager_id' => $this->jobToRun->getManager()->getId(),
         ]);
         $this->assertEquals(StatusCode::HTTP_OK, $response->getStatusCode());
 
@@ -159,7 +159,7 @@ class ApiJobSlidingWindowTest extends TestCase
 
         $response = $this->runWebApp('POST', sprintf('/api/job/callback?id=%s', $this->jobToRun->getId()), true, $this->tokenHeader, [
             'action' => 'joincluster',
-            'manager_fqdn' => $this->jobToRun->getManager()->getFqdn(),
+            'manager_id' => $this->jobToRun->getManager()->getId(),
         ]);
         $this->assertEquals(StatusCode::HTTP_OK, $response->getStatusCode());
 

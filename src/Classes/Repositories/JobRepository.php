@@ -37,7 +37,8 @@ class JobRepository extends EntityRepository
             )
             ->setParameter('skipJobId', $skipJobId)
             ->addOrderBy('j.priority', 'ASC')
-            ->addOrderBy('j.created', 'ASC');
+            ->addOrderBy('j.created', 'ASC')
+            ->setMaxResults(1);
 
         $this->generateLabelsCondition($labels, $qb);
 
