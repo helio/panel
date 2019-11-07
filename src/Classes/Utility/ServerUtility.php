@@ -40,7 +40,8 @@ class ServerUtility extends AbstractUtility
     {
         $baseUrl = self::get('BASE_URL', '');
         if ('' !== $baseUrl) {
-            return $baseUrl;
+            // ensure baseURL has slash in the end
+            return rtrim($baseUrl, '/') . '/';
         }
 
         $protocol = 'http' . (self::isSecure() ? 's' : '');
