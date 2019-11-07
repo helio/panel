@@ -683,7 +683,8 @@ class ApiJobController extends AbstractController
                     $executionRepository = App::getDbHelper()->getRepository(Execution::class);
                     $executionService = new ExecutionService($executionRepository);
                     $executionService->setNextExecutionActive($this->job);
-                    break;
+
+                    return $this->render(['message' => 'ok']);
             }
         }
 
