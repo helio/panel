@@ -677,7 +677,7 @@ class ApiJobController extends AbstractController
                 case 'joincluster':
                     LogHelper::info('new worker in cluster. Setting next execution active', [
                         'job' => $this->job->getId(),
-                        'manager_fqdn' => $body['manager_fqdn'],
+                        'manager_id' => $body['manager_id'],
                     ]);
                     /** @var ExecutionRepository $executionRepository */
                     $executionRepository = App::getDbHelper()->getRepository(Execution::class);
