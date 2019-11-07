@@ -209,7 +209,7 @@ class ApiJobController extends AbstractController
 
         if (!$this->user->getPreferences()->getNotifications()->isMuteAdmin()) {
             $str = $isNew ? 'New Job was created' : 'Job was updated';
-            App::getNotificationUtility()::notifyAdmin($str . ' by ' . $this->user->getEmail() . ', type: ' . $this->job->getType() . ', id: ' . $this->job->getId() . ', manager: '.$this->job->getManager()->getName()));
+            App::getNotificationUtility()::notifyAdmin($str . ' by ' . $this->user->getEmail() . ', type: ' . $this->job->getType() . ', id: ' . $this->job->getId() . ', manager: '.$this->job->getManager()->getName());
         }
 
         return $this->render([
