@@ -175,11 +175,6 @@ class ApiJobController extends AbstractController
         $isNew = null === $this->job->getId();
         JobFactory::getInstanceOfJob($this->job)->create($this->params);
 
-        if (!$this->user->getPreferences()->getNotifications()->isMuteAdmin()) {
-            $str = $isNew ? 'New Job was created' : 'Job was updated';
-            App::getNotificationUtility()::notifyAdmin($str . ' by ' . $this->user->getEmail() . ', type: ' . $this->job->getType() . ', id: ' . $this->job->getId() . ', expected manager: manager-init-' . ServerUtility::getShortHashOfString($this->job->getId()));
-        }
-
         if ($managerNodeRestriction) {
             $managers = App::getDbHelper()->getRepository(Manager::class)->findBy(['fqdn' => $managerNodeRestriction]);
             foreach ($managers as $manager) {
@@ -210,6 +205,11 @@ class ApiJobController extends AbstractController
             $this->persistJob();
 
             OrchestratorFactory::getOrchestratorForInstance($this->instance, $this->job)->provisionManager();
+        }
+
+        if (!$this->user->getPreferences()->getNotifications()->isMuteAdmin()) {
+            $str = $isNew ? 'New Job was created' : 'Job was updated';
+            App::getNotificationUtility()::notifyAdmin($str . ' by ' . $this->user->getEmail() . ', type: ' . $this->job->getType() . ', id: ' . $this->job->getId() . ', manager: '.$this->job->getManager()->getName()));
         }
 
         return $this->render([
