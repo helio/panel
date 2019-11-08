@@ -236,9 +236,11 @@ class Choria implements OrchestratorInterface
         return ServerUtility::executeShellCommand($command);
     }
 
-    public function removeExecution(Execution $execution): string
+    public function removeExecutions(array $executions): string
     {
-        $servicesArray = [$execution->getServiceName()];
+        $servicesArray = array_map(function (Execution $execution) {
+            return $execution->getServiceName();
+        }, $executions);
 
         $command = str_replace('{{serviceRemoveArray}}', json_encode($servicesArray), self::$serviceRemoveCommand);
         $command = $this->parseCommand($command, false, [$this->job->getManager()->getFqdn()]);

@@ -408,7 +408,7 @@ class ApiJobExecuteController extends AbstractController
 
         JobFactory::getInstanceOfJob($this->job, $this->execution)->executionDone((string) $this->request->getBody());
 
-        OrchestratorFactory::getOrchestratorForInstance(new Instance(), $this->job)->removeExecution($this->execution);
+        OrchestratorFactory::getOrchestratorForInstance(new Instance(), $this->job)->removeExecutions([$this->execution]);
         $this->job->setBudgetUsed(JobFactory::getDispatchConfigOfJob($this->job, $this->execution)->getExecutionEstimates()['cost'] + $this->job->getBudgetUsed());
         $this->persistJob();
 

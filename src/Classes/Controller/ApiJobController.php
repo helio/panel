@@ -5,6 +5,7 @@ namespace Helio\Panel\Controller;
 use Exception;
 use Helio\Panel\Exception\HttpException;
 use Helio\Panel\Helper\ElasticHelper;
+use Helio\Panel\Model\Instance;
 use Helio\Panel\Model\Job;
 use Helio\Panel\Model\Manager;
 use Helio\Panel\Orchestrator\ManagerStatus;
@@ -209,7 +210,7 @@ class ApiJobController extends AbstractController
 
         if (!$this->user->getPreferences()->getNotifications()->isMuteAdmin()) {
             $str = $isNew ? 'New Job was created' : 'Job was updated';
-            App::getNotificationUtility()::notifyAdmin($str . ' by ' . $this->user->getEmail() . ', type: ' . $this->job->getType() . ', id: ' . $this->job->getId() . ', manager: '.$this->job->getManager()->getName());
+            App::getNotificationUtility()::notifyAdmin($str . ' by ' . $this->user->getEmail() . ', type: ' . $this->job->getType() . ', id: ' . $this->job->getId() . ', manager: ' . $this->job->getManager()->getName());
         }
 
         return $this->render([
@@ -300,6 +301,7 @@ class ApiJobController extends AbstractController
                 $execution->setLatestAction();
                 App::getDbHelper()->persist($execution);
             }
+            OrchestratorFactory::getOrchestratorForInstance(new Instance(), $this->job)->removeExecutions($runningExecutions->toArray());
         }
         $this->persistJob();
         App::getDbHelper()->flush();
