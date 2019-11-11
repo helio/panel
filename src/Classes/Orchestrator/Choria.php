@@ -34,17 +34,19 @@ class Choria implements OrchestratorInterface
     private static $createManagerCommand = 'mco playbook run infrastructure::gce::create --input \'{"node":"%s","callback":"{{jobCallback}}","user_id":"%s","id":"{{jobId}}"}\'';
     private static $deleteManagerCommand = 'mco playbook run infrastructure::gce::delete --input \'{"node":"%s","fqdn":"%s","callback":"{{jobCallback}}","id":"{{jobId}}"}\'';
     private static $inventoryCommand = 'mco playbook run helio::tools::inventory --input \'{"fqdn":"{{fqdn}}","callback":"{{instanceCallback}}"}\'';
+    // FIXME: still in use?
     private static $startComputeCommand = 'mco playbook run helio::cluster::node::start --input \'{"node_id":"%s","node_fqdn":"{{fqdn}}","manager":"%s","callback":"{{instanceCallback}}"}\'';
+    // FIXME: still in use?
     private static $stopComputeCommand = 'mco playbook run helio::cluster::node::stop --input \'{"node_id":"%s","node_fqdn":"{{fqdn}}","manager":"%s","callback":"{{instanceCallback}}"}\'';
     private static $removeNodeCommand = 'mco playbook run helio::cluster::node::cleanup --input \'{"node_id":"%s","node_fqdn":"{{fqdn}}","manager":"%s","callback":"{{instanceCallback}}"}\'';
     private static $inspectCommand = 'mco playbook run helio::cluster::node::inspect --input \'{"node_fqdn":"{{fqdn}}","callback":"{{instanceCallback}}"}\'';
     private static $getRunnerIdCommand = 'mco playbook run helio::cluster::node::getid --input \'{"node_fqdn":"{{fqdn}}","callback":"{{instanceCallback}}"}\'';
     private static $dispatchCommand = 'mco playbook run helio::task::update --input \'{"cluster_address":"%s","task_ids":"[%s]"}\'';
-    private static $joinWorkersCommand = 'mco playbook run helio::queue --input \'{"cluster_join_token":"%s","cluster_join_address":"%s","cluster_join_count":"%s","manager_id":"%s","callback":"{{jobCallback}}"}\'';
+    private static $joinWorkersCommand = 'mco playbook run helio::queue --input \'{"cluster_join_token":"%s","cluster_join_address":"%s","cluster_join_count":"%s","manager_id":"%s"}\'';
+    private static $joinWorkersWithCallbackCommand = 'mco playbook run helio::queue --input \'{"cluster_join_token":"%s","cluster_join_address":"%s","cluster_join_count":"%s","manager_id":"%s","callback":"{{jobCallback}}"}\'';
     private static $updateJobCommand = 'mco playbook run helio::job::update --input \'{"node":"%s","ids":"%s","user_id":"%s"}\'';
     private static $serviceScaleCommand = 'mco playbook run helio::cluster::services::scale --input \'{"node":"%s","services":{{serviceScaleArray}}}\'';
     private static $serviceRemoveCommand = 'mco playbook run helio::cluster::services::remove --input \'{"node":"%s","services":{{serviceRemoveArray}}}\'';
-    private static $nodeCleanupCommand = 'mco playbook run helio::cluster::node::cleanup --input \'{"node_fqdn":"{{fqdn}}"}\'';
 
     /**
      * Choria constructor.
@@ -82,10 +84,7 @@ class Choria implements OrchestratorInterface
         return ServerUtility::executeShellCommand($this->parseCommand(self::$stopComputeCommand));
     }
 
-    /**
-     * @return bool
-     */
-    public function dispatchJob(): bool
+    public function dispatchJob(bool $joinWorkersCallback = false): bool
     {
         if (!$this->job) {
             return false;
@@ -105,8 +104,9 @@ class Choria implements OrchestratorInterface
         ]));
 
         if ($this->job->getActiveExecutionCount() > 0) {
+            $cmd = $joinWorkersCallback ? self::$joinWorkersWithCallbackCommand : self::$joinWorkersCommand;
             ServerUtility::executeShellCommand(
-                $this->parseCommand(self::$joinWorkersCommand, false, [
+                $this->parseCommand($cmd, false, [
                     $manager->getWorkerToken(),
                     $manager->getIp(),
                     1,
@@ -244,13 +244,6 @@ class Choria implements OrchestratorInterface
 
         $command = str_replace('{{serviceRemoveArray}}', json_encode($servicesArray), self::$serviceRemoveCommand);
         $command = $this->parseCommand($command, false, [$this->job->getManager()->getFqdn()]);
-
-        return ServerUtility::executeShellCommand($command);
-    }
-
-    public function nodeCleanup(): ?string
-    {
-        $command = $this->parseCommand(self::$nodeCleanupCommand, false);
 
         return ServerUtility::executeShellCommand($command);
     }

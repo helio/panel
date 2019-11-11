@@ -13,7 +13,7 @@ interface OrchestratorInterface
 
     public function getInventory(): ?string;
 
-    public function dispatchJob(): bool;
+    public function dispatchJob(bool $joinWorkersCallback = false): bool;
 
     public function updateJob(array $jobIDs): void;
 
@@ -30,6 +30,4 @@ interface OrchestratorInterface
     public function dispatchReplicas(array $executionsWithNewReplicaCount): ?string;
 
     public function removeExecutions(array $executions): string;
-
-    public function nodeCleanup(): ?string;
 }

@@ -272,7 +272,7 @@ class ApiAdminController extends AbstractController
             if ($job->getActiveExecutionCount() > 0 && $job->getManager()->works()) {
                 $foundManagers[] = $job->getManager()->getFqdn();
 
-                OrchestratorFactory::getOrchestratorForInstance((new Instance()), $job)->dispatchJob();
+                OrchestratorFactory::getOrchestratorForInstance((new Instance()), $job)->dispatchJob(true);
 
                 LogHelper::info('triggered dispatch job', [
                     'found_managers' => $foundManagers,
@@ -317,7 +317,7 @@ class ApiAdminController extends AbstractController
         }
 
         $orchestrator = OrchestratorFactory::getOrchestratorForInstance($instance);
-        $orchestrator->nodeCleanup();
+        $orchestrator->removeInstance();
 
         return $this->render(['success' => true, 'instance' => ['id' => $instance->getId(), 'fqdn' => $instance->getFqdn()]]);
     }
