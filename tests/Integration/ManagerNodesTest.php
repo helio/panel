@@ -135,12 +135,8 @@ class ManagerNodesTest extends TestCase
         $this->assertIsArray($executions);
         $this->assertCount(1, $executions);
 
-        $this->assertStringContainsString('helio::queue', ServerUtility::getLastExecutedShellCommand());
-        $this->assertStringContainsString('helio::task::update', ServerUtility::getLastExecutedShellCommand(1));
-        $this->assertStringContainsString('task_ids', ServerUtility::getLastExecutedShellCommand(1));
-        $this->assertStringContainsString('[' . $executions[0]->getId() . ']', ServerUtility::getLastExecutedShellCommand(1));
-        $this->assertStringContainsString('manager-init', ServerUtility::getLastExecutedShellCommand(1));
-        $this->assertStringContainsString('.example.com', ServerUtility::getLastExecutedShellCommand(1));
+        $this->assertStringContainsString('helio::cluster::services::create', ServerUtility::getLastExecutedShellCommand());
+        $this->assertStringContainsString('services\":[{\"service\":\"ep85-1-1\",\"scale\":1', ServerUtility::getLastExecutedShellCommand());
     }
 
     /**
@@ -156,8 +152,7 @@ class ManagerNodesTest extends TestCase
         );
         $this->assertEquals(StatusCode::HTTP_OK, $response->getStatusCode());
 
-        $this->assertStringContainsString('helio::queue', ServerUtility::getLastExecutedShellCommand());
-        $this->assertStringContainsString('helio::task', ServerUtility::getLastExecutedShellCommand(1));
+        $this->assertStringContainsString('helio::cluster::services::create', ServerUtility::getLastExecutedShellCommand());
 
         ServerUtility::resetLastExecutedCommand();
 
@@ -182,8 +177,7 @@ class ManagerNodesTest extends TestCase
         );
         $this->assertEquals(StatusCode::HTTP_OK, $response->getStatusCode());
 
-        $this->assertStringContainsString('helio::task', ServerUtility::getLastExecutedShellCommand(1));
-        $this->assertStringContainsString('helio::queue', ServerUtility::getLastExecutedShellCommand());
+        $this->assertStringContainsString('helio::cluster::services::create', ServerUtility::getLastExecutedShellCommand());
 
         ServerUtility::resetLastExecutedCommand();
 
@@ -194,17 +188,16 @@ class ManagerNodesTest extends TestCase
             ['name' => $this->getName() . '#2']
         );
         $this->assertEquals(StatusCode::HTTP_OK, $response->getStatusCode());
-        $this->assertStringContainsString('helio::task', ServerUtility::getLastExecutedShellCommand(1));
-        $this->assertStringContainsString('helio::queue', ServerUtility::getLastExecutedShellCommand());
+        $this->assertStringContainsString('helio::cluster::services::create', ServerUtility::getLastExecutedShellCommand());
 
-        $executions = $this->executionRepository->findBy(['job' => $this->job]);
-        $ids = '';
+        $executions = $this->executionRepository->findBy(['job' => $this->job, 'name' => $this->getName().'#2']);
+        $ids = [];
+        /** @var Execution $execution */
         foreach ($executions as $execution) {
-            /* @var Execution $execution */
-            $ids .= $execution->getId() . ',';
+            $ids[] = ['service' => $execution->getServiceName(), 'scale' => 1];
         }
-        $ids = rtrim($ids, ',');
-        $this->assertStringContainsString('[' . $ids . ']', ServerUtility::getLastExecutedShellCommand(1));
+        $ids = str_replace('"', '\"', json_encode($ids));
+        $this->assertStringContainsString($ids, ServerUtility::getLastExecutedShellCommand());
     }
 
     /**
@@ -255,8 +248,7 @@ class ManagerNodesTest extends TestCase
             $this->assertEquals(StatusCode::HTTP_OK, $response->getStatusCode(), (string) $response->getBody());
         } while ($i > 0);
 
-        $this->assertStringContainsString('helio::queue', ServerUtility::getLastExecutedShellCommand());
-        $this->assertStringContainsString('helio::task', ServerUtility::getLastExecutedShellCommand(1));
+        $this->assertStringContainsString('helio::cluster::services::create', ServerUtility::getLastExecutedShellCommand());
     }
 
     /**
@@ -307,9 +299,9 @@ class ManagerNodesTest extends TestCase
             ['type' => JobType::GITLAB_RUNNER, 'name' => $this->getName()]
         );
         $this->assertEquals(StatusCode::HTTP_OK, $result->getStatusCode());
-        $this->assertStringContainsString('infrastructure::gce::create', ServerUtility::getLastExecutedShellCommand(2));
-        $this->assertStringContainsString('helio::task::update', ServerUtility::getLastExecutedShellCommand(1));
-        $this->assertStringContainsString('helio::queue', ServerUtility::getLastExecutedShellCommand());
+
+        $this->assertStringContainsString('helio::cluster::services::create', ServerUtility::getLastExecutedShellCommand());
+        $this->assertStringContainsString('infrastructure::gce::create', ServerUtility::getLastExecutedShellCommand(1));
     }
 
     /**
@@ -327,8 +319,8 @@ class ManagerNodesTest extends TestCase
         );
         $this->assertEquals(StatusCode::HTTP_OK, $result->getStatusCode());
         $this->assertEmpty(ServerUtility::getLastExecutedShellCommand(2));
-        $this->assertStringContainsString('helio::task::update', ServerUtility::getLastExecutedShellCommand(1));
-        $this->assertStringContainsString('helio::queue', ServerUtility::getLastExecutedShellCommand());
+
+        $this->assertStringContainsString('helio::cluster::services::create', ServerUtility::getLastExecutedShellCommand());
     }
 
     public function testJobUpdateWhenMultipleJobsOnSameManager(): void
@@ -375,7 +367,6 @@ class ManagerNodesTest extends TestCase
         $this->assertStringContainsString('helio::job::update', ServerUtility::getLastExecutedShellCommand());
         $this->assertStringContainsString('ids\":\"' . implode(',', [$this->job->getId(), $jobId]) . '\"', ServerUtility::getLastExecutedShellCommand());
 
-        $this->assertStringContainsString('helio::queue', ServerUtility::getLastExecutedShellCommand(1));
-        $this->assertStringContainsString('helio::task::update', ServerUtility::getLastExecutedShellCommand(2));
+        $this->assertStringContainsString('helio::cluster::services::create', ServerUtility::getLastExecutedShellCommand(1));
     }
 }

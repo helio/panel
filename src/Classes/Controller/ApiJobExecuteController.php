@@ -223,7 +223,7 @@ class ApiJobExecuteController extends AbstractController
 
             // if replica count has changed OR we have an enforcement (e.g. one replica per execution fixed), dispatch the job
             if ($previousReplicaCount !== $newReplicaCount || $dispatchConfig->getFixedReplicaCount()) {
-                $orchestrator->dispatchJob();
+                $orchestrator->createService([$this->execution]);
                 $this->persistExecution();
                 $this->persistJob();
             }

@@ -30,4 +30,6 @@ interface OrchestratorInterface
     public function dispatchReplicas(array $executionsWithNewReplicaCount): ?string;
 
     public function removeExecutions(array $executions): string;
+
+    public function createService(array $executions): string;
 }

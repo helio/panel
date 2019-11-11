@@ -8,7 +8,6 @@ use Helio\Panel\Job\JobStatus;
 use Helio\Panel\Model\Execution;
 use Helio\Panel\Model\Manager;
 use Helio\Panel\Utility\ArrayUtility;
-use RuntimeException;
 use Helio\Panel\Helper\LogHelper;
 use Helio\Panel\Model\Instance;
 use Helio\Panel\Model\Job;
@@ -45,8 +44,9 @@ class Choria implements OrchestratorInterface
     private static $joinWorkersCommand = 'mco playbook run helio::queue --input \'{"cluster_join_token":"%s","cluster_join_address":"%s","cluster_join_count":"%s","manager_id":"%s"}\'';
     private static $joinWorkersWithCallbackCommand = 'mco playbook run helio::queue --input \'{"cluster_join_token":"%s","cluster_join_address":"%s","cluster_join_count":"%s","manager_id":"%s","callback":"{{jobCallback}}"}\'';
     private static $updateJobCommand = 'mco playbook run helio::job::update --input \'{"node":"%s","ids":"%s","user_id":"%s"}\'';
-    private static $serviceScaleCommand = 'mco playbook run helio::cluster::services::scale --input \'{"node":"%s","services":{{serviceScaleArray}}}\'';
+    private static $serviceScaleCommand = 'mco playbook run helio::cluster::services::scale --input \'{"node":"%s","services":{{servicesArray}}}\'';
     private static $serviceRemoveCommand = 'mco playbook run helio::cluster::services::remove --input \'{"node":"%s","services":{{serviceRemoveArray}}}\'';
+    private static $serviceCreateCommand = 'mco playbook run helio::cluster::services::create --input \'{"node":"%s","services":{{servicesArray}}}\'';
 
     /**
      * Choria constructor.
@@ -218,17 +218,9 @@ class Choria implements OrchestratorInterface
 
     public function dispatchReplicas(array $executionsWithNewReplicaCount): ?string
     {
-        $executionReplicasArray = [];
-        /** @var Execution $execution */
-        foreach ($executionsWithNewReplicaCount as $execution) {
-            $replica = $execution->getReplicas() ?? JobFactory::getDispatchConfigOfJob($this->job, $execution)->getDispatchConfig()->getReplicaCountForJob($this->job);
-            $executionReplicasArray[] = [
-                'service' => $execution->getServiceName(),
-                'scale' => $replica,
-            ];
-        }
+        $executionReplicasArray = $this->createServicesArray($executionsWithNewReplicaCount);
 
-        $command = str_replace('{{serviceScaleArray}}', json_encode($executionReplicasArray), self::$serviceScaleCommand);
+        $command = str_replace('{{servicesArray}}', json_encode($executionReplicasArray), self::$serviceScaleCommand);
         $command = $this->parseCommand($command, false, [$this->job->getManager()->getFqdn()]);
 
         return ServerUtility::executeShellCommand($command);
@@ -246,12 +238,14 @@ class Choria implements OrchestratorInterface
         return ServerUtility::executeShellCommand($command);
     }
 
-    protected function ensureRunnerIdIsSet(): void
+    public function createService(array $executions): string
     {
-        if (!$this->instance->getRunnerId()) {
-            ServerUtility::executeShellCommand($this->parseCommand(self::$getRunnerIdCommand));
-            throw new RuntimeException('Instance ID not set');
-        }
+        $executionReplicasArray = $this->createServicesArray($executions);
+
+        $command = str_replace('{{servicesArray}}', json_encode($executionReplicasArray), self::$serviceCreateCommand);
+        $command = $this->parseCommand($command, false, [$this->job->getManager()->getFqdn()]);
+
+        return ServerUtility::executeShellCommand($command);
     }
 
     /**
@@ -292,5 +286,23 @@ class Choria implements OrchestratorInterface
         );
 
         return vsprintf('ssh %s@%s "' . $command . '"' . ($waitForResult ? '' : ' > /dev/null 2>&1 &'), $params);
+    }
+
+    /**
+     * @param  Execution[] $executions
+     * @return array
+     */
+    protected function createServicesArray(array $executions): array
+    {
+        $executionReplicasArray = [];
+        foreach ($executions as $execution) {
+            $replica = $execution->getReplicas() ?? JobFactory::getDispatchConfigOfJob($this->job, $execution)->getDispatchConfig()->getReplicaCountForJob($this->job);
+            $executionReplicasArray[] = [
+                'service' => $execution->getServiceName(),
+                'scale' => $replica,
+            ];
+        }
+
+        return $executionReplicasArray;
     }
 }
