@@ -38,7 +38,7 @@ class Choria implements OrchestratorInterface
     private static $startComputeCommand = 'mco playbook run helio::cluster::node::start --input \'{"node_id":"%s","node_fqdn":"{{fqdn}}","manager":"%s","callback":"{{instanceCallback}}"}\'';
     // FIXME: still in use?
     private static $stopComputeCommand = 'mco playbook run helio::cluster::node::stop --input \'{"node_id":"%s","node_fqdn":"{{fqdn}}","manager":"%s","callback":"{{instanceCallback}}"}\'';
-    private static $removeNodeCommand = 'mco playbook run helio::cluster::node::cleanup --input \'{"node_id":"%s","node_fqdn":"{{fqdn}}","manager":"%s","callback":"{{instanceCallback}}"}\'';
+    private static $removeNodeCommand = 'mco playbook run helio::cluster::node::cleanup --input \'{"node_id":"%s","node_fqdn":"{{fqdn}}","manager_fqdn":"%s","callback":"{{instanceCallback}}"}\'';
     private static $inspectCommand = 'mco playbook run helio::cluster::node::inspect --input \'{"node_fqdn":"{{fqdn}}","callback":"{{instanceCallback}}"}\'';
     private static $getRunnerIdCommand = 'mco playbook run helio::cluster::node::getid --input \'{"node_fqdn":"{{fqdn}}","callback":"{{instanceCallback}}"}\'';
     private static $dispatchCommand = 'mco playbook run helio::task::update --input \'{"cluster_address":"%s","task_ids":"[%s]"}\'';
@@ -213,9 +213,7 @@ class Choria implements OrchestratorInterface
      */
     public function removeInstance(): ?string
     {
-        $this->ensureRunnerIdIsSet();
-
-        return ServerUtility::executeShellCommand($this->parseCommand(self::$removeNodeCommand, false, [$this->instance->getRunnerId()]));
+        return ServerUtility::executeShellCommand($this->parseCommand(self::$removeNodeCommand, false, [$this->instance->getRunnerId(), $this->job ? $this->job->getManager()->getFqdn() : '']));
     }
 
     public function dispatchReplicas(array $executionsWithNewReplicaCount): ?string
