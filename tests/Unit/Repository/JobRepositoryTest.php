@@ -26,6 +26,13 @@ class JobRepositoryTest extends TestCase
 
     public function testGetExecutionCountHavingReplicas()
     {
+        $anotherJob = $this->createJob(JobStatus::READY, function (Job $job) {
+            $job->setLabels(['render', 'gpu']);
+        });
+        $this->createExecution($anotherJob, ExecutionStatus::DONE, function (Execution $execution) {
+            $execution->setReplicas(0);
+        });
+
         $jobRenderGPU = $this->createJob(JobStatus::READY, function (Job $job) {
             $job->setLabels(['render', 'gpu']);
         });

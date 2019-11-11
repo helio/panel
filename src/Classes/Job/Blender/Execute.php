@@ -73,6 +73,7 @@ class Execute extends \Helio\Panel\Job\Docker\Execute
         // another execution gets a replica of 1. When an execution finishes, the next execution gets replica of 1.
         // As soon as all executions of this job are done, find executions which still need to run in other jobs and update replica count there.
         $runningExecution = $jobRepository->getExecutionCountHavingReplicas($this->job->getLabels());
+
         if ($runningExecution >= 1) {
             $replicas = 0;
         }

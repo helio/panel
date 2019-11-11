@@ -3,6 +3,7 @@
 namespace Helio\Panel\Repositories;
 
 use Doctrine\ORM\EntityRepository;
+use Doctrine\ORM\Query\Expr;
 use Doctrine\ORM\QueryBuilder;
 use Helio\Panel\Job\JobStatus;
 use Helio\Panel\Model\Execution;
@@ -15,7 +16,7 @@ class JobRepository extends EntityRepository
         $qb = $this->getEntityManager()->createQueryBuilder();
         $qb->select('count(j.id)')
             ->from(Job::class, 'j')
-            ->leftJoin(Execution::class, 'e')
+            ->leftJoin(Execution::class, 'e', Expr\Join::WITH, 'j.id = e.job')
             ->where($qb->expr()->andX(
                 $qb->expr()->eq('j.status', JobStatus::READY),
                 $qb->expr()->eq('e.replicas', 1)
