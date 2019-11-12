@@ -12,6 +12,7 @@ use Helio\Panel\Model\Manager;
 use Helio\Panel\Model\User;
 use Helio\Panel\Orchestrator\ManagerStatus;
 use Helio\Panel\Utility\JwtUtility;
+use Helio\Test\Infrastructure\Helper\TestHelper;
 use Helio\Test\Infrastructure\Utility\ServerUtility;
 use Helio\Test\TestCase;
 use Slim\Http\StatusCode;
@@ -25,13 +26,13 @@ class ApiExecutionTest extends TestCase
         $jobId = $this->createExecutionViaApi($job, $user);
         $this->assertNotNull($jobId);
 
-        $command = str_replace('\\"', '"', ServerUtility::getLastExecutedShellCommand());
+        $rawCommand = ServerUtility::getLastExecutedShellCommand();
+        $this->assertStringContainsString('\\"STORAGE_CREDENTIALS\\":\\"{  \\\\\\"type\\\\\\":  \\\\\\"dummy\\\\\\",  \\\\\\"characterEscapeTest\\\\\\": \\\\\\"&try:asdf@blubb%blah\\/ should work, properly +-\\\\\\"}\\"', $rawCommand);
+
+        $command = TestHelper::unescapeChoriaCommand();
         $this->assertStringContainsString('helio::cluster::services::create', $command);
 
-        $matches = [];
-        preg_match("/--input '([^']+)'/", $command, $matches);
-        $this->assertNotEmpty($matches);
-        $input = json_decode($matches[1], true);
+        $input = TestHelper::getInputFromChoriaCommand();
 
         $this->assertIsArray($input);
         $this->assertArrayHasKey('services', $input);
@@ -183,12 +184,8 @@ class ApiExecutionTest extends TestCase
         $this->assertStringContainsString('helio::cluster::services::scale', ServerUtility::getLastExecutedShellCommand(1));
         $this->assertStringContainsString('helio::cluster::services::remove', ServerUtility::getLastExecutedShellCommand(0));
 
-        $command = str_replace('\\"', '"', ServerUtility::getLastExecutedShellCommand(1));
+        $input = TestHelper::getInputFromChoriaCommand(1);
 
-        $matches = [];
-        preg_match("/--input '([^']+)'/", $command, $matches);
-        $this->assertNotEmpty($matches);
-        $input = json_decode($matches[1], true);
         $this->assertArrayHasKey('services', $input);
         $this->assertArrayHasKey('node', $input);
         $this->assertEquals('manager1.manager.example.com', $input['node']);

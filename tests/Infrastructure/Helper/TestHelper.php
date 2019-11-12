@@ -12,7 +12,7 @@ class TestHelper
      */
     public static function getCallbackUrlFromExecutedShellCommand(int $offset = 0): string
     {
-        $command = str_replace('\\"', '"', ServerUtility::getLastExecutedShellCommand($offset));
+        $command = self::unescapeChoriaCommand($offset);
         $pattern = '/^.*"callback":"' . str_replace('/', '\\/', ServerUtility::getBaseUrl()) . '([^"]+)"/';
         $matches = [];
         preg_match($pattern, $command, $matches);
@@ -21,5 +21,19 @@ class TestHelper
         }
 
         return '/' . $matches[1];
+    }
+
+    public static function getInputFromChoriaCommand(int $offset = 0): array
+    {
+        $command = self::unescapeChoriaCommand($offset);
+        $matches = [];
+        preg_match("/--input '([^']+)'/", $command, $matches);
+
+        return \GuzzleHttp\json_decode($matches[1], true);
+    }
+
+    public static function unescapeChoriaCommand(int $offset = 0): string
+    {
+        return str_replace(['\\\"', '\\"'], ['\\"', '"'], ServerUtility::getLastExecutedShellCommand($offset));
     }
 }

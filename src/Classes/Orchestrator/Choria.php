@@ -287,6 +287,7 @@ class Choria implements OrchestratorInterface
 
         $command = str_replace(
             [
+                '\\"',
                 '"',
                 '{{fqdn}}',
                 '{{instanceCallback}}',
@@ -295,6 +296,7 @@ class Choria implements OrchestratorInterface
                 '{{instanceId}}',
             ],
             [
+                '\\\"',
                 '\\"',
                 $this->instance->getFqdn(),
                 ServerUtility::getBaseUrl() . 'api/instance/callback?instanceid=' . $this->instance->getId(),
