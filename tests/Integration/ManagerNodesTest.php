@@ -135,8 +135,11 @@ class ManagerNodesTest extends TestCase
         $this->assertIsArray($executions);
         $this->assertCount(1, $executions);
 
-        $this->assertStringContainsString('helio::cluster::services::create', ServerUtility::getLastExecutedShellCommand());
-        $this->assertStringContainsString('services\":[{\"service\":\"ep85-1-1\",\"scale\":1', ServerUtility::getLastExecutedShellCommand());
+        $serviceCreateCmd = ServerUtility::getLastExecutedShellCommand();
+        $this->assertStringContainsString('helio::cluster::services::create', $serviceCreateCmd);
+        $this->assertStringContainsString('\"service\":\"ep85-1-1\"', $serviceCreateCmd);
+        $this->assertStringContainsString('\"replicas\":1', $serviceCreateCmd);
+        $this->assertStringContainsString('\"image\":\"hub.helio.dev:4567\/helio\/runner\/ep85:latest\"', $serviceCreateCmd);
     }
 
     /**
@@ -190,14 +193,15 @@ class ManagerNodesTest extends TestCase
         $this->assertEquals(StatusCode::HTTP_OK, $response->getStatusCode());
         $this->assertStringContainsString('helio::cluster::services::create', ServerUtility::getLastExecutedShellCommand());
 
-        $executions = $this->executionRepository->findBy(['job' => $this->job, 'name' => $this->getName().'#2']);
-        $ids = [];
+        $executions = $this->executionRepository->findBy(['job' => $this->job, 'name' => $this->getName() . '#2']);
+        $serviceCreateCmd = ServerUtility::getLastExecutedShellCommand();
         /** @var Execution $execution */
         foreach ($executions as $execution) {
-            $ids[] = ['service' => $execution->getServiceName(), 'scale' => 1];
+            $this->assertStringContainsString('helio::cluster::services::create', $serviceCreateCmd);
+            $this->assertStringContainsString(sprintf('\"service\":\"%s\"', $execution->getServiceName()), $serviceCreateCmd);
+            $this->assertStringContainsString('\"replicas\":1', $serviceCreateCmd);
+            $this->assertStringContainsString('\"image\":\"hello-world\"', $serviceCreateCmd);
         }
-        $ids = str_replace('"', '\"', json_encode($ids));
-        $this->assertStringContainsString($ids, ServerUtility::getLastExecutedShellCommand());
     }
 
     /**

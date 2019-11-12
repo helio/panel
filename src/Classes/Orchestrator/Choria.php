@@ -218,7 +218,14 @@ class Choria implements OrchestratorInterface
 
     public function dispatchReplicas(array $executionsWithNewReplicaCount): ?string
     {
-        $executionReplicasArray = $this->createServicesArray($executionsWithNewReplicaCount);
+        $executionReplicasArray = [];
+        foreach ($executionsWithNewReplicaCount as $execution) {
+            $replica = $execution->getReplicas() ?? JobFactory::getDispatchConfigOfJob($this->job, $execution)->getDispatchConfig()->getReplicaCountForJob($this->job);
+            $executionReplicasArray[] = [
+                'service' => $execution->getServiceName(),
+                'scale' => $replica,
+            ];
+        }
 
         $command = str_replace('{{servicesArray}}', json_encode($executionReplicasArray), self::$serviceScaleCommand);
         $command = $this->parseCommand($command, false, [$this->job->getManager()->getFqdn()]);
@@ -238,9 +245,18 @@ class Choria implements OrchestratorInterface
         return ServerUtility::executeShellCommand($command);
     }
 
+    /**
+     * @param  Execution[] $executions
+     * @return string
+     */
     public function createService(array $executions): string
     {
-        $executionReplicasArray = $this->createServicesArray($executions);
+        $executionReplicasArray = [];
+        foreach ($executions as $execution) {
+            $service = $execution->getServiceConfiguration();
+            $service['service'] = $execution->getServiceName();
+            $executionReplicasArray[] = $service;
+        }
 
         $command = str_replace('{{servicesArray}}', json_encode($executionReplicasArray), self::$serviceCreateCommand);
         $command = $this->parseCommand($command, false, [$this->job->getManager()->getFqdn()]);
@@ -286,23 +302,5 @@ class Choria implements OrchestratorInterface
         );
 
         return vsprintf('ssh %s@%s "' . $command . '"' . ($waitForResult ? '' : ' > /dev/null 2>&1 &'), $params);
-    }
-
-    /**
-     * @param  Execution[] $executions
-     * @return array
-     */
-    protected function createServicesArray(array $executions): array
-    {
-        $executionReplicasArray = [];
-        foreach ($executions as $execution) {
-            $replica = $execution->getReplicas() ?? JobFactory::getDispatchConfigOfJob($this->job, $execution)->getDispatchConfig()->getReplicaCountForJob($this->job);
-            $executionReplicasArray[] = [
-                'service' => $execution->getServiceName(),
-                'scale' => $replica,
-            ];
-        }
-
-        return $executionReplicasArray;
     }
 }

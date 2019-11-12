@@ -8,6 +8,7 @@ use Doctrine\ORM\Mapping\Index;
 use Exception;
 use DateTime;
 use DateTimeZone;
+use Helio\Panel\Job\JobFactory;
 use OpenApi\Annotations as OA;
 use Doctrine\ORM\Mapping\Entity;
 use Doctrine\ORM\Mapping\Table;
@@ -378,5 +379,56 @@ class Execution extends AbstractModel
         $job = $this->getJob();
 
         return $job->getType() . '-' . $job->getId() . '-' . $this->getId();
+    }
+
+    public function getServiceConfiguration(): array
+    {
+        $job = $this->getJob();
+        $service = [];
+        $env = [];
+
+        $dispatchConfig = JobFactory::getDispatchConfigOfJob($job, $this)->getDispatchConfig();
+        if ($dispatchConfig->getEnvVariables()) {
+            foreach ($dispatchConfig->getEnvVariables() as $key => $value) {
+                // it might be due to json array and object mixup, that value is still an array
+                if (is_array($value)) {
+                    foreach ($value as $subKey => $subValue) {
+                        $env[strtoupper($subKey)] = $subValue;
+                    }
+                } else {
+                    $env[strtoupper($key)] = $value;
+                }
+            }
+        }
+
+        // merge Yaml Config
+        if ($this->getConfig('env')) {
+            foreach ($this->getConfig('env') as $key => $value) {
+                // it might be due to json array and object mixup, that value is still an array
+                if (is_array($value)) {
+                    foreach ($value as $subKey => $subValue) {
+                        $env[strtoupper($subKey)] = $subValue;
+                    }
+                } else {
+                    $env[strtoupper($key)] = $value;
+                }
+            }
+        }
+
+        $env['HELIO_JOBID'] = $job->getId();
+        $env['HELIO_USERID'] = $job->getOwner()->getId();
+        $env['HELIO_EXECUTIONID'] = $this->getId();
+
+        // set args if present
+        $args = $this->getConfig('args') ?: $dispatchConfig->getArgs();
+        if ($args) {
+            $service['args'] = implode(' ', $args);
+        }
+
+        $service['image'] = $dispatchConfig->getImage() ?: 'hello-world';
+        $service['replicas'] = $this->getReplicas() ?? $dispatchConfig->getReplicaCountForJob($job);
+        $service['env'] = $env;
+
+        return $service;
     }
 }

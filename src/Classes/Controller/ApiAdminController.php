@@ -379,66 +379,23 @@ class ApiAdminController extends AbstractController
 
     private function generateExecutionHiera(Job $job, Execution $execution): array
     {
-        $service = [
-            'service_name' => $execution->getServiceName(),
-        ];
-
-        $yamlEnv = [];
-        $env = [];
-
         // catch done or not-yet-ready executions
         if (ExecutionStatus::isNotRequiredToRunAnymore($execution->getStatus())) {
             $service['ensure'] = 'absent';
+            $service['service_name'] = $execution->getServiceName();
 
             return $service;
         }
 
-        $dispatchConfig = JobFactory::getDispatchConfigOfJob($job, $execution)->getDispatchConfig();
-        if ($dispatchConfig->getEnvVariables()) {
-            foreach ($dispatchConfig->getEnvVariables() as $key => $value) {
-                // it might be due to json array and object mixup, that value is still an array
-                if (is_array($value)) {
-                    foreach ($value as $subKey => $subValue) {
-                        $env[strtoupper($subKey)] = $subValue;
-                    }
-                } else {
-                    $env[strtoupper($key)] = $value;
-                }
-            }
-        }
+        $service = $execution->getServiceConfiguration();
+        $service['service_name'] = $execution->getServiceName();
 
-        // merge Yaml Config
-        if ($execution->getConfig('env')) {
-            foreach ($execution->getConfig('env') as $key => $value) {
-                // it might be due to json array and object mixup, that value is still an array
-                if (is_array($value)) {
-                    foreach ($value as $subKey => $subValue) {
-                        $env[strtoupper($subKey)] = $subValue;
-                    }
-                } else {
-                    $env[strtoupper($key)] = $value;
-                }
-            }
-        }
-
-        $env['HELIO_JOBID'] = $job->getId();
-        $env['HELIO_USERID'] = $job->getOwner()->getId();
-        $env['HELIO_EXECUTIONID'] = $execution->getId();
-
-        foreach ($env as $item => $value) {
+        $yamlEnv = [];
+        foreach ($service['env'] as $item => $value) {
             // remove newlines because they cause yaml to parse them in a herein unwanted way
             $escapedVal = str_replace(["\n", "\r"], ['\n', '\r'], $value);
             $yamlEnv[] = escapeshellarg("$item=$escapedVal");
         }
-
-        // set args if present
-        $args = $execution->getConfig('args') ?: $dispatchConfig->getArgs();
-        if ($args) {
-            $service['args'] = implode(' ', $args);
-        }
-
-        $service['image'] = $dispatchConfig->getImage() ?: 'hello-world';
-        $service['replicas'] = $execution->getReplicas() ?? $dispatchConfig->getReplicaCountForJob($job);
         $service['env'] = $yamlEnv;
 
         return $service;
