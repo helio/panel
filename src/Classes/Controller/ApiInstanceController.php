@@ -338,7 +338,13 @@ class ApiInstanceController extends AbstractController
         $body = $this->request->getParsedBody();
         LogHelper::debug('Body received into instance ' . $this->instance->getId() . ' callback:' . print_r($body, true));
 
-        $this->instance->setInventory($body);
+        if (array_key_exists('action', $body)) {
+            if ('cleanup' === $body['action']) {
+                $this->instance->setHidden(true);
+            }
+        } else {
+            $this->instance->setInventory($body);
+        }
 
         $this->persistInstance();
 
