@@ -27,7 +27,7 @@ class ApiExecutionTest extends TestCase
         $this->assertNotNull($jobId);
 
         $rawCommand = ServerUtility::getLastExecutedShellCommand();
-        $this->assertStringContainsString('\\"STORAGE_CREDENTIALS\\":\\"{  \\\\\\"type\\\\\\":  \\\\\\"dummy\\\\\\",  \\\\\\"characterEscapeTest\\\\\\": \\\\\\"&try:asdf@blubb%blah\\/ should work, properly +-\\\\\\"}\\"', $rawCommand);
+        $this->assertStringContainsString('\\"STORAGE_CREDENTIALS\\":\\"{  \\\\\\"type\\\\\\":  \\\\\\"dummy\\\\\\",  \\\\\\"characterEscapeTest\\\\\\": \\\\\\"&try:asdf@blubb%blah\\/ should work, properly +-\\\\\\",  \\\\\\"newlinetest\\\\\\": \\\\\\"-----BEGIN PRIVATE KEY-----\\\nfoo\\\\\\"}\\"', $rawCommand);
 
         $command = TestHelper::unescapeChoriaCommand();
         $this->assertStringContainsString('helio::cluster::services::create', $command);

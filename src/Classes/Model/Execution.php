@@ -388,8 +388,9 @@ class Execution extends AbstractModel
         $env = [];
 
         $dispatchConfig = JobFactory::getDispatchConfigOfJob($job, $this)->getDispatchConfig();
-        if ($dispatchConfig->getEnvVariables()) {
-            foreach ($dispatchConfig->getEnvVariables() as $key => $value) {
+        $dispatchEnv = $dispatchConfig->getEnvVariables();
+        if ($dispatchEnv) {
+            foreach ($dispatchEnv as $key => $value) {
                 // it might be due to json array and object mixup, that value is still an array
                 if (is_array($value)) {
                     foreach ($value as $subKey => $subValue) {

@@ -1,4 +1,5 @@
 {
   "type":  "dummy",
-  "characterEscapeTest": "&try:asdf@blubb%blah/ should work, properly +-"
+  "characterEscapeTest": "&try:asdf@blubb%blah/ should work, properly +-",
+  "newlinetest": "-----BEGIN PRIVATE KEY-----\nfoo"
 }
