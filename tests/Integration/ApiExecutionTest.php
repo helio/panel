@@ -18,6 +18,29 @@ use Slim\Http\StatusCode;
 
 class ApiExecutionTest extends TestCase
 {
+    public function testNewExecutionSendsProperServicecreateCommandToChoria(): void
+    {
+        $user = $this->createUser();
+        $job = $this->createJob($user, JobType::BLENDER);
+        $jobId = $this->createExecutionViaApi($job, $user);
+        $this->assertNotNull($jobId);
+
+        $command = str_replace('\\"', '"', ServerUtility::getLastExecutedShellCommand());
+        $this->assertStringContainsString('helio::cluster::services::create', $command);
+
+        $matches = [];
+        preg_match("/--input '([^']+)'/", $command, $matches);
+        $this->assertNotEmpty($matches);
+        $input = json_decode($matches[1], true);
+
+        $this->assertIsArray($input);
+        $this->assertArrayHasKey('services', $input);
+
+        $storageCredentials = json_decode($input['services'][0]['env']['STORAGE_CREDENTIALS'], true);
+        $this->assertIsArray($storageCredentials);
+        $this->assertEquals('&try:asdf@blubb%blah/ should work, properly +-', $storageCredentials['characterEscapeTest']);
+    }
+
     /**
      * @throws Exception
      */
