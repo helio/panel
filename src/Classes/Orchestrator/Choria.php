@@ -255,6 +255,9 @@ class Choria implements OrchestratorInterface
         foreach ($executions as $execution) {
             $service = $execution->getServiceConfiguration();
             $service['service'] = $execution->getServiceName();
+            foreach ($service['env'] as $key => $value) {
+                $service['env'][$key] = str_replace('%', '%%', $value);
+            }
             $executionReplicasArray[] = $service;
         }
 
