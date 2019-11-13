@@ -24,7 +24,7 @@ use Helio\Panel\Execution\ExecutionStatus;
  * )
  *
  * @Entity(repositoryClass="Helio\Panel\Repositories\ExecutionRepository")
- * @Table(name="execution",indexes={@Index(name="job_id_replicas_idx", columns={"job_id","replicas"})})
+ * @Table(name="execution",indexes={@Index(name="job_id_replicas_idx", columns={"job_id","replicas"}), @Index(name="status_idx", columns={"status"})})
  **/
 class Execution extends AbstractModel
 {

@@ -22,7 +22,7 @@ class JobRepository extends EntityRepository
                 $qb->expr()->eq('e.replicas', 1)
             ));
 
-        $this->generateLabelsCondition($labels, $qb);
+        self::generateLabelsCondition($labels, $qb);
 
         return $qb->getQuery()->getSingleScalarResult();
     }
@@ -41,12 +41,12 @@ class JobRepository extends EntityRepository
             ->addOrderBy('j.created', 'ASC')
             ->setMaxResults(1);
 
-        $this->generateLabelsCondition($labels, $qb);
+        self::generateLabelsCondition($labels, $qb);
 
         return $qb->getQuery()->getOneOrNullResult();
     }
 
-    protected function generateLabelsCondition(array $labels, QueryBuilder $qb): void
+    public static function generateLabelsCondition(array $labels, QueryBuilder $qb): void
     {
         $orLabels = [];
         for ($i = 0, $l = count($labels); $i < $l; ++$i) {

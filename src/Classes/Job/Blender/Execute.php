@@ -105,7 +105,8 @@ class Execute extends \Helio\Panel\Job\Docker\Execute
         $executionRepository = $dbHelper->getRepository(Execution::class);
         $executionsService = new ExecutionService($executionRepository);
 
-        if ($executionsService->setNextExecutionActive($this->job)) {
+        // sliding window: set next execution active
+        if ($executionsService->setNextExecutionActive($this->job->getLabels())) {
             return true;
         }
 

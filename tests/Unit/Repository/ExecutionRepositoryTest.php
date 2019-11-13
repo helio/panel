@@ -27,6 +27,9 @@ class ExecutionRepositoryTest extends TestCase
     public function testFindExecutionsToStart()
     {
         $job = $this->createJob();
+        $anotherJob = $this->createJob(JobStatus::READY, function (Job $job) {
+            $job->setPriority(0);
+        });
         $execA = $this->createExecution($job, ExecutionStatus::READY, function (Execution $execution) {
             $execution->setReplicas(0);
         });
@@ -36,16 +39,15 @@ class ExecutionRepositoryTest extends TestCase
         $this->createExecution($job, ExecutionStatus::READY, function (Execution $execution) {
             $execution->setReplicas(1);
         });
-        $execB = $this->createExecution($job, ExecutionStatus::READY, function (Execution $execution) {
+        $execB = $this->createExecution($anotherJob, ExecutionStatus::READY, function (Execution $execution) {
             $execution->setReplicas(0);
-            $execution->setPriority(0);
         });
 
         $executions = array_map(
             function (Execution $exec) {
                 return $exec->getId();
             },
-            $this->repository->findExecutionsToStart($job)
+            $this->repository->findExecutionsToStart($job->getLabels())
         );
         $this->assertEquals([$execB->getId(), $execA->getId()], $executions);
     }

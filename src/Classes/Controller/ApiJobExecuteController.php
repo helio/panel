@@ -6,10 +6,7 @@ use Helio\Panel\App;
 use Helio\Panel\Helper\ElasticHelper;
 use Helio\Panel\Helper\LogHelper;
 use Helio\Panel\Model\Instance;
-use Helio\Panel\Repositories\ExecutionRepository;
-use Helio\Panel\Repositories\JobRepository;
 use Helio\Panel\Request\Log;
-use Helio\Panel\Service\ExecutionService;
 use Helio\Panel\Service\LogService;
 use OpenApi\Annotations as OA;
 use Exception;
@@ -404,8 +401,6 @@ class ApiJobExecuteController extends AbstractController
             return $this->render(['error' => 'Execution already done'], StatusCode::HTTP_BAD_REQUEST);
         }
 
-        $previouslyRunningExecutionsCount = $this->job->getStartedExecutionsCount();
-
         JobFactory::getInstanceOfJob($this->job, $this->execution)->executionDone((string) $this->request->getBody());
 
         OrchestratorFactory::getOrchestratorForInstance(new Instance(), $this->job)->removeExecutions([$this->execution]);
@@ -424,29 +419,7 @@ class ApiJobExecuteController extends AbstractController
 
         $notDoneCount = $this->job->getActiveExecutionCount();
         $allExecutionsCompleted = 0 === $notDoneCount;
-        // if previously running executions are higher than the amount of executions not yet done in this job, we assume
-        // that there would be a worker idling now. Of course this is a very narrow view of the whole system (as, concurrently, other jobs could start to run as well)
-        // but for now it's a simple way to ensure possible jobs get executed when there are more jobs/executions than workers.
-        // We might run into over-provisioning but that's probably still slightly better than under-provisioning and stopping/restarting workers cycles.
-        $canRunAnotherJobsExecution = $previouslyRunningExecutionsCount > $notDoneCount;
         $sendCompletedNotification = $allExecutionsCompleted && $this->user->getPreferences()->getNotifications()->isEmailOnAllExecutionsEnded();
-
-        if ($allExecutionsCompleted || $canRunAnotherJobsExecution) {
-            $dbHelper = App::getDbHelper();
-
-            // sliding window: set next job's first execution as active
-
-            /** @var JobRepository $jobRepository */
-            $jobRepository = $dbHelper->getRepository(Job::class);
-            $job = $jobRepository->findNextJobInQueue($this->job->getLabels(), $this->job->getId());
-            if (null !== $job) {
-                /** @var ExecutionRepository $executionRepository */
-                $executionRepository = $dbHelper->getRepository(Execution::class);
-                $executionsService = new ExecutionService($executionRepository);
-
-                $executionsService->setNextExecutionActive($job);
-            }
-        }
 
         if ($sendCompletedNotification) {
             App::getNotificationUtility()::notifyUser(

@@ -9,7 +9,6 @@ use Helio\Panel\Helper\DbHelper;
 use Helio\Panel\Helper\LogHelper;
 use Helio\Panel\Model\Execution;
 use Helio\Panel\Model\Instance;
-use Helio\Panel\Model\Job;
 use Helio\Panel\Orchestrator\OrchestratorFactory;
 use Helio\Panel\Repositories\ExecutionRepository;
 
@@ -31,11 +30,11 @@ class ExecutionService
         $this->executionRepository = $executionRepository;
     }
 
-    public function setNextExecutionActive(Job $job): bool
+    public function setNextExecutionActive(array $labels): bool
     {
-        $executions = $this->executionRepository->findExecutionsToStart($job);
+        $executions = $this->executionRepository->findExecutionsToStart($labels);
         if (!count($executions)) {
-            LogHelper::info('no executions to start found', ['job' => $job->getId()]);
+            LogHelper::info('no executions to start found', ['labels' => $labels]);
 
             return false;
         }
@@ -49,7 +48,7 @@ class ExecutionService
                 $this->dbHelper->flush();
 
                 // scale services accordingly
-                OrchestratorFactory::getOrchestratorForInstance(new Instance(), $job)->dispatchReplicas([$lockedExecution]);
+                OrchestratorFactory::getOrchestratorForInstance(new Instance(), $lockedExecution->getJob())->dispatchReplicas([$lockedExecution]);
 
                 return true;
             } catch (OptimisticLockException $e) {
