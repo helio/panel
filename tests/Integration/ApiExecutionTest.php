@@ -99,7 +99,7 @@ class ApiExecutionTest extends TestCase
     public function testOverflowExecutionScalesToZeroOnJobWithMaxActiveServices(): void
     {
         $user = $this->createUser();
-        $job = $this->createJob($user, JobType::BLENDER, 'testOverflowExecutionScalesToZeroOnJobWithMaxActiveServices', ['render']);
+        $job = $this->createJob($user, JobType::BLENDER, 'testOverflowExecutionScalesToZeroOnJobWithMaxActiveServices', ['render'], ['type' => 'render']);
 
         for ($i = 4; $i > 0; --$i) {
             $this->createExecutionViaApi($job, $user);
@@ -134,12 +134,41 @@ class ApiExecutionTest extends TestCase
     /**
      * @throws \Doctrine\ORM\ORMException
      * @throws \Doctrine\ORM\OptimisticLockException
+     */
+    public function testReplicasIsOneForEstimations(): void
+    {
+        $user = $this->createUser();
+        $renderJob = $this->createJob($user, JobType::BLENDER, 'testReplicasIsOneForEstimations#1', ['render'], ['type' => 'render']);
+        $this->createExecutionViaApi($renderJob, $user);
+
+        $estimationJob = $this->createJob($user, JobType::BLENDER, 'testReplicasIsOneForEstimations#2', ['render'], ['type' => 'estimation']);
+        $this->createExecutionViaApi($estimationJob, $user);
+
+        $anotherRenderJob = $this->createJob($user, JobType::BLENDER, 'testReplicasIsOneForEstimations#3', ['render'], ['type' => 'render']);
+        $this->createExecutionViaApi($anotherRenderJob, $user);
+
+        $executionRepository = $this->infrastructure->getRepository(Execution::class);
+        $renderExecutionsFromDb = $executionRepository->findBy(['job' => $renderJob]);
+        $estimationExecutionsFromDb = $executionRepository->findBy(['job' => $estimationJob]);
+        $anotherRenderExecutionsFromDb = $executionRepository->findBy(['job' => $anotherRenderJob]);
+
+        $this->assertCount(1, $renderExecutionsFromDb);
+        $this->assertCount(1, $estimationExecutionsFromDb);
+        $this->assertCount(1, $anotherRenderExecutionsFromDb);
+        $this->assertEquals(1, $renderExecutionsFromDb[0]->getReplicas());
+        $this->assertEquals(1, $estimationExecutionsFromDb[0]->getReplicas());
+        $this->assertEquals(0, $anotherRenderExecutionsFromDb[0]->getReplicas());
+    }
+
+    /**
+     * @throws \Doctrine\ORM\ORMException
+     * @throws \Doctrine\ORM\OptimisticLockException
      * @throws Exception
      */
     public function testSubmitresultAdjustsReplicaCountOnFollowingJobs(): void
     {
         $user = $this->createUser();
-        $job = $this->createJob($user, JobType::BLENDER, 'testSubmitresultAdjustsReplicaCountOnFollowingJobs', ['render']);
+        $job = $this->createJob($user, JobType::BLENDER, 'testSubmitresultAdjustsReplicaCountOnFollowingJobs', ['render'], ['type' => 'render']);
 
         for ($i = 4; $i > 0; --$i) {
             $this->createExecutionViaApi($job, $user);
@@ -167,7 +196,7 @@ class ApiExecutionTest extends TestCase
     public function testSubmitresultSendsScaleCommandIfApplicable(): void
     {
         $user = $this->createUser();
-        $job = $this->createJob($user, JobType::BLENDER, 'testSubmitresultSendsScaleCommandIfApplicable', ['render']);
+        $job = $this->createJob($user, JobType::BLENDER, 'testSubmitresultSendsScaleCommandIfApplicable', ['render'], ['type' => 'render']);
 
         for ($i = 4; $i > 0; --$i) {
             $this->createExecutionViaApi($job, $user);
@@ -221,12 +250,13 @@ class ApiExecutionTest extends TestCase
      * @param  string                                $type
      * @param  string                                $name
      * @param  array                                 $labels
+     * @param  array                                 $config
      * @return Job
      * @throws \Doctrine\ORM\ORMException
      * @throws \Doctrine\ORM\OptimisticLockException
      * @throws Exception
      */
-    private function createJob(User $user, string $type = JobType::BUSYBOX, string $name = __CLASS__, array $labels = []): Job
+    private function createJob(User $user, string $type = JobType::BUSYBOX, string $name = __CLASS__, array $labels = [], array $config = []): Job
     {
         /** @var Job $job */
         $job = (new Job())
@@ -241,6 +271,7 @@ class ApiExecutionTest extends TestCase
             )
             ->setLabels($labels)
             ->setStatus(JobStatus::READY)
+            ->setConfig($config)
             ->setCreated()
             ->setName($name);
         $this->infrastructure->getEntityManager()->persist($job);
