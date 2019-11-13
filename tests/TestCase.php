@@ -3,6 +3,7 @@
 namespace Helio\Test;
 
 use Doctrine\DBAL\Types\Type;
+use Helio\Panel\Helper\SQLLogger;
 use Helio\Panel\Model\Filter\DeletedFilter;
 use Helio\Panel\Model\Instance;
 use Helio\Panel\Model\Job;
@@ -68,6 +69,22 @@ class TestCase extends \PHPUnit\Framework\TestCase
      */
     protected $managerRepository;
 
+    /**
+     * @return bool
+     */
+    private static function isVeryVerboseSet(): bool
+    {
+        return in_array('-vv', $_SERVER['argv'], true);
+    }
+
+    /**
+     * @return bool
+     */
+    private static function isVerboseSet(): bool
+    {
+        return in_array('-v', $_SERVER['argv'], true);
+    }
+
     /** @throws \Exception
      * @see \PHPUnit_Framework_TestCase::setUp()
      */
@@ -100,8 +117,14 @@ class TestCase extends \PHPUnit\Framework\TestCase
         }
 
         $this->infrastructure = ORMInfrastructure::createWithDependenciesFor([User::class, Instance::class, Job::class, Execution::class, Manager::class]);
-        $this->infrastructure->getEntityManager()->getConfiguration()->addFilter('deleted', DeletedFilter::class);
-        $this->infrastructure->getEntityManager()->getConfiguration()->addCustomNumericFunction('timestampdiff', TimestampDiff::class);
+
+        $configuration = $this->infrastructure->getEntityManager()->getConfiguration();
+        $configuration->addFilter('deleted', DeletedFilter::class);
+        $configuration->addCustomNumericFunction('timestampdiff', TimestampDiff::class);
+
+        if (self::isVeryVerboseSet()) {
+            $configuration->setSQLLogger(new SQLLogger());
+        }
 
         DbHelper::setInfrastructure($this->infrastructure);
 
@@ -120,7 +143,13 @@ class TestCase extends \PHPUnit\Framework\TestCase
         if (!\defined('APPLICATION_ROOT')) {
             \define('APPLICATION_ROOT', \dirname(__DIR__));
             \define('LOG_DEST', 'php://stdout');
-            \define('LOG_LVL', in_array('-v', $_SERVER['argv'], true) ? Logger::WARNING : Logger::EMERGENCY);
+            $logLevel = Logger::EMERGENCY;
+            if (self::isVeryVerboseSet()) {
+                $logLevel = Logger::DEBUG;
+            } elseif (self::isVerboseSet()) {
+                $logLevel = Logger::WARNING;
+            }
+            \define('LOG_LVL', $logLevel);
         }
 
         // make sure no shell commands are being executed.
