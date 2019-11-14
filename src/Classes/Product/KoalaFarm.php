@@ -3,6 +3,7 @@
 namespace Helio\Panel\Product;
 
 use Helio\Panel\Utility\ServerUtility;
+use Helio\Panel\Utility\ViewUtility;
 
 class KoalaFarm implements Product
 {
@@ -11,18 +12,37 @@ class KoalaFarm implements Product
     Welcome to Koala farm. Please click this link to log in:
     {{link}}
 EOM;
+    private const confirmationMailHTMLContent = <<<EOM
+Hi {{username}}<br>
+Welcome to Koala farm. Please click the button below to log in:
+EOM;
 
     private const notificationMailTemplate = <<<EOM
     Hi {{username}}
     Thanks for using Koala farm!
+    Please visit {{baseURL}} to view the results.
     
     {{message}}
+EOM;
+    private const notificationMailHTMLTemplate = <<<EOM
+Hi {{username}}<br>
+Thanks for using Koala farm!<br>
+<br>
+{{message}}
 EOM;
 
     private const notifications = [
         'allExecutionsDone' => [
-            'subject' => 'Rendering completed!',
-            'message' => 'A new render completed successfully! Please visit {{baseURL}} to download the results.',
+            'estimation' => [
+                'subject' => '{{name}} ready to render!',
+                'message' => 'The estimation for {{name}} has been completed. Open the page to view the estimation and start rendering!',
+                'buttonText' => 'Start rendering',
+            ],
+            'render' => [
+                'subject' => '{{name}} finished rendering!',
+                'message' => 'A koality render is waiting for you! Download the rendered files now :)',
+                'buttonText' => 'Download files',
+            ],
         ],
     ];
 
@@ -37,32 +57,42 @@ EOM;
         return $this->baseURL() . '#token=%s';
     }
 
-    public function emailSender(): string
+    public function emailSender(): array
     {
-        return 'hello@koala.farm';
+        return ['hello@koala.farm' => $this->title()];
     }
 
     public function title(): string
     {
-        return 'Koala Farm';
+        return 'Koala Render Farm';
     }
 
-    public function confirmationMailContent(): string
+    public function emailHTMLLayout(): string
     {
-        return self::confirmationMailContent;
+        return ViewUtility::getEmailTemplate('koala-farm');
     }
 
-    public function notificationMailTemplate(): string
+    public function confirmationMailContent(): array
     {
-        return self::notificationMailTemplate;
+        return ['text' => self::confirmationMailContent, 'html' => self::confirmationMailHTMLContent];
     }
 
-    public function notificationMessage(string $event): array
+    public function notificationMailTemplate(): array
+    {
+        return ['text' => self::notificationMailTemplate, 'html' => self::notificationMailHTMLTemplate];
+    }
+
+    public function notificationMessage(string $event, array $params): array
     {
         if (!isset(self::notifications[$event])) {
             throw new \InvalidArgumentException("notification message ${event} not implemented");
         }
 
-        return self::notifications[$event];
+        $config = json_decode($params['config'], true);
+        if (array_key_exists('type', $config)) {
+            return self::notifications[$event][$config['type']];
+        }
+
+        return self::notifications[$event]['render'];
     }
 }

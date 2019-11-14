@@ -332,17 +332,28 @@ class ApiJobTest extends TestCase
         $this->assertEquals(
             [
                 'recipient' => 'test-autoscaler@example.com',
-                'subject' => 'Job testSendJobReadyNotification (1) ready - Helio',
-                'content' => "Hi testuser\n This is an automated notification from Helio.\n \n Your job with the id 1 is now ready to be executed on Helio",
-                'from' => 'hello@idling.host',
+                'subject' => 'Job testSendJobReadyNotification (1) ready',
+                'button' => [
+                    'text' => 'Open page',
+                    'link' => 'http://localhost',
+                ],
+                'content' => [
+                    'text' => "Hi testuser\n This is an automated notification from Helio.\n \n Your job with the id 1 is now ready to be executed on Helio",
+                    'html' => "Hi testuser<br>\nThis is an automated notification from Helio.<br>\n<br>\nYour job with the id 1 is now ready to be executed on Helio",
+                ],
+                'from' => ['hello@idling.host' => 'Helio'],
             ],
             $userNotification
         );
         $this->assertEquals([
             'recipient' => 'team@helio.exchange',
             'subject' => 'Admin Notification from Panel',
-            'content' => 'Job is now ready. By: test-autoscaler@example.com, type: busybox, id: 1, expected manager: manager1',
-            'from' => 'hello@idling.host',
+            'content' => ['text' => 'Job is now ready. By: test-autoscaler@example.com, type: busybox, id: 1, expected manager: manager1'],
+            'from' => ['hello@idling.host' => 'Helio'],
+            'button' => [
+                'text' => 'Open panel',
+                'link' => 'https://panel.idling.host',
+            ],
         ], $adminNotification);
     }
 
@@ -366,8 +377,12 @@ class ApiJobTest extends TestCase
         $this->assertEquals([
             'recipient' => 'team@helio.exchange',
             'subject' => 'Admin Notification from Panel',
-            'content' => 'Job was deleted by test-autoscaler@example.com, type: busybox, id: 1, expected manager: manager-init-356a192b',
-            'from' => 'hello@idling.host',
+            'content' => ['text' => 'Job was deleted by test-autoscaler@example.com, type: busybox, id: 1, expected manager: manager-init-356a192b'],
+            'from' => ['hello@idling.host' => 'Helio'],
+            'button' => [
+                'text' => 'Open panel',
+                'link' => 'https://panel.idling.host',
+            ],
         ], $adminNotification);
     }
 
@@ -388,9 +403,16 @@ class ApiJobTest extends TestCase
         $this->assertEquals(
             [
                 'recipient' => 'test-autoscaler@example.com',
-                'subject' => 'Job testSendExecutionDoneNotification (1), Execution testSendExecutionDoneNotification (1) executed - Helio',
-                'content' => "Hi testuser\n This is an automated notification from Helio.\n \n Your Job 1 with id 1 was successfully executed\nThe results can now be used.",
-                'from' => 'hello@idling.host',
+                'subject' => 'Job testSendExecutionDoneNotification (1), Execution testSendExecutionDoneNotification (1) executed',
+                'content' => [
+                    'text' => "Hi testuser\n This is an automated notification from Helio.\n \n Your Job 1 with id 1 was successfully executed\nThe results can now be used.",
+                    'html' => "Hi testuser<br>\nThis is an automated notification from Helio.<br>\n<br>\nYour Job 1 with id 1 was successfully executed\nThe results can now be used.",
+                ],
+                'from' => ['hello@idling.host' => 'Helio'],
+                'button' => [
+                    'text' => 'Open page',
+                    'link' => 'http://localhost',
+                ],
             ],
             $userNotification
         );
@@ -415,8 +437,12 @@ class ApiJobTest extends TestCase
         $this->assertEquals([
             'recipient' => 'team@helio.exchange',
             'subject' => 'Admin Notification from Panel',
-            'content' => 'Job is now ready. By: test-autoscaler@example.com, type: busybox, id: 1, expected manager: manager1',
-            'from' => 'hello@idling.host',
+            'content' => ['text' => 'Job is now ready. By: test-autoscaler@example.com, type: busybox, id: 1, expected manager: manager1'],
+            'from' => ['hello@idling.host' => 'Helio'],
+            'button' => [
+                'text' => 'Open panel',
+                'link' => 'https://panel.idling.host',
+            ],
         ], $adminNotification);
     }
 
@@ -442,8 +468,12 @@ class ApiJobTest extends TestCase
         $this->assertEquals([
             'recipient' => 'team@helio.exchange',
             'subject' => 'Admin Notification from Panel',
-            'content' => 'Job was deleted by test-autoscaler@example.com, type: busybox, id: 1, expected manager: manager-init-356a192b',
-            'from' => 'hello@idling.host',
+            'content' => ['text' => 'Job was deleted by test-autoscaler@example.com, type: busybox, id: 1, expected manager: manager-init-356a192b'],
+            'from' => ['hello@idling.host' => 'Helio'],
+            'button' => [
+                'text' => 'Open panel',
+                'link' => 'https://panel.idling.host',
+            ],
         ], $adminNotification);
     }
 
@@ -459,7 +489,11 @@ class ApiJobTest extends TestCase
             $user->setPreferences($preferences);
         });
 
-        $job = $this->createJob($user, 'testSendKoalaFarmExecutionDoneNotification', JobStatus::READY);
+        $job = $this->createJob($user, 'testSendKoalaFarmExecutionDoneNotification', JobStatus::READY, function (Job $job) {
+            $job->setConfig([
+                'type' => 'render',
+            ]);
+        });
         $execution = $this->createExecution($job, 'testSendKoalaFarmExecutionDoneNotification');
         $tokenHeader = ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $user, null, $job)['token']];
 
@@ -473,9 +507,16 @@ class ApiJobTest extends TestCase
         $this->assertEquals(
             [
                 'recipient' => 'test-autoscaler@example.com',
-                'subject' => 'Rendering completed! - Koala Farm',
-                'content' => "Hi testuser\n Thanks for using Koala farm!\n \n A new render completed successfully! Please visit http://localhost:3000 to download the results.",
-                'from' => 'hello@koala.farm',
+                'subject' => 'testSendKoalaFarmExecutionDoneNotification finished rendering!',
+                'content' => [
+                    'text' => "Hi testuser\n Thanks for using Koala farm!\n Please visit http://localhost:3000 to view the results.\n \n A koality render is waiting for you! Download the rendered files now :)",
+                    'html' => "Hi testuser<br>\nThanks for using Koala farm!<br>\n<br>\nA koality render is waiting for you! Download the rendered files now :)",
+                ],
+                'from' => ['hello@koala.farm' => 'Koala Render Farm'],
+                'button' => [
+                    'text' => 'Download files',
+                    'link' => 'http://localhost:3000',
+                ],
             ],
             $userNotification
         );

@@ -3,26 +3,31 @@
 namespace Helio\Panel\Product;
 
 use Helio\Panel\Utility\ServerUtility;
+use Helio\Panel\Utility\ViewUtility;
 
 class Helio implements Product
 {
-    /**
-     * @var string
-     */
-    public const confirmationMailContent = <<<EOM
+    private const confirmationMailContent = <<<EOM
     Hi {{username}}
     Welcome to Helio. Please click this link to log in:
     {{link}}
 EOM;
+    private const confirmationMailHTMLContent = <<<EOM
+Hi {{username}}<br>
+Welcome to Helio. Please click the button below to log in:
+EOM;
 
-    /**
-     * @var string
-     */
-    public const notificationMailTemplate = <<<EOM
+    private const notificationMailTemplate = <<<EOM
     Hi {{username}}
     This is an automated notification from {{product}}.
     
     {{message}}
+EOM;
+    private const notificationMailHTMLTemplate = <<<EOM
+Hi {{username}}<br>
+This is an automated notification from {{product}}.<br>
+<br>
+{{message}}
 EOM;
 
     public const notifications = [
@@ -61,9 +66,9 @@ EOM;
         return $this->baseURL() . '/confirm?signature=%s';
     }
 
-    public function emailSender(): string
+    public function emailSender(): array
     {
-        return 'hello@idling.host';
+        return ['hello@idling.host' => $this->title()];
     }
 
     public function title(): string
@@ -71,22 +76,27 @@ EOM;
         return 'Helio';
     }
 
-    public function confirmationMailContent(): string
+    public function confirmationMailContent(): array
     {
-        return self::confirmationMailContent;
+        return ['text' => self::confirmationMailContent, 'html' => self::confirmationMailHTMLContent];
     }
 
-    public function notificationMailTemplate(): string
+    public function notificationMailTemplate(): array
     {
-        return self::notificationMailTemplate;
+        return ['text' => self::notificationMailTemplate, 'html' => self::notificationMailHTMLTemplate];
     }
 
-    public function notificationMessage(string $event): array
+    public function notificationMessage(string $event, array $params): array
     {
         if (!isset(self::notifications[$event])) {
             throw new \InvalidArgumentException("notification message ${event} not implemented");
         }
 
         return self::notifications[$event];
+    }
+
+    public function emailHTMLLayout(): string
+    {
+        return ViewUtility::getEmailTemplate('helio');
     }
 }

@@ -16,6 +16,16 @@ class ViewUtility extends AbstractUtility
         self::include(['shared', $sharedName . self::$fileExtension], $params);
     }
 
+    public static function getEmailTemplate(string $name): string
+    {
+        $filename = ServerUtility::getTemplatesPath(['email', $name . '.html']);
+        if (!\file_exists($filename)) {
+            throw new \InvalidArgumentException("Email template '" . $name . "' does not exist");
+        }
+
+        return file_get_contents($filename);
+    }
+
     private static function include(array $name, array $params = []): void
     {
         if ($params) {

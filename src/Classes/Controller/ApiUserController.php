@@ -125,6 +125,8 @@ class ApiUserController extends AbstractController
                 ];
             });
 
+            $latestAction = $job->getLatestAction();
+
             $data = [
                 'id' => $job->getId(),
                 'name' => $job->getName(),
@@ -134,6 +136,7 @@ class ApiUserController extends AbstractController
                 'type' => $job->getType(),
                 'priority' => $job->getPriority(),
                 'created' => $job->getCreated()->getTimestamp(),
+                'latestAction' => null !== $latestAction ? $latestAction->getTimestamp() : null,
                 'autoExecSchedule' => $job->getAutoExecSchedule(),
                 'location' => $job->getLocation(),
                 'cpus' => $job->getCpus(),

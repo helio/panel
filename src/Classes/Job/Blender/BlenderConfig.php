@@ -39,4 +39,10 @@ class BlenderConfig
      * @OA\Property()
      */
     public $estimation;
+
+    /**
+     * @var string
+     * @OA\Property()
+     */
+    public $directory;
 }

@@ -5,6 +5,7 @@
   "author": "Christoph Buchli <christoph@helio.exchange>",
   "license": "MIT",
   "devDependencies": {
+    "mjml": "^4.5.1",
     "patternfly": "^3.59.3"
   },
   "scripts": {

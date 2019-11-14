@@ -165,10 +165,7 @@ abstract class AbstractModel
         return $this;
     }
 
-    /**
-     * @return DateTime
-     */
-    public function getLatestAction(): DateTime
+    public function getLatestAction(): ?DateTime
     {
         if ($this->created->getTimezone()->getName() !== $this->getTimezone()) {
             $this->created->setTimezone(new DateTimeZone($this->getTimezone()));

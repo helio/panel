@@ -426,7 +426,7 @@ class ApiJobExecuteController extends AbstractController
                 $this->job->getOwner(),
                 $this->job->getOwner()->getProduct(),
                 'allExecutionsDone',
-                ['name' => $this->job->getName(), 'id' => $this->job->getId()]
+                ['name' => $this->job->getName(), 'id' => $this->job->getId(), 'config' => $this->job->getConfig()]
             );
         }
 

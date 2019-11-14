@@ -43,9 +43,10 @@ class PanelTest extends TestCase
 
         $confirmationMail = NotificationUtility::$mails[0];
 
-        $this->assertStringContainsString('/confirm', $confirmationMail['content']);
+        $this->assertStringContainsString('/confirm', $confirmationMail['content']['text']);
+        $this->assertStringContainsString('/confirm', $confirmationMail['button']['link']);
 
-        preg_match_all('/^\s+(https?):\/\/(.+)$/m', $confirmationMail['content'], $matches, PREG_SET_ORDER);
+        preg_match_all('/^\s+(https?):\/\/(.+)$/m', $confirmationMail['content']['text'], $matches, PREG_SET_ORDER);
 
         $confirmationUrl = sprintf('%s://%s', $matches[0][1], $matches[0][2]);
 
@@ -71,7 +72,8 @@ class PanelTest extends TestCase
 
         $confirmationMail = NotificationUtility::$mails[0];
 
-        $this->assertStringContainsString('http://localhost:3000#token=', $confirmationMail['content']);
+        $this->assertStringContainsString('http://localhost:3000#token=', $confirmationMail['content']['text']);
+        $this->assertStringContainsString('http://localhost:3000#token=', $confirmationMail['button']['link']);
     }
 
     /**
@@ -86,9 +88,9 @@ class PanelTest extends TestCase
 
         $confirmationMail = NotificationUtility::$mails[0];
 
-        $this->assertStringContainsString('/confirm', $confirmationMail['content']);
+        $this->assertStringContainsString('/confirm', $confirmationMail['content']['text']);
 
-        preg_match_all('/^\s+(https?):\/\/(.+)$/m', $confirmationMail['content'], $matches, PREG_SET_ORDER);
+        preg_match_all('/^\s+(https?):\/\/(.+)$/m', $confirmationMail['content']['text'], $matches, PREG_SET_ORDER);
 
         $confirmationUrl = sprintf('%s://%s', $matches[0][1], $matches[0][2]);
 
