@@ -4,7 +4,6 @@ namespace Helio\Panel\Helper;
 
 use GuzzleHttp\Client;
 use Helio\Panel\Utility\ServerUtility;
-use GuzzleHttp\Exception\GuzzleException;
 
 class SlackHelper implements HelperInterface
 {
@@ -40,33 +39,33 @@ class SlackHelper implements HelperInterface
         ]);
     }
 
-    /**
-     * @param string $message
-     *
-     * @return bool
-     * @throws GuzzleException
-     */
     public function sendNotification(string $message): bool
     {
-        if (!ServerUtility::get('SLACK_WEBHOOK', '')) {
-            return false;
-        }
-
-        return 200 === $this->client->request('POST', ServerUtility::get('SLACK_WEBHOOK'), ['body' => '{"text":"' . $message . '"}'])->getStatusCode();
+        return $this->sendMessage('SLACK_WEBHOOK', $message);
     }
 
-    /**
-     * @param string $message
-     *
-     * @return bool
-     * @throws GuzzleException
-     */
     public function sendAlert(string $message): bool
     {
-        if (!ServerUtility::get('SLACK_WEBHOOK_ALERT', '')) {
+        return $this->sendMessage('SLACK_WEBHOOK_ALERT', $message);
+    }
+
+    public function sendKoalaFarmNotification(string $message): bool
+    {
+        return $this->sendMessage('SLACK_WEBHOOK_KOALA_FARM', $message);
+    }
+
+    public function sendCheetahNotification(string $message): bool
+    {
+        return $this->sendMessage('SLACK_WEBHOOK_CHEETAH', $message);
+    }
+
+    private function sendMessage(string $webhookEnvVariable, string $text): bool
+    {
+        $webhook = ServerUtility::get($webhookEnvVariable, '');
+        if (!$webhook) {
             return false;
         }
 
-        return 200 === $this->client->request('POST', ServerUtility::get('SLACK_WEBHOOK_ALERT'), ['body' => '{"text":"' . $message . '"}'])->getStatusCode();
+        return 200 === $this->client->request('POST', $webhook, ['json' => ['text' => $text]])->getStatusCode();
     }
 }

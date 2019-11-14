@@ -8,6 +8,7 @@ use Doctrine\ORM\OptimisticLockException;
 use Doctrine\ORM\ORMException;
 use GuzzleHttp\Exception\GuzzleException;
 use Helio\Panel\App;
+use Helio\Panel\Helper\SlackHelper;
 use Helio\Panel\Helper\ZapierHelper;
 use Helio\Panel\Job\JobType;
 use Helio\Panel\Model\User;
@@ -105,6 +106,8 @@ class UserService
             $prefs->setNotifications($notifications);
             $prefs->setLimits($limits);
             $user->setPreferences($prefs);
+
+            SlackHelper::getInstance()->sendKoalaFarmNotification(sprintf('New user %s registered', $email));
         }
 
         // TODO: ugly, but depends how it's used. Should find a better way.
