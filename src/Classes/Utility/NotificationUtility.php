@@ -101,7 +101,7 @@ class NotificationUtility extends AbstractUtility
             $content = ['text' => self::trimRepeatedWhitespace($content)];
         }
 
-        $transport = (new \Swift_SendmailTransport())->setLocalDomain(explode('@', array_key_first($from))[1]);
+        $transport = (new \Swift_SendmailTransport(ini_get('sendmail_path')))->setLocalDomain(explode('@', array_key_first($from))[1]);
         $mailer = new \Swift_Mailer($transport);
 
         $message = (new \Swift_Message())
