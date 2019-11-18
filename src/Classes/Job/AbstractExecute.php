@@ -12,6 +12,7 @@ use Helio\Panel\Helper\LogHelper;
 use Helio\Panel\Model\Job;
 use Helio\Panel\Model\Execution;
 use Helio\Panel\Execution\ExecutionStatus;
+use Helio\Panel\Model\User;
 use Helio\Panel\Utility\ExecUtility;
 use Helio\Panel\Utility\JwtUtility;
 use Helio\Panel\Utility\ServerUtility;
@@ -45,6 +46,11 @@ abstract class AbstractExecute implements JobInterface, DispatchableInterface
     {
         $this->job = $job;
         $this->execution = $execution ?? new Execution();
+    }
+
+    public function validate(User $user, array $jobObject): ?array
+    {
+        return null;
     }
 
     /**

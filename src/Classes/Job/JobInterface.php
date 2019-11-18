@@ -4,6 +4,7 @@ namespace Helio\Panel\Job;
 
 use Helio\Panel\Model\Execution;
 use Helio\Panel\Model\Job;
+use Helio\Panel\Model\User;
 use Psr\Http\Message\ResponseInterface;
 
 /**
@@ -17,6 +18,18 @@ interface JobInterface
      * @param Execution|null $execution
      */
     public function __construct(Job $job, Execution $execution = null);
+
+    /**
+     * Validates the passed job object on a per-job-type basis.
+     *
+     * If return value is null, there has been no error and it's ok to continue.
+     * If an array is returned this will contain a list of error messages.
+     *
+     * @param  User       $user
+     * @param  array      $jobObject
+     * @return array|null
+     */
+    public function validate(User $user, array $jobObject): ?array;
 
     /**
      * @param array $jobObject

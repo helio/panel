@@ -172,9 +172,19 @@ class ApiJobController extends AbstractController
             'autoExecSchedule' => FILTER_SANITIZE_STRING,
         ]);
 
+        $job = JobFactory::getInstanceOfJob($this->job);
+        $validationMessages = $job->validate($this->user, $this->params);
+        if (null !== $validationMessages && count($validationMessages) > 0) {
+            return $this->render([
+                'success' => false,
+                'message' => 'Unable to create job',
+                'errors' => $validationMessages,
+            ], StatusCode::HTTP_BAD_REQUEST);
+        }
+
         $this->job->setOwner($this->user);
         $isNew = null === $this->job->getId();
-        JobFactory::getInstanceOfJob($this->job)->create($this->params);
+        $job->create($this->params);
 
         if ($managerNodeRestriction) {
             $managers = App::getDbHelper()->getRepository(Manager::class)->findBy(['fqdn' => $managerNodeRestriction]);

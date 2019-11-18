@@ -40,6 +40,7 @@ class ApiUserController extends AbstractController
         return $this->render([
             'name' => $this->user->getName(),
             'email' => $this->user->getEmail(),
+            'active' => $this->user->isActive(),
         ]);
     }
 

@@ -7,6 +7,7 @@ use Helio\Panel\App;
 use Helio\Panel\Job\DispatchConfig;
 use Helio\Panel\Model\Execution;
 use Helio\Panel\Model\Job;
+use Helio\Panel\Model\User;
 use Helio\Panel\Repositories\ExecutionRepository;
 use Helio\Panel\Repositories\JobRepository;
 use Helio\Panel\Service\ExecutionService;
@@ -44,6 +45,23 @@ class Execute extends \Helio\Panel\Job\Docker\Execute
         ];
         $this->storageBucketName = ServerUtility::get('BLENDER_STORAGE_BUCKET_NAME');
         $this->storageCredentials = str_replace("\n", '', file_get_contents(ServerUtility::get('BLENDER_STORAGE_CREDENTIALS_JSON_PATH')));
+    }
+
+    public function validate(User $user, array $jobObject): ?array
+    {
+        $validationMessages = parent::validate($user, $jobObject);
+        if (null === $validationMessages) {
+            $validationMessages = [];
+        }
+
+        if (!$user->isActive() && 'render' === $jobObject['config']['type']) {
+            $validationMessages[] = 'confirm email address before creating a render job';
+        }
+        if (count($validationMessages) > 0) {
+            return $validationMessages;
+        }
+
+        return null;
     }
 
     public function create(array $jobObject): bool

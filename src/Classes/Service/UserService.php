@@ -14,6 +14,7 @@ use Helio\Panel\Job\JobType;
 use Helio\Panel\Model\User;
 use Helio\Panel\Product\Helio;
 use Helio\Panel\Product\KoalaFarm;
+use Helio\Panel\Utility\JwtUtility;
 use Helio\Panel\Utility\ServerUtility;
 use Monolog\Logger;
 use RuntimeException;
@@ -87,7 +88,7 @@ class UserService
         $user->setOrigin($origin);
         $user->setCreated();
 
-        if ($origin === ServerUtility::get('KOALA_FARM_ORIGIN', '')) {
+        if (self::isKoalaFarmOrigin($origin)) {
             $prefs = $user->getPreferences();
 
             $notifications = $prefs->getNotifications();
@@ -126,13 +127,15 @@ class UserService
 
     public function login(string $email, string $origin): array
     {
+        $new = false;
         $user = $this->findUserByEmail($email);
         if (!$user) {
+            $new = true;
             $user = $this->create($email, $origin);
         }
 
         $product = new Helio();
-        if ($origin === ServerUtility::get('KOALA_FARM_ORIGIN', '')) {
+        if (self::isKoalaFarmOrigin($origin)) {
             $product = new KoalaFarm();
         }
 
@@ -140,10 +143,21 @@ class UserService
             throw new RuntimeException('Error during User Creation', 1545655919);
         }
 
-        // TODO(mw): this is a leftover from having an example user which automatically responded with a token.
-        //           can be removed, but needs a check with consumers if it's somehow used somewhere.
         $token = null;
+        if ($this->issueTemporaryToken($new, $user)) {
+            $token = JwtUtility::generateToken('+1 day', $user, null, null, true)['token'];
+        }
 
         return ['user' => $user, 'token' => $token];
+    }
+
+    private function issueTemporaryToken(bool $new, User $user): bool
+    {
+        return $new && !$user->isActive() && self::isKoalaFarmOrigin($user->getOrigin());
+    }
+
+    private static function isKoalaFarmOrigin(string $origin): bool
+    {
+        return $origin === ServerUtility::get('KOALA_FARM_ORIGIN', '');
     }
 }

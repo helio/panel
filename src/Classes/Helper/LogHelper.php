@@ -101,8 +101,7 @@ class LogHelper implements HelperInterface
             // also log to stdout
             if (ServerUtility::isLocalDevEnv()) {
                 self::$logger[$suffix]
-                    ->pushHandler(new ErrorLogHandler(ErrorLogHandler::OPERATING_SYSTEM, Logger::WARNING, false))
-                    ->pushHandler(new StreamHandler('php://stdout'));
+                    ->pushHandler(new ErrorLogHandler(ErrorLogHandler::OPERATING_SYSTEM, Logger::WARNING, false));
             }
         }
 

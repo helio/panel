@@ -49,7 +49,12 @@ trait ModelUserController
     protected function persistUser(): void
     {
         if ($this->user) {
-            $this->user->setActive(true)->setLatestAction();
+            $container = App::getApp()->getContainer();
+            if (!$container->has('tokenTemporary') || !$container->get('tokenTemporary')) {
+                $this->user->setActive(true);
+            }
+            $this->user->setLatestAction();
+
             App::getDbHelper()->persist($this->user);
             App::getDbHelper()->flush($this->user);
         }

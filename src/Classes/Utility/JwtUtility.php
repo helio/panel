@@ -13,16 +13,15 @@ use Helio\Panel\Model\User;
 class JwtUtility extends AbstractUtility
 {
     /**
-     * @param string|null   $duration
-     * @param User|null     $user
-     * @param Instance|null $instance
-     * @param Job|null      $job
-     *
+     * @param  string|null   $duration
+     * @param  User|null     $user
+     * @param  Instance|null $instance
+     * @param  Job|null      $job
+     * @param  bool          $temporary
      * @return array
-     *
      * @throws Exception
      */
-    public static function generateToken(string $duration = null, User $user = null, Instance $instance = null, Job $job = null): array
+    public static function generateToken(string $duration = null, User $user = null, Instance $instance = null, Job $job = null, bool $temporary = false): array
     {
         $now = new DateTime('now', ServerUtility::getTimezoneObject());
         $jti = ServerUtility::getRandomString();
@@ -44,6 +43,11 @@ class JwtUtility extends AbstractUtility
         if ($instance) {
             $payload['i'] = $instance->getId();
         }
+
+        if ($temporary) {
+            $payload['tmp'] = true;
+        }
+
         $secret = ServerUtility::get('JWT_SECRET');
         $token = JWT::encode($payload, $secret, 'HS256');
 

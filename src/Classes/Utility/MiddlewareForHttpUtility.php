@@ -57,6 +57,12 @@ class MiddlewareForHttpUtility extends AbstractUtility
                 new RequestMethodRule(['passthrough' => ['OPTIONS']]),
             ],
             'before' => function (Request $request, array $arguments) use ($userService) {
+                $container = App::getApp()->getContainer();
+
+                if (array_key_exists('tmp', $arguments['decoded'])) {
+                    $container['tokenTemporary'] = true;
+                }
+
                 // set user if authenticated via jwt
                 if (array_key_exists('u', $arguments['decoded'])) {
                     /** @var User $user */
@@ -66,26 +72,26 @@ class MiddlewareForHttpUtility extends AbstractUtility
                         $userLoggedOutTime = $user->getLoggedOut()->setTimezone(ServerUtility::getTimezoneObject());
 
                         if ($userLoggedOutTime <= $tokenGenerationTime) {
-                            App::getApp()->getContainer()['user'] = $user;
+                            $container['user'] = $user;
                         }
                     }
 
                     // impersonation feature for admin users completely mocks another user
                     if (array_key_exists('impersonate', $request->getCookieParams()) && $user->isAdmin() && (string) (int) $request->getCookieParams()['impersonate'] === (string) $request->getCookieParams()['impersonate']) {
-                        App::getApp()->getContainer()['impersonatinguser'] = clone $user;
+                        $container['impersonatinguser'] = clone $user;
                         $user = $userService->findById((int) $request->getCookieParams()['impersonate']) ?? $user;
                     }
 
-                    App::getApp()->getContainer()['user'] = $user;
+                    $container['user'] = $user;
                 }
 
                 // set instance if authenticated via jwt
                 if (array_key_exists('i', $arguments['decoded'])) {
                     /** @var Instance $instance */
                     $instance = App::getDbHelper()->getRepository(Instance::class)->find($arguments['decoded']['i']);
-                    App::getApp()->getContainer()['instance'] = $instance;
-                    if (!App::getApp()->getContainer()->has('user')) {
-                        App::getApp()->getContainer()['user'] = $instance->getOwner();
+                    $container['instance'] = $instance;
+                    if (!$container->has('user')) {
+                        $container['user'] = $instance->getOwner();
                     }
                 }
 
@@ -93,9 +99,9 @@ class MiddlewareForHttpUtility extends AbstractUtility
                 if (array_key_exists('j', $arguments['decoded'])) {
                     /** @var Job $job */
                     $job = App::getDbHelper()->getRepository(Job::class)->find($arguments['decoded']['j']);
-                    App::getApp()->getContainer()['job'] = $job;
-                    if (!App::getApp()->getContainer()->has('user')) {
-                        App::getApp()->getContainer()['user'] = $job->getOwner();
+                    $container['job'] = $job;
+                    if (!$container->has('user')) {
+                        $container['user'] = $job->getOwner();
                     }
                 }
             },

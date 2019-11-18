@@ -53,9 +53,14 @@ class ApiAuthenticationController extends AbstractController
         }
 
         $origin = $this->request->hasHeader('Origin') ? $this->request->getHeader('Origin')[0] : '';
-        ['token' => $token] = $this->userService->login($email, $origin);
+        ['user' => $user, 'token' => $token] = $this->userService->login($email, $origin);
 
-        return $this->render(['token' => $token]);
+        $response = ['token' => $token];
+        if (null !== $token) {
+            $response['active'] = $user->isActive();
+        }
+
+        return $this->render($response);
     }
 
     protected function getReturnType(): string

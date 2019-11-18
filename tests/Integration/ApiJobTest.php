@@ -522,6 +522,26 @@ class ApiJobTest extends TestCase
         );
     }
 
+    public function testBlenderJobCreationWithInactiveUser()
+    {
+        $user = $this->createUser(function (User $user) {
+            $user->setOrigin(ServerUtility::get('KOALA_FARM_ORIGIN'));
+            $user->setActive(false);
+        });
+        $tokenHeader = ['Authorization' => 'Bearer ' . JwtUtility::generateToken(null, $user, null, null, true)['token']];
+
+        $response = $this->runWebApp('POST', '/api/job', true, $tokenHeader, ['type' => 'blender', 'config' => ['type' => 'estimation']]);
+        $this->assertEquals(200, $response->getStatusCode());
+
+        $response = $this->runWebApp('POST', '/api/job', true, $tokenHeader, ['type' => 'blender', 'config' => ['type' => 'render']]);
+        $this->assertEquals(400, $response->getStatusCode());
+
+        $body = json_decode((string) $response->getBody(), true);
+        $this->assertEquals(false, $body['success']);
+        $this->assertEquals('Unable to create job', $body['message']);
+        $this->assertEquals('confirm email address before creating a render job', $body['errors'][0]);
+    }
+
     public function testSetReplicaOneInitially()
     {
         $repository = $this->infrastructure->getRepository(Execution::class);
