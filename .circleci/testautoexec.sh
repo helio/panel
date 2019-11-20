@@ -20,8 +20,8 @@ if [[ -z "${LATEST_JOB_RUN}" || 0 -ge ${LATEST_JOB_RUN} ]]; then echo "Error: Jo
 # If this fails, make sure to synchronize autoExecSchedule and circleCi Schedule
 EXPECTED=$(expr $(date "+%s") - 3600 )
 
-echo "Latest job run: $(date -r "$LATEST_JOB_RUN")"
-echo "Expected: $(date -r "$EXPECTED")"
+echo "Latest job run: $(date --date=@"$LATEST_JOB_RUN")"
+echo "Expected: $(date --date=@"$EXPECTED")"
 
 if [[ ${EXPECTED} -ge ${LATEST_JOB_RUN} ]]; then echo "Error: Latest Execution is too old" && exit 4; fi
 
