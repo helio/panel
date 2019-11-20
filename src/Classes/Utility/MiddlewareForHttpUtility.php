@@ -58,10 +58,7 @@ class MiddlewareForHttpUtility extends AbstractUtility
             ],
             'before' => function (Request $request, array $arguments) use ($userService) {
                 $container = App::getApp()->getContainer();
-
-                if (array_key_exists('tmp', $arguments['decoded'])) {
-                    $container['tokenTemporary'] = true;
-                }
+                $dbHelper = App::getDbHelper();
 
                 // set user if authenticated via jwt
                 if (array_key_exists('u', $arguments['decoded'])) {
@@ -83,12 +80,19 @@ class MiddlewareForHttpUtility extends AbstractUtility
                     }
 
                     $container['user'] = $user;
+
+                    // if the token isn't a temporary one but the user isn't active yet, assume it's token received via mail -> set user active
+                    if (!array_key_exists('tmp', $arguments['decoded']) && !$user->isActive()) {
+                        $user->setActive(true);
+                        $dbHelper->persist($user);
+                        $dbHelper->flush($user);
+                    }
                 }
 
                 // set instance if authenticated via jwt
                 if (array_key_exists('i', $arguments['decoded'])) {
                     /** @var Instance $instance */
-                    $instance = App::getDbHelper()->getRepository(Instance::class)->find($arguments['decoded']['i']);
+                    $instance = $dbHelper->getRepository(Instance::class)->find($arguments['decoded']['i']);
                     $container['instance'] = $instance;
                     if (!$container->has('user')) {
                         $container['user'] = $instance->getOwner();
@@ -98,7 +102,7 @@ class MiddlewareForHttpUtility extends AbstractUtility
                 // set job if authenticated via jwt
                 if (array_key_exists('j', $arguments['decoded'])) {
                     /** @var Job $job */
-                    $job = App::getDbHelper()->getRepository(Job::class)->find($arguments['decoded']['j']);
+                    $job = $dbHelper->getRepository(Job::class)->find($arguments['decoded']['j']);
                     $container['job'] = $job;
                     if (!$container->has('user')) {
                         $container['user'] = $job->getOwner();
