@@ -26,6 +26,10 @@ class BlenderReport
 
         $combinedJobs = [];
         foreach ($jobs as $job) {
+            $type = $job->getConfig('type');
+            if ('render' !== $type && 'estimation' !== $type) {
+                continue;
+            }
             $combinedJobs[$job->getName()] = $this->generateJobData($job, $combinedJobs[$job->getName()] ?? []);
         }
 
@@ -56,11 +60,6 @@ class BlenderReport
 
     protected function generateJobData(Job $job, array $jobData): array
     {
-        $type = $job->getConfig('type');
-        if ('render' !== $type && 'estimation' !== $type) {
-            throw new \InvalidArgumentException('Job type not supported');
-        }
-
         $config = json_decode($job->getConfig(), true);
         $settings = $config['settings'];
         $resolutionPercentage = $settings['resolutionPercentage'];
