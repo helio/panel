@@ -587,6 +587,14 @@ class Job extends AbstractModel
         return $this->executions->matching($criteria)->count();
     }
 
+    public function getStartedExecutions(): Collection
+    {
+        $c = Criteria::create()
+            ->where(Criteria::expr()->neq('started', null));
+
+        return $this->executions->matching($c);
+    }
+
     /**
      * @param array $executions
      *
