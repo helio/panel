@@ -61,6 +61,7 @@ class BlenderReport
     protected function generateJobData(Job $job, array $jobData): array
     {
         $config = json_decode($job->getConfig(), true);
+        $type = $config['type'];
         $settings = $config['settings'];
         $resolutionPercentage = $settings['resolutionPercentage'];
 
