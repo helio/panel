@@ -311,7 +311,7 @@ class ApiJobController extends AbstractController
                 $execution->setLatestAction();
                 App::getDbHelper()->persist($execution);
             }
-            OrchestratorFactory::getOrchestratorForInstance(new Instance(), $this->job)->removeExecutions($runningExecutions->toArray());
+            OrchestratorFactory::getOrchestratorForInstance(new Instance(), $this->job)->removeExecutions($this->job->getExecutions()->toArray());
         }
         $this->persistJob();
         App::getDbHelper()->flush();
