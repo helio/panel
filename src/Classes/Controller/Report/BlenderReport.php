@@ -30,7 +30,11 @@ class BlenderReport
             if ('render' !== $type && 'estimation' !== $type) {
                 continue;
             }
-            $combinedJobs[$job->getName()] = $this->generateJobData($job, $combinedJobs[$job->getName()] ?? []);
+            $id = $job->getName();
+            if (false === strpos($id, '/')) {
+                $id = sprintf('%s/%s', $job->getConfig('directory'), $id);
+            }
+            $combinedJobs[$id] = $this->generateJobData($job, $combinedJobs[$id] ?? []);
         }
 
         $combinedJobs = array_filter($combinedJobs, function (array $data) {
