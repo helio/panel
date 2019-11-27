@@ -2,6 +2,8 @@
 
 namespace Helio\Panel\Product;
 
+use Helio\Panel\Model\User;
+use Helio\Panel\Utility\JwtUtility;
 use Helio\Panel\Utility\ServerUtility;
 use Helio\Panel\Utility\ViewUtility;
 
@@ -49,6 +51,13 @@ EOM;
     public function baseURL(): string
     {
         return ServerUtility::get('KOALA_FARM_ORIGIN');
+    }
+
+    public function callToActionURL(User $user): string
+    {
+        $token = JwtUtility::generateToken('+1 week', $user)['token'];
+
+        return sprintf($this->confirmURL(), $token);
     }
 
     public function confirmURL(): string

@@ -2,11 +2,15 @@
 
 namespace Helio\Panel\Product;
 
+use Helio\Panel\Model\User;
+
 interface Product
 {
     public function baseURL(): string;
 
     public function confirmURL(): string;
+
+    public function callToActionURL(User $user): string;
 
     public function emailSender(): array;
 

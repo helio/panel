@@ -49,20 +49,20 @@ class NotificationUtility extends AbstractUtility
             return false;
         }
 
+        $callToActionURL = $product->callToActionURL($user);
+
         $params = array_merge([
             'product' => $product->title(),
             'baseURL' => $product->baseURL(),
+            'callToActionURL' => $callToActionURL,
             'username' => $user->getName(),
         ], $params);
         $message = self::replaceParams($template['message'], $params);
         $subject = self::replaceParams($template['subject'], $params);
 
-        $params = [
-            'username' => $user->getName(),
-            'product' => $product->title(),
-            'baseURL' => $product->baseURL(),
+        $params = array_merge($params, [
             'message' => $message,
-        ];
+        ]);
         $notificationMailTemplate = $product->notificationMailTemplate();
         $content = [
             'text' => self::replaceParams($notificationMailTemplate['text'], $params),
@@ -71,7 +71,7 @@ class NotificationUtility extends AbstractUtility
 
         $buttonText = $template['buttonText'] ?? 'Open page';
 
-        return static::sendMail($user->getEmail(), $subject, $content, ['text' => $buttonText, 'link' => $product->baseURL()], $product->emailSender(), $product->emailHTMLLayout());
+        return static::sendMail($user->getEmail(), $subject, $content, ['text' => $buttonText, 'link' => $callToActionURL], $product->emailSender(), $product->emailHTMLLayout());
     }
 
     public static function notifyAdmin(string $content = ''): bool

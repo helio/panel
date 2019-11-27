@@ -504,6 +504,13 @@ class ApiJobTest extends TestCase
 
         $userNotification = NotificationUtility::$mails[0];
 
+        // button is tested separately because the link inside changes on every test run
+        $this->assertArrayHasKey('button', $userNotification);
+        $button = $userNotification['button'];
+        $this->assertEquals('Download files', $button['text']);
+        $this->assertStringStartsWith('http://localhost:3000#token=', $button['link']);
+        unset($userNotification['button']);
+
         $this->assertEquals(
             [
                 'recipient' => 'test-autoscaler@example.com',
@@ -513,10 +520,6 @@ class ApiJobTest extends TestCase
                     'html' => "Hi testuser<br>\nThanks for using Koala farm!<br>\n<br>\nA koality render is waiting for you! Download the rendered files now :)",
                 ],
                 'from' => ['hello@koala.farm' => 'Koala Render Farm'],
-                'button' => [
-                    'text' => 'Download files',
-                    'link' => 'http://localhost:3000',
-                ],
             ],
             $userNotification
         );

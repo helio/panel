@@ -2,6 +2,7 @@
 
 namespace Helio\Panel\Product;
 
+use Helio\Panel\Model\User;
 use Helio\Panel\Utility\ServerUtility;
 use Helio\Panel\Utility\ViewUtility;
 
@@ -59,6 +60,11 @@ EOM;
         }
 
         return 'https://panel.idling.host';
+    }
+
+    public function callToActionURL(User $user): string
+    {
+        return $this->baseURL();
     }
 
     public function confirmURL(): string
