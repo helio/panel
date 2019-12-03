@@ -95,6 +95,7 @@ class ApiUserController extends AbstractController
 
         $jobRepository = App::getDbHelper()->getRepository(Job::class);
         $jobs = $jobRepository->findBy($searchCriteria, $orderBy, $limit, $offset);
+        $totalHits = $jobRepository->count($searchCriteria);
 
         $jobs = array_map(function (Job $job) use ($returnHTML) {
             $executions = $job->getExecutions();
@@ -162,7 +163,7 @@ class ApiUserController extends AbstractController
             return $data;
         }, $jobs);
 
-        return $this->render(['items' => $jobs]);
+        return $this->render(['items' => $jobs, 'total_hits' => $totalHits]);
     }
 
     /**
