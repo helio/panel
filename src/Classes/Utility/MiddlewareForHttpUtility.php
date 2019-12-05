@@ -5,6 +5,7 @@ namespace Helio\Panel\Utility;
 use Exception;
 use DateTime;
 use Helio\Panel\App;
+use Helio\Panel\Exception\HttpException;
 use Helio\Panel\Helper\LogHelper;
 use Helio\Panel\Middleware\ReAuthenticate;
 use Helio\Panel\Model\Instance;
@@ -64,6 +65,10 @@ class MiddlewareForHttpUtility extends AbstractUtility
                 if (array_key_exists('u', $arguments['decoded'])) {
                     /** @var User $user */
                     $user = $userService->findById($arguments['decoded']['u']);
+                    if (!$user) {
+                        throw new HttpException(StatusCode::HTTP_UNAUTHORIZED, 'Not authorized');
+                    }
+
                     if ($user->getLoggedOut() && !array_key_exists('sticky', $arguments['decoded'])) {
                         $tokenGenerationTime = (new DateTime('now', ServerUtility::getTimezoneObject()))->setTimestamp($arguments['decoded']['iat']);
                         $userLoggedOutTime = $user->getLoggedOut()->setTimezone(ServerUtility::getTimezoneObject());

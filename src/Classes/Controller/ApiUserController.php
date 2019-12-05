@@ -7,22 +7,24 @@ use Helio\Panel\App;
 use Helio\Panel\Controller\Traits\ModelUserController;
 use Helio\Panel\Controller\Traits\ModelParametrizedController;
 use Helio\Panel\Controller\Traits\TypeApiController;
+use Helio\Panel\Exception\HttpException;
+use Helio\Panel\Helper\LogHelper;
 use Helio\Panel\Job\JobFactory;
 use Helio\Panel\Job\JobStatus;
 use Helio\Panel\Model\Instance;
 use Helio\Panel\Model\Job;
 use Helio\Panel\Model\Execution;
 use Helio\Panel\Execution\ExecutionStatus;
+use Helio\Panel\Model\User;
 use Helio\Panel\Utility\ExecUtility;
 use Helio\Panel\Utility\JwtUtility;
 use Psr\Http\Message\ResponseInterface;
+use Slim\Http\StatusCode;
 
 /**
- * Class ApiController.
- *
- * @author    Christoph Buchli <team@opencomputing.cloud>
- *
  * @RoutePrefix('/api/user')
+ *
+ * @OA\Tag(name="user", description="User related APIs")
  */
 class ApiUserController extends AbstractController
 {
@@ -31,16 +33,59 @@ class ApiUserController extends AbstractController
     use TypeApiController;
 
     /**
+     * @OA\Get(
+     *     path="/user",
+     *     tags={"user"},
+     *     security={
+     *         {"authByApitoken": {"any"}}
+     *     },
+     *     description="Get current user or a given user (only possible if authenticated user is admin)",
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="query",
+     *         description="Id of the user to return, only possible if authenticated user is admin",
+     *         @Oa\Schema(
+     *             type="integer",
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response="200",
+     *         description="User data",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="name", type="string"),
+     *             @OA\Property(property="email", type="string"),
+     *             @OA\Property(property="active", type="boolean"),
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response="403",
+     *         description="Tried to access a resource not permitted"
+     *     )
+     * )
+     *
      * @return ResponseInterface
      *
      * @Route("", methods={"GET"}, name="user.get")
      */
     public function getUserAction(): ResponseInterface
     {
+        $user = $this->user;
+        $id = $this->params['id'] ?? null;
+        if ($id) {
+            if (!$this->user->isAdmin()) {
+                LogHelper::warn('non-admin user tried accessing another user', ['authorized-user' => $this->user->getId(), 'passed-user-id' => $id]);
+                throw new HttpException(StatusCode::HTTP_FORBIDDEN, 'Operation not permitted.');
+            }
+            $user = App::getDbHelper()->getRepository(User::class)->find((int) $id);
+            if (!$user) {
+                throw new HttpException(StatusCode::HTTP_NOT_FOUND, 'User not found');
+            }
+        }
+
         return $this->render([
-            'name' => $this->user->getName(),
-            'email' => $this->user->getEmail(),
-            'active' => $this->user->isActive(),
+            'name' => $user->getName(),
+            'email' => $user->getEmail(),
+            'active' => $user->isActive(),
         ]);
     }
 
