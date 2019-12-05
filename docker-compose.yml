@@ -1,24 +1,50 @@
-version: '3'
+version: '3.5'
 
 services:
     panel:
         build: .
         working_dir: /var/www
-        command: php -S 0.0.0.0:8080 -t www
+        command: php -S 0.0.0.0:8080 -t www www/.ht.router.php
         env_file:
             - ./.panel.env
-        ports:
-            - 8080:8080
         volumes:
-            - .:/var/www
+            - .:/var/www:delegated
+        labels:
+            - "traefik.frontend.rule=Host:panel.helio.test"
+            - "traefik.frontend.headers.SSLRedirect=true"
+            - "traefik.docker.network=pontsun"
+            - "traefik.enable=true"
+            - "traefik.port=8080"
+        networks:
+            - pontsun
+            - panel
     database:
         image: mariadb:10.4
+        ports:
+            - 3306:3306
         environment:
             MYSQL_ROOT_PASSWORD: b7yujnx
             MYSQL_DATABASE: panel
             MYSQL_USER: helio-panel
             MYSQL_PASSWORD: helio-panel-356tyjl
+        volumes:
+            - db-data:/var/lib/mysql
+        networks:
+            - panel
     search:
         image: elasticsearch:7.3.0
+        ports:
+            - 9200:9200
         environment:
             discovery.type: single-node
+        networks:
+            - panel
+networks:
+    pontsun:
+        external: true
+        name: pontsun
+    panel:
+        name: panel
+
+volumes:
+    db-data:
