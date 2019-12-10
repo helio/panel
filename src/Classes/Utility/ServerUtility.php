@@ -82,7 +82,7 @@ class ServerUtility extends AbstractUtility
 
     public static function isLocalDevEnv(): bool
     {
-        return SITE_ENV === 'DEV';
+        return 'DEV' === self::get('SITE_ENV');
     }
 
     public static function isTestEnv(): bool
