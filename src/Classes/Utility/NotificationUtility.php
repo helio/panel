@@ -137,7 +137,7 @@ class NotificationUtility extends AbstractUtility
         }
 
         // write mail to stdout
-        if (PHP_SAPI === 'cli-server' && 'PROD' !== ServerUtility::get('SITE_ENV')) {
+        if (ServerUtility::isLocalDevEnv()) {
             LogHelper::logToConsole("mail sent to $recipient:\n$subject\n\n${content['text']}");
         }
 

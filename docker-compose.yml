@@ -1,22 +1,30 @@
 version: '3.5'
 
 services:
-    panel:
-        build: .
-        working_dir: /var/www
-        command: php -S 0.0.0.0:8080 -t www www/.ht.router.php
-        env_file:
-            - ./.panel.env
+    web:
+        image: nginx:mainline-alpine
         volumes:
             - .:/var/www:delegated
+            - ./dev-nginx.conf:/etc/nginx/conf.d/default.conf
         labels:
             - "traefik.frontend.rule=Host:panel.helio.test"
             - "traefik.frontend.headers.SSLRedirect=true"
             - "traefik.docker.network=pontsun"
             - "traefik.enable=true"
-            - "traefik.port=8080"
+            - "traefik.port=80"
         networks:
             - pontsun
+            - panel
+    panel:
+        build: .
+        working_dir: /var/www
+        env_file:
+            - ./.panel.env
+        labels:
+            - "traefik.enable=false"
+        volumes:
+            - .:/var/www:delegated
+        networks:
             - panel
     database:
         image: mariadb:10.4

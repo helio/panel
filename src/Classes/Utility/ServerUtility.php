@@ -82,7 +82,7 @@ class ServerUtility extends AbstractUtility
 
     public static function isLocalDevEnv(): bool
     {
-        return PHP_SAPI === 'cli-server' && SITE_ENV === 'DEV';
+        return SITE_ENV === 'DEV';
     }
 
     public static function isTestEnv(): bool
