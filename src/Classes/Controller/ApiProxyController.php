@@ -112,7 +112,7 @@ class ApiProxyController extends AbstractController
      * @param  string            $path
      * @return ResponseInterface
      *
-     * @Route("/api/billing/{path:.*}", methods={"POST"}, name="billing.service")
+     * @Route("/api/billing/{path:.*}", methods={"GET","POST","PUT"}, name="billing.service")
      *
      * @throws Exception
      * @throws GuzzleException
