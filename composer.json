@@ -36,7 +36,7 @@
     "symfony/yaml": "^4.2",
     "zircote/swagger-php": "^3.0",
     "elasticsearch/elasticsearch": "^6.7",
-    "adhocore/cron-expr": "^0.0.6",
+    "adhocore/cron-expr": "^1.1",
     "ramsey/uuid": "^3.8",
     "swiftmailer/swiftmailer": "^6.0"
   },
