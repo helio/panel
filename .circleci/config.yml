@@ -111,12 +111,13 @@ workflows:
             only:
             - master
             - development
-    - runners:
-        filters:
-          branches:
-            only:
-            - master
-            - development
+    # # ToDo: once repository is moved, activate again       
+    # - runners:
+    #     filters:
+    #       branches:
+    #         only:
+    #         - master
+    #         - development
 
   functest:
     triggers:
