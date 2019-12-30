@@ -265,26 +265,24 @@ class ApiAdminController extends AbstractController
 
         $dbHelper = App::getDbHelper();
 
-        $jobs = $dbHelper->getRepository(Job::class)->findBy(['labels' => $body['labels']], ['priority' => 'ASC', 'created' => 'ASC']);
+        /** @var Job|null $job */
+        $job = $dbHelper->getRepository(Job::class)->findOneBy(['labels' => $body['labels']], ['priority' => 'ASC', 'created' => 'ASC']);
+        if ($job && $job->getManager()->works()) {
+            $foundManagers[] = $job->getManager()->getFqdn();
 
-        /** @var Job $job */
-        foreach ($jobs as $job) {
-            if ($job->getActiveExecutionCount() > 0 && $job->getManager()->works()) {
-                $foundManagers[] = $job->getManager()->getFqdn();
+            OrchestratorFactory::getOrchestratorForInstance((new Instance()), $job)->joinWorkers(true);
 
-                OrchestratorFactory::getOrchestratorForInstance((new Instance()), $job)->dispatchJob(true);
+            LogHelper::info('triggered join workers', [
+                'found_managers' => $foundManagers,
+                'labels' => $body['labels'],
+            ]);
 
-                LogHelper::info('triggered dispatch job', [
-                    'found_managers' => $foundManagers,
-                    'labels' => $body['labels'],
-                ]);
-
-                return $this->render(['found_managers' => $foundManagers]);
-            }
+            return $this->render(['found_managers' => $foundManagers]);
         }
 
-        LogHelper::err('did not trigger dispatch job on any worker', [
+        LogHelper::err('did not trigger join workers on any worker', [
             'labels' => $body['labels'],
+            'found-job' => $job ? $job->getId() : 'no job found',
         ]);
 
         return $this->render(['found_managers' => null, 'labels' => $body['labels']]);

@@ -105,16 +105,39 @@ class Choria implements OrchestratorInterface
         ]));
 
         if ($this->job->getActiveExecutionCount() > 0) {
-            $cmd = $joinWorkersCallback ? self::$joinWorkersWithCallbackCommand : self::$joinWorkersCommand;
-            ServerUtility::executeShellCommand(
-                $this->parseCommand($cmd, false, [
+            $this->joinWorkers($joinWorkersCallback);
+        }
+
+        return true;
+    }
+
+    public function joinWorkers(bool $joinWorkersCallback = false): bool
+    {
+        if (!$this->job) {
+            return false;
+        }
+
+        $manager = $this->job->getManager();
+
+        if (!ManagerStatus::isValidActiveStatus($manager->getStatus())) {
+            LogHelper::err('joinWorkers called on job ' . $this->job->getId() . ' that\'s not ready. Aborting.');
+
+            return false;
+        }
+
+        $cmd = $joinWorkersCallback ? self::$joinWorkersWithCallbackCommand : self::$joinWorkersCommand;
+        ServerUtility::executeShellCommand(
+            $this->parseCommand(
+                $cmd,
+                false,
+                [
                     $manager->getWorkerToken(),
                     $manager->getIp(),
                     1,
                     $manager->getIdByChoria(),
-                ])
-            );
-        }
+                ]
+            )
+        );
 
         return true;
     }

@@ -53,11 +53,11 @@ class ApiChoriaCallbackTest extends TestCase
     /**
      * @throws Exception
      */
-    public function testCallbackWorkerNodeDoesNotCallAssignWhenNoActiveExecutions()
+    public function testCallbackWorkerNodeDoesCallAssignWhenNoActiveExecutions()
     {
         $user = $this->createAdmin();
         $job = $this->createJob($user);
-        $job->addLabel('testCallbackWorkerNodeDoesNotCallAssignWhenNoActiveExecutions');
+        $job->addLabel('testCallbackWorkerNodeDoesCallAssignWhenNoActiveExecutions');
 
         $this->infrastructure->getEntityManager()->persist($job);
         $this->infrastructure->getEntityManager()->flush($job);
@@ -66,12 +66,12 @@ class ApiChoriaCallbackTest extends TestCase
 
         $response = $this->runWebApp('POST', '/api/admin/workerwakeup', true, $tokenHeader, [
             'labels' => [
-                'testCallbackWorkerNodeDoesNotCallAssignWhenNoActiveExecutions',
+                'testCallbackWorkerNodeDoesCallAssignWhenNoActiveExecutions',
             ],
         ]);
         $this->assertEquals(StatusCode::HTTP_OK, $response->getStatusCode());
 
-        $this->assertEquals('', ServerUtility::getLastExecutedShellCommand(), 'Must not call anything if no executions pending');
+        $this->assertStringContainsString('helio::queue', ServerUtility::getLastExecutedShellCommand());
     }
 
     /**
@@ -199,7 +199,7 @@ class ApiChoriaCallbackTest extends TestCase
         return $user;
     }
 
-    private function createJob(User $user, Manager $manager = null, string $name = __CLASS__, array $labels = []): Job
+    private function createJob(User $user, Manager $manager = null, string $name = 'ApiChoriaCallbackTest', array $labels = []): Job
     {
         $manager = $manager ?? $this->createManager($name);
 

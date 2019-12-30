@@ -15,6 +15,8 @@ interface OrchestratorInterface
 
     public function dispatchJob(bool $joinWorkersCallback = false): bool;
 
+    public function joinWorkers(bool $joinWorkersCallback = false): bool;
+
     public function updateJob(array $jobIDs): void;
 
     public function startComputing(): ?string;
