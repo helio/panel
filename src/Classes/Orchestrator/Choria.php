@@ -331,6 +331,7 @@ class Choria implements OrchestratorInterface
             $command
         );
 
-        return vsprintf('ssh %s@%s "' . $command . '"' . ($waitForResult ? '' : ' > /dev/null 2>&1 &'), $params);
+        // FIXME: Beautify remote logging and make it more versatile
+        return vsprintf('ssh %s@%s "' . $command . ($waitForResult ? '' : ' >> ~/log/'.md5($command).'.log 2>&1') . '"' . ($waitForResult ? '' : ' > /dev/null 2>&1 &'), $params);
     }
 }
