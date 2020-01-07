@@ -107,8 +107,6 @@ class UserService
             $prefs->setNotifications($notifications);
             $prefs->setLimits($limits);
             $user->setPreferences($prefs);
-
-            SlackHelper::getInstance()->sendKoalaFarmNotification(sprintf('New user %s registered', $email));
         }
 
         // TODO: ugly, but depends how it's used. Should find a better way.
