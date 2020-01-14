@@ -47,23 +47,6 @@ class Execute extends \Helio\Panel\Job\Docker\Execute
         $this->storageCredentials = str_replace("\n", '', file_get_contents(ServerUtility::get('BLENDER_STORAGE_CREDENTIALS_JSON_PATH')));
     }
 
-    public function validate(User $user, array $jobObject): ?array
-    {
-        $validationMessages = parent::validate($user, $jobObject);
-        if (null === $validationMessages) {
-            $validationMessages = [];
-        }
-
-        if (!$user->isActive() && 'render' === $jobObject['config']['type']) {
-            $validationMessages[] = 'confirm email address before creating a render job';
-        }
-        if (count($validationMessages) > 0) {
-            return $validationMessages;
-        }
-
-        return null;
-    }
-
     public function create(array $jobObject): bool
     {
         $jobObject['labels'] = ['render'];
