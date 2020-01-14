@@ -78,7 +78,7 @@ class ApiProxyController extends AbstractController
      * @param  string            $path
      * @return ResponseInterface
      *
-     * @Route("/api/storage/{path:.*}", methods={"GET", "PUT", "POST"}, name="storage.service")
+     * @Route("/api/storage/{path:.*}", methods={"GET", "PUT", "POST", "HEAD"}, name="storage.service")
      *
      * @throws Exception
      * @throws GuzzleException

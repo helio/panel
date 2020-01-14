@@ -135,6 +135,7 @@ class MiddlewareForHttpUtility extends AbstractUtility
         $app->add(new CorsMiddleware([
             'logger' => LogHelper::getInstance('cors'),
             'origin' => ['*'],
+            'methods' => ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD"],
             'headers.allow' => ['Authorization', 'If-Match', 'If-Unmodified-Since', 'Content-Type', 'X-Upload-Content-Type', 'X-Upload-Content-Length', 'Content-Range'],
             'headers.expose' => ['Authorization', 'Etag'],
             'credentials' => true,
