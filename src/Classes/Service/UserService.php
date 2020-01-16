@@ -8,7 +8,6 @@ use Doctrine\ORM\OptimisticLockException;
 use Doctrine\ORM\ORMException;
 use GuzzleHttp\Exception\GuzzleException;
 use Helio\Panel\App;
-use Helio\Panel\Helper\SlackHelper;
 use Helio\Panel\Helper\ZapierHelper;
 use Helio\Panel\Job\JobType;
 use Helio\Panel\Model\User;

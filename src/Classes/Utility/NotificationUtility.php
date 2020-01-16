@@ -36,15 +36,19 @@ class NotificationUtility extends AbstractUtility
         ];
         $subject = 'Please confirm your e-mail address';
 
+        $product->notify($user->getEmail(), 'userRegistration', []);
+
         return static::sendMail($user->getEmail(), $subject, $content, ['text' => 'Confirm Email & Login', 'link' => $confirmLink], $product->emailSender(), $product->emailHTMLLayout());
     }
 
-    public static function notifyUser(User $user, Product $product, string $templateName, array $params): bool
+    public static function notifyUser(User $user, Product $product, string $event, array $params): bool
     {
+        $product->notify($user->getEmail(), $event, $params);
+
         try {
-            $template = $product->notificationMessage($templateName, $params);
+            $template = $product->notificationMessage($event, $params);
         } catch (\InvalidArgumentException $e) {
-            LogHelper::info("template name ${templateName} not supported for product", ['product title' => $product->title()]);
+            LogHelper::info("template name ${event} not supported for product", ['product title' => $product->title()]);
 
             return false;
         }

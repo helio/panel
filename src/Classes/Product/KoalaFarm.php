@@ -2,10 +2,12 @@
 
 namespace Helio\Panel\Product;
 
+use Helio\Panel\Helper\LogHelper;
 use Helio\Panel\Model\User;
 use Helio\Panel\Utility\JwtUtility;
 use Helio\Panel\Utility\ServerUtility;
 use Helio\Panel\Utility\ViewUtility;
+use Intercom\IntercomClient;
 
 class KoalaFarm implements Product
 {
@@ -103,5 +105,34 @@ EOM;
         }
 
         return self::notifications[$event]['render'];
+    }
+
+    public function notify($email, $event, $params): void
+    {
+        self::IntercomEvent($email, $event, $params);
+    }
+
+    public static function IntercomEvent(string $email, string $event, array $metadata): bool
+    {
+        $apiKey = ServerUtility::get('INTERCOM_API_KEY', false);
+        if (false == $apiKey) {
+            return false;
+        }
+
+        $client = new IntercomClient($apiKey);
+        try {
+            $client->events->create([
+                'email' => $email,
+                'event_name' => $event,
+                'created_at' => ServerUtility::getCurrentUTCTimestamp(),
+                'metadata' => $metadata,
+            ]);
+
+            return true;
+        } catch (\Throwable $t) {
+            LogHelper::warn('could not send Event to Intercom', ['err' => $t, 'event' => $event, 'email' => $email, 'metadata' => $metadata]);
+        }
+
+        return false;
     }
 }

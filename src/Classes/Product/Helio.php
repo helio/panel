@@ -105,4 +105,9 @@ EOM;
     {
         return ViewUtility::getEmailTemplate('helio');
     }
+
+    public function notify($email, $event, $params): void
+    {
+        return;
+    }
 }

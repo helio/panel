@@ -38,7 +38,9 @@
     "elasticsearch/elasticsearch": "^6.7",
     "adhocore/cron-expr": "^1.1",
     "ramsey/uuid": "^3.8",
-    "swiftmailer/swiftmailer": "^6.0"
+    "swiftmailer/swiftmailer": "^6.0",
+    "intercom/intercom-php": "^4.2",
+    "php-http/guzzle6-adapter": "^2.0"
   },
   "require-dev": {
     "roave/security-advisories": "dev-master",

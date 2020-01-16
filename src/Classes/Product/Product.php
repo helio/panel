@@ -29,4 +29,6 @@ interface Product
      * @throws \InvalidArgumentException if notification event not supported for given product
      */
     public function notificationMessage(string $event, array $params): array;
+
+    public function notify(string $email, string $event, array $params): void;
 }

@@ -115,6 +115,14 @@ Zapier captures a few things, if you want to change the hook, here's how:
 ZAPIER_HOOK_URL=/hooks/catch/1234/blahd3d/
 ```
 
+### Koala Intercom
+
+Koala uses Intercom, to activate the Event Notification set:
+```bash 
+INTERCOM_API_KEY=ZESECRETAPIKEY
+```
+
+
 ### Slack
 
 Slack Webhook for Admin Notifications and Alerts. Activates if the following ENV-Variable is set:

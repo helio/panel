@@ -58,6 +58,14 @@ class ServerUtility extends AbstractUtility
     }
 
     /**
+     * @return int
+     */
+    public static function getCurrentUTCTimestamp(): int
+    {
+        return (new DateTime('now', ServerUtility::getTimezoneObject()))->setTimezone(new DateTimeZone(DateTimeZone::UTC))->getTimestamp();
+    }
+
+    /**
      * @return bool
      */
     public static function isSecure(): bool
