@@ -107,12 +107,12 @@ EOM;
         return self::notifications[$event]['render'];
     }
 
-    public function notify($email, $event, $params): void
+    public function notify($user, $event, $params): void
     {
-        self::IntercomEvent($email, $event, $params);
+        self::IntercomEvent($user, $event, $params);
     }
 
-    public static function IntercomEvent(string $email, string $event, array $metadata): bool
+    public static function IntercomEvent(User $user, string $event, array $metadata): bool
     {
         $apiKey = ServerUtility::get('INTERCOM_API_KEY', false);
         if (false == $apiKey) {
@@ -121,12 +121,22 @@ EOM;
 
         $client = new IntercomClient($apiKey);
         try {
-            $client->events->create([
-                'email' => $email,
+            $client->users->update([
+                'email' => $user->getEmail(),
+                'user_id' => $user->getId(),
+            ]);
+
+            $eventPayload = [
+                'email' => $user->getEmail(),
                 'event_name' => $event,
                 'created_at' => ServerUtility::getCurrentUTCTimestamp(),
-                'metadata' => $metadata,
-            ]);
+            ];
+
+            if (count($metadata) > 0) {
+                $eventPayload['metadata'] = $metadata;
+            }
+
+            $client->events->create($eventPayload);
 
             return true;
         } catch (\Throwable $t) {

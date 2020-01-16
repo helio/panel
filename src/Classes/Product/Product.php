@@ -30,5 +30,5 @@ interface Product
      */
     public function notificationMessage(string $event, array $params): array;
 
-    public function notify(string $email, string $event, array $params): void;
+    public function notify(User $user, string $event, array $params): void;
 }

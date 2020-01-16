@@ -36,14 +36,23 @@ class NotificationUtility extends AbstractUtility
         ];
         $subject = 'Please confirm your e-mail address';
 
-        $product->notify($user->getEmail(), 'userRegistration', []);
+        $product->notify($user, 'userRegistration', []);
 
         return static::sendMail($user->getEmail(), $subject, $content, ['text' => 'Confirm Email & Login', 'link' => $confirmLink], $product->emailSender(), $product->emailHTMLLayout());
     }
 
     public static function notifyUser(User $user, Product $product, string $event, array $params): bool
     {
-        $product->notify($user->getEmail(), $event, $params);
+        $notificationData = [];
+        if (isset($params['name'])) {
+            $notificationData['helio-job-name'] = $params['name'];
+        }
+
+        if (isset($params['id'])) {
+            $notificationData['helio-job-id'] = $params['id'];
+        }
+
+        $product->notify($user, $event, $notificationData);
 
         try {
             $template = $product->notificationMessage($event, $params);
