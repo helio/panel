@@ -62,7 +62,7 @@ class ServerUtility extends AbstractUtility
      */
     public static function getCurrentUTCTimestamp(): int
     {
-        return (new DateTime('now', ServerUtility::getTimezoneObject()))->setTimezone(new DateTimeZone(DateTimeZone::UTC))->getTimestamp();
+        return (new DateTime('now', ServerUtility::getTimezoneObject()))->setTimezone(new DateTimeZone("UTC"))->getTimestamp();
     }
 
     /**
