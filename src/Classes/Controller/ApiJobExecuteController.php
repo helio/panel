@@ -5,6 +5,7 @@ namespace Helio\Panel\Controller;
 use Helio\Panel\App;
 use Helio\Panel\Helper\ElasticHelper;
 use Helio\Panel\Helper\LogHelper;
+use Helio\Panel\Job\JobType;
 use Helio\Panel\Model\Instance;
 use Helio\Panel\Request\Log;
 use Helio\Panel\Service\LogService;
@@ -14,7 +15,7 @@ use RuntimeException;
 use Helio\Panel\Controller\Traits\ModelInstanceController;
 use Helio\Panel\Controller\Traits\ModelExecutionController;
 use Helio\Panel\Controller\Traits\TypeApiController;
-use Helio\Panel\Controller\Traits\AuthorizedActiveJobController;
+use Helio\Panel\Controller\Traits\AuthorizedJobController;
 use Helio\Panel\Job\JobFactory;
 use Helio\Panel\Job\JobStatus;
 use Helio\Panel\Model\Job;
@@ -37,18 +38,18 @@ use Slim\Http\StatusCode;
  */
 class ApiJobExecuteController extends AbstractController
 {
-    use AuthorizedActiveJobController, ModelExecutionController, ModelInstanceController {
-        AuthorizedActiveJobController::setupParams insteadof ModelExecutionController, ModelInstanceController;
-        AuthorizedActiveJobController::requiredParameterCheck insteadof ModelExecutionController, ModelInstanceController;
-        AuthorizedActiveJobController::optionalParameterCheck insteadof ModelExecutionController, ModelInstanceController;
+    use AuthorizedJobController, ModelExecutionController, ModelInstanceController {
+        AuthorizedJobController::setupParams insteadof ModelExecutionController, ModelInstanceController;
+        AuthorizedJobController::requiredParameterCheck insteadof ModelExecutionController, ModelInstanceController;
+        AuthorizedJobController::optionalParameterCheck insteadof ModelExecutionController, ModelInstanceController;
 
-        AuthorizedActiveJobController::setupUser insteadof ModelInstanceController, ModelExecutionController;
-        AuthorizedActiveJobController::validateUserIsSet insteadof ModelInstanceController, ModelExecutionController;
-        AuthorizedActiveJobController::persistUser insteadof ModelInstanceController, ModelExecutionController;
+        AuthorizedJobController::setupUser insteadof ModelInstanceController, ModelExecutionController;
+        AuthorizedJobController::validateUserIsSet insteadof ModelInstanceController, ModelExecutionController;
+        AuthorizedJobController::persistUser insteadof ModelInstanceController, ModelExecutionController;
 
-        AuthorizedActiveJobController::setupJob insteadof ModelInstanceController, ModelExecutionController;
-        AuthorizedActiveJobController::validateJobIsSet insteadof ModelInstanceController, ModelExecutionController;
-        AuthorizedActiveJobController::persistJob insteadof ModelInstanceController, ModelExecutionController;
+        AuthorizedJobController::setupJob insteadof ModelInstanceController, ModelExecutionController;
+        AuthorizedJobController::validateJobIsSet insteadof ModelInstanceController, ModelExecutionController;
+        AuthorizedJobController::persistJob insteadof ModelInstanceController, ModelExecutionController;
     }
 
     use TypeApiController;
@@ -162,6 +163,20 @@ class ApiJobExecuteController extends AbstractController
     public function execAction(): ResponseInterface
     {
         try {
+            if (!$this->job) {
+                return $this->render([
+                    'success' => false,
+                    'message' => 'Job not found',
+                ], StatusCode::HTTP_NOT_FOUND);
+            }
+
+            if (!JobType::isValidType($this->job->getType())) {
+                return $this->render([
+                    'success' => false,
+                    'message' => 'Invalid job type',
+                ], StatusCode::HTTP_FORBIDDEN);
+            }
+
             if (!JobStatus::isValidActiveStatus($this->job->getStatus())) {
                 return $this->render([
                     'success' => false,
@@ -327,6 +342,20 @@ class ApiJobExecuteController extends AbstractController
      */
     public function executionStatusAction(): ResponseInterface
     {
+        if (!$this->job) {
+            return $this->render([
+                'success' => false,
+                'message' => 'Job not found',
+            ], StatusCode::HTTP_NOT_FOUND);
+        }
+
+        if (!JobType::isValidType($this->job->getType())) {
+            return $this->render([
+                'success' => false,
+                'message' => 'Invalid job type',
+            ], StatusCode::HTTP_FORBIDDEN);
+        }
+
         if (null === $this->execution) {
             return $this->render(['error' => 'no execution found'], StatusCode::HTTP_NOT_FOUND);
         }
@@ -393,6 +422,27 @@ class ApiJobExecuteController extends AbstractController
      */
     public function submitresultAction(): ResponseInterface
     {
+        if (!$this->job) {
+            return $this->render([
+                'success' => false,
+                'message' => 'Job not found',
+            ], StatusCode::HTTP_NOT_FOUND);
+        }
+
+        if (!JobType::isValidType($this->job->getType())) {
+            return $this->render([
+                'success' => false,
+                'message' => 'Invalid job type',
+            ], StatusCode::HTTP_FORBIDDEN);
+        }
+
+        if (!JobStatus::isValidActiveStatus($this->job->getStatus())) {
+            return $this->render([
+                'success' => false,
+                'message' => 'Job not ready',
+            ], StatusCode::HTTP_FORBIDDEN);
+        }
+
         if (null === $this->execution) {
             return $this->render(['success' => false, 'message' => 'Execution not found'], StatusCode::HTTP_NOT_FOUND);
         }
@@ -444,9 +494,24 @@ class ApiJobExecuteController extends AbstractController
     public function workAction(int $job, string $method): ResponseInterface
     {
         try {
+            if (!$this->job) {
+                return $this->render([
+                    'success' => false,
+                    'message' => 'Job not found',
+                ], StatusCode::HTTP_NOT_FOUND);
+            }
+
+            if (!JobType::isValidType($this->job->getType())) {
+                return $this->render([
+                    'success' => false,
+                    'message' => 'Invalid job type',
+                ], StatusCode::HTTP_FORBIDDEN);
+            }
+
             if (!JobStatus::isValidActiveStatus($this->job->getStatus())) {
                 throw new RuntimeException('job not ready');
             }
+
             if (null === $this->execution) {
                 return $this->render(['error' => 'no execution found'], StatusCode::HTTP_NOT_FOUND);
             }
@@ -495,6 +560,27 @@ class ApiJobExecuteController extends AbstractController
     public function heartbeatAction(): ResponseInterface
     {
         try {
+            if (!$this->job) {
+                return $this->render([
+                    'success' => false,
+                    'message' => 'Job not found',
+                ], StatusCode::HTTP_NOT_FOUND);
+            }
+
+            if (!JobType::isValidType($this->job->getType())) {
+                return $this->render([
+                    'success' => false,
+                    'message' => 'Invalid job type',
+                ], StatusCode::HTTP_FORBIDDEN);
+            }
+
+            if (!JobStatus::isValidActiveStatus($this->job->getStatus())) {
+                return $this->render([
+                    'success' => false,
+                    'message' => 'Job not ready',
+                ], StatusCode::HTTP_FORBIDDEN);
+            }
+
             if (null === $this->execution) {
                 return $this->render(['error' => 'no execution found', 'params' => $this->params, 'execution' => $this->execution], StatusCode::HTTP_NOT_FOUND);
             }
@@ -588,6 +674,20 @@ class ApiJobExecuteController extends AbstractController
      */
     public function logsAction(): ResponseInterface
     {
+        if (!$this->job) {
+            return $this->render([
+                'success' => false,
+                'message' => 'Job not found',
+            ], StatusCode::HTTP_NOT_FOUND);
+        }
+
+        if (!JobType::isValidType($this->job->getType())) {
+            return $this->render([
+                'success' => false,
+                'message' => 'Invalid job type',
+            ], StatusCode::HTTP_FORBIDDEN);
+        }
+
         if (null === $this->execution) {
             return $this->render(['error' => 'no execution found'], StatusCode::HTTP_NOT_FOUND);
         }
@@ -611,6 +711,27 @@ class ApiJobExecuteController extends AbstractController
      */
     public function uploadAction(): ResponseInterface
     {
+        if (!$this->job) {
+            return $this->render([
+                'success' => false,
+                'message' => 'Job not found',
+            ], StatusCode::HTTP_NOT_FOUND);
+        }
+
+        if (!JobType::isValidType($this->job->getType())) {
+            return $this->render([
+                'success' => false,
+                'message' => 'Invalid job type',
+            ], StatusCode::HTTP_FORBIDDEN);
+        }
+
+        if (!JobStatus::isValidActiveStatus($this->job->getStatus())) {
+            return $this->render([
+                'success' => false,
+                'message' => 'Job not ready',
+            ], StatusCode::HTTP_FORBIDDEN);
+        }
+
         if (null === $this->execution) {
             return $this->render(['error' => 'no execution found'], StatusCode::HTTP_NOT_FOUND);
         }
@@ -636,6 +757,27 @@ class ApiJobExecuteController extends AbstractController
      */
     public function downloadAction(int $job, string $file): ResponseInterface
     {
+        if (!$this->job) {
+            return $this->render([
+                'success' => false,
+                'message' => 'Job not found',
+            ], StatusCode::HTTP_NOT_FOUND);
+        }
+
+        if (!JobType::isValidType($this->job->getType())) {
+            return $this->render([
+                'success' => false,
+                'message' => 'Invalid job type',
+            ], StatusCode::HTTP_FORBIDDEN);
+        }
+
+        if (!JobStatus::isValidActiveStatus($this->job->getStatus())) {
+            return $this->render([
+                'success' => false,
+                'message' => 'Job not ready',
+            ], StatusCode::HTTP_FORBIDDEN);
+        }
+
         if (null === $this->execution) {
             return $this->render(['error' => 'no execution found'], StatusCode::HTTP_NOT_FOUND);
         }
